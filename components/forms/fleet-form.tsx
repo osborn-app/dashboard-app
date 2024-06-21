@@ -235,7 +235,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
           toast({
             variant: "destructive",
             title: "Uh oh! ada sesuatu yang error",
-            description: `error: ${error.message}`,
+            description: `error: ${error?.response?.data?.message}`,
           });
         },
       });
@@ -267,7 +267,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
           toast({
             variant: "destructive",
             title: "Uh oh! ada sesuatu yang error",
-            description: `error: ${error.message}`,
+            description: `error: ${error?.response?.data?.message}`,
           });
         },
       });
