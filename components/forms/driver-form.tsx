@@ -224,6 +224,7 @@ export const DriverForm: React.FC<DriverFormProps> = ({
           toast({
             variant: "destructive",
             title: "Uh oh! ada sesuatu yang error",
+            // @ts-ignore
             description: `error: ${error?.response?.data?.message}`,
           });
         },
@@ -258,6 +259,7 @@ export const DriverForm: React.FC<DriverFormProps> = ({
           toast({
             variant: "destructive",
             title: "Uh oh! ada sesuatu yang error",
+            //@ts-ignore
             description: `error: ${error?.response?.data?.message}`,
           });
         },
