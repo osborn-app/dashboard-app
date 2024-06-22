@@ -36,6 +36,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           variant: "success",
           title: "Fleet berhasil dihapus!",
         });
+        router.refresh();
       },
       onError: (error) => {
         toast({

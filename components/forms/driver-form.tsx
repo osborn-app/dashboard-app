@@ -215,6 +215,7 @@ export const DriverForm: React.FC<DriverFormProps> = ({
             variant: "success",
             title: toastMessage,
           });
+          router.refresh();
           router.push(`/dashboard/drivers`);
         },
         onSettled: () => {
@@ -249,7 +250,7 @@ export const DriverForm: React.FC<DriverFormProps> = ({
             variant: "success",
             title: toastMessage,
           });
-          // router.refresh();
+          router.refresh();
           router.push(`/dashboard/drivers`);
         },
         onSettled: () => {

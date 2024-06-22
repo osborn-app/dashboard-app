@@ -226,6 +226,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
             variant: "success",
             title: toastMessage,
           });
+          router.refresh();
           router.push(`/dashboard/fleets`);
         },
         onSettled: () => {
@@ -258,7 +259,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
             variant: "success",
             title: toastMessage,
           });
-          // router.refresh();
+          router.refresh();
           router.push(`/dashboard/fleets`);
         },
         onSettled: () => {

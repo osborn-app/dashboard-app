@@ -207,7 +207,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
             variant: "success",
             title: toastMessage,
           });
-          // router.refresh();
+          router.refresh();
           router.push(`/dashboard/requests`);
         },
         onSettled: () => {
@@ -231,7 +231,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
             title: toastMessage,
             description: "Driver akan menerima notifikasi request ini.",
           });
-          // router.refresh();
+          router.refresh();
           router.push(`/dashboard/requests`);
         },
         onSettled: () => {

@@ -278,6 +278,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             variant: "success",
             title: toastMessage,
           });
+          router.refresh();
           router.push(`/dashboard/customers`);
         },
         onSettled: () => {
@@ -317,7 +318,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             variant: "success",
             title: toastMessage,
           });
-          // router.refresh();
+          router.refresh();
           router.push(`/dashboard/customers`);
         },
         onSettled: () => {
