@@ -11,7 +11,7 @@ import { useEditDiscount, useGetDiscount, usePostDiscount } from "@/hooks/api/us
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormLabel, FormMessage } from "../ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import locale from "antd/locale/id_ID";
 import { Select as AntdSelect, ConfigProvider, DatePicker, Space, Input } from "antd";
 import "dayjs/locale/id";
@@ -122,6 +122,7 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
             end_date: new Date(data?.range_date[1]).toISOString(),
             location_id: parseInt(data?.location_id as string),
             fleet_type: data?.fleet_type as string
+        }
 
         if (initialData) {
             updateDiscount(payload, {
