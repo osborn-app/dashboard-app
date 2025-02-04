@@ -140,7 +140,7 @@ export const navItems: NavItem[] = [
     href: "/dashboard",
     icon: "dashboard",
     label: "Dashboard",
-    roles: ["admin"],
+    roles: ["admin", "owner"],
   },
   {
     title: "Calendar",

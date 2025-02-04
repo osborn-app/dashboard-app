@@ -1,4 +1,4 @@
-import { useGetRecaps } from "../api/useLedgers";
+import { useGetFleetsRecaps, useGetRecaps } from "../api/useLedgers";
 
 interface IFleet {
   color: string | null;
@@ -37,8 +37,8 @@ export interface ITotal {
   owner_comission: 0;
 }
 
-const useRecapsStore = (params?: any) => {
-  const { data: recaps, isFetching } = useGetRecaps({ ...params });
+const useRecapsStore = (params?: any, get_fleets: boolean = false) => {
+  const { data: recaps, isFetching } = !get_fleets ? useGetRecaps(params) : useGetFleetsRecaps(params);
 
   const items: IItems[] =
     recaps?.data?.items.map((item: IItems) => ({
@@ -47,8 +47,8 @@ const useRecapsStore = (params?: any) => {
 
   const total: ITotal = recaps?.data?.total
     ? {
-        ...recaps?.data?.total,
-      }
+      ...recaps?.data?.total,
+    }
     : { debit: 0, credit: 0, duration: 0, owner_commission: 0 };
 
   if (!isFetching && items.length < 5) {

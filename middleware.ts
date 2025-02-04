@@ -17,6 +17,7 @@ export async function middleware(req: NextRequest) {
   const role = token?.user?.role || "admin";
 
   const ownerRoutes = [
+    "/dashboard",
     "/dashboard/calendar",
     "/dashboard/fleets",
     "/dashboard/recap",

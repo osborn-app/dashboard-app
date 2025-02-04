@@ -25,6 +25,21 @@ export const useGetRecaps = (params?: Record<string, any>) => {
   });
 };
 
+export const useGetFleetsRecaps = (params?: Record<string, any>) => {
+  const axiosAuth = useAxiosAuth();
+
+  const getRecaps = () => {
+    return axiosAuth.get("/ledgers/recaps/fleets", {
+      params,
+    });
+  };
+
+  return useQuery({
+    queryKey: compact(["ledgers", "recaps", params]),
+    queryFn: getRecaps,
+  });
+};
+
 export const useGetLedgersFleet = (
   id: number,
   params: {
