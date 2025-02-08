@@ -38,6 +38,7 @@ export const columns: ColumnDef<IItems>[] = [
         ),
         cell: ({ row }) => {
             const commission = row.original?.owner_commission
+            const fleet = row.original?.fleet
             return (
                 <span className="text-sm font-medium">
                     {commission ? (
@@ -45,8 +46,9 @@ export const columns: ColumnDef<IItems>[] = [
                             {formatRupiah(commission)}
                         </>
                     ) : (
-                        "Rp 0"
+                        ""
                     )}
+                    {!commission && fleet ? "Rp 0" : ""}
                 </span>
             );
         },
