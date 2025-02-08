@@ -16,15 +16,20 @@ const OrderOwnerStatusCard = () => {
     const { month, year } = useMonthYearState();
 
     const { items, total, isFetching } = useRecapsStore({ status: "done" }, true);
-    const { total: totalInInterval, isFetching: isFetchingInInterval } = useRecapsStore({
+    const { total: totalIntervalMonth, isFetching: isFetchingIntervalMonth } = useRecapsStore({
         status: "done",
         month: month,
         year: year,
     });
+    const { total: totalIntervalDay, isFetching: isFetchingItervalDay } = useRecapsStore({
+        status: "done",
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: new Date().toISOString().split('T')[0],
+    })
 
     return (
         <>
-            {isFetching || isFetchingInInterval ? (
+            {isFetching || isFetchingIntervalMonth || isFetchingItervalDay ? (
                 <div className="absolute w-full">
                     <Spinner />
                 </div>
@@ -52,7 +57,24 @@ const OrderOwnerStatusCard = () => {
                                     <CircleDollarSign />
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">{`${formatRupiah(totalInInterval.owner_comission) ?? "0"}`}</div>
+                                    <div className="text-2xl font-bold">{`${formatRupiah(totalIntervalMonth.owner_comission) ?? "0"}`}</div>
+                                </CardContent>
+                            </Card>
+                        </Link>
+
+                        <Link
+                            href={{
+                                pathname: "/dashboard/recap",
+                                query: { status: "pending" },
+                            }}
+                        >
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Total Hari Ini</CardTitle>
+                                    <CircleDollarSign />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{`${formatRupiah(totalIntervalDay.owner_comission) ?? "0"}`}</div>
                                 </CardContent>
                             </Card>
                         </Link>
