@@ -15,14 +15,14 @@ import { columns } from "./tables/dashboard-tables/collumn";
 const OrderOwnerStatusCard = () => {
     const { month, year } = useMonthYearState();
 
-    const { items, total, isFetching } = useRecapsStore({ status: "done" }, true);
+    const { items, total, isFetching } = useRecapsStore({ status: "accepted" }, true);
     const { total: totalIntervalMonth, isFetching: isFetchingIntervalMonth } = useRecapsStore({
-        status: "done",
+        status: "accepted",
         month: month,
         year: year,
     });
     const { total: totalIntervalDay, isFetching: isFetchingItervalDay } = useRecapsStore({
-        status: "done",
+        status: "accepted",
         start_date: new Date().toISOString().split('T')[0],
         end_date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0],
     })
