@@ -24,7 +24,7 @@ const OrderOwnerStatusCard = () => {
     const { total: totalIntervalDay, isFetching: isFetchingItervalDay } = useRecapsStore({
         status: "done",
         start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date().toISOString().split('T')[0],
+        end_date: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0],
     })
 
     return (
