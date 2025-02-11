@@ -48,7 +48,7 @@ export const columns: ColumnDef<IItems>[] = [
                     ) : (
                         ""
                     )}
-                    {!commission && fleet ? "Rp 0" : ""}
+                    {commission == 0 && fleet ? "Rp 0" : ""}
                 </span>
             );
         },
