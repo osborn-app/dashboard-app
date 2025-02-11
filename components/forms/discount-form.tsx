@@ -26,8 +26,8 @@ const { RangePicker } = DatePicker;
 const formSchema = z.object({
     discount: z.coerce.number().min(1, { message: "Discount minimal is from 1" }).max(100, { message: "Discount must be between 0 and 100" }),
     range_date: z.tuple([z.any(), z.any()]),
-    location_id: z.string().min(0).optional(),
-    fleet_type: z.string().min(0).optional()
+    location_id: z.coerce.number().min(0),
+    fleet_type: z.string().optional()
 })
 
 type DiscountFormValues = z.infer<typeof formSchema>;
@@ -83,7 +83,7 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
             discount: initialData?.discount,
             start_date: new Date(initialData?.start_date),
             end_date: new Date(initialData?.end_date),
-            location_id: initialData?.location?.id?.toString(),
+            location_id: initialData?.location?.id,
             fleet_type: initialData?.fleet?.id?.toString(),
 
         }
@@ -91,11 +91,11 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
             discount: 0,
             start_date: "",
             end_date: "",
-            location_id: "",
+            location_id: undefined,
             fleet_type: "all",
         }
 
-        
+
     const form = useForm<DiscountFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues,
@@ -108,7 +108,7 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
             fetchNextLocations();
         }
     };
-  
+
     const disabledDate = (current: Dayjs | null): boolean => {
         if (lastPath === "edit") return false;
         return current ? current < dayjs().startOf("day") : false;;
@@ -120,7 +120,7 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
             discount: data?.discount,
             start_date: new Date(data?.range_date[0]).toISOString(),
             end_date: new Date(data?.range_date[1]).toISOString(),
-            location_id: parseInt(data?.location_id as string),
+            location_id: data?.location_id,
             fleet_type: data?.fleet_type as string
         }
 
@@ -237,9 +237,9 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
                                             >
                                                 {isEdit && (
                                                     <Option
-                                                        value={initialData?.location?.id?.toString()}
+                                                        value={initialData?.location?.id ? initialData?.location?.id.toString() : "0"}
                                                     >
-                                                        {initialData?.location?.name}
+                                                        {initialData?.location?.name ?? "Pilih Lokasi"}
                                                     </Option>
                                                 )}
                                                 {locations?.pages.map((page: any, pageIndex: any) =>
@@ -262,6 +262,7 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
                                                 )}
                                             </AntdSelect>
                                         </FormControl>
+                                        <FormMessage />
                                     </Space>
                                 );
                             }}
