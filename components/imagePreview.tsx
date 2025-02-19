@@ -2,7 +2,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 
-const ImagePreview = ({ url, title = "Bukti Transaksi" }) => {
+interface ImagePreviewProps {
+  url: string;
+  title?: string;
+}
+
+const ImagePreview: React.FC<ImagePreviewProps> = ({ url, title = "Bukti Transaksi" }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
 
