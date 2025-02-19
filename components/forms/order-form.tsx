@@ -1642,10 +1642,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
           {openDriverDetail && !isFetchingDriver && (
             <DriverDetail
-              innerRef={detailRef}
-              data={driver?.data}
-              onClose={() => setOpenDriverDetail(false)}
-            />
+            innerRef={detailRef}
+            data={driver?.data}
+            onClose={() => setOpenDriverDetail(false)}
+            initialData={driver?.data || null} // Gunakan data yang ada atau null jika kosong
+            confirmLoading={false} 
+            handleOpenApprovalModal={() => {}} // Hindari throw error
+            handleOpenRejectModal={() => {}} // Hindari throw error
+          />
           )}
 
           {!openCustomerDetail && !openFleetDetail && !openDriverDetail && (
