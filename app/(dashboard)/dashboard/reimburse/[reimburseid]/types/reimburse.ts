@@ -27,22 +27,3 @@ export enum ReimburseStatus {
   CONFIRMED = "confirmed",
   DONE = "done",
 }
-
-export enum PaymentStatus {
-  PENDING = "pending",
-  DONE = "done",
-  FAILED = "failed",
-}
-
-// export function getPaymentStatusLabel(status: string): string {
-//   switch (status) {
-//     case PaymentStatus.PENDING:
-//       return "Pending";
-//     case PaymentStatus.DONE:
-//       return "Berhasil DiBayar";
-//     case PaymentStatus.FAILED:
-//       return "Gagal DiBayar";
-//     default:
-//       return "";
-//   }
-// }

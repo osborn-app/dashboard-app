@@ -1,9 +1,4 @@
 "use client";
-import {
-  getPaymentStatusLabel,
-  getStatusVariant,
-  ReimburseStatus,
-} from "@/app/(dashboard)/dashboard/reimburse/[reimburseid]/types/reimburse";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Form,
@@ -1168,10 +1163,10 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
           <DriverDetail
             innerRef={detailRef}
             data={driverData?.data}
-            initialData={initialData}
             handleOpenApprovalModal={() => setOpenApprovalModal(true)}
             handleOpenRejectModal={() => setOpenRejectModal(true)}
             confirmLoading={loading}
+            initialData={initialData}
             type={lastPath}
             onClose={() => setOpenDriverDetail(false)}
           />
