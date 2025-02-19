@@ -149,7 +149,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         noRekening: initialData?.noRekening || "", // Nomor rekening
         date: initialData?.date || "", // Tanggal reimburse
         description: initialData?.description || "", // Keterangan tambahan
-        transaction_proof_url: initialData?.transactionProofUrl || "", // Kolom dari formSchema
+        transaction_proof_url: initialData?.transactionProofUrl || null,
+        transfer_proof_url: initialData?.transferProofUrl || null,
       }
     : {
         driver: "", // Nama driver kosong
@@ -159,7 +160,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         noRekening: "", // Nomor rekening kosong
         date: "", // Tanggal kosong
         description: "", // Keterangan kosong
-        transaction_proof_url: "", // Kolom dari formSchema
+        transaction_proof_url: null,
+        transfer_proof_url: null,
       };
 
   const form = useForm<ReimburseFormValues>({
@@ -172,6 +174,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const bankNameField = form.watch("bank"); // Nama bank
   const locationField = form.watch("location"); // Lokasi reimburse
   const transactionProofUrlField = form.watch("transaction_proof_url"); // Lokasi reimburse
+  // const transferProofUrlField = form.watch("transfer_proof_url"); // Lokasi reimburse
   const accountNumberField = form.watch("noRekening"); // Nomor rekening
   const dateField = form.watch("date"); // Tanggal reimburse
   const descriptionField = form.watch("description"); // Keterangan tambahan (opsional)
@@ -195,16 +198,32 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const onSubmit = async (data: ReimburseFormValues) => {
     setLoading(true);
 
-    const createPayload = (data: ReimburseFormValues) => ({
-      driver_id: data.driver, // Menggunakan nama driver
-      nominal: data.nominal, // Mengubah nominal ke number, menghapus koma jika ada
-      bank: data.bank, // Nama bank
-      location_id: data.location, // Lokasi reimburse
-      noRekening: data.noRekening, // Nomor rekening
-      transaction_proof_url: data.transaction_proof_url, // URL bukti transaksi
-      date: data.date, // Format tanggal (YYYY-MM-DD)
-      description: data.description || "", // Keterangan opsional
-    });
+    const createPayload = (data: ReimburseFormValues) => {
+      const basedPayload = {
+        driver_id: data.driver, // Menggunakan nama driver
+        nominal: data.nominal, // Mengubah nominal ke number, menghapus koma jika ada
+        bank: data.bank, // Nama bank
+        location_id: data.location, // Lokasi reimburse
+        noRekening: data.noRekening, // Nomor rekening
+        date: data.date, // Format tanggal (YYYY-MM-DD)
+        description: data.description || "", // Keterangan opsional
+      };
+
+      const fileFields = {
+        ...(data.transaction_proof_url && {
+          transaction_proof_url: data.transaction_proof_url,
+        }),
+        ...(data.transfer_proof_url && {
+          transfer_proof_url: data.transfer_proof_url,
+        }),
+      };
+
+      // 3. Menggabungkan basePayload dan fileFields
+      return {
+        ...basedPayload,
+        ...fileFields,
+      };
+    };
 
     console.log(createPayload(data));
 
@@ -296,19 +315,12 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         : nominalField,
       location_id: locationField, // Lokasi reimburse
       transaction_proof_url: transactionProofUrlField,
+
       bank: bankNameField, // Nama bank
       noRekening: accountNumberField, // Nomor rekening
       date: dateField, // Tanggal reimburse (format: YYYY-MM-DD)
       description: descriptionField || "",
     };
-
-    // if (driverNameField) {
-    //   createReimburse(payload, {
-    //     onSuccess: (data) => {
-    //       setOpenDriverDetail(data.data);
-    //     },
-    //   });
-    // }
   }, [
     transactionProofUrlField,
     driverNameField,
@@ -387,6 +399,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         transactionProofUrlField,
         defaultValues?.transaction_proof_url,
       ), // Lokasi Reimburse
+
       bank: generateMessage(bankNameField, defaultValues?.bank), // Nama Bank
       noRekening: generateMessage(
         accountNumberField,
@@ -414,13 +427,14 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
 
   const approvalModalTitle =
     lastPath === "edit"
-      ? "Apakah Anda Yakin Ingin Mengedit reimburse ini?"
-      : "Apakah Anda Yakin Ingin Mengonfirmasi Reimburse ini?";
+      ? "Apakah Anda Yakin Ingin Mengedit Pesanan ini?"
+      : "Apakah Anda Yakin Ingin Mengonfirmasi Pesanan ini?";
 
   return (
     <>
       {openApprovalModal && (
         <ApprovalModal
+          heading="reimburse"
           isOpen={openApprovalModal}
           onClose={() => setOpenApprovalModal(false)}
           onConfirm={form.handleSubmit(onSubmit)}
@@ -442,7 +456,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       >
         <Heading title={title} description={description} />
         {initialData?.status !== "pending" &&
-          initialData?.request_status === "pending" &&
+          initialData?.status === "pending" &&
           lastPath !== "pending" && (
             <div className="flex gap-2">
               {lastPath === "edit" && (
@@ -486,16 +500,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
               )}
 
               <div className="flex justify-between gap-3.5">
-                {initialData?.reimburse_status != ReimburseStatus.PENDING && (
-                  <div
-                    className={cn(
-                      getStatusVariant(initialData?.payment_status),
-                      "text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center",
-                    )}
-                  >
-                    {getPaymentStatusLabel(initialData?.payment_status)}
-                  </div>
-                )}
                 <div className="bg-red-50 text-red-500 text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center">
                   Belum kembali
                 </div>
@@ -539,16 +543,16 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
               </Link>
             )}
             <div className="flex justify-between gap-3.5">
-              {initialData?.payment_status !== ReimburseStatus.PENDING && (
+              {/* {initialData?.status !== ReimburseStatus.PENDING && (
                 <div
                   className={cn(
-                    getStatusVariant(initialData?.payment_status),
+                    getStatusVariant(initialData?.status),
                     "text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center",
                   )}
                 >
-                  {getPaymentStatusLabel(initialData?.payment_status)}
+                  {getPaymentStatusLabel(initialData?.status)}
                 </div>
-              )}
+              )} */}
               <div className="bg-green-50 text-green-500 text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center">
                 Selesai
               </div>
@@ -572,7 +576,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
             className="space-y-8 w-full basis-2/3"
           >
             <div className="relative space-y-8" id="parent">
-              <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
+              <div className={cn("lg:grid grid-cols-3 gap-[10px] items-start")}>
                 <div className="flex items-end">
                   {lastPath !== "preview" && isEdit ? (
                     <FormField
@@ -666,35 +670,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             value={initialData?.driver?.name ?? "-"}
                           />
                         </FormControl>
-                        {/* <Button
-                          className={cn(
-                            buttonVariants({ variant: "main" }),
-                            "w-[65px] h-[40px]",
-                          )}
-                          disabled={
-                            !form.getFieldState("driver").isDirty &&
-                            isEmpty(form.getValues("driver"))
-                          }
-                          type="button"
-                          onClick={() => {
-                            setOpenDriverDetail(true);
-                            scrollDetail();
-                          }}
-                        >
-                          {initialData?.driver?.status == "pending"
-                            ? "Tinjau"
-                            : "Lihat"}
-                        </Button> */}
                       </div>
-                      {initialData?.driver?.status == "pending" && (
-                        <p
-                          className={cn(
-                            "text-[0.8rem] font-medium text-destructive",
-                          )}
-                        >
-                          Pengemudi belum verified
-                        </p>
-                      )}
                     </FormItem>
                   )}
                 </div>
@@ -754,8 +730,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                     </FormItem>
                   )}
                 </div>
-              </div>
-              <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
                 <div className="flex items-end">
                   {isEdit ? (
                     <FormField
@@ -765,61 +739,40 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                         return (
                           <div className="space-y-2 w-full">
                             <FormLabel className="relative label-required">
-                              Nama Bank
+                              Nama Bank / Pembayaran
                             </FormLabel>
                             <div className="flex">
                               <FormControl>
                                 <AntdSelect
                                   className={cn("mr-2 w-full")}
                                   showSearch
-                                  // mode="tags"
+                                  mode="tags" // Aktifkan kembali mode tags untuk input manual
+                                  maxTagCount={1} // Batasi hanya 1 tag yang ditampilkan
                                   disabled={lastPath === "preview"}
-                                  value={initialData?.bank}
+                                  value={field.value || initialData?.bank}
                                   placeholder="Nama Bank..."
-                                  onChange={field.onChange}
+                                  onChange={(value) => {
+                                    // Ambil nilai terakhir jika ada multiple values
+                                    const lastValue = Array.isArray(value)
+                                      ? value[value.length - 1]
+                                      : value;
+                                    field.onChange(lastValue);
+                                  }}
                                   style={{
                                     height: "40px",
                                   }}
-                                  filterOption={false}
-                                  // notFoundContent={
-                                  //   isFetchingNextDrivers ? (
-                                  //     <p className="px-3 text-sm">loading</p>
-                                  //   ) : null
-                                  // }
-                                  // append value attribute when field is not  empty
-                                  {...(!isEmpty(field.value) && {
-                                    value: field.value,
-                                  })}
                                 >
-                                  {lastPath !== "create" && isEdit && (
-                                    <>
-                                      {/* {banks.map((bank) => (
-                                        <Option key={bank} value={bank}>
-                                          {bank}
-                                        </Option>
-                                      ))} */}
-                                      <Option value="BCA">BCA</Option>
-                                      <Option value="BRI">BRI</Option>
-                                      <Option value="BNI">BNI</Option>
-                                      <Option value="MANDIRI">MANDIRI</Option>
-                                      <Option value="DKI">DKI</Option>
-                                    </>
-                                  )}
-
-                                  {lastPath === "create" && (
-                                    <>
-                                      {/* {banks.map((bank) => (
-                                        <Option key={bank} value={bank}>
-                                          {bank}
-                                        </Option>
-                                      ))} */}
-                                      <Option value="BCA">BCA</Option>
-                                      <Option value="BRI">BRI</Option>
-                                      <Option value="BNI">BNI</Option>
-                                      <Option value="MANDIRI">MANDIRI</Option>
-                                      <Option value="DKI">DKI</Option>
-                                    </>
-                                  )}
+                                  {[
+                                    { value: "BCA", label: "BCA" },
+                                    { value: "BRI", label: "BRI" },
+                                    { value: "BNI", label: "BNI" },
+                                    { value: "MANDIRI", label: "MANDIRI" },
+                                    { value: "DKI", label: "DKI" },
+                                  ].map((bank) => (
+                                    <Option key={bank.value} value={bank.value}>
+                                      {bank.label}
+                                    </Option>
+                                  ))}
                                 </AntdSelect>
                               </FormControl>
                             </div>
@@ -837,7 +790,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             : "",
                         )}
                       >
-                        Nama Bank
+                        Nama Bank / Pembayaran
                       </FormLabel>
                       <div className="flex">
                         {" "}
@@ -848,13 +801,15 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                               height: "40px",
                             }}
                             // disabled
-                            // value={initialData?.bank}
+                            value={initialData?.bank}
                           />
                         </FormControl>
                       </div>
                     </FormItem>
                   )}
                 </div>
+              </div>
+              <div className={cn("lg:grid grid-cols-3 gap-[10px] items-start")}>
                 <div className="flex items-end">
                   {lastPath !== "preview" && isEdit ? (
                     <FormField
@@ -951,8 +906,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                     </FormItem>
                   )}
                 </div>
-              </div>
-              <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
                 <div className="flex items-end">
                   {isEdit ? (
                     <FormField
@@ -1064,7 +1017,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                       name="noRekening"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>No. Rekening</FormLabel>
+                          <FormLabel>No. Rekening / No. Pembayaran</FormLabel>
                           <FormControl className="disabled:opacity-100">
                             <Input
                               disabled={lastPath === "preview"}
@@ -1083,7 +1036,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                   )}
                 </div>
               </div>
-              <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
+              <div className={cn("lg:grid grid-cols-3 gap-[10px] items-start")}>
                 <div className="flex items-end">
                   {!isEdit ? (
                     <FormItem>
@@ -1131,63 +1084,79 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                     />
                   )}
                 </div>
-                <div className="flex items-end">
-                  {isEdit ? (
-                    <FormField
-                      control={form.control}
-                      name="transaction_proof_url"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="relative label-required">
-                            Bukti Transaction
-                          </FormLabel>
-                          <FormControl className="disabled:opacity-100">
-                            <>
+                <div className="flex items-end ml-[3px]">
+                  <FormField
+                    control={form.control}
+                    name="transaction_proof_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="relative label-required">
+                          Bukti Transaksi
+                        </FormLabel>
+                        <FormControl className="disabled:opacity-100">
+                          <>
+                            {lastPath !== "edit" && lastPath !== "detail" && (
                               <UploadFile
+                                initialData={initialData}
                                 lastPath={lastPath}
                                 form={form}
                                 name="transaction_proof_url"
                               />
-                              {lastPath === "preview" || lastPath === "edit" ? (
+                            )}
+                            {lastPath !== "create" && (
+                              <div className="p-2 ml-3 relative border-opacity-25 border-gray-800 border border-dashed -ml-[5px] gap-2  md:h-[200px]   md:w-[300px] :w-[500px] h-[300px] flex flex-col justify-center items-center">
                                 <img
                                   width={500}
+                                  className="object-cover w-full h-full "
                                   height={300}
                                   src={initialData?.transactionProofUrl ?? ""}
                                 />
-                              ) : (
-                                ""
-                              )}
+                              </div>
+                            )}
+                          </>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                {/* <div className="flex items-center ml-[5px]">
+                  {lastPath !== "create" && lastPath !== "preview" && (
+                    <FormField
+                      control={form.control}
+                      name="transfer_proof_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="relative label-required">
+                            Bukti Transfer
+                          </FormLabel>
+                          <FormControl className="disabled:opacity-100">
+                            <>
+                              <UploadFile
+                                initialData={initialData}
+                                lastPath={lastPath}
+                                form={form}
+                                name="transfer_proof_url"
+                              />
+                              {lastPath !== "create" &&
+                                lastPath !== "preview" && (
+                                  <div className="p-2 ml-3 relative border-opacity-25 border-gray-800 border border-dashed -ml-[5px] gap-2  md:h-[200px]   md:w-[300px] :w-[500px] h-[300px] flex flex-col justify-center items-center">
+                                    <img
+                                      width={500}
+                                      height={300}
+                                      style={{ border: "none" }}
+                                      src={initialData?.transferProofUrl ?? ""}
+                                    />
+                                  </div>
+                                )}
                             </>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  ) : (
-                    <FormItem>
-                      <FormLabel className="relative label-required">
-                        Bukti Transfer
-                      </FormLabel>
-                      <FormControl className="disabled:opacity-100">
-                        <>
-                          <UploadFile
-                            lastPath={lastPath}
-                            form={form}
-                            name="transaction_proof_url"
-                          />
-                          {lastPath === "preview" && (
-                            <img
-                              width={500}
-                              height={300}
-                              src={initialData?.transactionProofUrl ?? ""}
-                            />
-                          )}
-                        </>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
                   )}
-                </div>
+                </div> */}
               </div>
 
               <Separator className={cn("mt-1")} />

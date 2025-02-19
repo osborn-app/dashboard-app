@@ -1,6 +1,5 @@
 "use client";
 import { AlertModal } from "@/components/modal/alert-modal";
-import { AlertForceModal } from "@/components/modal/alertforce-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,7 +25,6 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const [force, setForce] = useState(false);
   const { user } = useUser();
   const router = useRouter();
   const id = data?.id;

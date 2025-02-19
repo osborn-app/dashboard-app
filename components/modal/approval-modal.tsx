@@ -17,6 +17,7 @@ interface ModalProps {
   loading?: boolean;
   onConfirm: () => void;
   title: string;
+  heading: string;
 }
 
 export const ApprovalModal: React.FC<ModalProps> = ({
@@ -25,6 +26,7 @@ export const ApprovalModal: React.FC<ModalProps> = ({
   loading,
   onConfirm,
   title,
+  heading,
 }) => {
   const [checked, setChecked] = useState<boolean>(true);
   const onChange = (open: boolean) => {
@@ -39,8 +41,8 @@ export const ApprovalModal: React.FC<ModalProps> = ({
         <DialogHeader>
           <DialogTitle className="text-left">{title}</DialogTitle>
           <DialogDescription className="text-left">
-            Konfirmasi pesanan akan otomatis membuat Invoice, mohon pastikan
-            data pesanan yang diinput telah benar sepenuhnya
+            Konfirmasi {heading} akan otomatis membuat Invoice, mohon pastikan
+            data {heading} yang diinput telah benar sepenuhnya
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2">
@@ -78,7 +80,11 @@ export const ApprovalModal: React.FC<ModalProps> = ({
               onConfirm();
             }}
           >
-            {loading ? <Spinner className="h-5 w-5" /> : "Konfirmasi Pesanan"}
+            {loading ? (
+              <Spinner className="h-5 w-5" />
+            ) : (
+              `Konfirmasi ${heading}`
+            )}
           </Button>
         </div>
       </DialogContent>

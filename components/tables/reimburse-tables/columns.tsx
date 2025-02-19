@@ -13,10 +13,7 @@ import {
 } from "@/components/ui/hover-card";
 import { CalendarDays, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import {
-  getPaymentStatusLabel,
-  getStatusVariant,
-} from "@/app/(dashboard)/dashboard/reimburse/[reimburseid]/types/reimburse";
+
 import { CellAction } from "./cell-action";
 
 const duration = require("dayjs/plugin/duration");
@@ -39,7 +36,7 @@ export const pendingColumns: ColumnDef<any>[] = [
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Nominal</span>
     ),
-    cell: ({ row }) => <span>{row.original?.nominal}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original?.nominal)}</span>,
     enableSorting: false,
   },
   {
@@ -54,7 +51,9 @@ export const pendingColumns: ColumnDef<any>[] = [
     accessorKey: "noRekening",
 
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">No.Rek</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        No.Rek / No. Pembayaran
+      </span>
     ),
     cell: ({ row }) => <span>{row.original?.noRekening}</span>,
     enableSorting: false,
@@ -98,7 +97,9 @@ export const pendingColumns: ColumnDef<any>[] = [
   {
     accessorKey: "bank",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Nama Bank</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        Nama Bank / Pembayaran
+      </span>
     ),
     cell: ({ row }) => <span>{row.original?.bank}</span>,
     enableSorting: false,
@@ -141,7 +142,7 @@ export const rejectedColumns: ColumnDef<any>[] = [
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Nominal</span>
     ),
-    cell: ({ row }) => <span>{row.original?.nominal}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original?.nominal)}</span>,
     enableSorting: false,
   },
   {
@@ -157,7 +158,9 @@ export const rejectedColumns: ColumnDef<any>[] = [
     accessorKey: "noRekening",
 
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">No.Rek</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        No.Rek / No. Pembayaran
+      </span>
     ),
     cell: ({ row }) => <span>{row.original?.noRekening}</span>,
     enableSorting: false,
@@ -201,7 +204,9 @@ export const rejectedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "bank",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Nama Bank</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        Nama Bank / Pembayaran
+      </span>
     ),
     cell: ({ row }) => <span>{row.original?.bank}</span>,
     enableSorting: false,
@@ -215,9 +220,21 @@ export const rejectedColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "rejection_reason",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Alasan Ditolak
+      </span>
+    ),
+    cell: ({ row }) => <span>{row.original?.rejection_reason}</span>,
+    enableSorting: false,
+  },
+  {
     accessorKey: "status",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Status</span>
+      <span className="text-sm ml-3 font-semibold text-neutral-700">
+        Status
+      </span>
     ),
     cell: ({ row }) => (
       <span className="bg-red-50 text-red-500 text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center">
@@ -250,7 +267,7 @@ export const confirmedColumns: ColumnDef<any>[] = [
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Nominal</span>
     ),
-    cell: ({ row }) => <span>{row.original?.nominal}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original?.nominal)}</span>,
     enableSorting: false,
   },
   {
@@ -266,7 +283,9 @@ export const confirmedColumns: ColumnDef<any>[] = [
     accessorKey: "noRekening",
 
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">No.Rek</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        No.Rek / No. Pembayaran
+      </span>
     ),
     cell: ({ row }) => <span>{row.original?.noRekening}</span>,
     enableSorting: false,
@@ -310,7 +329,9 @@ export const confirmedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "bank",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Nama Bank</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        Nama Bank / Pembayaran
+      </span>
     ),
     cell: ({ row }) => <span>{row.original?.bank}</span>,
     enableSorting: false,
@@ -346,7 +367,7 @@ export const completedColumns: ColumnDef<any>[] = [
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Nominal</span>
     ),
-    cell: ({ row }) => <span>{row.original?.nominal}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original?.nominal)}</span>,
     enableSorting: false,
   },
   {
@@ -362,7 +383,9 @@ export const completedColumns: ColumnDef<any>[] = [
     accessorKey: "noRekening",
 
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">No.Rek</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        No.Rek / No. Pembayaran
+      </span>
     ),
     cell: ({ row }) => <span>{row.original?.noRekening}</span>,
     enableSorting: false,
@@ -406,7 +429,9 @@ export const completedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "bank",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Nama Bank</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        Nama Bank / Pembayaran
+      </span>
     ),
     cell: ({ row }) => <span>{row.original?.bank}</span>,
     enableSorting: false,
@@ -422,10 +447,12 @@ export const completedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "status",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Status</span>
+      <span className="text-sm ml-3 font-semibold text-neutral-700">
+        Status
+      </span>
     ),
     cell: ({ row }) => (
-      <span className="bg-red-50 text-green-500 text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center">
+      <span className="bg-green-50 text-green-500 text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center">
         {row.original?.status}
       </span>
     ),

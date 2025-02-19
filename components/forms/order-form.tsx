@@ -671,6 +671,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     <>
       {openApprovalModal && (
         <ApprovalModal
+          heading="pesanan"
           isOpen={openApprovalModal}
           onClose={() => setOpenApprovalModal(false)}
           onConfirm={form.handleSubmit(onSubmit)}
@@ -1642,14 +1643,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
           {openDriverDetail && !isFetchingDriver && (
             <DriverDetail
-            innerRef={detailRef}
-            data={driver?.data}
-            onClose={() => setOpenDriverDetail(false)}
-            initialData={driver?.data || null} // Gunakan data yang ada atau null jika kosong
-            confirmLoading={false} 
-            handleOpenApprovalModal={() => {}} // Hindari throw error
-            handleOpenRejectModal={() => {}} // Hindari throw error
-          />
+              innerRef={detailRef}
+              data={driver?.data}
+              onClose={() => setOpenDriverDetail(false)}
+            />
           )}
 
           {!openCustomerDetail && !openFleetDetail && !openDriverDetail && (

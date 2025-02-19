@@ -34,15 +34,15 @@ export enum PaymentStatus {
   FAILED = "failed",
 }
 
-export function getPaymentStatusLabel(payment_status: string): string {
-  switch (payment_status) {
-    case PaymentStatus.PENDING:
-      return "Pending";
-    case PaymentStatus.DONE:
-      return "Berhasil DiBayar";
-    case PaymentStatus.FAILED:
-      return "Gagal DiBayar";
-    default:
-      return "";
-  }
-}
+// export function getPaymentStatusLabel(status: string): string {
+//   switch (status) {
+//     case PaymentStatus.PENDING:
+//       return "Pending";
+//     case PaymentStatus.DONE:
+//       return "Berhasil DiBayar";
+//     case PaymentStatus.FAILED:
+//       return "Gagal DiBayar";
+//     default:
+//       return "";
+//   }
+// }

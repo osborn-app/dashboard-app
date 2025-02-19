@@ -15,7 +15,11 @@ export const formSchema = z.object({
     .number()
     .min(1, { message: "Tolong masukkan nominal anda" }),
   bank: z.string().min(1, { message: "Tolong masukkan nama bank" }),
-  transaction_proof_url: z.string().url("URL bukti transaksi tidak valid"),
+  transaction_proof_url: z
+    .string()
+    .url("URL bukti transaksi tidak valid")
+    .optional()
+    .nullable(),
   noRekening: z
     .string()
     .min(5, { message: "Tolong masukkan nomor rekening anda" }),
@@ -30,7 +34,11 @@ export const editSchema = z.object({
     .number()
     .min(1, { message: "Tolong masukkan nominal anda" }),
   bank: z.string().min(1, { message: "Tolong masukkan nama bank" }),
-  transaction_proof_url: z.string().url("URL bukti transaksi tidak valid"),
+  transfer_proof_url: z
+    .string()
+    .url("URL bukti transfer tidak valid")
+    .optional()
+    .nullable(),
   noRekening: z
     .string()
     .min(5, { message: "Tolong masukkan nomor rekening anda" }),
