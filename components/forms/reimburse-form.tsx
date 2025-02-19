@@ -414,8 +414,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
 
   const approvalModalTitle =
     lastPath === "edit"
-      ? "Apakah Anda Yakin Ingin Mengedit Pesanan ini?"
-      : "Apakah Anda Yakin Ingin Mengonfirmasi Pesanan ini?";
+      ? "Apakah Anda Yakin Ingin Mengedit Reimburse ini?"
+      : "Apakah Anda Yakin Ingin Mengonfirmasi Reimburse ini?";
 
   return (
     <>
