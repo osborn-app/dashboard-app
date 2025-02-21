@@ -1,4 +1,5 @@
 "use client";
+import { ReimburseStatus } from "@/app/(dashboard)/dashboard/reimburse/[reimburseid]/types/reimburse";
 import { AlertModal } from "@/components/modal/alert-modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,14 +80,16 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/dashboard/reimburse/${data?.id}/edit`);
-              }}
-            >
-              <Edit className="mr-2 h-4 w-4" /> Edit
-            </DropdownMenuItem>
+            {data?.status !== "rejected" && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/dashboard/reimburse/${data?.id}/edit`);
+                }}
+              >
+                <Edit className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               className="text-red-500"
               onClick={(e) => {

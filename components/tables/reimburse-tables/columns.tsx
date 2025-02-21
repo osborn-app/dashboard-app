@@ -40,6 +40,14 @@ export const pendingColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "fleet",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">Nama Fleet</span>
+    ),
+    cell: ({ row }) => <span>{row.original?.fleet?.name}</span>,
+    enableSorting: false,
+  },
+  {
     accessorKey: "location",
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Lokasi</span>
@@ -143,6 +151,14 @@ export const rejectedColumns: ColumnDef<any>[] = [
       <span className="text-sm font-semibold text-neutral-700">Nominal</span>
     ),
     cell: ({ row }) => <span>{formatRupiah(row.original?.nominal)}</span>,
+    enableSorting: false,
+  },
+  {
+    accessorKey: "fleet",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">Nama Fleet</span>
+    ),
+    cell: ({ row }) => <span>{row.original?.fleet?.name}</span>,
     enableSorting: false,
   },
   {
@@ -271,6 +287,14 @@ export const confirmedColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "fleet",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">Nama Fleet</span>
+    ),
+    cell: ({ row }) => <span>{row.original?.fleet?.name}</span>,
+    enableSorting: false,
+  },
+  {
     accessorKey: "location",
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Lokasi</span>
@@ -368,6 +392,14 @@ export const completedColumns: ColumnDef<any>[] = [
       <span className="text-sm font-semibold text-neutral-700">Nominal</span>
     ),
     cell: ({ row }) => <span>{formatRupiah(row.original?.nominal)}</span>,
+    enableSorting: false,
+  },
+  {
+    accessorKey: "fleet",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">Nama Fleet</span>
+    ),
+    cell: ({ row }) => <span>{row.original?.fleet?.name}</span>,
     enableSorting: false,
   },
   {

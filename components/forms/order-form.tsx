@@ -1646,11 +1646,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               innerRef={detailRef}
               data={driver?.data}
               onClose={() => setOpenDriverDetail(false)}
-              handleOpenApprovalModal={() => setOpenApprovalModal(true)}
-              handleOpenRejectModal={() => setOpenRejectModal(true)}
-              confirmLoading={loading}
-              initialData={initialData}
-              type={lastPath}
             />
           )}
 

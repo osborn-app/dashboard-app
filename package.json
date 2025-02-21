@@ -44,6 +44,7 @@
     "antd": "^5.20.0",
     "autoprefixer": "10.4.15",
     "axios": "^1.7.3",
+    "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.0",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",

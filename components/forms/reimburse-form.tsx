@@ -44,13 +44,14 @@ import { RejectModal } from "../modal/reject-modal";
 import Spinner from "../spinner";
 import { Textarea } from "../ui/textarea";
 import { useToast } from "../ui/use-toast";
-import DriverDetail from "./section/driver-detail";
 import { ReimburseFormProps, ReimburseFormValues } from "./types/reimburse";
 import { generateSchema } from "./validation/orderSchema";
 import { editSchema, formSchema } from "./validation/reimburseSchema";
 
 import ImagePreview from "../imagePreview";
 import UploadFile from "../uploud-file";
+import { useGetInfinityFleets } from "@/hooks/api/useFleet";
+import DriverReimburseDetail from "./section/driverReimburse-detail";
 // import "@uploadthing/react/styles.css";
 
 export const IMG_MAX_LIMIT = 3;
@@ -96,8 +97,10 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const { mutate: rejectReimburse } = useRejectReimburse();
   const [searchLocation, setSearchLocation] = useState("");
   const [searchDriverTerm, setSearchDriverTerm] = useState("");
+  const [searchFleetTerm, setSearchFleetTerm] = useState("");
   // const [searchLocationTerm, setSearchLocationTerm] = useState("");
   const [searchDriverDebounce] = useDebounce(searchDriverTerm, 500);
+  const [searchFleetDebounce] = useDebounce(searchFleetTerm, 500);
   const [searchLocationDebounce] = useDebounce(searchLocation, 500);
   // const [detail, setDetail] = useState<DriverDetail | null>(null);
   const [openApprovalModal, setOpenApprovalModal] = useState<boolean>(false);
@@ -138,6 +141,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const defaultValues = initialData
     ? {
         driver: initialData?.driver?.id?.toString(), // Mengambil nama driver
+        fleet: initialData?.fleet?.id?.toString(), // Mengambil nama driver
         nominal: initialData?.nominal?.toString() || "", // Nominal reimburse
         bank: initialData?.bank || "", // Nama bank
         location: initialData?.location?.id?.toString(), // Lokasi reimburse
@@ -149,6 +153,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       }
     : {
         driver: "", // Nama driver kosong
+        fleet: "", // Nama fleet kosong
         nominal: "", // Nominal default 0
         bank: "", // Nama bank kosong
         location: "", // Lokasi kosong
@@ -165,11 +170,12 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   });
   // Reimburse Fields
   const driverNameField = form.watch("driver"); // Nama driver
+  const fleetField = form.watch("fleet"); // Nama driver
   const nominalField = form.watch("nominal"); // Nominal/jumlah reimburse
   const bankNameField = form.watch("bank"); // Nama bank
   const locationField = form.watch("location"); // Lokasi reimburse
   const transactionProofUrlField = form.watch("transaction_proof_url"); // Lokasi reimburse
-  // const transferProofUrlField = form.watch("transfer_proof_url"); // Lokasi reimburse
+  const transferProofUrlField = form.watch("transfer_proof_url"); // Lokasi reimburse
   const accountNumberField = form.watch("noRekening"); // Nomor rekening
   const dateField = form.watch("date"); // Tanggal reimburse
   const descriptionField = form.watch("description"); // Keterangan tambahan (opsional)
@@ -196,6 +202,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     const createPayload = (data: ReimburseFormValues) => {
       const basedPayload = {
         driver_id: data.driver, // Menggunakan nama driver
+        fleet_id: data.fleet, // Menggunakan nama driver
         nominal: data.nominal, // Mengubah nominal ke number, menghapus koma jika ada
         bank: data.bank, // Nama bank
         location_id: data.location, // Lokasi reimburse
@@ -284,11 +291,23 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     hasNextPage: hasNextLocations,
     isFetchingNextPage: isFetchingNextLocations,
   } = useGetInfinityLocation(searchLocationDebounce);
+  const {
+    data: fleets,
+    fetchNextPage: fetchNextFleets,
+    hasNextPage: hasNextFleets,
+    isFetchingNextPage: isFetchingNextFleets,
+  } = useGetInfinityFleets(searchFleetDebounce);
 
   const handleScrollDrivers = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.target as HTMLDivElement;
     if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
       fetchNextDrivers();
+    }
+  };
+  const handleScrollFleets = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLDivElement;
+    if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+      fetchNextFleets();
     }
   };
 
@@ -305,18 +324,21 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   useEffect(() => {
     const payload = {
       driver_id: driverNameField, // Nama driver
+      fleet_id: fleetField, // Nama driver
       nominal: isString(nominalField) // Nominal/jumlah reimburse
         ? +nominalField
         : nominalField,
       location_id: locationField, // Lokasi reimburse
       transaction_proof_url: transactionProofUrlField,
-
+      transfer_proof_url: transferProofUrlField,
       bank: bankNameField, // Nama bank
       noRekening: accountNumberField, // Nomor rekening
       date: dateField, // Tanggal reimburse (format: YYYY-MM-DD)
       description: descriptionField || "",
     };
   }, [
+    fleetField,
+    transferProofUrlField,
     transactionProofUrlField,
     driverNameField,
     nominalField,
@@ -388,11 +410,16 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   useEffect(() => {
     const newMessages = {
       driver: generateMessage(driverNameField, defaultValues?.driver), // Nama Driver
+      fleet: generateMessage(driverNameField, defaultValues?.fleet), // Nama Driver
       nominal: generateMessage(nominalField, defaultValues?.nominal), // Nominal/Jumlah Reimburse
       location: generateMessage(locationField, defaultValues?.location), // Lokasi Reimburse
       transaction_proof_url: generateMessage(
         transactionProofUrlField,
         defaultValues?.transaction_proof_url,
+      ), // Lokasi Reimburse
+      transfer_proof_url: generateMessage(
+        transferProofUrlField,
+        defaultValues?.transfer_proof_url,
       ), // Lokasi Reimburse
 
       bank: generateMessage(bankNameField, defaultValues?.bank), // Nama Bank
@@ -410,6 +437,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       setMessages(newMessages);
     }
   }, [
+    fleetField,
+    transferProofUrlField,
     transactionProofUrlField,
     driverNameField,
     nominalField,
@@ -808,29 +837,29 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                 <div className="flex items-end">
                   {lastPath !== "preview" && isEdit ? (
                     <FormField
-                      name="location"
+                      name="fleet"
                       control={form.control}
                       render={({ field }) => {
                         return (
                           <div className="space-y-2 w-full">
                             <FormLabel className="relative label-required">
-                              Lokasi
+                              Pilih Unit
                             </FormLabel>
                             <div className="flex">
                               <FormControl>
                                 <AntdSelect
+                                  className={cn("mr-2 w-full")}
                                   showSearch
-                                  value={field.value}
-                                  placeholder="Pilih Lokasi"
-                                  style={{ width: "100%" }}
-                                  onSearch={setSearchLocation}
+                                  placeholder="Nama Pengemudi..."
+                                  style={{
+                                    height: "40px",
+                                  }}
+                                  onSearch={setSearchDriverTerm}
                                   onChange={field.onChange}
-                                  onPopupScroll={(event) =>
-                                    handleScroll(event, "location")
-                                  }
-                                  // filterOption={false}
+                                  onPopupScroll={handleScrollFleets}
+                                  filterOption={false}
                                   notFoundContent={
-                                    isFetchingNextLocations ? (
+                                    isFetchingNextFleets ? (
                                       <p className="px-3 text-sm">loading</p>
                                     ) : null
                                   }
@@ -841,12 +870,12 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                 >
                                   {lastPath !== "create" && isEdit && (
                                     <Option
-                                      value={initialData?.location?.id?.toString()}
+                                      value={initialData?.fleet?.id?.toString()}
                                     >
-                                      {initialData?.location?.name}
+                                      {initialData?.fleet?.name}
                                     </Option>
                                   )}
-                                  {locations?.pages.map(
+                                  {fleets?.pages.map(
                                     (page: any, pageIndex: any) =>
                                       page.data.items.map(
                                         (item: any, itemIndex: any) => {
@@ -861,7 +890,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                         },
                                       ),
                                   )}
-                                  {isFetchingNextLocations && (
+
+                                  {isFetchingNextFleets && (
                                     <Option disabled>
                                       <p className="px-3 text-sm">loading</p>
                                     </Option>
@@ -878,12 +908,12 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                     <FormItem>
                       <FormLabel
                         className={cn(
-                          initialData?.location?.status === "pending"
+                          initialData?.fleet?.status === "pending"
                             ? "text-destructive"
                             : "",
                         )}
                       >
-                        Lokasi
+                        Pilih Unit
                       </FormLabel>
                       <div className="flex">
                         {" "}
@@ -894,13 +924,14 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                               height: "40px",
                             }}
                             disabled
-                            value={initialData?.location?.name ?? "-"}
+                            value={initialData?.fleet.name ?? "-"}
                           />
                         </FormControl>
                       </div>
                     </FormItem>
                   )}
                 </div>
+
                 <div className="flex items-end">
                   {isEdit ? (
                     <FormField
@@ -1079,7 +1110,105 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                     />
                   )}
                 </div>
-                <div className="flex items-end ml-[3px]">
+                <div className="flex items-end">
+                  {lastPath !== "preview" && isEdit ? (
+                    <FormField
+                      name="location"
+                      control={form.control}
+                      render={({ field }) => {
+                        return (
+                          <div className="space-y-2 w-full">
+                            <FormLabel className="relative label-required">
+                              Lokasi
+                            </FormLabel>
+                            <div className="flex">
+                              <FormControl>
+                                <AntdSelect
+                                  showSearch
+                                  value={field.value}
+                                  placeholder="Pilih Lokasi"
+                                  style={{ width: "100%" }}
+                                  onSearch={setSearchLocation}
+                                  onChange={field.onChange}
+                                  onPopupScroll={(event) =>
+                                    handleScroll(event, "location")
+                                  }
+                                  // filterOption={false}
+                                  notFoundContent={
+                                    isFetchingNextLocations ? (
+                                      <p className="px-3 text-sm">loading</p>
+                                    ) : null
+                                  }
+                                  // append value attribute when field is not  empty
+                                  {...(!isEmpty(field.value) && {
+                                    value: field.value,
+                                  })}
+                                >
+                                  {lastPath !== "create" && isEdit && (
+                                    <Option
+                                      value={initialData?.location?.id?.toString()}
+                                    >
+                                      {initialData?.location?.name}
+                                    </Option>
+                                  )}
+                                  {locations?.pages.map(
+                                    (page: any, pageIndex: any) =>
+                                      page.data.items.map(
+                                        (item: any, itemIndex: any) => {
+                                          return (
+                                            <Option
+                                              key={item.id}
+                                              value={item.id.toString()}
+                                            >
+                                              {item.name}
+                                            </Option>
+                                          );
+                                        },
+                                      ),
+                                  )}
+                                  {isFetchingNextLocations && (
+                                    <Option disabled>
+                                      <p className="px-3 text-sm">loading</p>
+                                    </Option>
+                                  )}
+                                </AntdSelect>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </div>
+                        );
+                      }}
+                    />
+                  ) : (
+                    <FormItem>
+                      <FormLabel
+                        className={cn(
+                          initialData?.location?.status === "pending"
+                            ? "text-destructive"
+                            : "",
+                        )}
+                      >
+                        Lokasi
+                      </FormLabel>
+                      <div className="flex">
+                        {" "}
+                        <FormControl className="disabled:opacity-100">
+                          <Input
+                            className={cn("mr-2")}
+                            style={{
+                              height: "40px",
+                            }}
+                            disabled
+                            value={initialData?.location?.name ?? "-"}
+                          />
+                        </FormControl>
+                      </div>
+                    </FormItem>
+                  )}
+                </div>
+              </div>
+              <div className={cn("lg:grid grid-cols-3 gap-[10px] items-start")}>
+                <div className="flex items-end ">
                   <FormField
                     control={form.control}
                     name="transaction_proof_url"
@@ -1099,7 +1228,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                               />
                             )}
                             {lastPath !== "create" && (
-                              <div className="p-2 ml-3 relative border-opacity-25 border-gray-800 border border-dashed -ml-[5px] gap-2  md:h-[200px]   md:w-[300px] :w-[500px] h-[300px] flex flex-col justify-center items-center">
+                              <div className="p-2 relative border-opacity-25 border-gray-800 border border-dashed -ml-[5px] gap-2  md:h-[200px]   md:w-[300px] :w-[500px] h-[300px] flex flex-col justify-center items-center">
                                 <img
                                   width={500}
                                   className="object-cover w-full h-full "
@@ -1133,14 +1262,16 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                 form={form}
                                 name="transfer_proof_url"
                               />
-                              {lastPath !== "create" &&
-                                lastPath !== "preview" && (
+                              {lastPath !== "preview" &&
+                                initialData?.transfer_proof_url && (
                                   <div className="p-2 ml-3 relative border-opacity-25 border-gray-800 border border-dashed -ml-[5px] gap-2  md:h-[200px]   md:w-[300px] :w-[500px] h-[300px] flex flex-col justify-center items-center">
                                     <img
                                       width={500}
                                       height={300}
                                       style={{ border: "none" }}
-                                      src={initialData?.transferProofUrl ?? ""}
+                                      src={
+                                        initialData?.transfer_proof_url ?? ""
+                                      }
                                     />
                                   </div>
                                 )}
@@ -1153,14 +1284,13 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                   )}
                 </div> */}
               </div>
-
               <Separator className={cn("mt-1")} />
             </div>
           </form>
           {/* sidebar */}
 
           {/* {lastPath === "create" && lastPath === "preview" && ( */}
-          <DriverDetail
+          <DriverReimburseDetail
             innerRef={detailRef}
             data={driverData?.data}
             handleOpenApprovalModal={() => setOpenApprovalModal(true)}

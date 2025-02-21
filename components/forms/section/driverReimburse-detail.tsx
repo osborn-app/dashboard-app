@@ -1,6 +1,7 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Cake,
+  Info,
   Mail,
   PersonStanding,
   Phone,
@@ -20,20 +21,34 @@ import {
 } from "@/components/ui/carousel";
 import { Card } from "@/components/ui/card";
 import { PreviewImage } from "@/components/modal/preview-image";
+import Spinner from "@/components/spinner";
+import { useUser } from "@/context/UserContext";
 
 interface DriverDetailProps {
   onClose: () => void;
   data: any;
   innerRef?: any;
+  initialData: any;
+  type?: string;
+  confirmLoading: boolean;
+  handleOpenApprovalModal: () => void;
+  handleOpenRejectModal: () => void;
 }
 
-const DriverDetail: React.FC<DriverDetailProps> = ({
+const DriverReimburseDetail: React.FC<DriverDetailProps> = ({
   onClose,
   data,
+  handleOpenApprovalModal,
+  handleOpenRejectModal,
   innerRef,
+  type,
+  initialData,
+  confirmLoading,
 }) => {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState(null);
+  const { user } = useUser();
+  // console.log("data", data);
 
   const onHandlePreview = (file: any) => {
     setContent(file);
@@ -47,19 +62,19 @@ const DriverDetail: React.FC<DriverDetailProps> = ({
       ref={innerRef}
     >
       <div className="flex justify-between items-center mb-4">
-        <h4 className="text-center font-semibold text-xl">
-          Penangung Jawab Detail
-        </h4>
-        <Button
-          type="button"
-          className={cn(
-            buttonVariants({ variant: "secondary" }),
-            "w-[65px] h-[40px]",
-          )}
-          onClick={onClose}
-        >
-          Tutup
-        </Button>
+        <h4 className="text-center font-semibold text-xl">Pengemudi Detail</h4>
+        {type !== "create" && type !== "preview" && type !== "edit" && (
+          <Button
+            type="button"
+            className={cn(
+              buttonVariants({ variant: "secondary" }),
+              "w-[65px] h-[40px]",
+            )}
+            onClick={onClose}
+          >
+            Tutup
+          </Button>
+        )}
       </div>
       <div className="flex flex-col justify-between ">
         <div>
@@ -70,7 +85,7 @@ const DriverDetail: React.FC<DriverDetailProps> = ({
               </div>
               <div className="flex flex-col ml-4">
                 <span className="font-normal text-xs text-neutral-500">
-                  Nama Penanggung Jawab
+                  Nama Pengemudi
                 </span>
                 <span className="font-medium text-sm text-black">
                   {data?.name ?? "-"}
@@ -167,6 +182,59 @@ const DriverDetail: React.FC<DriverDetailProps> = ({
             </div>
           )}
         </div>
+        <div className="mt-2 mx-auto">
+          {type === "preview" &&
+            user?.role !== "driver" &&
+            initialData?.status === "pending" && (
+              <div className="flex flex-col gap-5   bottom-1">
+                <div className="flex bg-neutral-100 p-4 gap-5 rounded-md">
+                  <Info className="h-10 w-10" />
+                  <p>
+                    Invoice akan tersedia saat reimburse telah dikonfirmasi.
+                    Pastikan semua data benar.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleOpenRejectModal}
+                  className="w-full bg-red-50 text-red-500 hover:bg-red-50/90"
+                  type="button"
+                >
+                  Tolak Reimburse
+                </Button>
+                <Button
+                  onClick={handleOpenApprovalModal}
+                  className="w-full  bg-main hover:bg-main/90"
+                  type="button"
+                >
+                  Konfirmasi Reimburse
+                </Button>
+              </div>
+            )}
+
+          {type === "create" && (
+            <div className="flex flex-col gap-5   bottom-1">
+              <div className="flex bg-neutral-100 p-4 gap-5 rounded-md ">
+                <Info className="h-10 w-10" />
+                <p>
+                  Invoice akan tersedia saat reimburse telah dikonfirmasi.
+                  Pastikan semua data benar.
+                </p>
+              </div>
+              <Button
+                onClick={handleOpenApprovalModal}
+                className="w-full  bg-main hover:bg-main/90"
+                type="button"
+                disabled={confirmLoading}
+              >
+                {confirmLoading ? (
+                  <Spinner className="h-5 w-5" />
+                ) : (
+                  "Konfirmasi Reimburse"
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
       <PreviewImage
         isOpen={open}
@@ -177,4 +245,4 @@ const DriverDetail: React.FC<DriverDetailProps> = ({
   );
 };
 
-export default DriverDetail;
+export default DriverReimburseDetail;

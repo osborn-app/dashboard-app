@@ -13,6 +13,7 @@ export type ReimburseFormValues = z.infer<
   bank: string;
   noRekening: string;
   driver: number;
+  fleet: number;
   location: number;
   date: Date;
   description: string;
