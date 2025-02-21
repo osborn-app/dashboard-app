@@ -567,16 +567,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
               </Link>
             )}
             <div className="flex justify-between gap-3.5">
-              {/* {initialData?.status !== ReimburseStatus.PENDING && (
-                <div
-                  className={cn(
-                    getStatusVariant(initialData?.status),
-                    "text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center",
-                  )}
-                >
-                  {getPaymentStatusLabel(initialData?.status)}
-                </div>
-              )} */}
               <div className="bg-green-50 text-green-500 text-xs font-medium flex items-center justify-center px-[10px] py-1 rounded-full text-center">
                 Selesai
               </div>
@@ -1289,7 +1279,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
           </form>
           {/* sidebar */}
 
-          {/* {lastPath === "create" && lastPath === "preview" && ( */}
           <DriverReimburseDetail
             innerRef={detailRef}
             data={driverData?.data}
@@ -1300,12 +1289,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
             type={lastPath}
             onClose={() => setOpenDriverDetail(false)}
           />
-          {/* )} */}
-          {/* {openDriverDetail &&
-            !isFetchingDriver &&
-            type === "create" &&
-            lastPath ===
-              "preview"( */}
         </Form>
       </div>
     </>
