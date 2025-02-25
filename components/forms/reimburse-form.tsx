@@ -840,7 +840,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                 <AntdSelect
                                   className={cn("mr-2 w-full")}
                                   showSearch
-                                  placeholder="Nama Pengemudi..."
+                                  placeholder="Pilih kendaraan anda..."
                                   style={{
                                     height: "40px",
                                   }}
@@ -1037,7 +1037,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                           <FormControl className="disabled:opacity-100">
                             <Input
                               disabled={lastPath === "preview"}
-                              placeholder="No. Rekening"
+                              placeholder="Masukan no rekening / no pembayaran"
                               value={field.value ?? ""}
                               onChange={(e) => {
                                 e.target.value = e.target.value.trimStart();
@@ -1083,7 +1083,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                           <FormControl className="disabled:opacity-100">
                             <Textarea
                               id="keterangan"
-                              placeholder="Isi keteragan anda dengan lengkap..."
+                              placeholder="Isi keterangan anda dengan lengkap..."
                               className="col-span-4"
                               rows={6}
                               disabled={lastPath === "preview"}
