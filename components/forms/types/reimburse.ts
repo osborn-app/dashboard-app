@@ -32,6 +32,7 @@ export type Messages = {
 } & {
   nominal: number;
   bank: string;
+  fleet: number;
   noRekening: string;
   driver: number;
   location: number;

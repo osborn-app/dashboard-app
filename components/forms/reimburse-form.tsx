@@ -227,8 +227,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       };
     };
 
-    console.log(createPayload(data));
-
     const handleSuccess = () => {
       queryClient.invalidateQueries({ queryKey: ["reimburse"] });
       toast({
@@ -324,7 +322,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   useEffect(() => {
     const payload = {
       driver_id: driverNameField, // Nama driver
-      fleet_id: fleetField, // Nama driver
+      fleet_id: fleetField, // Nama fleet
       nominal: isString(nominalField) // Nominal/jumlah reimburse
         ? +nominalField
         : nominalField,
@@ -410,7 +408,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   useEffect(() => {
     const newMessages = {
       driver: generateMessage(driverNameField, defaultValues?.driver), // Nama Driver
-      fleet: generateMessage(driverNameField, defaultValues?.fleet), // Nama Driver
+      fleet: generateMessage(fleetField, defaultValues?.fleet), // Nama Driver
       nominal: generateMessage(nominalField, defaultValues?.nominal), // Nominal/Jumlah Reimburse
       location: generateMessage(locationField, defaultValues?.location), // Lokasi Reimburse
       transaction_proof_url: generateMessage(
@@ -847,7 +845,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   onSearch={setSearchDriverTerm}
                                   onChange={field.onChange}
                                   onPopupScroll={handleScrollFleets}
-                                  filterOption={false}
                                   notFoundContent={
                                     isFetchingNextFleets ? (
                                       <p className="px-3 text-sm">loading</p>

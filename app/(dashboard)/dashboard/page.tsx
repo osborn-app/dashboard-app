@@ -23,22 +23,28 @@ export default function Page() {
           <Welcome />
         </div>
 
-        <h3 className="text-2xl font-bold tracking-tight">Request Task</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <RequestStatusCard />
-        </div>
-        <h3 className="text-2xl font-bold tracking-tight">Order</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <OrderStatusCard />
-        </div>
-        <h3 className="text-2xl font-bold tracking-tight">Customer</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <CustomerStatusCard />
-        </div>
-        <h3 className="text-2xl font-bold tracking-tight">Driver Reimburse</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <ReimburseStatusCard />
-        </div>
+        {user?.role !== "driver" && (
+          <>
+            <h3 className="text-2xl font-bold tracking-tight">Request Task</h3>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <RequestStatusCard />
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight">Order</h3>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <OrderStatusCard />
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight">Customer</h3>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <CustomerStatusCard />
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight">
+              Driver Reimburse
+            </h3>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <ReimburseStatusCard />
+            </div>
+          </>
+        )}
       </div>
     </ScrollArea>
   );
