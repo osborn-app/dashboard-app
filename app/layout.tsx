@@ -1,12 +1,14 @@
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import Providers from "@/components/layout/providers";
 import { Toaster } from "@/components/ui/toaster";
-import "@uploadthing/react/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { ourFileRouter } from "./api/uploadthing/core";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -57,6 +59,15 @@ export default async function RootLayout({
       <body className={`${inter.className} overflow-hidden`}>
         <Providers session={session}>
           <Toaster />
+          <NextSSRPlugin
+            /**
+             * The `extractRouterConfig` will extract **only** the route configs
+             * from the router to prevent additional information from being
+             * leaked to the client. The data passed to the client is the same
+             * as if you were to fetch `/api/uploadthing` directly.
+             */
+            routerConfig={extractRouterConfig(ourFileRouter)}
+          />
           {children}
           <ReactQueryDevtools initialIsOpen={false} />
         </Providers>

@@ -43,7 +43,7 @@ export const useGetInfinityDrivers = (query?: string) => {
   };
 
   return useInfiniteQuery({
-    queryKey: ["drivers", query],
+    queryKey: ["driver", query],
     queryFn: ({ pageParam }) => getDrivers({ pageParam, query }),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.data.pagination?.next_page,

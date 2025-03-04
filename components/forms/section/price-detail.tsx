@@ -46,12 +46,13 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
   confirmLoading,
   type,
   messages,
-  innerRef
+  innerRef,
 }) => {
   return (
     <div
       className="p-5 top-10 border rounded-md w-full basis-1/3"
-      id="detail-sidebar" ref={innerRef}
+      id="detail-sidebar"
+      ref={innerRef}
     >
       <div className="">
         <h4 className="text-center font-semibold text-xl mb-4 mt-4">
@@ -132,11 +133,11 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                   <div className="flex justify-between mb-1">
                     <p className="font-medium text-sm text-neutral-700">
                       {!form.getValues("start_request.is_self_pickup") &&
-                        !form.getValues("end_request.is_self_pickup")
+                      !form.getValues("end_request.is_self_pickup")
                         ? "Diantar & Dijemput"
                         : !form.getValues("start_request.is_self_pickup")
-                          ? "Diantar"
-                          : "Dijemput"}
+                        ? "Diantar"
+                        : "Dijemput"}
                     </p>
                     <p className="font-semibold text-base">
                       {formatRupiah(detail?.service_price ?? 0)}
@@ -145,21 +146,7 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                 )}
               {showAdditional && isEdit
                 ? detail?.additional_services?.length !== 0 &&
-                detail?.additional_services?.map((item: any, index: any) => {
-                  return (
-                    <div className="flex justify-between mb-1" key={index}>
-                      <p className="font-medium text-sm text-neutral-700">
-                        {item.name}
-                      </p>
-                      <p className="font-semibold text-base">
-                        {formatRupiah(item.price)}
-                      </p>
-                    </div>
-                  );
-                })
-                : initialData?.additional_services?.length !== 0 &&
-                initialData?.additional_services?.map(
-                  (item: any, index: any) => {
+                  detail?.additional_services?.map((item: any, index: any) => {
                     return (
                       <div className="flex justify-between mb-1" key={index}>
                         <p className="font-medium text-sm text-neutral-700">
@@ -170,8 +157,22 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                         </p>
                       </div>
                     );
-                  },
-                )}
+                  })
+                : initialData?.additional_services?.length !== 0 &&
+                  initialData?.additional_services?.map(
+                    (item: any, index: any) => {
+                      return (
+                        <div className="flex justify-between mb-1" key={index}>
+                          <p className="font-medium text-sm text-neutral-700">
+                            {item.name}
+                          </p>
+                          <p className="font-semibold text-base">
+                            {formatRupiah(item.price)}
+                          </p>
+                        </div>
+                      );
+                    },
+                  )}
               {(showAdditional || showServicePrice) && (
                 <Separator className="mb-1" />
               )}
@@ -212,7 +213,7 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                     <p className="font-semibold text-base">
                       {formatRupiah(
                         detail?.weekend_days.length * detail?.weekend_price ??
-                        0,
+                          0,
                       )}
                     </p>
                   </div>

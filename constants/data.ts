@@ -178,6 +178,13 @@ export const navItems: NavItem[] = [
     roles: ["admin"],
   },
   {
+    title: "Reimburse",
+    href: "/dashboard/reimburse",
+    icon: "hand",
+    label: "reimburse",
+    roles: ["admin", "driver"],
+  },
+  {
     title: "Customers",
     href: "/dashboard/customers",
     icon: "users",

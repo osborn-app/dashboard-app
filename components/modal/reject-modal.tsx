@@ -74,7 +74,7 @@ export const RejectModal: React.FC<ModalProps> = ({
             Kembali
           </Button>
           <Button
-            disabled={loading || !reason.trim()}
+            disabled={loading}
             className="bg-red-50 text-red-500 hover:bg-red-100"
             type="button"
             onClick={(e) => {

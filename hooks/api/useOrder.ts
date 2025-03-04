@@ -116,7 +116,7 @@ export const useDeleteOrder = (id: number, force: boolean) => {
   const queryClient = useQueryClient();
 
   const deleteOrder = (id: number) => {
-    return axiosAuth.delete(`${baseEndpoint}/${id}`,{
+    return axiosAuth.delete(`${baseEndpoint}/${id}`, {
       params: {
         force,
       },

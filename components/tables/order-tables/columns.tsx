@@ -13,7 +13,10 @@ import {
 } from "@/components/ui/hover-card";
 import { CalendarDays, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { getPaymentStatusLabel, getStatusVariant } from "@/app/(dashboard)/dashboard/orders/[orderId]/types/order";
+import {
+  getPaymentStatusLabel,
+  getStatusVariant,
+} from "@/app/(dashboard)/dashboard/orders/[orderId]/types/order";
 
 const duration = require("dayjs/plugin/duration");
 dayjs.extend(duration);
@@ -88,10 +91,14 @@ export const pendingColumns: ColumnDef<any>[] = [
   {
     accessorKey: "is_with_driver",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Keterangan Sewa</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        Keterangan Sewa
+      </span>
     ),
     cell: ({ row }) => (
-      <span>{row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}</span>
+      <span>
+        {row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}
+      </span>
     ),
     enableSorting: false,
   },
@@ -187,10 +194,14 @@ export const confirmedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "is_with_driver",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Keterangan Sewa</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        Keterangan Sewa
+      </span>
     ),
     cell: ({ row }) => (
-      <span>{row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}</span>
+      <span>
+        {row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}
+      </span>
     ),
     enableSorting: false,
   },
@@ -322,10 +333,14 @@ export const onProgressColumns: ColumnDef<any>[] = [
   {
     accessorKey: "is_with_driver",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Keterangan Sewa</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        Keterangan Sewa
+      </span>
     ),
     cell: ({ row }) => (
-      <span>{row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}</span>
+      <span>
+        {row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}
+      </span>
     ),
     enableSorting: false,
   },
@@ -457,10 +472,14 @@ export const completedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "is_with_driver",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Keterangan Sewa</span>
+      <span className="text-sm font-semibold text-neutral-700">
+        Keterangan Sewa
+      </span>
     ),
     cell: ({ row }) => (
-      <span>{row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}</span>
+      <span>
+        {row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}
+      </span>
     ),
     enableSorting: false,
   },

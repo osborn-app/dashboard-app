@@ -102,18 +102,18 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     lastPath === "preview"
       ? "Tinjau Pesanan"
       : lastPath === "edit"
-        ? "Edit Pesanan"
-        : lastPath === "detail"
-          ? "Detail Pesanan"
-          : "Tambah Pesanan";
+      ? "Edit Pesanan"
+      : lastPath === "detail"
+      ? "Detail Pesanan"
+      : "Tambah Pesanan";
   const description =
     lastPath === "preview"
       ? "Tinjau pesanan baru dari pelanggan"
       : lastPath === "edit"
-        ? "Edit pesanan untuk pelanggan"
-        : lastPath === "detail"
-          ? ""
-          : "Tambah pesanan baru untuk pelanggan";
+      ? "Edit pesanan untuk pelanggan"
+      : lastPath === "detail"
+      ? ""
+      : "Tambah pesanan baru untuk pelanggan";
   const toastMessage = initialData
     ? "Pesanan berhasil diubah!"
     : "Pesanan berhasil dibuat";
@@ -143,7 +143,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const scrollDetail = () => {
     detailRef.current?.scrollIntoView({ behavior: "smooth" });
-  }
+  };
 
   const {
     data: customers,
@@ -189,57 +189,57 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const { isMinimized } = useSidebar();
   const defaultValues = initialData
     ? {
-      start_request: {
-        is_self_pickup: initialData?.start_request?.is_self_pickup,
-        address: initialData?.start_request?.address,
-        distance: initialData?.start_request?.distance ?? 0,
-        driver_id: initialData?.start_request?.driver?.id?.toString(),
-      },
-      end_request: {
-        is_self_pickup: initialData?.end_request?.is_self_pickup,
-        address: initialData?.end_request?.address,
-        distance: initialData?.end_request?.distance ?? 0,
-        driver_id: initialData?.end_request?.driver?.id?.toString(),
-      },
-      customer: initialData?.customer?.id?.toString(),
-      fleet: initialData?.fleet?.id?.toString(),
-      description: initialData?.description,
-      is_with_driver: initialData?.is_with_driver,
-      is_out_of_town: initialData?.is_out_of_town,
-      date: initialData?.start_date,
-      duration: initialData?.duration?.toString(),
-      discount: initialData?.discount?.toString(),
-      insurance_id: initialData?.insurance
-        ? initialData?.insurance?.id.toString()
-        : "0",
-      service_price: initialData?.service_price.toString(),
-      additionals: initialData?.additional_services,
-    }
+        start_request: {
+          is_self_pickup: initialData?.start_request?.is_self_pickup,
+          address: initialData?.start_request?.address,
+          distance: initialData?.start_request?.distance ?? 0,
+          driver_id: initialData?.start_request?.driver?.id?.toString(),
+        },
+        end_request: {
+          is_self_pickup: initialData?.end_request?.is_self_pickup,
+          address: initialData?.end_request?.address,
+          distance: initialData?.end_request?.distance ?? 0,
+          driver_id: initialData?.end_request?.driver?.id?.toString(),
+        },
+        customer: initialData?.customer?.id?.toString(),
+        fleet: initialData?.fleet?.id?.toString(),
+        description: initialData?.description,
+        is_with_driver: initialData?.is_with_driver,
+        is_out_of_town: initialData?.is_out_of_town,
+        date: initialData?.start_date,
+        duration: initialData?.duration?.toString(),
+        discount: initialData?.discount?.toString(),
+        insurance_id: initialData?.insurance
+          ? initialData?.insurance?.id.toString()
+          : "0",
+        service_price: initialData?.service_price.toString(),
+        additionals: initialData?.additional_services,
+      }
     : {
-      start_request: {
-        is_self_pickup: true,
-        address: "",
-        distance: 0,
-        driver_id: "",
-      },
-      end_request: {
-        is_self_pickup: true,
-        address: "",
-        distance: 0,
-        driver_id: "",
-      },
-      customer: "",
-      fleet: "",
-      description: "",
-      is_with_driver: false,
-      is_out_of_town: false,
-      date: "",
-      duration: "1",
-      discount: "0",
-      insurance_id: "0",
-      service_price: "",
-      additionals: [],
-    };
+        start_request: {
+          is_self_pickup: true,
+          address: "",
+          distance: 0,
+          driver_id: "",
+        },
+        end_request: {
+          is_self_pickup: true,
+          address: "",
+          distance: 0,
+          driver_id: "",
+        },
+        customer: "",
+        fleet: "",
+        description: "",
+        is_with_driver: false,
+        is_out_of_town: false,
+        date: "",
+        duration: "1",
+        discount: "0",
+        insurance_id: "0",
+        service_price: "",
+        additionals: [],
+      };
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(schema),
@@ -327,8 +327,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       insurance_id: +data.insurance_id === 0 ? null : +data.insurance_id,
       ...(showServicePrice &&
         data?.service_price && {
-        service_price: +data.service_price.replace(/,/g, ""),
-      }),
+          service_price: +data.service_price.replace(/,/g, ""),
+        }),
       ...(fields.length !== 0 && {
         additional_services: additionalField.map((field) => {
           return {
@@ -360,8 +360,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           error?.response?.data?.message == "Customer must be verified."
             ? "Customer belum diverifikasi"
             : //@ts-ignore
-            error?.response?.data?.message
-          }`,
+              error?.response?.data?.message
+        }`,
       });
     };
 
@@ -671,6 +671,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     <>
       {openApprovalModal && (
         <ApprovalModal
+          heading="pesanan"
           isOpen={openApprovalModal}
           onClose={() => setOpenApprovalModal(false)}
           onConfirm={form.handleSubmit(onSubmit)}
@@ -728,7 +729,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     buttonVariants({ variant: "outline" }),
                     "text-black",
                     user?.role !== "admin" &&
-                    "cursor-not-allowed pointer-events-none opacity-50",
+                      "cursor-not-allowed pointer-events-none opacity-50",
                   )}
                 >
                   Edit Pesanan
@@ -882,9 +883,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               di ukuran laya 1920px, kita perlu expand lebar si content sebesar 240px
               apabila 1 baris form terdapat 2 input field, maka kita perlu expand sebanya 120px disetiap field
               */}
-              <div
-                className={cn("lg:grid grid-cols-2 gap-[10px] items-start",)}
-              >
+              <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
                 <div className="flex items-end">
                   {lastPath !== "preview" && isEdit ? (
                     <FormField
@@ -988,7 +987,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       <div className="flex">
                         <FormControl className="disabled:opacity-100">
                           <Input
-                            className={cn("mr-2",)}
+                            className={cn("mr-2")}
                             style={{
                               height: "40px",
                             }}
@@ -1162,9 +1161,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   )}
                 </div>
               </div>
-              <div
-                className={cn("gap-2 lg:gap-5 flex flex-col lg:flex-row")}
-              >
+              <div className={cn("gap-2 lg:gap-5 flex flex-col lg:flex-row")}>
                 {isEdit ? (
                   <FormField
                     control={form.control}
@@ -1245,7 +1242,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                         value={field.value}
                       >
                         <FormControl
-                          className={cn("disabled:opacity-100", "w-full", "h-[40px]")}
+                          className={cn(
+                            "disabled:opacity-100",
+                            "w-full",
+                            "h-[40px]",
+                          )}
                         >
                           <SelectTrigger className="">
                             <SelectValue placeholder="asdf" />
@@ -1287,9 +1288,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   <FormMessage />
                 </FormItem>
               </div>
-              <div
-                className={cn("lg:grid grid-cols-2 gap-5")}
-              >
+              <div className={cn("lg:grid grid-cols-2 gap-5")}>
                 <FormField
                   control={form.control}
                   name="is_out_of_town"
@@ -1383,9 +1382,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   }}
                 />
               </div>
-              <Separator
-                className={cn("mt-1")}
-              />
+              <Separator className={cn("mt-1")} />
               <DetailSection
                 title="Detail Pengambilan"
                 form={form}
@@ -1424,9 +1421,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 lastPath={lastPath}
                 messages={messages}
               />
-              <div
-                className={cn("space-y-8")}
-              >
+              <div className={cn("space-y-8")}>
                 {showServicePrice && (
                   <FormField
                     name="service_price"
@@ -1569,11 +1564,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       dangerouslySetInnerHTML={{
                         __html: !isEmpty(defaultValues?.description)
                           ? makeUrlsClickable(
-                            defaultValues?.description.replace(
-                              /\n/g,
-                              "<br />",
-                            ),
-                          )
+                              defaultValues?.description.replace(
+                                /\n/g,
+                                "<br />",
+                              ),
+                            )
                           : "-",
                       }}
                     />
@@ -1593,7 +1588,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                             rows={3}
                             value={field.value || ""}
                             onChange={(e) => {
-                              e.target.value = e.target.value.trimStart()
+                              e.target.value = e.target.value.trimStart();
                               field.onChange(e.target.value);
                             }}
                           />
@@ -1719,6 +1714,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
     setContent(file);
     setOpen(true);
   };
+
   const {
     data: drivers,
     fetchNextPage: fetchNextDrivers,
@@ -1787,9 +1783,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
           )}
         </div>
         {/* Layanan */}
-        <div
-          className={cn("gap-5")}
-        >
+        <div className={cn("gap-5")}>
           <FormField
             control={form.control}
             name={`${type}_request.is_self_pickup`}
@@ -1897,10 +1891,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                         {drivers?.pages.map((page: any, pageIndex: any) =>
                           page.data.items.map((item: any, itemIndex: any) => {
                             return (
-                              <Option
-                                key={item.id}
-                                value={item.id.toString()}
-                              >
+                              <Option key={item.id} value={item.id.toString()}>
                                 {item.name}
                               </Option>
                             );
@@ -1964,8 +1955,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                     "max-w-[65px] h-[40px]",
                   )}
                   disabled={
-                    !form.getFieldState(`${type}_request.driver_id`)
-                      .isDirty &&
+                    !form.getFieldState(`${type}_request.driver_id`).isDirty &&
                     isEmpty(form.getValues(`${type}_request.driver_id`))
                   }
                   type="button"
@@ -2028,16 +2018,16 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                       : defaultValues?.end_request?.address,
                   )
                     ? makeUrlsClickable(
-                      type === "start"
-                        ? defaultValues?.start_request?.address.replace(
-                          /\n/g,
-                          "<br />",
-                        )
-                        : defaultValues?.end_request?.address.replace(
-                          /\n/g,
-                          "<br />",
-                        ),
-                    )
+                        type === "start"
+                          ? defaultValues?.start_request?.address.replace(
+                              /\n/g,
+                              "<br />",
+                            )
+                          : defaultValues?.end_request?.address.replace(
+                              /\n/g,
+                              "<br />",
+                            ),
+                      )
                     : "-",
                 }}
               />
@@ -2180,9 +2170,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
         )}
       </div>
 
-      <Separator
-        className={cn("mt-1")}
-      />
+      <Separator className={cn("mt-1")} />
 
       <PreviewImage
         isOpen={open}

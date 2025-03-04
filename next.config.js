@@ -15,22 +15,20 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(
-  module.exports,
-  {
-    // For all available options, see:
-    // https://github.com/getsentry/sentry-webpack-plugin#options
+module.exports = withSentryConfig(module.exports, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
 
-    org: "transgo",
-    project: "dashboard-app",
+  org: "transgo",
+  project: "dashboard-app",
 
-    // An auth token is required for uploading source maps.
-    authToken: process.env.SENTRY_AUTH_TOKEN,
+  // An auth token is required for uploading source maps.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
-    // Only print logs for uploading source maps in CI
-    silent: false,
+  // Only print logs for uploading source maps in CI
+  silent: false,
 
-    /* // For all available options, see:
+  /* // For all available options, see:
     // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
     // Upload a larger set of source maps for prettier stack traces (increases build time)
@@ -53,5 +51,4 @@ module.exports = withSentryConfig(
     // https://docs.sentry.io/product/crons/
     // https://vercel.com/docs/cron-jobs
     automaticVercelMonitors: true, */
-  }
-);
+});

@@ -11,6 +11,7 @@ import { Dispatch, SetStateAction } from "react";
 import { useSidebar } from "@/hooks/useSidebar";
 import { ChevronFirst, ChevronLast } from "lucide-react";
 import { useOrdersStatusCount } from "@/hooks/api/useOrder";
+import { useReimburseStatusCount } from "@/hooks/api/useReimburse";
 import { useCustomersStatusCount } from "@/hooks/api/useCustomer";
 import { useUser } from "@/context/UserContext";
 
@@ -29,18 +30,21 @@ export function DashboardNav({
   const { isMinimized, toggle } = useSidebar();
   const { data: orderStatusCount, isFetching: isFetchingOrderStatus } =
     useOrdersStatusCount();
+  const { data: reimburseStatusCount, isFetching: isFetchingReimburseStatus } =
+    useReimburseStatusCount();
   const { data: customerStatusCount, isFetching: isFetchingCustomerStatus } =
     useCustomersStatusCount();
   const { user } = useUser();
   const orderCount = orderStatusCount?.data;
   const customerCount = customerStatusCount?.data;
+  const reimburseCount = reimburseStatusCount?.data;
 
   const navItems = useMemo(() => {
     const baseItems = [...items];
-  
+
     // Avoid adding "Discount" if it already exists in the base items
-    const discountExists = baseItems.some(item => item.title === "Discount");
-    
+    const discountExists = baseItems.some((item) => item.title === "Discount");
+
     if (user?.role === "admin" && !discountExists) {
       baseItems.push({
         title: "Discount",
@@ -49,9 +53,9 @@ export function DashboardNav({
         roles: ["admin"],
       });
     }
-  
+
     return baseItems;
-  }, [items, user]);  
+  }, [items, user]);
 
   if (!navItems?.length) {
     return null;
@@ -89,6 +93,7 @@ export function DashboardNav({
             "/dashboard/orders",
             "/dashboard/requests",
             "/dashboard/fleets",
+            "/dashboard/reimburse",
             "/dashboard/customers",
             "/dashboard/drivers",
             "/dashboard/location",
@@ -146,6 +151,13 @@ export function DashboardNav({
                       !isFetchingCustomerStatus && (
                         <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
                           {customerCount?.[0]?.count ?? 0}
+                        </div>
+                      )}
+                    {item.title === "Reimburse" &&
+                      !isFetchingReimburseStatus &&
+                      user?.role !== "driver" && (
+                        <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                          {reimburseCount?.[0]?.count ?? 0}
                         </div>
                       )}
                   </div>

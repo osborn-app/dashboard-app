@@ -58,7 +58,11 @@ interface CustomerDetailProps {
   innerRef?: any;
 }
 
-const CustomerDetail: React.FC<CustomerDetailProps> = ({ onClose, data, innerRef }) => {
+const CustomerDetail: React.FC<CustomerDetailProps> = ({
+  onClose,
+  data,
+  innerRef,
+}) => {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState(null);
 
@@ -154,7 +158,8 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({ onClose, data, innerRef
       )}
       <div
         className="p-5 top-10 border rounded-md w-full basis-1/3"
-        id="detail-sidebar" ref={innerRef}
+        id="detail-sidebar"
+        ref={innerRef}
       >
         <div className="flex justify-between items-center mb-4">
           <h4 className="text-center font-semibold text-xl">
@@ -238,8 +243,8 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({ onClose, data, innerRef
                     {data?.gender === "male"
                       ? "Laki-Laki"
                       : data?.gender === "female"
-                        ? "Perempuan"
-                        : "-"}
+                      ? "Perempuan"
+                      : "-"}
                   </span>
                 </div>
               </div>
