@@ -12,7 +12,7 @@ export default function Page({ params }: { params: { reimburseid: number } }) {
 
   const breadcrumbItems = [
     { title: "Reimburse", link: "/dashboard/reimburse" },
-    { title: "Bayar Reimburse", link: "/dashboard/reimburse/tinjau" },
+    { title: "Tinjau Reimburse", link: "/dashboard/reimburse/tinjau" },
   ];
 
   const { data, isFetching } = useGetDetailReimburse(params.reimburseid);

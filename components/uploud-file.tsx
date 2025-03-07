@@ -6,6 +6,7 @@ import { Image } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { PreviewImage } from "./modal/preview-image";
 import CustomImage from "./custom-image";
+import { last } from "lodash";
 
 interface UploadFileProps {
   form: any;
@@ -83,74 +84,62 @@ const UploadFile = ({ form, name, initialData, lastPath }: UploadFileProps) => {
 
   return (
     <>
-      {lastPath !== "preview" && initialData?.status !== "done" && (
-        <div className="p-2 relative cursor-pointer border-opacity-25 w-full border-gray-800 border border-dashed -ml-[6px] gap-2 md:h-[200px] md:w-[300px] w-[500px] h-[300px] flex flex-col justify-center items-center">
-          <PreviewImage
-            isOpen={open}
-            onClose={() => setOpen(false)}
-            content={content}
-          />
-          {!isUploaded && (
-            <div className="flex flex-col -mt-8 absolute size-16">
-              <div className="flex flex-col items-center">
-                <Image className="mx-auto text-gray-600 size-16 -mt-5" />
-                {isCompressing ? (
-                  <div className="mt-2">Compressing image...</div>
-                ) : (
-                  <UploadButton
-                    className="mt-2"
-                    disabled={lastPath === "preview"}
-                    endpoint="imageUploader"
-                    onBeforeUploadBegin={async (files) => {
-                      const compressedFiles = await Promise.all(
-                        files.map(async (file) => {
-                          if (file.type.startsWith("image/")) {
-                            return await handleCompression(file);
-                          }
-                          return file;
-                        }),
-                      );
-                      return compressedFiles;
-                    }}
-                    onClientUploadComplete={(res) => {
-                      setIsUploaded(res[0].ufsUrl);
-                      const uploadedUrl = res[0].ufsUrl;
-                      form.setValue(name, uploadedUrl);
-                    }}
-                  />
-                )}
-              </div>
+      <div className="p-2 relative cursor-pointer border-opacity-25 w-full border-gray-800 border border-dashed -ml-[6px] gap-2 md:h-[200px] md:w-[300px] w-[500px] h-[300px] flex flex-col justify-center items-center">
+        <PreviewImage
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          content={content}
+        />
+        {!isUploaded && !initialData?.transactionProofUrl && (
+          <div className="flex flex-col -mt-8 absolute size-16">
+            <div className="flex flex-col items-center">
+              <Image className="mx-auto text-gray-600 size-16 -mt-5" />
+              {isCompressing ? (
+                <div className="mt-2">Compressing image...</div>
+              ) : (
+                <UploadButton
+                  className="mt-2"
+                  endpoint="imageUploader"
+                  onBeforeUploadBegin={async (files) => {
+                    const compressedFiles = await Promise.all(
+                      files.map(async (file) => {
+                        if (file.type.startsWith("image/")) {
+                          return await handleCompression(file);
+                        }
+                        return file;
+                      }),
+                    );
+                    return compressedFiles;
+                  }}
+                  onClientUploadComplete={(res) => {
+                    setIsUploaded(res[0].ufsUrl);
+                    const uploadedUrl = res[0].ufsUrl;
+                    form.setValue(name, uploadedUrl);
+                  }}
+                />
+              )}
             </div>
-          )}
-          {/* {isUploaded ? (
-            <img
-              width={500}
-              className="object-cover w-full h-full"
-              height={300}
-              src={isUploaded || initialData?.transactionProofUrl}
-              alt="Uploaded image"
-            />
-          ) : null} */}
+          </div>
+        )}
 
-          {isUploaded ? (
-            <CustomImage
-              onClick={() => {
-                setOpen(true);
-                onHandlePreview(isUploaded || initialData?.transactionProofUrl);
-              }}
-              width={500}
-              height={300}
-              className="object-contain w-full h-full"
-              alt=""
-              srcSet={`${isUploaded || initialData?.transactionProofUrl} 500w,${
-                isUploaded || initialData?.transactionProofUrl
-              } 1000w`}
-              sizes="(max-width: 600px) 480px, 800px"
-              src={isUploaded || initialData?.transactionProofUrl}
-            />
-          ) : null}
-        </div>
-      )}
+        {(isUploaded || initialData?.transactionProofUrl) && (
+          <CustomImage
+            onClick={() => {
+              setOpen(true);
+              onHandlePreview(isUploaded || initialData?.transactionProofUrl);
+            }}
+            width={500}
+            height={300}
+            className="object-contain w-full h-full"
+            alt=""
+            srcSet={`${isUploaded || initialData?.transactionProofUrl} 500w,${
+              isUploaded || initialData?.transactionProofUrl
+            } 1000w`}
+            sizes="(max-width: 600px) 480px, 800px"
+            src={isUploaded || initialData?.transactionProofUrl}
+          />
+        )}
+      </div>
     </>
   );
 };

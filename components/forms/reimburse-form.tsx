@@ -449,8 +449,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
 
   const approvalModalTitle =
     lastPath === "edit"
-      ? "Apakah Anda Yakin Ingin Mengedit Pesanan ini?"
-      : "Apakah Anda Yakin Ingin Mengonfirmasi Pesanan ini?";
+      ? "Apakah Anda Yakin Ingin Mengedit Reimburse ini?"
+      : "Apakah Anda Yakin Ingin Mengonfirmasi Reimburse ini?";
 
   return (
     <>
@@ -1197,40 +1197,47 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
               </div>
               <div className={cn("lg:grid grid-cols-3 gap-[10px] items-start")}>
                 <div className="flex items-end ">
-                  <FormField
-                    control={form.control}
-                    name="transaction_proof_url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="relative label-required">
-                          Bukti Transaksi
-                        </FormLabel>
-                        <FormControl className="disabled:opacity-100">
-                          <>
-                            {lastPath !== "edit" && lastPath !== "detail" && (
+                  {lastPath !== "create" ? (
+                    <FormField
+                      control={form.control}
+                      name="transaction_proof_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="relative label-required">
+                            Bukti Transaksi
+                          </FormLabel>
+                          <FormControl className="disabled:opacity-100">
+                            <>
                               <UploadFile
                                 initialData={initialData}
                                 lastPath={lastPath}
                                 form={form}
                                 name="transaction_proof_url"
                               />
-                            )}
-                            {lastPath !== "create" && (
-                              <div className="p-2 relative border-opacity-25 border-gray-800 border border-dashed -ml-[5px] gap-2  md:h-[200px]   md:w-[300px] :w-[500px] h-[300px] flex flex-col justify-center items-center">
-                                <img
-                                  width={500}
-                                  className="object-cover w-full h-full "
-                                  height={300}
-                                  src={initialData?.transactionProofUrl ?? ""}
-                                />
-                              </div>
-                            )}
-                          </>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                            </>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <FormItem>
+                      <FormLabel className="relative label-required">
+                        Bukti Transaksi
+                      </FormLabel>
+                      <FormControl className="disabled:opacity-100">
+                        <>
+                          <UploadFile
+                            initialData={initialData}
+                            lastPath={lastPath}
+                            form={form}
+                            name="transaction_proof_url"
+                          />
+                        </>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 </div>
                 {/* <div className="flex items-center ml-[5px]">
                   {lastPath !== "create" && lastPath !== "preview" && (
