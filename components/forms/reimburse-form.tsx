@@ -842,9 +842,10 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   style={{
                                     height: "40px",
                                   }}
-                                  onSearch={setSearchDriverTerm}
+                                  onSearch={setSearchFleetTerm}
                                   onChange={field.onChange}
                                   onPopupScroll={handleScrollFleets}
+                                  filterOption={false}
                                   notFoundContent={
                                     isFetchingNextFleets ? (
                                       <p className="px-3 text-sm">loading</p>
