@@ -346,7 +346,7 @@ export function ReimburseTable<TData, TValue>({
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
+        {/* <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
           <div className="flex w-[120px] items-center justify-center text-sm font-medium">
             Halaman {table.getState().pagination.pageIndex + 1} dari{" "}
             {table.getPageCount()}
@@ -389,7 +389,7 @@ export function ReimburseTable<TData, TValue>({
               <DoubleArrowRightIcon className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );

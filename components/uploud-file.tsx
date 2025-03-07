@@ -4,6 +4,8 @@ import { useState } from "react";
 import { UploadButton } from "./uploudthing";
 import { Image } from "lucide-react";
 import imageCompression from "browser-image-compression";
+import { PreviewImage } from "./modal/preview-image";
+import CustomImage from "./custom-image";
 
 interface UploadFileProps {
   form: any;
@@ -15,6 +17,13 @@ interface UploadFileProps {
 const UploadFile = ({ form, name, initialData, lastPath }: UploadFileProps) => {
   const [isUploaded, setIsUploaded] = useState("");
   const [isCompressing, setIsCompressing] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [content, setContent] = useState(null);
+
+  const onHandlePreview = (file: any) => {
+    setContent(file?.photo || file?.transactionProofUrl || file?.data || file);
+    setOpen(true);
+  };
 
   // Aggressive compression options
   const compressionOptions = {
@@ -75,7 +84,12 @@ const UploadFile = ({ form, name, initialData, lastPath }: UploadFileProps) => {
   return (
     <>
       {lastPath !== "preview" && initialData?.status !== "done" && (
-        <div className="p-2 relative border-opacity-25 w-full border-gray-800 border border-dashed -ml-[6px] gap-2 md:h-[200px] md:w-[300px] w-[500px] h-[300px] flex flex-col justify-center items-center">
+        <div className="p-2 relative cursor-pointer border-opacity-25 w-full border-gray-800 border border-dashed -ml-[6px] gap-2 md:h-[200px] md:w-[300px] w-[500px] h-[300px] flex flex-col justify-center items-center">
+          <PreviewImage
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            content={content}
+          />
           {!isUploaded && (
             <div className="flex flex-col -mt-8 absolute size-16">
               <div className="flex flex-col items-center">
@@ -108,13 +122,31 @@ const UploadFile = ({ form, name, initialData, lastPath }: UploadFileProps) => {
               </div>
             </div>
           )}
-          {isUploaded ? (
+          {/* {isUploaded ? (
             <img
               width={500}
               className="object-cover w-full h-full"
               height={300}
               src={isUploaded || initialData?.transactionProofUrl}
               alt="Uploaded image"
+            />
+          ) : null} */}
+
+          {isUploaded ? (
+            <CustomImage
+              onClick={() => {
+                setOpen(true);
+                onHandlePreview(isUploaded || initialData?.transactionProofUrl);
+              }}
+              width={500}
+              height={300}
+              className="object-contain w-full h-full"
+              alt=""
+              srcSet={`${isUploaded || initialData?.transactionProofUrl} 500w,${
+                isUploaded || initialData?.transactionProofUrl
+              } 1000w`}
+              sizes="(max-width: 600px) 480px, 800px"
+              src={isUploaded || initialData?.transactionProofUrl}
             />
           ) : null}
         </div>
