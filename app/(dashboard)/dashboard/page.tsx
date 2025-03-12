@@ -22,7 +22,11 @@ export default function Page() {
 
         {user?.role !== "driver" && (
           <>
-            <h3 className="text-2xl font-bold tracking-tight">Request Task</h3>
+            {user?.role === "admin" && (
+              <>
+                <h3 className="text-2xl font-bold tracking-tight">
+                  Request Task
+                </h3>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <RequestStatusCard />
                 </div>
@@ -34,12 +38,14 @@ export default function Page() {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <CustomerStatusCard />
                 </div>
-            <h3 className="text-2xl font-bold tracking-tight">
-              Driver Reimburse
-            </h3>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <ReimburseStatusCard />
-            </div>
+                <h3 className="text-2xl font-bold tracking-tight">
+                  Driver Reimburse
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <ReimburseStatusCard />
+                </div>
+              </>
+            )}
           </>
         )}
 
