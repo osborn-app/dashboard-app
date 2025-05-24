@@ -192,6 +192,13 @@ export const navItems: NavItem[] = [
     roles: ["admin"],
   },
   {
+  title: "Verifikasi Tambahan",
+  href: "/dashboard/verification",
+  icon: "users",
+  label: "customer",
+  roles: ["admin"],
+  },
+  {
     title: "Location",
     href: "/dashboard/location",
     icon: "maps",

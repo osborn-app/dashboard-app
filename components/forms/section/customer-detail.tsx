@@ -1,4 +1,7 @@
+"use client";
+import CommentDialog from "@/app/(dashboard)/dashboard/verification/table/detail/comment-dialog";
 import { ConfirmModal } from "@/components/modal/confirm-modal";
+import { ConfirmModalWithInput } from "@/components/modal/confirm-modal-input";
 import { PreviewImage } from "@/components/modal/preview-image";
 import { RejectCustomerModal } from "@/components/modal/reject-customer-modal";
 import Spinner from "@/components/spinner";
@@ -13,6 +16,7 @@ import {
 } from "@/components/ui/carousel";
 import { useToast } from "@/components/ui/use-toast";
 import { useApproveCustomer, useRejectCustomer } from "@/hooks/api/useCustomer";
+import useAxiosAuth from "@/hooks/axios/use-axios-auth";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -50,6 +54,8 @@ interface User {
   emergency_phone_number: string;
   status: string;
   id_cards: IDCard[];
+  additional_data_status: string;
+  additional_data: IDCard[];
 }
 
 interface CustomerDetailProps {
@@ -68,6 +74,7 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
 
   const [openApprovalModal, setOpenApprovalModal] = useState(false);
   const [openRejectModal, setOpenRejectModal] = useState(false);
+  const [openApprovalModalWithInput, setOpenApprovalModalWithInput] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
   const { toast } = useToast();
@@ -78,10 +85,19 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
     setContent(file);
     setOpen(true);
   };
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogLoading, setDialogLoading] = useState(false);
+  const axiosAuth = useAxiosAuth();
+  const [dialogData, setDialogData] = useState([]);
 
-  const handleApproveCustomer = () => {
+  const handleApproveCustomer = (reason?: string) => {
     setLoading(true);
-    approveCustomer(data?.id as unknown as string, {
+    approveCustomer(
+      {
+      id: String(data?.id),
+      reason,
+      },
+      {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["customers"] });
         queryClient.invalidateQueries({ queryKey: ["orders"] });
@@ -137,6 +153,20 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
     );
   };
 
+  const openCommentDialog = async () => {
+    setIsDialogOpen(true);
+    setDialogLoading(true);
+
+    try {
+      const res = await axiosAuth.get(`/customers/${data?.id}/comments`);
+      setDialogData(res.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDialogLoading(false);
+    }
+  };
+
   return (
     <>
       {openApprovalModal && (
@@ -156,6 +186,16 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
           loading={loading}
         />
       )}
+
+      {openApprovalModalWithInput && (
+      <ConfirmModalWithInput
+        isOpen={openApprovalModalWithInput}
+        onClose={() => setOpenApprovalModalWithInput(false)}
+        onConfirm={handleApproveCustomer}
+        loading={loading}
+      />
+    )}
+
       <div
         className="p-5 top-10 border rounded-md w-full basis-1/3"
         id="detail-sidebar"
@@ -304,9 +344,30 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
                 )}
               </Carousel>
             )}
+           {isEmpty(data?.additional_data) ? (
+            <div className="p-4 rounded-md bg-gray-100 text-gray-700 mt-3">
+              <p className="text-sm">Customer tidak memiliki riwayat upload data tambahan.</p>
+            </div>
+          ) : (
+            <div className="p-4 rounded-md bg-green-50 border border-green-200 text-green-800 flex flex-col items-center justify-between gap-4 mt-3 mb-3 hover:bg-green-100 cursor-pointer"
+            onClick={() => openCommentDialog()}
+              >
+              <p className="text-sm font-medium">
+                Customer memiliki riwayat upload data tambahan.
+              </p>
+              <button
+                onClick={() => openCommentDialog()}
+                className="px-3 py-1 text-sm border border-green-600 text-green-700 rounded hover:bg-green-100 transition"
+              >
+                Klik di sini untuk lihat detail
+              </button>
+            </div>
+          )}
+
+
           </div>
           {data?.status === "pending" && (
-            <div className="flex flex-col gap-5 sticky bottom-1">
+            <div className="flex flex-col gap-5 bottom-1 mt-5">
               <Button
                 className="w-full bg-red-50 text-red-500 hover:bg-red-50/90"
                 type="button"
@@ -318,11 +379,22 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
                 className="w-full  bg-main hover:bg-main/90"
                 type="button"
                 onClick={() => setOpenApprovalModal(true)}
-              >
+                >
                 {loading ? (
                   <Spinner className="h-5 w-5" />
                 ) : (
                   "Verifikasi Pelanggan"
+                )}
+              </Button>
+               <Button
+                className="w-full  bg-green-500 hover:bg-green-600"
+                type="button"
+                onClick={() => setOpenApprovalModal(true)}
+                >
+                {loading ? (
+                  <Spinner className="h-5 w-5" />
+                ) : (
+                  "Verifikasi Pelanggan Dengan Data Tambahan"
                 )}
               </Button>
             </div>
@@ -334,6 +406,15 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
           content={content}
         />
       </div>
+      <CommentDialog
+      open={isDialogOpen}
+      onClose={() => setIsDialogOpen(false)}
+      commentData={dialogData}
+      loading={dialogLoading}
+      customerId={data?.id?.toString()}
+      status_data={data?.additional_data_status}
+    />
+
     </>
   );
 };

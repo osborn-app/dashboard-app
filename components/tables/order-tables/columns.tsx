@@ -103,6 +103,20 @@ export const pendingColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "invoice_number",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Nomor Invoice
+      </span>
+    ),
+    cell: ({ row }) => (
+      <span>
+        {row.original.invoice_number}
+      </span>
+    ),
+    enableSorting: false,
+  },
+  {
     accessorKey: "total_price",
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">
@@ -201,6 +215,20 @@ export const confirmedColumns: ColumnDef<any>[] = [
     cell: ({ row }) => (
       <span>
         {row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}
+      </span>
+    ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: "is_with_driver",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Nomor Invoice
+      </span>
+    ),
+    cell: ({ row }) => (
+      <span>
+        {row.original.invoice_number}
       </span>
     ),
     enableSorting: false,
@@ -345,6 +373,20 @@ export const onProgressColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "is_with_driver",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Nomor Invoice
+      </span>
+    ),
+    cell: ({ row }) => (
+      <span>
+        {row.original.invoice_number}
+      </span>
+    ),
+    enableSorting: false,
+  },
+  {
     accessorKey: "pic",
     header: () => (
       <HoverCard>
@@ -479,6 +521,20 @@ export const completedColumns: ColumnDef<any>[] = [
     cell: ({ row }) => (
       <span>
         {row.original.is_with_driver ? "Dengan Supir" : "Lepas Kunci"}
+      </span>
+    ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: "is_with_driver",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Nomor Invoice
+      </span>
+    ),
+    cell: ({ row }) => (
+      <span>
+        {row.original.invoice_number}
       </span>
     ),
     enableSorting: false,

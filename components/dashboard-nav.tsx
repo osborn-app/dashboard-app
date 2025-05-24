@@ -12,7 +12,7 @@ import { useSidebar } from "@/hooks/useSidebar";
 import { ChevronFirst, ChevronLast } from "lucide-react";
 import { useOrdersStatusCount } from "@/hooks/api/useOrder";
 import { useReimburseStatusCount } from "@/hooks/api/useReimburse";
-import { useCustomersStatusCount } from "@/hooks/api/useCustomer";
+import { customerVerificationStatusCount, useCustomersStatusCount } from "@/hooks/api/useCustomer";
 import { useUser } from "@/context/UserContext";
 
 interface DashboardNavProps {
@@ -34,10 +34,13 @@ export function DashboardNav({
     useReimburseStatusCount();
   const { data: customerStatusCount, isFetching: isFetchingCustomerStatus } =
     useCustomersStatusCount();
+  const { data: customerVerificationCount, isFetching: isFetchingVerificationStatus } =
+  customerVerificationStatusCount();
   const { user } = useUser();
   const orderCount = orderStatusCount?.data;
   const customerCount = customerStatusCount?.data;
   const reimburseCount = reimburseStatusCount?.data;
+  const verificationCount = customerVerificationCount?.data;
 
   const navItems = useMemo(() => {
     const baseItems = [...items];
@@ -153,6 +156,13 @@ export function DashboardNav({
                           {customerCount?.[0]?.count ?? 0}
                         </div>
                       )}
+                    {item.title === "Verifikasi Tambahan" &&
+                      !isFetchingVerificationStatus && (
+                        <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                          {verificationCount?.[0]?.count ?? 0}
+                        </div>
+                      )}
+                    
                     {item.title === "Reimburse" &&
                       !isFetchingReimburseStatus &&
                       user?.role !== "driver" && (

@@ -44,6 +44,7 @@ import { convertEmptyStringsToNull } from "@/lib/utils";
 import { ConfirmModal } from "../modal/confirm-modal";
 import { RejectCustomerModal } from "../modal/reject-customer-modal";
 import Spinner from "../spinner";
+import { ConfirmModalWithInput } from "../modal/confirm-modal-input";
 const fileSchema = z.custom<any>(
   (val: any) => {
     // if (!(val instanceof FileList)) return false;
@@ -103,6 +104,7 @@ const formSchema = z.object({
   phone_number: z
     .string({ required_error: "Nomor telepon diperlukan" })
     .min(10, { message: "Nomor Telepon minimal harus 10 digit" }),
+    // additional_data: z.any().optional(),
 });
 
 const formEditSchema = z.object({
@@ -173,6 +175,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const queryClient = useQueryClient();
   const [openApprovalModal, setOpenApprovalModal] = useState(false);
   const [openRejectModal, setOpenRejectModal] = useState(false);
+  const [openApprovalModalWithInput, setOpenApprovalModalWithInput] = useState(false);
 
   const { mutate: approveCustomer } = useApproveCustomer();
   const { mutate: rejectCustomer } = useRejectCustomer();
@@ -189,6 +192,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         id_cards: initialData?.id_cards,
         phone_number: initialData?.phone_number,
         emergency_phone_number: initialData?.emergency_phone_number,
+        // additional_data: initialData?.additional_data
       }
     : {
         name: "",
@@ -198,6 +202,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         id_cards: [],
         phone_number: "",
         emergency_phone_number: "",
+        // additional_data: []
       };
 
   const form = useForm<CustomerFormValues>({
@@ -328,8 +333,12 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     }
   };
 
-  const handleApproveCustomer = () => {
-    approveCustomer(customerId as string, {
+ const handleApproveCustomer = (reason?: string) => {
+  setLoading(true); 
+
+  approveCustomer(
+    { id: customerId as string, reason: reason},
+    {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["customers"] });
         toast({
@@ -345,12 +354,13 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         toast({
           variant: "destructive",
           title: "Uh oh! ada sesuatu yang error",
-          //@ts-ignore
+          // @ts-ignore
           description: `error: ${error?.response?.message}`,
         });
       },
-    });
-  };
+    }
+  );
+};
 
   const handleRejectCustomer = (reason: string) => {
     rejectCustomer(
@@ -392,6 +402,17 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           loading={loading}
         />
       )}
+
+      {openApprovalModalWithInput && (
+      <ConfirmModalWithInput
+        isOpen={openApprovalModalWithInput}
+        onClose={() => setOpenApprovalModalWithInput(false)}
+        onConfirm={handleApproveCustomer}
+        loading={loading}
+      />
+    )}
+      
+
 
       {openRejectModal && (
         <RejectCustomerModal
@@ -657,7 +678,48 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="button"
             onClick={() => setOpenApprovalModal(true)}
           >
-            {loading ? <Spinner className="h-5 w-5" /> : "Setuju"}
+            {loading ? <Spinner className="h-5 w-5" /> : "Setuju!"}
+          </Button>
+         <Button
+          disabled={loading}
+          className="bg-green-600 hover:bg-main/90 p-5 text-[12px]"
+          type="button"
+          onClick={() => setOpenApprovalModalWithInput(true)}
+        >
+          {loading ? (
+            <Spinner className="h-5 w-5" />
+          ) : (
+            <>
+              Setuju Dengan<br />Data Tambahan
+            </>
+          )}
+        </Button>
+
+        </div>
+      )}
+      {lastPath === "detail" || lastPath == "preview" && initialData?.status === "verified" && (
+        <div className="flex justify-start gap-4">
+         <Button
+          disabled={loading}
+          className="bg-green-600 hover:bg-main/90 p-5 text-[12px]"
+          type="button"
+          onClick={() => setOpenApprovalModalWithInput(true)}
+        >
+          {loading ? (
+            <Spinner className="h-5 w-5" />
+          ) : (
+            <>
+              Setuju Dengan<br />Data Tambahan
+            </>
+          )}
+        </Button>
+          <Button
+            disabled={loading}
+            className=" bg-main hover:bg-main/90"
+            type="button"
+            onClick={() => setOpenApprovalModal(true)}
+          >
+            {loading ? <Spinner className="h-5 w-5" /> : "Setujui Seluruh Data"}
           </Button>
         </div>
       )}
