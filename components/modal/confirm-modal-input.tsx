@@ -77,7 +77,7 @@ export const ConfirmModalWithInput: React.FC<ModalProps> = ({
               onConfirm(reason);
             }}
           >
-            Setuju Dengan<br />Data Tambahan
+            Setuju Dengan<br />Data Tambahan!
           </Button>
         </div>
       </DialogContent>
