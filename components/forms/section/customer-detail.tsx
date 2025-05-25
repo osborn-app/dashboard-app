@@ -344,27 +344,68 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
                 )}
               </Carousel>
             )}
-           {isEmpty(data?.additional_data) ? (
-            <div className="p-4 rounded-md bg-gray-100 text-gray-700 mt-3">
-              <p className="text-sm">Customer tidak memiliki riwayat upload data tambahan.</p>
-            </div>
-          ) : (
-            <div className="p-4 rounded-md bg-green-50 border border-green-200 text-green-800 flex flex-col items-center justify-between gap-4 mt-3 mb-3 hover:bg-green-100 cursor-pointer"
-            onClick={() => openCommentDialog()}
-              >
-              <p className="text-sm font-medium">
-                Customer memiliki riwayat upload data tambahan.
-              </p>
-              <button
-                onClick={() => openCommentDialog()}
-                className="px-3 py-1 text-sm border border-green-600 text-green-700 rounded hover:bg-green-100 transition"
-              >
-                Klik di sini untuk lihat detail
-              </button>
-            </div>
-          )}
-
-
+           {(() => {
+              if (data?.additional_data_status === "pending") {
+                return (
+                  <div
+                    className="p-4 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 flex flex-col items-center justify-between gap-4 mt-3 mb-3 hover:bg-yellow-100 cursor-pointer"
+                    onClick={() => openCommentDialog()}
+                  >
+                    <p className="text-sm font-medium">
+                      Customer memiliki riwayat upload data tambahan yang belum diverifikasi.
+                    </p>
+                    <button
+                      onClick={() => openCommentDialog()}
+                      className="px-3 py-1 text-sm border border-yellow-600 text-yellow-700 rounded hover:bg-yellow-100 transition"
+                    >
+                      Klik di sini untuk lihat detail
+                    </button>
+                  </div>
+                );
+              } else if (data?.additional_data_status === "required") {
+                return (
+                  <div
+                    className="p-4 rounded-md bg-red-50 border border-red-200 text-red-800 flex flex-col items-center justify-between gap-4 mt-3 mb-3 hover:bg-red-100 cursor-pointer"
+                    onClick={() => openCommentDialog()}
+                  >
+                    <p className="text-sm font-medium">
+                      Customer memiliki riwayat upload data yang belum dipenuhi.
+                    </p>
+                    <button
+                      onClick={() => openCommentDialog()}
+                      className="px-3 py-1 text-sm border border-red-600 text-red-700 rounded hover:bg-red-100 transition"
+                    >
+                      Klik di sini untuk lihat detail
+                    </button>
+                  </div>
+                );
+              } else if (data?.additional_data_status === "not_required" && data?.additional_data && data?.additional_data.length > 0) {
+                return (
+                  <div
+                    className="p-4 rounded-md bg-green-50 border border-green-200 text-green-800 flex flex-col items-center justify-between gap-4 mt-3 mb-3 hover:bg-green-100 cursor-pointer"
+                    onClick={() => openCommentDialog()}
+                  >
+                    <p className="text-sm font-medium">
+                      Customer memiliki riwayat upload data tambahan.
+                    </p>
+                    <button
+                      onClick={() => openCommentDialog()}
+                      className="px-3 py-1 text-sm border border-green-600 text-green-700 rounded hover:bg-green-100 transition"
+                    >
+                      Klik di sini untuk lihat detail
+                    </button>
+                  </div>
+                );
+              } else if (data?.additional_data_status === "not_required" && (!data?.additional_data || data?.additional_data.length === 0)) {
+                return (
+                  <div className="p-4 rounded-md bg-gray-100 text-gray-700 mt-3">
+                    <p className="text-sm">Customer tidak memiliki riwayat upload data tambahan.</p>
+                  </div>
+                );
+              } else {
+                return null;
+              }
+            })()}
           </div>
           {data?.status === "pending" && (
             <div className="flex flex-col gap-5 bottom-1 mt-5">
