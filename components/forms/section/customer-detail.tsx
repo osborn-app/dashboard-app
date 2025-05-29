@@ -141,7 +141,7 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
         onSettled: () => {
           setLoading(false);
         },
-        onError: (error) => {
+        onError: (error: any) => {
           toast({
             variant: "destructive",
             title: "Uh oh! ada sesuatu yang error",
@@ -414,7 +414,7 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
                 type="button"
                 onClick={() => setOpenRejectModal(true)}
               >
-                {loading ? <Spinner className="h-5 w-5" /> : "Tolak Pelanggan"}
+                {loading ? <Spinner className="h-5 w-5" /> : "Tolak Pelanggan!"}
               </Button>
               <Button
                 className="w-full  bg-main hover:bg-main/90"

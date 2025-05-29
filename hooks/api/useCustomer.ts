@@ -145,7 +145,7 @@ export const useRejectCustomer = (queryKey: any[] = ["customers"]) => {
   const queryClient = useQueryClient();
 
   const putCustomer = ({ id, reason }: { id: string; reason: string }) => {
-    return axiosAuth.put(`${baseEndpoint}/${id}/reject`, { reason });
+    return axiosAuth.put(`/orders/${id}/bulk-reject`, { reason });
   };
 
   return useMutation({

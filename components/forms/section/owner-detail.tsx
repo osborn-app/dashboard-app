@@ -96,9 +96,8 @@ const OwnerDetail: React.FC<OwnerDetailProps> = ({ onClose, data }) => {
           description: `error: ${error?.response?.message}`,
         });
       },
-    }
-  );
-};
+    });
+  };
 
   const handleRejectCustomer = (reason: string) => {
     setLoading(true);
