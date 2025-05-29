@@ -430,7 +430,7 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
                <Button
                 className="w-full  bg-green-500 hover:bg-green-600"
                 type="button"
-                onClick={() => setOpenApprovalModal(true)}
+                onClick={() => setOpenApprovalModalWithInput(true)}
                 >
                 {loading ? (
                   <Spinner className="h-5 w-5" />
