@@ -65,44 +65,44 @@ export function DashboardNav({
   }
 
   return (
-    <nav className="grid items-start gap-2">
-      <span
-        className={cn(
-          "flex justify-between items-center rounded-md  text-sm font-medium",
-        )}
+  <nav className="flex flex-col h-screen">
+    {/* HEADER: Judul dan tombol toggle */}
+    <div className="flex justify-between items-center rounded-md text-sm font-medium p-3">
+      {isMobileNav || (!isMinimized && !isMobileNav) ? (
+        <span className="mr-2 truncate font-semibold text-lg">Menu</span>
+      ) : (
+        ""
+      )}
+      <div
+        className="border border-neutral-200 p-3 bg-neutral-50 rounded-md"
+        onClick={toggle}
       >
-        {isMobileNav || (!isMinimized && !isMobileNav) ? (
-          <span className="mr-2 truncate font-semibold text-lg pl-3">Menu</span>
+        {isMinimized ? (
+          <ChevronLast className="h-4 w-4" />
         ) : (
-          ""
+          <ChevronFirst className="h-4 w-4" />
         )}
-        <div
-          className="border border-neutral-200 p-3 bg-neutral-50 rounded-md"
-          onClick={toggle}
-        >
-          {isMinimized ? (
-            <ChevronLast className="h-4 w-4" />
-          ) : (
-            <ChevronFirst className="h-4 w-4" />
-          )}
-        </div>
-      </span>
-      {navItems.map((item, index) => {
-        const Icon = Icons[item.icon || "arrowRight"];
-        const isActive = () => {
-          const basePaths = [
-            "/dashboard",
-            "/dashboard/calendar",
-            "/dashboard/orders",
-            "/dashboard/requests",
-            "/dashboard/fleets",
-            "/dashboard/reimburse",
-            "/dashboard/customers",
-            "/dashboard/drivers",
-            "/dashboard/location",
-            "/dashboard/owners",
-            "/dashboard/recap",
-          ];
+      </div>
+    </div>
+
+    <div className="overflow-y-auto pr-2 flex-1">
+      <div className="grid items-start gap-2 pb-10">
+        {navItems.map((item, index) => {
+          const Icon = Icons[item.icon || "arrowRight"];
+          const isActive = () => {
+            const basePaths = [
+              "/dashboard",
+              "/dashboard/calendar",
+              "/dashboard/orders",
+              "/dashboard/requests",
+              "/dashboard/fleets",
+              "/dashboard/reimburse",
+              "/dashboard/customers",
+              "/dashboard/drivers",
+              "/dashboard/location",
+              "/dashboard/owners",
+              "/dashboard/recap",
+            ];
 
           if (item.href === "/dashboard") {
             return path === "/dashboard";
@@ -140,45 +140,50 @@ export function DashboardNav({
                   isActive() ? "bg-[#EDEFF3] text-main" : "transparent",
                   item.disabled && "cursor-not-allowed opacity-80",
                 )}
-              >
-                <Icon className="h-4 w-4" />
-                {isMobileNav || (!isMinimized && !isMobileNav) ? (
-                  <div className="flex justify-between w-full">
-                    <span className="ml-2 mr-2 truncate">{item.title}</span>
-                    {item.title === "Pesanan" && !isFetchingOrderStatus && (
-                      <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
-                        {orderCount?.[0]?.count ?? 0}
-                      </div>
-                    )}
-                    {item.title === "Customers" &&
-                      !isFetchingCustomerStatus && (
+                >
+
+                  <Icon className="h-4 w-4" />
+                  {isMobileNav || (!isMinimized && !isMobileNav) ? (
+                    <div className="flex justify-between w-full">
+                      <span className="ml-2 mr-2 truncate">{item.title}</span>
+
+                      {item.title === "Pesanan" && !isFetchingOrderStatus && (
                         <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
-                          {customerCount?.[0]?.count ?? 0}
+                          {orderCount?.[0]?.count ?? 0}
                         </div>
                       )}
-                    {item.title === "Verifikasi Tambahan" &&
-                      !isFetchingVerificationStatus && (
-                        <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
-                          {verificationCount?.[0]?.count ?? 0}
-                        </div>
-                      )}
-                    
-                    {item.title === "Reimburse" &&
-                      !isFetchingReimburseStatus &&
-                      user?.role !== "driver" && (
-                        <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
-                          {reimburseCount?.[0]?.count ?? 0}
-                        </div>
-                      )}
-                  </div>
-                ) : (
-                  ""
-                )}
-              </span>
-            </Link>
-          )
-        );
-      })}
-    </nav>
-  );
+                      {item.title === "Customers" &&
+                        !isFetchingCustomerStatus && (
+                          <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                            {customerCount?.[0]?.count ?? 0}
+                          </div>
+                        )}
+                      {item.title === "Verifikasi Tambahan" &&
+                        !isFetchingVerificationStatus && (
+                          <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                            {verificationCount?.[0]?.count ?? 0}
+                          </div>
+                        )}
+                      {item.title === "Reimburse" &&
+                        !isFetchingReimburseStatus &&
+                        user?.role !== "driver" && (
+                          <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                            {reimburseCount?.[0]?.count ?? 0}
+                          </div>
+                        )}
+                    </div>
+                  ) : (
+                    ""
+                  )}
+                </span>
+              </Link>
+            )
+          );
+        })}
+      </div>
+      <div className="h-32" />
+    </div>
+  </nav>
+);
+
 }

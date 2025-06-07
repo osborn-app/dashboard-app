@@ -354,12 +354,6 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
                     <p className="text-sm font-medium">
                       Customer memiliki riwayat upload data tambahan yang belum diverifikasi.
                     </p>
-                    <button
-                      onClick={() => openCommentDialog()}
-                      className="px-3 py-1 text-sm border border-yellow-600 text-yellow-700 rounded hover:bg-yellow-100 transition"
-                    >
-                      Klik di sini untuk lihat detail
-                    </button>
                   </div>
                 );
               } else if (data?.additional_data_status === "required") {
@@ -371,12 +365,6 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
                     <p className="text-sm font-medium">
                       Customer memiliki riwayat upload data yang belum dipenuhi.
                     </p>
-                    <button
-                      onClick={() => openCommentDialog()}
-                      className="px-3 py-1 text-sm border border-red-600 text-red-700 rounded hover:bg-red-100 transition"
-                    >
-                      Klik di sini untuk lihat detail
-                    </button>
                   </div>
                 );
               } else if (data?.additional_data_status === "not_required" && data?.additional_data && data?.additional_data.length > 0) {
@@ -388,12 +376,6 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
                     <p className="text-sm font-medium">
                       Customer memiliki riwayat upload data tambahan.
                     </p>
-                    <button
-                      onClick={() => openCommentDialog()}
-                      className="px-3 py-1 text-sm border border-green-600 text-green-700 rounded hover:bg-green-100 transition"
-                    >
-                      Klik di sini untuk lihat detail
-                    </button>
                   </div>
                 );
               } else if (data?.additional_data_status === "not_required" && (!data?.additional_data || data?.additional_data.length === 0)) {

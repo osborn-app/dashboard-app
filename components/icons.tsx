@@ -37,7 +37,11 @@ import {
   Users,
   MapPinned,
   Ticket,
-  UserCheckIcon
+  UserCheckIcon,
+  UsersIcon,
+  LucideCarTaxiFront,
+  LucideUserSquare2,
+  PhoneCall
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -142,6 +146,9 @@ export const Icons = {
   maps: MapPinned,
   ticket: Ticket,
   checkuser: UserCheckIcon,
+  usersicon: UsersIcon,
+  carpartner: LucideCarTaxiFront,
+  phonecall : PhoneCall,
   pdf: PDFIcon,
   owners: Owners,
   notebookText: NotebookText,

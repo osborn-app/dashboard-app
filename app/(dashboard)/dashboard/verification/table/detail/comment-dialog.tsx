@@ -193,7 +193,10 @@ export default function CommentDialog({
             <Button
               disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs p-2"
-              onClick={handleApproveAll}
+              onClick={() => {
+                handleApproveAll(),
+                onClose();
+              }}
             >
               {isLoading ? <Spinner className="h-5 w-5" /> : "Setujui Seluruh Data"}
             </Button>
