@@ -461,7 +461,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         commentData={dialogData}
         loading={dialogLoading}
         customerId={selectedCustomerId}
-        status_data={defaultValues.additional_data_status}
+        status_data='no_button'
       />
      )}
       <div className="flex items-center justify-between">
@@ -737,7 +737,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                   <p className="text-sm font-medium">
                     Customer memiliki riwayat upload data tambahan.
                   </p>
-                  <p>Jumlah data: {additionalDataLength}</p>
+                  {/* <p>Jumlah data: {additionalDataLength}</p> */}
                 </div>
               );
             }

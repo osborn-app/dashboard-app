@@ -68,7 +68,7 @@ export default function VerificationTableWrapper() {
     setSelectedStatus(status)
     try {
       const res = await axiosAuth.get(`/customers/${id}/comments`);
-      setDialogData(res.data); // ⬅️ sesuaikan jika format data berbeda
+      setDialogData(res.data);
     } catch (error) {
       console.error(error);
     } finally {

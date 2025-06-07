@@ -153,7 +153,12 @@ export default function CommentDialog({
       <Modal
         open={open}
         onCancel={onClose}
-        // title="Riwayat Komentar Data"
+        title={
+            <div>
+              <div className="text-lg font-semibold">Riwayat Verifikasi Tambahan</div>
+              <hr className="mt-2 mb-4 border-gray-300" />
+            </div>
+          }
         width={800}
         footer={
         status_data === 'pending' ? (
