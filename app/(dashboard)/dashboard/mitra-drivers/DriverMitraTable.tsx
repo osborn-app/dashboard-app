@@ -6,6 +6,7 @@ import {
   DoubleArrowRightIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  Link1Icon
 } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import {
 import { Input } from "antd";
 import Swal from "sweetalert2";
 import useAxiosAuth from "@/hooks/axios/use-axios-auth";
+import { LinkIcon } from "lucide-react";
 
 
 type Driver = {
@@ -45,6 +47,8 @@ export default function DriverMitraTable() {
   const [formPhoneNumber, setFormPhoneNumber] = useState("");
   const [editId, setEditId] = useState<number | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [formImage, setFormImage] = useState<File | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   const axiosAuth = useAxiosAuth();
 
@@ -67,9 +71,8 @@ export default function DriverMitraTable() {
       });
 
       const res = await axiosAuth.get(`/driver_mitra?${params.toString()}`);
-      
       const json = res.data;
-      
+
       setDrivers(json.data);
       setTotal(json.total);
     } catch (error) {
@@ -120,8 +123,32 @@ export default function DriverMitraTable() {
     setModalOpen(true);
   };
 
+   const uploadImageToS3 = async (file: File) => {
+    try {
+
+      const res = await axiosAuth.post("/storages/presign/list", {
+        file_names: [file.name], 
+        folder: "user", 
+      });
+
+      const presignData = res.data[0];  
+
+      await axiosAuth.put(presignData.upload_url, file, {
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      return presignData.download_url; 
+    } catch (error) {
+      console.error("Upload gagal", error);
+      throw new Error("Gagal meng-upload gambar");
+    }
+  };
+
+
   // Open modal edit
-  const openEditModal = async (id: number) => {
+    const openEditModal = async (id: number) => {
     setModalMode("edit");
     setModalOpen(true);
     setModalLoading(true);
@@ -132,6 +159,7 @@ export default function DriverMitraTable() {
       setFormDriverName(driver.name);
       setFormPhoneNumber(driver.phone_number);
       setEditId(driver.id);
+      setPhotoUrl(driver.photo_profile); 
     } catch (error) {
       Swal.fire("Error", "Gagal memuat data driver", "error");
       setModalOpen(false);
@@ -140,6 +168,33 @@ export default function DriverMitraTable() {
     }
   };
 
+const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (files && files.length > 0) {
+    const file = files[0];
+    if (file.type === "image/jpeg" || file.type === "image/png") {
+      setFormImage(file);
+      setPhotoUrl(null); 
+    } else {
+      alert("Hanya file JPG atau PNG yang diperbolehkan.");
+      e.target.value = "";
+    }
+  }
+};
+
+const resetModalState = () => {
+  setFormDriverName(""); 
+  setFormPhoneNumber(""); 
+  setFormImage(null);
+  setPhotoUrl(null); 
+  setModalMode("add"); 
+  setEditId(null);
+};
+
+const handleCancel = () => {
+  resetModalState(); 
+  setModalOpen(false); 
+};
 
   // Submit form add or edit
   const handleSubmit = async () => {
@@ -148,29 +203,47 @@ export default function DriverMitraTable() {
       return;
     }
     setModalLoading(true);
+
     try {
+      let photoUrl = "";
+      if (formImage) {
+        photoUrl = await uploadImageToS3(formImage);
+      }
+
       let res;
       if (modalMode === "add") {
         res = await axiosAuth.post("/driver_mitra", {
           name: formDriverName,
           phone_number: formPhoneNumber,
+          photo_profile: photoUrl,
         });
       } else if (modalMode === "edit" && editId !== null) {
         res = await axiosAuth.put(`/driver_mitra/${editId}`, {
           name: formDriverName,
           phone_number: formPhoneNumber,
+          photo_profile: photoUrl || undefined,
         });
       }
 
-      if (res && res.status === 200 || res?.status === 201) {
-        Swal.fire("Sukses", `Driver berhasil ${modalMode === "add" ? "ditambah" : "diedit"}`, "success");
+      if (res && (res.status === 200 || res.status === 201)) {
+        Swal.fire(
+          "Sukses",
+          `Driver berhasil ${modalMode === "add" ? "ditambah" : "diedit"}`,
+          "success"
+        );
         setModalOpen(false);
         fetchDrivers();
       } else {
         throw new Error("Gagal menyimpan data");
       }
-    } catch (error) {
-      Swal.fire("Error", "Gagal menyimpan data driver", "error");
+    } catch (error: any) {
+      console.error(error);
+
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error
+
+      Swal.fire("Error", errorMessage, "error");
     } finally {
       setModalLoading(false);
     }
@@ -323,10 +396,67 @@ export default function DriverMitraTable() {
                   placeholder="Masukkan nomor telepon"
                   className="mb-4"
                 />
-                <div className="flex justify-end space-x-2">
+
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="image-upload"
+                    className="font-medium text-sm text-gray-700"
+                  >
+                    Upload Foto (PNG/JPG)
+                  </label>
+
+                  <label
+                    htmlFor="image-upload"
+                    className="cursor-pointer inline-block px-4 py-1 text-white bg-blue-600 rounded-md shadow-md hover:bg-blue-700 transition-colors"
+                  >
+                    Pilih Gambar
+                  </label>
+
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept=".jpg,.jpeg,.png"
+                    onChange={handleImageChange} 
+                    className="hidden"
+                  />
+                </div>
+
+                {modalMode === "edit" && photoUrl && !formImage && (
+                  <div className="my-4 flex items-center">
+                    <LinkIcon className="h-4 w-4 text-blue-500 mr-2" />
+                    <div className="flex justify-between items-center">
+                      <a
+                        href={photoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-words max-w-xs"
+                      >
+                        {photoUrl.split('/').pop()}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {formImage && (
+                  <div className="mt-4 flex items-center">
+                    <LinkIcon className="h-4 w-4 text-blue-500 mr-2" />
+                    <div className="flex justify-between items-center">
+                      <a
+                        href={URL.createObjectURL(formImage)} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-words max-w-xs"
+                      >
+                        {formImage.name}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-2 mt-4">
                   <Button
                     variant="outline"
-                    onClick={() => setModalOpen(false)}
+                    onClick={handleCancel}
                     disabled={modalLoading}
                   >
                     Batal
