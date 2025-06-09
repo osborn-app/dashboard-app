@@ -19,6 +19,8 @@ import {
 import { Input, Select } from "antd";
 import Swal from "sweetalert2";
 import useAxiosAuth from "@/hooks/axios/use-axios-auth";
+import { LinkIcon } from "lucide-react";
+import axios from "axios";
 
 
 type FleetParner = {
@@ -28,13 +30,14 @@ type FleetParner = {
   color: string;
   driver_id?: number;
   name?: string;
+  photo_profile: string;
 };
 
 
 
 
 export default function DriverMitraTable() {
-  const [drivers, setDrivers] = useState<FleetParner[]>([]);
+  const [fleetPartner, setFleet] = useState<FleetParner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -53,6 +56,9 @@ export default function DriverMitraTable() {
   const [driverId, setDriverId] = useState<number | undefined>(undefined);
   const [modalLoading, setModalLoading] = useState(false);
 
+  const [formImage, setFormImage] = useState<File | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
   const axiosAuth = useAxiosAuth();
 
   const resetModalState = () => {
@@ -61,7 +67,9 @@ export default function DriverMitraTable() {
     setEditId(null);
     setDriverId(undefined);
     setCurrentDriverOption(null);
+    setPhotoUrl(null); 
     setModalMode("add");
+    setFormImage(null);
   };
 
 
@@ -74,7 +82,7 @@ export default function DriverMitraTable() {
     return () => clearTimeout(delay);
   }, [searchInput]);
 
-  const fetchDrivers = async () => {
+  const fetchFleetMitra = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -87,7 +95,7 @@ export default function DriverMitraTable() {
       
       const json = res.data;
       
-      setDrivers(json.data);
+      setFleet(json.data);
       setTotal(json.total);
     } catch (error) {
       console.error("Gagal mengambil data:", error);
@@ -107,7 +115,7 @@ export default function DriverMitraTable() {
 
 
   useEffect(() => {
-    fetchDrivers();
+    fetchFleetMitra();
     fetchUnassignedDrivers();
   }, [search, page]);
 
@@ -127,7 +135,8 @@ export default function DriverMitraTable() {
 
         if (res.status === 200) {
           Swal.fire("Berhasil!", "Driver telah dihapus.", "success");
-          fetchDrivers(); 
+          fetchFleetMitra();
+          fetchUnassignedDrivers();
         } else {
           throw new Error("Gagal menghapus data.");
         }
@@ -157,17 +166,17 @@ export default function DriverMitraTable() {
   setModalLoading(true);
   try {
     const res = await axiosAuth.get(`/fleet-mitra/${id}`);
-    const driver: FleetParner = res.data;
+    const fleet: FleetParner = res.data;
 
-    setFormDriverName(driver.fleet_name);
-    setFormPhoneNumber(driver.number_plate);
-    setEditId(driver.id);
-    setDriverId(driver.driver_id);
-
-    if (driver.driver_id && driver.name) {
+    setFormDriverName(fleet.fleet_name);
+    setFormPhoneNumber(fleet.number_plate);
+    setEditId(fleet.id);
+    setDriverId(fleet.driver_id);
+    setPhotoUrl(fleet.photo_profile); 
+    if (fleet.driver_id && fleet.name) {
       setCurrentDriverOption({
-        value: driver.driver_id,
-        label: driver.name,
+        value: fleet.driver_id,
+        label: fleet.name,
       });
     } else {
       setCurrentDriverOption(null);
@@ -180,7 +189,43 @@ export default function DriverMitraTable() {
   }
 };
 
+const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (files && files.length > 0) {
+    const file = files[0];
+    if (file.type === "image/jpeg" || file.type === "image/png") {
+      setFormImage(file);
+      setPhotoUrl(null); 
+    } else {
+      alert("Hanya file JPG atau PNG yang diperbolehkan.");
+      e.target.value = "";
+    }
+  }
+};
 
+
+const uploadImageToS3 = async (file: File) => {
+    try {
+
+      const res = await axiosAuth.post("/storages/presign/list", {
+        file_names: [file.name], 
+        folder: "user", 
+      });
+
+      const presignData = res.data[0];  
+
+      await axios.put(presignData.upload_url, file, {
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      return presignData.download_url; 
+    } catch (error) {
+      console.error("Upload gagal", error);
+      throw new Error("Gagal meng-upload gambar");
+    }
+  };
 
   // Submit form add or edit
   const handleSubmit = async () => {
@@ -190,25 +235,33 @@ export default function DriverMitraTable() {
     }
     setModalLoading(true);
     try {
+
+      let photoUrl = "";
+      if (formImage) {
+        photoUrl = await uploadImageToS3(formImage);
+      }
+
       let res;
       if (modalMode === "add") {
         res = await axiosAuth.post("/fleet-mitra", {
           fleet_name: formDriverName,
           number_plate: formPhoneNumber,
           driver_id: driverId,
+          photo_profile: photoUrl,
         });
       } else if (modalMode === "edit" && editId !== null) {
         res = await axiosAuth.put(`/fleet-mitra/${editId}`, {
           fleet_name: formDriverName,
           number_plate: formPhoneNumber,
           driver_id: driverId, 
+          photo_profile: photoUrl || undefined,
         });
       }
 
       if (res && res.status === 200 || res?.status === 201) {
         Swal.fire("Sukses", `Driver berhasil ${modalMode === "add" ? "ditambah" : "diedit"}`, "success");
         setModalOpen(false);
-        fetchDrivers();
+        fetchFleetMitra();
         fetchUnassignedDrivers()
       } else {
         throw new Error("Gagal menyimpan data");
@@ -255,18 +308,18 @@ export default function DriverMitraTable() {
                   Memuat data...
                 </TableCell>
               </TableRow>
-            ) : drivers.length === 0 ? (
+            ) : fleetPartner.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-20">
                   Tidak ada data ditemukan
                 </TableCell>
               </TableRow>
             ) : (
-              drivers.map((driver) => (
-                <TableRow key={driver.id}>
-                  <TableCell className="max-w-[250px] truncate">{driver.fleet_name}</TableCell>
-                  <TableCell className="max-w-[150px] truncate">{driver.number_plate}</TableCell>
-                  <TableCell className="max-w-[150px] truncate">{driver.name ?? '-'}</TableCell>
+              fleetPartner.map((fleet) => (
+                <TableRow key={fleet.id}>
+                  <TableCell className="max-w-[250px] truncate">{fleet.fleet_name}</TableCell>
+                  <TableCell className="max-w-[150px] truncate">{fleet.number_plate}</TableCell>
+                  <TableCell className="max-w-[150px] truncate">{fleet.name ?? '-'}</TableCell>
                   <TableCell>
                     <a
                       href=''
@@ -281,14 +334,14 @@ export default function DriverMitraTable() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => openEditModal(driver.id)}
+                      onClick={() => openEditModal(fleet.id)}
                     >
                       Edit Data
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDelete(driver.id)}
+                      onClick={() => handleDelete(fleet.id)}
                     >
                       Hapus
                     </Button>
@@ -349,7 +402,7 @@ export default function DriverMitraTable() {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">
-              {modalMode === "add" ? "Tambah Fleet" : "Edit Fleet"}
+              {modalMode === "add" ? "Tambah Data Fleet" : "Edit Fleet"}
             </h2>
             {modalLoading ? (
               <div className="text-center py-10">Memuat...</div>
@@ -383,9 +436,62 @@ export default function DriverMitraTable() {
                   placeholder="Pilih Driver"
                   className="mb-4 w-full"
                 />
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="image-upload"
+                    className="font-medium text-sm text-gray-700"
+                  >
+                    Upload Foto (PNG/JPG)
+                  </label>
 
+                  <label
+                    htmlFor="image-upload"
+                    className="cursor-pointer inline-block px-4 py-1 text-white bg-blue-600 rounded-md shadow-md hover:bg-blue-700 transition-colors"
+                  >
+                    Pilih Gambar
+                  </label>
 
-                <div className="flex justify-end space-x-2">
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept=".jpg,.jpeg,.png"
+                    onChange={handleImageChange} 
+                    className="hidden"
+                  />
+                </div>
+
+                {modalMode === "edit" && photoUrl && !formImage && (
+                  <div className="my-4 flex items-center">
+                    <LinkIcon className="h-4 w-4 text-blue-500 mr-2" />
+                    <div className="flex justify-between items-center">
+                      <a
+                        href={photoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-words max-w-xs"
+                      >
+                        {photoUrl.split('/').pop()}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {formImage && (
+                  <div className="mt-4 flex items-center">
+                    <LinkIcon className="h-4 w-4 text-blue-500 mr-2" />
+                    <div className="flex justify-between items-center">
+                      <a
+                        href={URL.createObjectURL(formImage)} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline break-words max-w-xs"
+                      >
+                        {formImage.name}
+                      </a>
+                    </div>
+                  </div>
+                )}
+                 <div className="flex justify-end space-x-2 mt-6">
                  <Button
                   variant="outline"
                   onClick={() => {

@@ -142,48 +142,72 @@ export default function TablePage() {
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
   const handleSubmit = async () => {
-  try {
-    setLoadingSubmit(true);
-    const filteredData = data.filter(item => item.saldo > 0 || item.biayaSewa > 0);
+    try {
+      setLoadingSubmit(true);
 
-    if (filteredData.length === 0) {
-      Swal.fire("Gagal", "Data Kosong", "error");
-      return; 
+      const filteredData = data.filter(item => item.saldo > 0 || item.biayaSewa > 0);
+
+      if (filteredData.length === 0) {
+        Swal.fire("Gagal", "Data Kosong", "error");
+        return;
+      }
+
+      const payload = filteredData.map(item => {
+        const jumlahKekurangan = item.biayaSewa - item.saldo;
+        const jumlahKelebihan = item.saldo - item.biayaSewa;
+
+        return {
+          driver_id: item.driver_id,
+          saldo: formatRupiah(item.saldo),
+          biaya_sewa: formatRupiah(item.biayaSewa),
+          jumlah_kekurangan: jumlahKekurangan > 0 ? formatRupiah(jumlahKekurangan) : "0",
+          jumlah_kelebihan: jumlahKelebihan > 0 ? formatRupiah(jumlahKelebihan) : "0",
+        };
+      });
+
+      const response = await axiosAuth.post("/wa-blas/send-wa-driver", payload);
+      console.log("Response:", response.data);
+
+      const { total_request, total_sent, total_failed, failed_details } = response.data;
+
+      setModalVisible(false);
+
+      let failedMessage = '';
+      if (total_failed > 0) {
+        failedMessage = `<br/><b>Detail Gagal:</b><ul style="text-align: left;">`;
+        failed_details.forEach((fail: any) => {
+          failedMessage += `<li>• ${fail.name} (${fail.phone}): ${fail.reason}</li>`;
+        });
+        failedMessage += `</ul>`;
+      }
+
+      Swal.fire({
+        icon: total_failed === 0 ? "success" : "warning",
+        title: "Hasil Pengiriman WhatsApp",
+        html: `
+          <b>Total Data:</b> ${total_request}<br/>
+          <b>Berhasil Dikirim:</b> ${total_sent}<br/>
+          <b>Gagal Dikirim:</b> ${total_failed}
+          ${failedMessage}
+        `,
+      }).then(() => {
+        const resetData = data.map(item => ({
+          ...item,
+          saldo: 0,
+          biayaSewa: 0,
+          jumlah_kekurangan: "-",
+          jumlah_kelebihan: "-"
+        }));
+        setData(resetData);
+      });
+
+    } catch (error) {
+      console.error("Gagal mengirim data:", error);
+      Swal.fire("Error", "Terjadi kesalahan saat mengirim data.", "error");
+    } finally {
+      setLoadingSubmit(false);
     }
-
-    const payload = filteredData.map(item => {
-      const jumlahKekurangan = item.biayaSewa - item.saldo;
-      const jumlahKelebihan = item.saldo - item.biayaSewa;
-      
-      return {
-        driver_id: item.driver_id,  
-        saldo: formatRupiah(item.saldo), 
-        biaya_sewa: formatRupiah(item.biayaSewa), 
-        jumlah_kekurangan: jumlahKekurangan > 0 ? formatRupiah(jumlahKekurangan) : "-",
-        jumlah_kelebihan: jumlahKelebihan > 0 ? formatRupiah(jumlahKelebihan) : "-",
-      };
-    });
-
-    // POST request
-    const response = await axiosAuth.post("/wa-blas/send-wa-driver", payload);
-    console.log("Response:", response.data);
-    setModalVisible(false);
-    Swal.fire("Berhasil", `WhatsApp Telah Berhasil Dikirim ke Driver`, "success").then(() => {
-      const resetData = data.map(item => ({
-        ...item,
-        saldo: 0,
-        biayaSewa: 0,
-        jumlah_kekurangan: "-",
-        jumlah_kelebihan: "-"
-      }));
-      setData(resetData);
-    });
-  } catch (error) {
-    console.error("Gagal mengirim data:", error);
-  } finally {
-    setLoadingSubmit(false);
-  }
-};
+  };
 
 
   return (
