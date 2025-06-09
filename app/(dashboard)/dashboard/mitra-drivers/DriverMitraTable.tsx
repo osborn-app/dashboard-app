@@ -21,6 +21,7 @@ import { Input } from "antd";
 import Swal from "sweetalert2";
 import useAxiosAuth from "@/hooks/axios/use-axios-auth";
 import { LinkIcon } from "lucide-react";
+import axios from "axios";
 
 
 type Driver = {
@@ -133,7 +134,7 @@ export default function DriverMitraTable() {
 
       const presignData = res.data[0];  
 
-      await axiosAuth.put(presignData.upload_url, file, {
+      await axios.put(presignData.upload_url, file, {
         headers: {
           "Content-Type": file.type,
         },
