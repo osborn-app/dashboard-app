@@ -44,6 +44,8 @@ import { convertEmptyStringsToNull } from "@/lib/utils";
 import { ConfirmModal } from "../modal/confirm-modal";
 import { RejectCustomerModal } from "../modal/reject-customer-modal";
 import Spinner from "../spinner";
+import { ConfirmModalWithInput } from "../modal/confirm-modal-input";
+import CommentDialog from "@/app/(dashboard)/dashboard/verification/table/detail/comment-dialog";
 const fileSchema = z.custom<any>(
   (val: any) => {
     // if (!(val instanceof FileList)) return false;
@@ -103,6 +105,7 @@ const formSchema = z.object({
   phone_number: z
     .string({ required_error: "Nomor telepon diperlukan" })
     .min(10, { message: "Nomor Telepon minimal harus 10 digit" }),
+    // additional_data: z.any().optional(),
 });
 
 const formEditSchema = z.object({
@@ -173,12 +176,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const queryClient = useQueryClient();
   const [openApprovalModal, setOpenApprovalModal] = useState(false);
   const [openRejectModal, setOpenRejectModal] = useState(false);
+  const [openApprovalModalWithInput, setOpenApprovalModalWithInput] = useState(false);
+  const [openModalVerification, setOpenModalVerification] = useState(false);
+
 
   const { mutate: approveCustomer } = useApproveCustomer();
   const { mutate: rejectCustomer } = useRejectCustomer();
   const { mutate: createCustomer } = usePostCustomer();
   const { mutate: updateCustomer } = usePatchCustomer();
   const axiosAuth = useAxiosAuth();
+
 
   const defaultValues = initialData
     ? {
@@ -189,6 +196,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         id_cards: initialData?.id_cards,
         phone_number: initialData?.phone_number,
         emergency_phone_number: initialData?.emergency_phone_number,
+        additional_data_status: initialData?.additional_data_status,
+        additional_data: initialData?.additional_data
       }
     : {
         name: "",
@@ -198,6 +207,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         id_cards: [],
         phone_number: "",
         emergency_phone_number: "",
+        additional_data_status: '',
+        additional_data: []
       };
 
   const form = useForm<CustomerFormValues>({
@@ -328,8 +339,12 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     }
   };
 
-  const handleApproveCustomer = () => {
-    approveCustomer(customerId as string, {
+ const handleApproveCustomer = (reason?: string) => {
+  setLoading(true); 
+
+  approveCustomer(
+    { id: customerId as string, reason: reason},
+    {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["customers"] });
         toast({
@@ -345,12 +360,13 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         toast({
           variant: "destructive",
           title: "Uh oh! ada sesuatu yang error",
-          //@ts-ignore
+          // @ts-ignore
           description: `error: ${error?.response?.message}`,
         });
       },
-    });
-  };
+    }
+  );
+};
 
   const handleRejectCustomer = (reason: string) => {
     rejectCustomer(
@@ -382,6 +398,32 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     );
   };
 
+
+  // ini lg di edit
+  const [dialogData, setDialogData] = useState([]);
+  const [dialogLoading, setDialogLoading] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>();
+  
+  const handleOpenCommentDialog = async () => {
+    const id = Array.isArray(customerId) ? customerId[0] : customerId;
+    setSelectedCustomerId(id);
+    setDialogLoading(true);
+
+    try {
+      const response = await axiosAuth.get(`/customers/${id}/comments`);
+      setDialogData(response.data);
+      console.log("Customer comments:", response.data); 
+    } catch (error) {
+      console.error("Gagal mengambil komentar:", error);
+    } finally {
+      setDialogLoading(false);
+    }
+
+    setOpenModalVerification(true);
+  };
+
+
+
   return (
     <>
       {openApprovalModal && (
@@ -393,6 +435,17 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         />
       )}
 
+      {openApprovalModalWithInput && (
+      <ConfirmModalWithInput
+        isOpen={openApprovalModalWithInput}
+        onClose={() => setOpenApprovalModalWithInput(false)}
+        onConfirm={handleApproveCustomer}
+        loading={loading}
+      />
+    )}
+      
+
+
       {openRejectModal && (
         <RejectCustomerModal
           isOpen={openRejectModal}
@@ -401,6 +454,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           loading={loading}
         />
       )}
+     {openModalVerification && (
+       <CommentDialog
+        open={openModalVerification}
+        onClose={() => setOpenModalVerification(false)}
+        commentData={dialogData}
+        loading={dialogLoading}
+        customerId={selectedCustomerId}
+        status_data='no_button'
+      />
+     )}
       <div className="flex items-center justify-between">
         <Heading title={title} description={description} />
       </div>
@@ -630,6 +693,67 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
               </FormItem>
             )}
           />
+           {(() => {
+            const status = defaultValues?.additional_data_status;
+            const additionalData = defaultValues?.additional_data || [];
+            const additionalDataLength = additionalData.length;
+
+            const baseClass =
+              "p-4 rounded-md flex flex-col items-center justify-between gap-4 mt-3 mb-3 cursor-pointer";
+            const handleClick = () => handleOpenCommentDialog();
+
+            if (status === "pending") {
+              return (
+                <div
+                  className={`${baseClass} bg-yellow-50 border border-yellow-200 text-yellow-800 hover:bg-yellow-100`}
+                  onClick={handleClick}
+                >
+                  <p className="text-sm font-medium">
+                    Customer memiliki riwayat upload data tambahan yang belum diverifikasi.
+                  </p>
+                </div>
+              );
+            }
+
+            if (status === "required") {
+              return (
+                <div
+                  className={`${baseClass} bg-red-50 border border-red-200 text-red-800 hover:bg-red-100`}
+                  onClick={handleClick}
+                >
+                  <p className="text-sm font-medium">
+                    Customer memiliki riwayat upload data yang belum dipenuhi.
+                  </p>
+                </div>
+              );
+            }
+
+            if (status === "not_required" && additionalDataLength > 0) {
+              return (
+                <div
+                  className={`${baseClass} bg-green-50 border border-green-200 text-green-800 hover:bg-green-100`}
+                  onClick={handleClick}
+                >
+                  <p className="text-sm font-medium">
+                    Customer memiliki riwayat upload data tambahan.
+                  </p>
+                  {/* <p>Jumlah data: {additionalDataLength}</p> */}
+                </div>
+              );
+            }
+
+            if (status === "not_required" && additionalDataLength === 0) {
+              return (
+                <div className="p-4 rounded-md bg-gray-100 text-gray-700 mt-3">
+                  <p className="text-sm">Customer tidak memiliki riwayat upload data tambahan.</p>
+                </div>
+              );
+            }
+
+            return null;
+          })()}
+
+
           {isEdit && lastPath !== "preview" && (
             <Button
               disabled={loading}
@@ -657,7 +781,48 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="button"
             onClick={() => setOpenApprovalModal(true)}
           >
-            {loading ? <Spinner className="h-5 w-5" /> : "Setuju"}
+            {loading ? <Spinner className="h-5 w-5" /> : "Setuju!"}
+          </Button>
+         <Button
+          disabled={loading}
+          className="bg-green-600 hover:bg-main/90 p-5 text-[12px]"
+          type="button"
+          onClick={() => setOpenApprovalModalWithInput(true)}
+        >
+          {loading ? (
+            <Spinner className="h-5 w-5" />
+          ) : (
+            <>
+              Setuju Dengan<br />Data Tambahan
+            </>
+          )}
+        </Button>
+
+        </div>
+      )}
+      {lastPath === "detail" || lastPath == "preview" && initialData?.status === "verified" && (
+        <div className="flex justify-start gap-4">
+         <Button
+          disabled={loading}
+          className="bg-green-600 hover:bg-main/90 p-5 text-[12px]"
+          type="button"
+          onClick={() => setOpenApprovalModalWithInput(true)}
+        >
+          {loading ? (
+            <Spinner className="h-5 w-5" />
+          ) : (
+            <>
+              Setuju Dengan<br />Data Tambahan
+            </>
+          )}
+        </Button>
+          <Button
+            disabled={loading}
+            className=" bg-main hover:bg-main/90"
+            type="button"
+            onClick={() => setOpenApprovalModal(true)}
+          >
+            {loading ? <Spinner className="h-5 w-5" /> : "Setujui Seluruh Data"}
           </Button>
         </div>
       )}

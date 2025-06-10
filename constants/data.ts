@@ -192,6 +192,13 @@ export const navItems: NavItem[] = [
     roles: ["admin"],
   },
   {
+  title: "Verifikasi Tambahan",
+  href: "/dashboard/verification",
+  icon: "users",
+  label: "customer",
+  roles: ["admin"],
+  },
+  {
     title: "Location",
     href: "/dashboard/location",
     icon: "maps",
@@ -211,5 +218,26 @@ export const navItems: NavItem[] = [
     icon: "notebookText",
     label: "recap",
     roles: ["owner"],
+  },
+  {
+  title: "Driver Mitra",
+  href: "/dashboard/mitra-drivers",
+  icon: "usersicon",
+  label: "Driver Mitra",
+  roles: ["admin"],
+  },
+  {
+  title: "Fleet Mitra",
+  href: "/dashboard/partner-fleets",
+  icon: "carpartner",
+  label: "Fleet Mitra",
+  roles: ["admin"],
+  },
+  {
+  title: "Template Pesan Fleet",
+  href: "/dashboard/wa-blas-partner",
+  icon: "phonecall",
+  label: "Template Pesan Fleet",
+  roles: ["admin"],
   },
 ];

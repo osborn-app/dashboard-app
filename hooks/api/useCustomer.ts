@@ -9,7 +9,12 @@ import { useUser } from "@/context/UserContext";
 
 const baseEndpoint = "/customers";
 
-export const useGetCustomers = (params: any, options = {}, type: string) => {
+export const useGetCustomers = (
+  params: any,
+  options = {},
+  type: string,
+  queryKeyPrefix: string = "customers"
+) => {
   const axiosAuth = useAxiosAuth();
 
   const getCustomers = async () => {
@@ -18,11 +23,12 @@ export const useGetCustomers = (params: any, options = {}, type: string) => {
   };
 
   return useQuery({
-    queryKey: ["customers", params, type],
+    queryKey: [queryKeyPrefix, params, type],
     queryFn: getCustomers,
     ...options,
   });
 };
+
 
 export const useGetInfinityCustomers = (query?: string, status?: string) => {
   const { user } = useUser();
@@ -117,32 +123,38 @@ export const useDeleteCustomer = (id: number) => {
   });
 };
 
-export const useApproveCustomer = () => {
+export const useApproveCustomer = (queryKey: any[] = ["customers"]) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
-  const putCustomer = (id: number | string) => {
-    return axiosAuth.put(`${baseEndpoint}/${id}/verify`);
+
+  const putCustomer = ({ id, reason }: { id: number | string; reason?: string }) => {
+    return axiosAuth.put(`${baseEndpoint}/${id}/verify`, { reason });
   };
 
   return useMutation({
     mutationFn: putCustomer,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["customers"] });
+      await queryClient.cancelQueries({ queryKey: queryKey });
     },
   });
 };
 
-export const useRejectCustomer = () => {
+
+export const useRejectCustomer = (queryKey: any[] = ["customers"]) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
+
   const putCustomer = ({ id, reason }: { id: string; reason: string }) => {
-    return axiosAuth.put(`${baseEndpoint}/${id}/reject`, { reason });
+    return axiosAuth.put(`/orders/${id}/bulk-reject`, { reason });
   };
 
   return useMutation({
     mutationFn: putCustomer,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["customers"] });
+      await queryClient.cancelQueries({ queryKey });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 };
@@ -155,6 +167,19 @@ export const useCustomersStatusCount = () => {
   };
   return useQuery({
     queryKey: ["customers"],
+    queryFn: getStatusCountFn,
+    enabled: user?.role !== "owner",
+  });
+};
+
+export const customerVerificationStatusCount = () => {
+  const { user } = useUser();
+  const axiosAuth = useAxiosAuth();
+  const getStatusCountFn = () => {
+    return axiosAuth.get(`${baseEndpoint}/verification/data/count`);
+  };
+  return useQuery({
+    queryKey: ["additionaldata"],
     queryFn: getStatusCountFn,
     enabled: user?.role !== "owner",
   });

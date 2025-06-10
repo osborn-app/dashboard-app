@@ -66,9 +66,16 @@ const OwnerDetail: React.FC<OwnerDetailProps> = ({ onClose, data }) => {
     setOpen(true);
   };
 
-  const handleApproveCustomer = () => {
-    setLoading(true);
-    approveCustomer(data?.id as unknown as string, {
+  const handleApproveCustomer = (reason?: string) => {
+
+  setLoading(true);
+
+  approveCustomer(
+    {
+      id: String(data?.id),
+      reason,
+    },
+    {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["customers"] });
         queryClient.invalidateQueries({ queryKey: ["orders"] });
