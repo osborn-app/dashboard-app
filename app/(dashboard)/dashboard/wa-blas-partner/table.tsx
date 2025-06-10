@@ -158,8 +158,8 @@ export default function TablePage() {
 
         return {
           driver_id: item.driver_id,
-          saldo: formatRupiah(item.saldo),
-          biaya_sewa: formatRupiah(item.biayaSewa),
+          saldo: formatRupiah(item.saldo) ?? "0",
+          biaya_sewa: formatRupiah(item.biayaSewa) ?? "0",
           jumlah_kekurangan: jumlahKekurangan > 0 ? formatRupiah(jumlahKekurangan) : "0",
           jumlah_kelebihan: jumlahKelebihan > 0 ? formatRupiah(jumlahKelebihan) : "0",
         };

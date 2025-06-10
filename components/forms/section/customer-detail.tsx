@@ -435,7 +435,8 @@ const CustomerDetail: React.FC<CustomerDetailProps> = ({
       commentData={dialogData}
       loading={dialogLoading}
       customerId={data?.id?.toString()}
-      status_data={data?.additional_data_status}
+      // status_data={data?.additional_data_status}
+      status_data='no_button'
     />
 
     </>
