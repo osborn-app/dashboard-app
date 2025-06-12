@@ -304,13 +304,13 @@ const uploadImageToS3 = async (file: File) => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-20">
+                <TableCell colSpan={5} className="text-center py-20">
                   Memuat data...
                 </TableCell>
               </TableRow>
             ) : fleetPartner.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-20">
+                <TableCell colSpan={5} className="text-center py-20">
                   Tidak ada data ditemukan
                 </TableCell>
               </TableRow>
@@ -321,14 +321,18 @@ const uploadImageToS3 = async (file: File) => {
                   <TableCell className="max-w-[150px] truncate">{fleet.number_plate}</TableCell>
                   <TableCell className="max-w-[150px] truncate">{fleet.name ?? '-'}</TableCell>
                   <TableCell>
-                    <a
-                      href=''
-                      className="text-blue-500 hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Lihat Foto
-                    </a>
+                    {fleet.photo_profile ? (
+                      <a
+                        href={fleet.photo_profile}
+                        className="text-blue-500 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Lihat Foto
+                      </a>
+                    ) : (
+                      '-'
+                    )}
                   </TableCell>
                   <TableCell className="space-x-2">
                     <Button

@@ -20,6 +20,7 @@ import { useGetCustomers } from "@/hooks/api/useCustomer";
 import { Input, Tabs } from "antd";
 import useAxiosAuth from "@/hooks/axios/use-axios-auth";
 import CommentDialog from "./comment-dialog";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export default function VerificationTableWrapper() {
   const [page, setPage] = useState(1);
@@ -29,6 +30,7 @@ export default function VerificationTableWrapper() {
   const pageLimit = 10;
 
   const axiosAuth = useAxiosAuth();
+  const router = useRouter();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogData, setDialogData] = useState([]);
@@ -89,8 +91,22 @@ export default function VerificationTableWrapper() {
               setPage(1);
             }}
             items={[
-              { label: "Menunggu Konfirmasi Admin", key: "pending" },
-              { label: "Menunggu User Upload", key: "required" },
+              {
+                label: (
+                  <span className={`font-medium flex items-center text-[14px]`}>
+                    Menunggu Konfirmasi Admin
+                  </span>
+                ),
+                key: "pending",
+              },
+              {
+                label: (
+                  <span className={`font-medium flex items-center text-[14px]`}>
+                    Menunggu User Upload
+                  </span>
+                ),
+                key: "required",
+              },
             ]}
           />
           <Input
@@ -120,7 +136,6 @@ export default function VerificationTableWrapper() {
                   <TableCell colSpan={6} align="center" style={{ height: '200px', textAlign: 'center', verticalAlign: 'middle' }}>
                     Loading...
                   </TableCell>
-
                 </TableRow>
               ) : customers.length === 0 ? (
                 <TableRow>
@@ -130,7 +145,16 @@ export default function VerificationTableWrapper() {
                 </TableRow>
               ) : (
                 customers.map((item: any) => (
-                  <TableRow key={item.id}>
+                  <TableRow
+                    key={item.id}
+                    onClick={(e) => {
+                      const isButton = (e.target as HTMLElement).closest('button');
+                      if (!isButton) {
+                        router.push(`/dashboard/customers/${item.id}/detail`);
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }} 
+                  >
                     <TableCell>{item.name}</TableCell>
                     <TableCell>{item.email}</TableCell>
                     <TableCell>{item.phone_number}</TableCell>
@@ -142,7 +166,10 @@ export default function VerificationTableWrapper() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => openCommentDialog(item.id, item.additional_data_status)}
+                        onClick={(e) => {
+                          e.stopPropagation(); 
+                          openCommentDialog(item.id, item.additional_data_status);
+                        }}
                       >
                         Tinjau
                       </Button>
@@ -206,7 +233,7 @@ export default function VerificationTableWrapper() {
         commentData={dialogData}
         loading={dialogLoading}
         customerId={selectedCustomerId}
-        status_data={selectedStatus}
+        status_data='pending'
       />
 
     </>

@@ -296,14 +296,18 @@ const handleCancel = () => {
                   <TableCell className="max-w-[250px] truncate">{driver.name}</TableCell>
                   <TableCell className="max-w-[150px] truncate">{driver.phone_number}</TableCell>
                   <TableCell>
-                    <a
-                      href={driver.photo_profile}
-                      className="text-blue-500 hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Lihat Foto
-                    </a>
+                    {driver.photo_profile ? (
+                      <a
+                        href={driver.photo_profile}
+                        className="text-blue-500 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Lihat Foto
+                      </a>
+                    ) : (
+                      '-'
+                    )}
                   </TableCell>
                   <TableCell className="space-x-2">
                     <Button

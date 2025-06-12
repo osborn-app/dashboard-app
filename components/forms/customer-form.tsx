@@ -412,9 +412,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     try {
       const response = await axiosAuth.get(`/customers/${id}/comments`);
       setDialogData(response.data);
-      console.log("Customer comments:", response.data); 
+      // console.log("Customer comments:", response.data); 
     } catch (error) {
-      console.error("Gagal mengambil komentar:", error);
+      console.error("Error:", error);
     } finally {
       setDialogLoading(false);
     }

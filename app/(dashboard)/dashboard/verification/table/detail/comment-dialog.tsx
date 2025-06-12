@@ -10,11 +10,14 @@ import { toast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useApproveCustomer, useRejectCustomer } from "@/hooks/api/useCustomer";
 import { RejectCustomerModal } from "@/components/modal/reject-customer-modal";
+import dayjs from "dayjs";
+import "dayjs/locale/id";
 
 type CommentItem = {
   id: number;
   message: string;
   items: string[];
+  created_at: string;
 };
 
 type CommentDialogProps = {
@@ -95,7 +98,7 @@ export default function CommentDialog({
             variant: "success",
             title: "Customer berhasil ditolak",
           });
-          router.push(`/dashboard/customers`);
+          router.push(`/dashboard/verification`);
         },
         onSettled: () => {
           setLoading(false);
@@ -216,8 +219,9 @@ export default function CommentDialog({
         ) : commentData.length > 0 ? (
           <div className="space-y-6 max-h-[70vh] overflow-auto">
             {commentData.map((comment) => (
-              <div key={comment.id} className="space-y-2 border-b pb-4">
-                <h4 className="text-lg font-medium">{comment.message}</h4>
+              <div key={comment.id} className="border-b pb-4">
+                <h4 className="text-lg font-semibold">{comment.message}</h4>
+                <p className="text-sm text-gray-500 mb-5"> {dayjs(comment.created_at).locale("id").format("DD MMMM YYYY, HH:mm")} </p>
                 <div className="flex flex-wrap gap-2">
                   {comment.items.map((url, index) => (
                     <img
