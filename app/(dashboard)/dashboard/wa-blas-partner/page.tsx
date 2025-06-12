@@ -5,8 +5,8 @@ import { Metadata } from "next";
 import TablePage from "./table";
 
 export const metadata: Metadata = {
-  title: "Wa Blas Partner",
-  description: "Halaman Blas Partner",
+  title: "Wa Blast Partner",
+  description: "Halaman Blast Partner",
 };
 
 
@@ -17,7 +17,7 @@ export default function Page() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <BreadCrumb items={breadcrumbItems} />
       <div className="flex items-start justify-between">
-        <Heading title="Halaman Blas Partner" />
+        <Heading title="Halaman Blast Partner" />
       </div>
       <Separator />
       <TablePage />

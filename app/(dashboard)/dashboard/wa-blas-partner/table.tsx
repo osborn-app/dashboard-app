@@ -13,7 +13,7 @@ import { formatRupiah } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Table Mitra",
-  description: "Halaman Tabel Mitra WA Blas",
+  description: "Halaman Tabel Mitra WA Blast",
 };
 
 interface ApiFleetResponse {
@@ -148,7 +148,7 @@ export default function TablePage() {
       const filteredData = data.filter(item => item.saldo > 0 || item.biayaSewa > 0);
 
       if (filteredData.length === 0) {
-        Swal.fire("Gagal", "Data Kosong", "error");
+        Swal.fire("Gagal", "Data Belum Ditambahkan", "error");
         return;
       }
 
@@ -216,7 +216,7 @@ export default function TablePage() {
         {/* <Heading title="Pastikan Nomor Whatsapp Valid" /> */}
         <p className="text-[20px] font-semibold text-red-500">Harap Pastikan Nomor Whatsapp Valid & Aktif</p>
         <Button onClick={() => setModalVisible(true)}>
-          Kirim Data Blas
+          Kirim Data Blast
         </Button>
       </div>
       <Separator />
