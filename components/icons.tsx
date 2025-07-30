@@ -40,8 +40,8 @@ import {
   UserCheckIcon,
   UsersIcon,
   LucideCarTaxiFront,
-  LucideUserSquare2,
-  PhoneCall
+  PhoneCall,
+  Footprints
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -149,6 +149,7 @@ export const Icons = {
   usersicon: UsersIcon,
   carpartner: LucideCarTaxiFront,
   phonecall : PhoneCall,
+  footprints: Footprints,
   pdf: PDFIcon,
   owners: Owners,
   notebookText: NotebookText,

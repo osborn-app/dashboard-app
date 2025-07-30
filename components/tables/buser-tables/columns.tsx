@@ -1,0 +1,139 @@
+import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { assignBusserTask } from "@/client/busserClient";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { useInvalidateBuserQueries } from "@/hooks/api/useBuser";
+
+export type Buser = {
+  id: string;
+  name: string;
+  phone_number: string;
+  emergency_number: string;
+  email: string;
+  status: string;
+};
+
+const BACKEND_BASE_URL = "https://dev.api.transgo.id/api";
+
+const statusColorMap: Record<string, string> = {
+  peringatan: "bg-yellow-50 text-yellow-500",
+  butuh_tindakan: "bg-orange-50 text-orange-500",
+  urgent: "bg-red-50 text-red-500",
+  tindak_lanjut: "bg-gray-50 text-gray-800",
+  selesai: "bg-green-50 text-green-500",
+};
+
+const ActionButton: React.FC<{ row: Buser }> = ({ row }) => {
+  const status = row.status;
+  const router = useRouter();
+  const invalidateBuserQueries = useInvalidateBuserQueries();
+
+  if (status === "urgent") {
+    return (
+      <Button
+        size="sm"
+        variant="secondary"
+        onClick={async (e) => {
+          e.stopPropagation();
+          try {
+            await assignBusserTask(row.id, 1); // TODO: ganti id sesuai user login
+            // Invalidate all buser queries to refresh the table
+            invalidateBuserQueries();
+            router.push(
+              "/dashboard/buser?status=tindak_lanjut&page=1&limit=10&q=",
+            );
+          } catch (e) {
+            alert("Gagal memindahkan ke Tindak Lanjut");
+          }
+        }}
+      >
+        Tindak Lanjut
+      </Button>
+    );
+  } else if (status === "selesai") {
+    return (
+      <Button
+        size="sm"
+        variant="secondary"
+        onClick={(e) => {
+          e.stopPropagation();
+          router.push(`/dashboard/buser/${row.id}/info`);
+        }}
+      >
+        Informasi
+      </Button>
+    );
+  } else {
+    // Semua status lain (peringatan, butuh_tindakan, tindak_lanjut) ke preview
+    return (
+      <Link
+        href={`/dashboard/buser/${row.id}/preview`}
+        className={buttonVariants({ variant: "main" }) + " px-3 py-1 text-xs"}
+        onClick={(e) => e.stopPropagation()}
+      >
+        Tinjau
+      </Link>
+    );
+  }
+  // Default fallback (should not happen)
+  return null;
+};
+
+export const BuserColumns: ColumnDef<Buser>[] = [
+  {
+    accessorKey: "name",
+    header: "Nama",
+    cell: ({ row }) => (
+      <span className="max-w-[200px] whitespace-normal break-words block">
+        {row.original.name}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "phone_number",
+    header: "Nomor Telepon",
+    cell: ({ row }) => row.original.phone_number,
+  },
+  {
+    accessorKey: "emergency_number",
+    header: "Nomor Emergency",
+    cell: ({ row }) => row.original.emergency_number,
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+    cell: ({ row }) => row.original.email,
+  },
+  {
+    accessorKey: "status",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">Status</span>
+    ),
+    cell: ({ row }) => (
+      <span
+        className={
+          statusColorMap[row.original.status] +
+          " text-xs font-medium rounded-md text-center px-2 py-0.5 whitespace-nowrap"
+        }
+      >
+        {row.original.status === "selesai"
+          ? "Selesai"
+          : row.original.status
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase())}
+      </span>
+    ),
+  },
+  {
+    id: "action",
+    header: () => null,
+    cell: ({ row }) => (
+      <div className="flex justify-center pr-4">
+        <ActionButton row={row.original} />
+      </div>
+    ),
+  },
+];

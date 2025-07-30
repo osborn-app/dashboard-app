@@ -1,0 +1,94 @@
+import React from "react";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { formatRupiah } from "@/lib/utils";
+import Image from "next/image";
+
+interface BuserFormProps {
+  initialData: any;
+  children?: React.ReactNode;
+}
+
+const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold mb-4">Tinjau Buser</h2>
+      {/* Row 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="font-medium">Nama</label>
+          <Input value={initialData?.name || "-"} readOnly />
+        </div>
+        <div>
+          <label className="font-medium">Email</label>
+          <Input value={initialData?.email || "-"} readOnly />
+        </div>
+        <div>
+          <label className="font-medium">Nomor Telepon</label>
+          <Input value={initialData?.phone_number || "-"} readOnly />
+        </div>
+      </div>
+      {/* Row 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="font-medium">Nomor Emergency</label>
+          <Input value={initialData?.emergency_number || "-"} readOnly />
+        </div>
+        <div>
+          <label className="font-medium">Status</label>
+          <Input value={initialData?.status || "-"} readOnly />
+        </div>
+        <div>
+          <label className="font-medium">Tanggal Lahir</label>
+          <Input value={initialData?.birth_date || "-"} readOnly />
+        </div>
+      </div>
+      {/* Row 3: Foto KTP */}
+      <div>
+        <label className="font-medium">Foto KTP</label>
+        {initialData?.id_photo ? (
+          <div className="relative w-48 h-32">
+            <Image
+              src={initialData.id_photo}
+              alt="Foto KTP"
+              fill
+              className="object-cover rounded border"
+            />
+          </div>
+        ) : (
+          <div className="w-48 h-32 bg-gray-200 flex items-center justify-center rounded">
+            Tidak ada foto KTP
+          </div>
+        )}
+      </div>
+      {/* Row 4 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="font-medium">Total Pembayaran</label>
+          <Input
+            value={
+              typeof initialData?.total_payment === "number"
+                ? formatRupiah(initialData.total_payment)
+                : initialData?.total_payment || "-"
+            }
+            readOnly
+          />
+        </div>
+        <div>
+          <label className="font-medium">Jenis Mobil/Motor</label>
+          <Input value={initialData?.vehicle_type || "-"} readOnly />
+        </div>
+      </div>
+      {/* Row 5: Keterangan (full width) */}
+      <div>
+        <label className="font-medium">Keterangan</label>
+        <Input value={initialData?.notes || "-"} readOnly />
+      </div>
+      {/* Row 6: Action buttons (kanan) */}
+      {children && <div className="flex justify-end gap-4">{children}</div>}
+      <Separator />
+    </div>
+  );
+};
+
+export default BuserForm;
