@@ -1,4 +1,6 @@
 import { NavItem } from "@/types";
+import { hr } from "date-fns/locale";
+import { title } from "process";
 
 export type User = {
   id: number;
@@ -231,6 +233,13 @@ export const navItems: NavItem[] = [
   href: "/dashboard/partner-fleets",
   icon: "carpartner",
   label: "Fleet Mitra",
+  roles: ["admin"],
+  },
+  {
+  title: "Buru Sergap",
+  href: "/dashboard/buser",
+  icon: "footprints",
+  label: "Buru Sergap",
   roles: ["admin"],
   },
   {
