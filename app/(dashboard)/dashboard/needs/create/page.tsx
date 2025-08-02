@@ -33,8 +33,7 @@ export default function Page() {
     }
   getFleets(token)
     .then((res: { data: Fleet[] }) => {
-      const filtered = res.data.filter((fleet: Fleet) => fleet.status === "preparation");
-      setFleets(filtered);
+      setFleets(res.data);
       setLoading(false);
     })
     .catch(() => {
@@ -63,7 +62,7 @@ export default function Page() {
       {loading ? (
         <div>Loading...</div>
       ) : (
-        <NeedsForm fleets={fleets} onSubmit={handleSubmit} />
+        <NeedsForm onSubmit={handleSubmit} />
       )}
     </div>
   );

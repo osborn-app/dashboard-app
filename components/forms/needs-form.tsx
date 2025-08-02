@@ -14,11 +14,15 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select as AntdSelect, DatePicker, ConfigProvider } from "antd";
+import idID from 'antd/es/locale/id_ID';
+import { useGetInfinityFleets } from "@/hooks/api/useFleet";
+import { useDebounce } from "use-debounce";
+import { isEmpty } from "lodash";
+import dayjs from "dayjs";
+import 'dayjs/locale/id';
 
-type Fleet = { id: number; name: string };
 type NeedsFormProps = {
-  fleets: Fleet[];
   onSubmit: (form: { fleet_id: number; name: string; description: string; start_date: string; estimate_days: number }) => void;
 };
 
@@ -35,11 +39,16 @@ const formSchema = z.object({
 
 type NeedsFormValues = z.infer<typeof formSchema>;
 
-export default function NeedsForm({ fleets, onSubmit }: NeedsFormProps) {
-  const [search, setSearch] = useState("");
-  const filteredFleets = fleets.filter(fleet =>
-    fleet.name.toLowerCase().includes(search.toLowerCase())
-  );
+export default function NeedsForm({ onSubmit }: NeedsFormProps) {
+  const [searchFleetTerm, setSearchFleetTerm] = useState("");
+  const [searchFleetDebounce] = useDebounce(searchFleetTerm, 500);
+  const {
+    data: fleets,
+    isFetching: isFetchingFleets,
+    fetchNextPage: fetchNextFleets,
+    hasNextPage: hasNextFleets,
+    isFetchingNextPage: isFetchingNextFleets,
+  } = useGetInfinityFleets(searchFleetDebounce);
   const form = useForm<NeedsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -51,21 +60,23 @@ export default function NeedsForm({ fleets, onSubmit }: NeedsFormProps) {
     },
   });
 
+  dayjs.locale('id');
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-4">Form Maintenance Armada</h2>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit((data) => {
-            onSubmit({
-              ...data,
-              fleet_id: Number(data.fleet_id),
-              description: data.description ?? "",
-            });
-          })}
-          className="space-y-8 w-full"
-        >
-          <div className="md:grid md:grid-cols-2 gap-8">
+    <ConfigProvider locale={idID}>
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold mb-4">Form Maintenance Armada</h2>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((data) => {
+              onSubmit({
+                ...data,
+                fleet_id: Number(data.fleet_id),
+                description: data.description ?? "",
+              });
+            })}
+            className="space-y-8 w-full"
+          >
+            <div className="md:grid md:grid-cols-2 gap-8">
             <FormField
               control={form.control}
               name="name"
@@ -73,7 +84,15 @@ export default function NeedsForm({ fleets, onSubmit }: NeedsFormProps) {
                 <FormItem>
                   <FormLabel>Nama Maintenance</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nama maintenance" {...field} />
+                    <AntdSelect
+                      placeholder="Pilih tipe maintenance"
+                      value={field.value || undefined}
+                      onChange={field.onChange}
+                      style={{ width: "100%" }}
+                    >
+                      <AntdSelect.Option value="Perbaikan (Maintenance)">Perbaikan (Maintenance)</AntdSelect.Option>
+                      <AntdSelect.Option value="Penggunaan Internal">Penggunaan Internal</AntdSelect.Option>
+                    </AntdSelect>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -86,30 +105,32 @@ export default function NeedsForm({ fleets, onSubmit }: NeedsFormProps) {
                 <FormItem>
                   <FormLabel>Armada</FormLabel>
                   <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      defaultValue={field.value}
+                    <AntdSelect
+                      showSearch
+                      placeholder="Pilih Armada"
+                      style={{ width: "100%" }}
+                      onSearch={setSearchFleetTerm}
+                      onChange={field.onChange}
+                      onPopupScroll={() => {
+                        if (hasNextFleets && !isFetchingNextFleets) fetchNextFleets();
+                      }}
+                      filterOption={false}
+                      notFoundContent={isFetchingNextFleets ? <p className="px-3 text-sm">loading</p> : null}
+                      value={field.value || undefined}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Armada" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="px-2 py-1">
-                          <Input
-                            placeholder="Cari Armada..."
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            className="mb-2"
-                          />
-                        </div>
-                        {filteredFleets.map(fleet => (
-                          <SelectItem key={fleet.id} value={fleet.id.toString()}>
-                            {fleet.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      {fleets?.pages?.map((page: any) =>
+                        page.data.items.map((item: any) => (
+                          <AntdSelect.Option key={item.id} value={item.id.toString()}>
+                            {item.name}
+                          </AntdSelect.Option>
+                        ))
+                      )}
+                      {isFetchingNextFleets && (
+                        <AntdSelect.Option disabled>
+                          <p className="px-3 text-sm">loading</p>
+                        </AntdSelect.Option>
+                      )}
+                    </AntdSelect>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,7 +158,19 @@ export default function NeedsForm({ fleets, onSubmit }: NeedsFormProps) {
                 <FormItem>
                   <FormLabel>Tanggal Mulai</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DatePicker
+                      placeholder="Pilih tanggal mulai"
+                      style={{ width: "100%" }}
+                      format="DD/MM/YYYY - dddd, DD MMMM YYYY (HH:mm:ss)"
+                      showTime={{ format: 'HH:mm:ss' }}
+                      value={field.value ? dayjs(field.value) : null}
+                      onChange={(date) => {
+                        field.onChange(date ? date.format("YYYY-MM-DDTHH:mm:ss") : "");
+                      }}
+                      disabledDate={(current) => {
+                        return current && current < dayjs().startOf('day');
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -150,18 +183,28 @@ export default function NeedsForm({ fleets, onSubmit }: NeedsFormProps) {
                 <FormItem>
                   <FormLabel>Estimasi Hari</FormLabel>
                   <FormControl>
-                    <Input type="number" min={1} {...field} />
+                    <AntdSelect
+                      placeholder="Pilih estimasi hari"
+                      value={field.value || undefined}
+                      onChange={field.onChange}
+                      style={{ width: "100%" }}
+                    >
+                      {Array.from({ length: 30 }, (_, i) => (
+                        <AntdSelect.Option key={i + 1} value={i + 1}>{`${i + 1} Hari`}</AntdSelect.Option>
+                      ))}
+                    </AntdSelect>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <div className="flex justify-end gap-4">
-            <Button type="submit" variant="main">Konfirmasi</Button>
-          </div>
-        </form>
-      </Form>
-    </div>
+            <div className="flex justify-end gap-4">
+              <Button type="submit" variant="main">Konfirmasi</Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </ConfigProvider>
   );
 }
