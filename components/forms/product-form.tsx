@@ -62,7 +62,7 @@ const fileSchema = z.custom<any>(
   },
 );
 
-// Product Form Schema
+// Product Form Schema trigger
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   category: z.string().min(1, "Category is required"),
