@@ -1,7 +1,9 @@
+"use client";
+
 import BreadCrumb from "@/components/breadcrumb";
-import { Heading } from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
 import InspectionsForm from "@/components/forms/inspections-form";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import React from "react";
 
 export default function CreateInspectionPage() {
   const breadcrumbItems = [
@@ -10,15 +12,11 @@ export default function CreateInspectionPage() {
   ];
 
   return (
-    <>
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <ScrollArea className="h-full">
+      <div className="flex-1 space-y-4 p-5">
         <BreadCrumb items={breadcrumbItems} />
-        <div className="flex items-start justify-between">
-          <Heading title="Mulai Inspeksi" />
-        </div>
-        <Separator />
-        <InspectionsForm />
+        <InspectionsForm isEdit={false} />
       </div>
-    </>
+    </ScrollArea>
   );
 }

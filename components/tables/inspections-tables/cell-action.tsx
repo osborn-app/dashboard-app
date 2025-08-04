@@ -21,14 +21,17 @@ interface CellActionProps {
 export const CellAction: React.FC<CellActionProps> = ({ data, status }) => {
   const router = useRouter();
 
-
-
   const handlePreview = () => {
     router.push(`/dashboard/inspections/${data.id}/preview`);
   };
 
   const handleStartInspection = () => {
-    router.push(`/dashboard/inspections/create?fleet_id=${data.fleet.id}`);
+    const fleetId = data.fleet?.id;
+    if (fleetId) {
+      router.push(`/dashboard/inspections/create?fleet_id=${fleetId}`);
+    } else {
+      router.push(`/dashboard/inspections/create`);
+    }
   };
 
   const getActions = () => {

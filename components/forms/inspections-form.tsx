@@ -102,14 +102,33 @@ export default function InspectionsForm({
     }
   }, [fleetId, form]);
 
+  // Auto-set fleet type if fleet_id is provided
+  useEffect(() => {
+    if (fleetId && !isEdit) {
+      // Try to determine fleet type from available fleets
+      if (availableFleets?.data) {
+        const fleet = availableFleets.data.find(
+          (f: any) => f.id.toString() === fleetId,
+        );
+        if (fleet) {
+          setFleetType(fleet.type || "car");
+        }
+      }
+    }
+  }, [fleetId, availableFleets, isEdit]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       await createInspection.mutateAsync({
         ...values,
+        fleet_id: parseInt(values.fleet_id),
         kilometer: parseInt(values.kilometer),
         repair_duration_days: values.repair_duration_days
           ? parseInt(values.repair_duration_days)
           : undefined,
+        has_issue: values.oil_status === "tidak_aman" || 
+                   values.tire_status === "tidak_aman" || 
+                   values.battery_status === "tidak_aman",
       });
 
       toast({
@@ -159,37 +178,39 @@ export default function InspectionsForm({
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-8 w-full"
         >
-          {/* Fleet Type Selection */}
-          <FormField
-            control={form.control}
-            name="fleet_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipe Fleet</FormLabel>
-                <Select
-                  value={fleetType}
-                  onValueChange={(value) => {
-                    setFleetType(value);
-                    form.setValue("fleet_id", "");
-                  }}
-                  disabled={isEdit}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih tipe fleet" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="car">Mobil</SelectItem>
-                    <SelectItem value="motorcycle">Motor</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Pilih tipe fleet untuk melihat daftar yang tersedia
-                </FormDescription>
-              </FormItem>
-            )}
-          />
+          {/* Fleet Type Selection - Only show if no fleet_id provided */}
+          {!fleetId && !isEdit && (
+            <FormField
+              control={form.control}
+              name="fleet_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipe Fleet</FormLabel>
+                  <Select
+                    value={fleetType}
+                    onValueChange={(value) => {
+                      setFleetType(value);
+                      form.setValue("fleet_id", "");
+                    }}
+                    disabled={isEdit}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih tipe fleet" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="car">Mobil</SelectItem>
+                      <SelectItem value="motorcycle">Motor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Pilih tipe fleet untuk melihat daftar yang tersedia
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
+          )}
 
           {/* Fleet Selection */}
           <FormField
@@ -201,7 +222,7 @@ export default function InspectionsForm({
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
-                  disabled={loadingFleets || isEdit}
+                  disabled={loadingFleets || isEdit || !!fleetId}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -212,6 +233,15 @@ export default function InspectionsForm({
                           ? `${initialData.fleet.name} - ${initialData.fleet.plate_number}`
                           : isEdit && initialData?.fleet_id
                           ? `Fleet ID: ${initialData.fleet_id}`
+                          : fleetId && availableFleets?.data
+                          ? (() => {
+                              const fleet = availableFleets.data.find(
+                                (f: any) => f.id.toString() === fleetId,
+                              );
+                              return fleet
+                                ? `${fleet.name} - ${fleet.plate_number}`
+                                : `Fleet ID: ${fleetId}`;
+                            })()
                           : undefined}
                       </SelectValue>
                     </SelectTrigger>
