@@ -376,19 +376,47 @@ const breadcrumbItems = [
                {calculatedPrice ? (
                  <>
                    <div className="flex justify-between">
-                     <span>Harga Produk</span>
-                     <span>{formatRupiah(calculatedPrice.service_price)}</span>
+                     <span>Harga Sewa</span>
+                     <span>{formatRupiah(calculatedPrice.rent_price)}</span>
                    </div>
+                   <div className="flex justify-between">
+                     <span>Total Harga Sewa</span>
+                     <span>{formatRupiah(calculatedPrice.total_rent_price)}</span>
+                   </div>
+                   {calculatedPrice.service_price > 0 && (
+                     <div className="flex justify-between">
+                       <span>Biaya Layanan</span>
+                       <span>{formatRupiah(calculatedPrice.service_price)}</span>
+                     </div>
+                   )}
                    {calculatedPrice.driver_price > 0 && (
                      <div className="flex justify-between">
                        <span>Biaya Driver</span>
                        <span>{formatRupiah(calculatedPrice.driver_price)}</span>
                      </div>
                    )}
+                   {calculatedPrice.total_driver_price > 0 && (
+                     <div className="flex justify-between">
+                       <span>Total Biaya Driver</span>
+                       <span>{formatRupiah(calculatedPrice.total_driver_price)}</span>
+                     </div>
+                   )}
                    {calculatedPrice.out_of_town_price > 0 && (
                      <div className="flex justify-between">
                        <span>Biaya Out of Town</span>
                        <span>{formatRupiah(calculatedPrice.out_of_town_price)}</span>
+                     </div>
+                   )}
+                   {calculatedPrice.weekend_price > 0 && (
+                     <div className="flex justify-between">
+                       <span>Biaya Weekend</span>
+                       <span>{formatRupiah(calculatedPrice.weekend_price)}</span>
+                     </div>
+                   )}
+                   {calculatedPrice.total_weekend_price > 0 && (
+                     <div className="flex justify-between">
+                       <span>Total Biaya Weekend</span>
+                       <span>{formatRupiah(calculatedPrice.total_weekend_price)}</span>
                      </div>
                    )}
                    {calculatedPrice.additional_services && calculatedPrice.additional_services.length > 0 && (
@@ -401,34 +429,44 @@ const breadcrumbItems = [
                        </span>
                      </div>
                    )}
-                   {calculatedPrice.insurance && (
+                   {calculatedPrice.insurance && calculatedPrice.insurance_price > 0 && (
                      <div className="flex justify-between">
                        <span>Asuransi</span>
-                       <span>{formatRupiah(calculatedPrice.insurance.price)}</span>
+                       <span>{formatRupiah(calculatedPrice.insurance_price)}</span>
                      </div>
                    )}
                    <Separator />
                    <div className="flex justify-between">
                      <span>Sub Total</span>
-                     <span>{formatRupiah(calculatedPrice.sub_total_price)}</span>
+                     <span>{formatRupiah(calculatedPrice.sub_total)}</span>
                    </div>
-                   {calculatedPrice.discount > 0 && (
+                   {calculatedPrice.discount_percentage > 0 && (
                      <div className="flex justify-between text-green-600">
-                       <span>Diskon ({calculatedPrice.discount}%)</span>
-                       <span>-{formatRupiah(calculatedPrice.discount_amount)}</span>
+                       <span>Diskon ({calculatedPrice.discount_percentage}%)</span>
+                       <span>-{formatRupiah(calculatedPrice.discount)}</span>
+                     </div>
+                   )}
+                   {calculatedPrice.tax > 0 && (
+                     <div className="flex justify-between">
+                       <span>Pajak</span>
+                       <span>{formatRupiah(calculatedPrice.tax)}</span>
                      </div>
                    )}
                    <Separator />
                    <div className="flex justify-between text-lg font-bold">
                      <span>Total</span>
-                     <span>{formatRupiah(calculatedPrice.total_price)}</span>
+                     <span>{formatRupiah(calculatedPrice.total)}</span>
+                   </div>
+                   <div className="flex justify-between text-lg font-bold">
+                     <span>Grand Total</span>
+                     <span>{formatRupiah(calculatedPrice.grand_total)}</span>
                    </div>
                  </>
                ) : (
                  <>
                    <div className="flex justify-between">
-                     <span>Harga Produk</span>
-                     <span>{formatRupiah(productOrder.data?.service_price)}</span>
+                     <span>Harga Sewa</span>
+                     <span>{formatRupiah(productOrder.data?.service_price || 0)}</span>
                    </div>
                    {productOrder.data?.driver_price > 0 && (
                      <div className="flex justify-between">

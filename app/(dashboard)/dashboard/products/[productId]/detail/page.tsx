@@ -1,5 +1,5 @@
 import BreadCrumb from "@/components/breadcrumb";
-import { ProductDetail } from "@/components/product-detail";
+import { ProductDetails } from "@/components/product-details";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import React from "react";
 
@@ -12,7 +12,7 @@ export default function page({ params }: { params: { productId: string } }) {
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <BreadCrumb items={breadcrumbItems} />
-        <ProductDetail productId={params.productId} />
+        <ProductDetails productId={params.productId} />
       </div>
     </ScrollArea>
   );

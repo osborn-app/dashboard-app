@@ -80,6 +80,18 @@ export function getCategoryLabel(category: string): string {
     }
 }
 
+export function getProductStatusLabel(status: string): string {
+    switch (status) {
+        case 'available':
+            return 'Tersedia';
+        case 'unavailable':
+            return 'Tidak Tersedia';
+        default:
+            return status;
+    }
+}
+
+    
 export interface ProductOrder {
     id: number;
     created_at: string;

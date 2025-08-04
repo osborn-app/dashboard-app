@@ -108,7 +108,7 @@ const ProductOrderPreviewPage = () => {
             Preview Product Order
           </h1>
           <p className="text-gray-600 mt-2">
-            Invoice: {productOrder.invoice_number}
+            Invoice: {productOrder.data.invoice_number}
           </p>
         </div>
         <Link href="/dashboard/product-orders">
@@ -137,7 +137,7 @@ const ProductOrderPreviewPage = () => {
                     Nama Produk
                   </label>
                   <p className="text-lg font-semibold">
-                    {productOrder.product.name}
+                    {productOrder.data.product.name}
                   </p>
                 </div>
                 <div>
@@ -145,7 +145,7 @@ const ProductOrderPreviewPage = () => {
                     Kategori
                   </label>
                   <p className="text-lg font-semibold">
-                    {productOrder.product.category_label}
+                    {productOrder.data.product.category_label}
                   </p>
                 </div>
                 <div>
@@ -153,7 +153,7 @@ const ProductOrderPreviewPage = () => {
                     Model
                   </label>
                   <p className="text-lg font-semibold">
-                    {productOrder.product.model}
+                    {productOrder.data.product.model}
                   </p>
                 </div>
                 <div>
@@ -161,12 +161,12 @@ const ProductOrderPreviewPage = () => {
                     Status Produk
                   </label>
                   <Badge variant="secondary">
-                    {productOrder.product.status_label}
+                    {productOrder.data.product.status_label}
                   </Badge>
                 </div>
               </div>
 
-              {productOrder.product.specifications && (
+              {productOrder.data.product.specifications && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">
                     Spesifikasi
@@ -174,15 +174,15 @@ const ProductOrderPreviewPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-sm text-gray-500">Warna</p>
-                      <p className="font-medium">{productOrder.product.specifications.color}</p>
+                      <p className="font-medium">{productOrder.data.product.specifications.color}</p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-sm text-gray-500">Storage</p>
-                      <p className="font-medium">{productOrder.product.specifications.storage}</p>
+                      <p className="font-medium">{productOrder.data.product.specifications.storage}</p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <p className="text-sm text-gray-500">Battery Level</p>
-                      <p className="font-medium">{productOrder.product.specifications.battery_level}%</p>
+                      <p className="font-medium">{productOrder.data.product.specifications.battery_level}%</p>
                     </div>
                   </div>
                 </div>
@@ -205,10 +205,10 @@ const ProductOrderPreviewPage = () => {
                     Tanggal Mulai
                   </label>
                   <p className="text-lg font-semibold">
-                    {dayjs(productOrder.start_date).format("dddd, DD MMMM YYYY")}
+                    {dayjs(productOrder.data.start_date).format("dddd, DD MMMM YYYY")}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Jam {dayjs(productOrder.start_date).format("HH:mm")} WIB
+                    Jam {dayjs(productOrder.data.start_date).format("HH:mm")} WIB
                   </p>
                 </div>
                 <div>
@@ -216,10 +216,10 @@ const ProductOrderPreviewPage = () => {
                     Tanggal Selesai
                   </label>
                   <p className="text-lg font-semibold">
-                    {dayjs(productOrder.end_date).format("dddd, DD MMMM YYYY")}
+                    {dayjs(productOrder.data.end_date).format("dddd, DD MMMM YYYY")}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Jam {dayjs(productOrder.end_date).format("HH:mm")} WIB
+                    Jam {dayjs(productOrder.data.end_date).format("HH:mm")} WIB
                   </p>
                 </div>
                 <div>
@@ -227,7 +227,7 @@ const ProductOrderPreviewPage = () => {
                     Durasi
                   </label>
                   <p className="text-lg font-semibold">
-                    {productOrder.duration} Hari
+                    {productOrder.data.duration} Hari
                   </p>
                 </div>
                 <div>
@@ -235,7 +235,7 @@ const ProductOrderPreviewPage = () => {
                     Deskripsi
                   </label>
                   <p className="text-lg font-semibold">
-                    {productOrder.description}
+                    {productOrder.data.description}
                   </p>
                 </div>
               </div>
@@ -243,14 +243,14 @@ const ProductOrderPreviewPage = () => {
           </Card>
 
           {/* Additional Services */}
-          {productOrder.additional_services && productOrder.additional_services.length > 0 && (
+          {productOrder.data.additional_services && productOrder.data.additional_services.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Layanan Tambahan</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {productOrder.additional_services.map((service, index) => (
+                  {productOrder.data.additional_services.map((service: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">{service.name}</p>
@@ -264,7 +264,7 @@ const ProductOrderPreviewPage = () => {
           )}
 
           {/* Insurance */}
-          {productOrder.insurance && (
+          {productOrder.data.insurance && (
             <Card>
               <CardHeader>
                 <CardTitle>Asuransi</CardTitle>
@@ -273,10 +273,10 @@ const ProductOrderPreviewPage = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <div>
-                      <p className="font-medium">{productOrder.insurance.name}</p>
-                      <p className="text-sm text-gray-600">{productOrder.insurance.description}</p>
+                      <p className="font-medium">{productOrder.data.insurance.name}</p>
+                      <p className="text-sm text-gray-600">{productOrder.data.insurance.description}</p>
                     </div>
-                    <p className="font-semibold">{formatRupiah(productOrder.insurance.price)}</p>
+                    <p className="font-semibold">{formatRupiah(productOrder.data.insurance.price)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -299,22 +299,22 @@ const ProductOrderPreviewPage = () => {
                 <label className="text-sm font-medium text-gray-500">
                   Nama
                 </label>
-                <p className="text-lg font-semibold">{productOrder.customer.name}</p>
+                <p className="text-lg font-semibold">{productOrder.data.customer.name}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{productOrder.customer.email}</span>
+                <span className="text-sm">{productOrder.data.customer.email}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">{productOrder.customer.phone_number}</span>
+                <span className="text-sm">{productOrder.data.customer.phone_number}</span>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">
                   Status
                 </label>
                 <Badge variant="outline" className="mt-1">
-                  {productOrder.customer.status}
+                  {productOrder.data.customer.status}
                 </Badge>
               </div>
             </CardContent>
@@ -331,9 +331,9 @@ const ProductOrderPreviewPage = () => {
                   Status Order
                 </label>
                 <Badge 
-                  className={`mt-1 ${getStatusVariant(productOrder.status)}`}
+                  className={`mt-1 ${getStatusVariant(productOrder.data.status)}`}
                 >
-                  {productOrder.order_status_text}
+                  {productOrder.data.order_status_text}
                 </Badge>
               </div>
               <div>
@@ -341,9 +341,9 @@ const ProductOrderPreviewPage = () => {
                   Status Pembayaran
                 </label>
                 <Badge 
-                  className={`mt-1 ${getStatusVariant(productOrder.payment_status)}`}
+                    className={`mt-1 ${getStatusVariant(productOrder.data.payment_status)}`}
                 >
-                  {getPaymentStatusLabel(productOrder.payment_status)}
+                  {getPaymentStatusLabel(productOrder.data.payment_status)}
                 </Badge>
               </div>
             </CardContent>
@@ -357,57 +357,57 @@ const ProductOrderPreviewPage = () => {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span>Harga Produk</span>
-                <span>{formatRupiah(productOrder.service_price)}</span>
+                <span>{formatRupiah(productOrder.data.service_price)}</span>
               </div>
-              {productOrder.driver_price > 0 && (
+              {productOrder.data.driver_price > 0 && (
                 <div className="flex justify-between">
                   <span>Biaya Driver</span>
-                  <span>{formatRupiah(productOrder.driver_price)}</span>
+                  <span>{formatRupiah(productOrder.data.driver_price)}</span>
                 </div>
               )}
-              {productOrder.out_of_town_price > 0 && (
+              {productOrder.data.out_of_town_price > 0 && (
                 <div className="flex justify-between">
                   <span>Biaya Out of Town</span>
-                  <span>{formatRupiah(productOrder.out_of_town_price)}</span>
+                  <span>{formatRupiah(productOrder.data.out_of_town_price)}</span>
                 </div>
               )}
-              {productOrder.additional_services && productOrder.additional_services.length > 0 && (
+              {productOrder.data.additional_services && productOrder.data.additional_services.length > 0 && (
                 <div className="flex justify-between">
                   <span>Layanan Tambahan</span>
                   <span>
                     {formatRupiah(
-                      productOrder.additional_services.reduce((sum, service) => sum + service.price, 0)
+                      productOrder.data.additional_services.reduce((sum: number, service: any) => sum + service.price, 0)
                     )}
                   </span>
                 </div>
               )}
-              {productOrder.insurance && (
+              {productOrder.data.insurance && (
                 <div className="flex justify-between">
                   <span>Asuransi</span>
-                  <span>{formatRupiah(productOrder.insurance.price)}</span>
+                  <span>{formatRupiah(productOrder.data.insurance.price)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between">
                 <span>Sub Total</span>
-                <span>{formatRupiah(productOrder.sub_total_price)}</span>
+                <span>{formatRupiah(productOrder.data.sub_total_price)}</span>
               </div>
-              {productOrder.discount > 0 && (
+              {productOrder.data.discount > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span>Diskon ({productOrder.discount}%)</span>
-                  <span>-{formatRupiah(productOrder.discount_amount)}</span>
+                  <span>Diskon ({productOrder.data.discount}%)</span>
+                  <span>-{formatRupiah(productOrder.data.discount_amount)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>{formatRupiah(productOrder.total_price)}</span>
+                <span>{formatRupiah(productOrder.data.total_price)}</span>
               </div>
             </CardContent>
           </Card>
 
           {/* Location */}
-          {productOrder.product.location && (
+          {productOrder.data.product.location && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -417,8 +417,8 @@ const ProductOrderPreviewPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="font-medium">{productOrder.product.location.name}</p>
-                  <p className="text-sm text-gray-600">{productOrder.product.location.address}</p>
+                  <p className="font-medium">{productOrder.data.product.location.name}</p>
+                  <p className="text-sm text-gray-600">{productOrder.data.product.location.address}</p>
                 </div>
               </CardContent>
             </Card>

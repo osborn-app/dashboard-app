@@ -1,6 +1,5 @@
 "use client";
 import { Trash } from "lucide-react";
-import { IMG_MAX_LIMIT } from "./forms/product-form";
 import { Button } from "./ui/button";
 import { useToast } from "./ui/use-toast";
 import { Input } from "./ui/input";
@@ -9,6 +8,8 @@ import { PreviewImage } from "./modal/preview-image";
 import { useState } from "react";
 import CustomImage from "./custom-image";
 import Image from "next/image";
+
+export const IMG_MAX_LIMIT = 3;
 
 export interface MulitpleImageUploadResponse {
   data?: FileList | null;
@@ -71,7 +72,7 @@ export default function MulitpleImageUpload({
       <div className="flex flex-wrap gap-4 ">
         {value.map((item: any, index: number) => (
           <div
-            key={item?.name + "-" + index ?? value.url + "-" + index}
+            key={(item?.name ? item.name : item?.url ? item.url : "item") + "-" + index}
             className="relative rounded-md cursor-pointer w-full h-[300px] sm:w-1/3 lg:w-1/4 xl:w-1/5"
           >
             {!disabled && (

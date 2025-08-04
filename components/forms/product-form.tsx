@@ -30,7 +30,37 @@ import { usePostProduct, useEditProduct, useGetDetailProduct } from "@/hooks/api
 import { useGetLocation } from "@/hooks/api/useLocation";
 import { useGetInfinityOwners } from "@/hooks/api/useOwner";
 import { NumericFormat } from "react-number-format";
-import { ProductCategory } from "@/app/(dashboard)/dashboard/product-orders/[productOrderId]/types/product-order";
+import MulitpleImageUpload, {
+  MulitpleImageUploadResponse,
+} from "@/components/multiple-image-upload";
+import useAxiosAuth from "@/hooks/axios/use-axios-auth";
+import axios from "axios";
+import { omitBy } from "lodash";
+
+// Product Category Enum
+enum ProductCategory {
+  IPHONE = "iphone",
+  CAMERA = "camera",
+  OUTDOOR = "outdoor",
+  STARLINK = "starlink",
+}
+
+// File schema for photo upload
+const fileSchema = z.custom<any>(
+  (val: any) => {
+    if (val.length == 0) return false;
+    for (let i = 0; i < val.length; i++) {
+      const file = val[i];
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
+      if (!allowedTypes.includes(file.type)) return false;
+    }
+    return true;
+  },
+  {
+    message:
+      "Foto kosong. Pastikan file yang kamu pilih adalah tipe JPEG, PNG.",
+  },
+);
 
 // Product Form Schema
 const productSchema = z.object({
@@ -41,6 +71,7 @@ const productSchema = z.object({
   location_id: z.string().min(1, "Location is required"),
   owner_id: z.string().min(1, "Owner is required"),
   status: z.string().min(1, "Status is required"),
+  photos: fileSchema,
   specifications: z.object({
     brand: z.string().optional(),
     color: z.string().optional(),
@@ -52,7 +83,9 @@ const productSchema = z.object({
   description: z.string().optional(),
 });
 
-type ProductFormValues = z.infer<typeof productSchema>;
+type ProductFormValues = z.infer<typeof productSchema> & {
+  photos: MulitpleImageUploadResponse;
+};
 
 interface ProductFormProps {
   initialData?: any;
@@ -78,6 +111,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [searchOwner, setSearchOwner] = useState("");
   const queryClient = useQueryClient();
+  const axiosAuth = useAxiosAuth();
 
   const title = productId ? "Edit Product" : "Create Product";
   const description = productId ? "Edit product details" : "Create a new product";
@@ -102,6 +136,28 @@ const ProductForm: React.FC<ProductFormProps> = ({
   // Use product data for edit mode
   const productDataForForm = productData?.data;
 
+  const uploadImage = async (file: any) => {
+    const file_names = [];
+    for (let i = 0; i < file?.length; i++) {
+      file_names.push(file?.[i].name);
+    }
+
+    const response = await axiosAuth.post("/storages/presign/list", {
+      file_names: file_names,
+      folder: "fleet",
+    });
+
+    for (let i = 0; i < file_names.length; i++) {
+      const file_data = file;
+      await axios.put(response.data[i].upload_url, file_data[i], {
+        headers: {
+          "Content-Type": file_data[i].type,
+        },
+      });
+    }
+
+    return response.data;
+  };
 
   const defaultValues = isEdit && productDataForForm
     ? {
@@ -112,6 +168,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         location_id: productDataForForm.location_id?.toString() || "",
         owner_id: productDataForForm.owner_id?.toString() || "",
         status: productDataForForm.status || "available",
+        photos: productDataForForm.photos || [],
         specifications: productDataForForm.specifications || {
           brand: "",
           color: "",
@@ -130,6 +187,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         location_id: "",
         owner_id: "",
         status: "available",
+        photos: [],
         specifications: {
           brand: "",
           color: "",
@@ -157,6 +215,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         location_id: productDataForForm.location_id?.toString() || "",
         owner_id: productDataForForm.owner_id?.toString() || "",
         status: productDataForForm.status || "available",
+        photos: productDataForForm.photos || [],
         specifications: productDataForForm.specifications || {
           brand: "",
           color: "",
@@ -171,51 +230,118 @@ const ProductForm: React.FC<ProductFormProps> = ({
   }, [isEdit, productDataForForm, form]);
 
   const onSubmit = async (data: ProductFormValues) => {
+    let isPresign: boolean = false;
+    for (let i = 0; i < data?.photos?.length; i++) {
+      if (data?.photos[i]?.photo) {
+        isPresign = false;
+        break;
+      } else {
+        isPresign = true;
+      }
+    }
     setLoading(true);
+    
+    try {
+      if (productId) {
+        let filteredURL: string[] = [];
+        if (isPresign) {
+          const uploadImageRes = await uploadImage(data?.photos);
+          filteredURL = uploadImageRes?.map(
+            (item: { download_url: string; upload_url: string }) =>
+              item.download_url,
+          );
+        } else {
+          filteredURL = data?.photos?.map((item: any) => item.photo);
+        }
 
-    const payload = {
-      name: data.name,
-      category: data.category,
-      model: data.model,
-      price: parseInt(data.price),
-      location_id: parseInt(data.location_id),
-      owner_id: parseInt(data.owner_id),
-      status: data.status,
-      specifications: data.specifications || {},
-      description: data.description || "",
-    };
+        const payload = {
+          name: data.name,
+          category: data.category,
+          model: data.model,
+          price: parseInt(data.price),
+          location_id: parseInt(data.location_id),
+          owner_id: parseInt(data.owner_id),
+          status: data.status,
+          photos: filteredURL,
+          specifications: data.specifications || {},
+          description: data.description || "",
+        };
 
-    const handleSuccess = () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast({
-        variant: "success",
-        title: productId ? "Product updated successfully!" : "Product created successfully!",
-      });
-      router.push("/dashboard/products");
-    };
+        editProduct(payload, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["products"] });
+            toast({
+              variant: "success",
+              title: "Product updated successfully!",
+            });
+            router.push("/dashboard/products");
+          },
+          onSettled: () => {
+            setLoading(false);
+          },
+          onError: (error: any) => {
+            toast({
+              variant: "destructive",
+              title: "Uh oh! ada sesuatu yang error",
+              description: `error: ${
+                error?.response?.data?.message || error?.message
+              }`,
+            });
+          },
+        });
+      } else {
+        const uploadImageRes = await uploadImage(data?.photos);
+        const filteredURL = uploadImageRes.map(
+          (item: { download_url: string; upload_url: string }) =>
+            item.download_url,
+        );
 
-    const handleError = (error: any) => {
+        const payload = omitBy(
+          {
+            name: data.name,
+            category: data.category,
+            model: data.model,
+            price: parseInt(data.price),
+            location_id: parseInt(data.location_id),
+            owner_id: parseInt(data.owner_id),
+            status: data.status,
+            photos: filteredURL,
+            specifications: data.specifications || {},
+            description: data.description || "",
+          },
+          (value) => value == "" || value == null,
+        );
+
+        createProduct(payload, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["products"] });
+            toast({
+              variant: "success",
+              title: "Product created successfully!",
+            });
+            router.push("/dashboard/products");
+          },
+          onSettled: () => {
+            setLoading(false);
+          },
+          onError: (error: any) => {
+            toast({
+              variant: "destructive",
+              title: "Uh oh! ada sesuatu yang error",
+              description: `error: ${
+                error?.response?.data?.message || error?.message
+              }`,
+            });
+          },
+        });
+      }
+    } catch (error: any) {
+      setLoading(false);
       toast({
         variant: "destructive",
         title: "Error",
         description: error?.response?.data?.message || "Something went wrong",
       });
-    };
-
-    try {
-      if (productId) {
-        editProduct(payload, {
-          onSuccess: handleSuccess,
-          onError: handleError,
-        });
-      } else {
-        createProduct(payload, {
-          onSuccess: handleSuccess,
-          onError: handleError,
-        });
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -404,6 +530,28 @@ const ProductForm: React.FC<ProductFormProps> = ({
               )}
             />
           </div>
+
+          {/* Photo Upload */}
+          <FormField
+            control={form.control}
+            name="photos"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="relative label-required">
+                  Foto Produk
+                </FormLabel>
+                <FormControl className="disabled:opacity-100">
+                  <MulitpleImageUpload
+                    onChange={field.onChange}
+                    value={field.value}
+                    onRemove={field.onChange}
+                    disabled={loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
                      <div className="space-y-4">
              <div className="flex items-center gap-2">
