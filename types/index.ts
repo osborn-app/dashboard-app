@@ -9,6 +9,7 @@ export interface NavItem {
   label?: string;
   description?: string;
   roles: string[];
+  items?: NavItem[];
 }
 
 export interface NavItemWithChildren extends NavItem {

@@ -2,18 +2,23 @@ import * as z from "zod";
 
 const additionalSchema = z.object({
   name: z.string().min(1, "deskripsi layanan"),
-  price: z.coerce.string().min(1, { message: "tolong masukkan harga layanan" }),
+  price: z.string().min(1, { message: "tolong masukkan harga layanan" }).transform((val) => {
+    const cleanVal = val.replace(/,/g, "");
+    const num = Number(cleanVal);
+    if (isNaN(num) || num <= 0) throw new Error("Harga harus berupa angka yang valid");
+    return num;
+  }),
 });
 
 const formSchema = z.object({
   start_request: z.object({
-    is_self_pickup: z.any(),
+    is_self_pickup: z.boolean(),
     // address: z.string().min(1, { message: "Tolong masukkan alamat" }),
     // distance: z.coerce.number().gte(0, "Jarak minimal 0 KM"),
     driver_id: z.string().min(1, { message: "Tolong pilih Penanggung Jawab" }),
   }),
   end_request: z.object({
-    is_self_pickup: z.any(),
+    is_self_pickup: z.boolean(),
     // address: z.string().min(1, { message: "Tolong masukkan alamat" }),
     // distance: z.coerce.number().gte(0, "Jarak minimal 0 KM"),
     driver_id: z.string().min(1, { message: "Tolong pilih Penanggung Jawab" }),

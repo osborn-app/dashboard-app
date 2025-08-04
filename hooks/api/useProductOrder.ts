@@ -4,7 +4,7 @@ import { useUser } from "@/context/UserContext";
 
 const baseEndpoint = "/orders";
 
-interface GetOrdersParams {
+interface GetProductOrdersParams {
   status: string;
   page: number;
   limit: number;
@@ -13,17 +13,18 @@ interface GetOrdersParams {
   end_date?: string | Date | undefined;
   order_by?: string | undefined;
   order_column?: string | undefined;
+  type?: string;
   order_type?: string;
 }
 
-export const useGetOrders = (
-  params: GetOrdersParams,
+export const useGetProductOrders = (
+  params: GetProductOrdersParams,
   options = {},
   type: string,
 ) => {
   const axiosAuth = useAxiosAuth();
 
-  const getOrders = async () => {
+  const getProductOrders = async () => {
     const { data } = await axiosAuth.get(baseEndpoint, {
       params,
     });
@@ -31,58 +32,58 @@ export const useGetOrders = (
   };
 
   return useQuery({
-    queryKey: ["orders", params, type, "vehicle"],
-    queryFn: getOrders,
+    queryKey: ["orders", params, type, "product"],
+    queryFn: getProductOrders,
     ...options,
   });
 };
 
-export const useGetDetailOrder = (id: number | string) => {
+export const useGetDetailProductOrder = (id: number | string) => {
   const axiosAuth = useAxiosAuth();
 
-  const getDetailOrder = () => {
+  const getDetailProductOrder = () => {
     return axiosAuth.get(`${baseEndpoint}/${id}`);
   };
 
   return useQuery({
-    queryKey: ["orders", id, "vehicle"],
-    queryFn: getDetailOrder,
+    queryKey: ["orders", id, "product"],
+    queryFn: getDetailProductOrder,
   });
 };
 
-export const usePostOrder = () => {
+export const usePostProductOrder = () => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
-  const postOrder = (body: any) => {
+  const postProductOrder = (body: any) => {
     return axiosAuth.post(baseEndpoint, body);
   };
 
   return useMutation({
-    mutationFn: postOrder,
+    mutationFn: postProductOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "product"] });
     },
   });
 };
 
-export const useEditOrder = (id: string | number) => {
+export const useEditProductOrder = (id: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
-  const editOrder = (body: any) => {
+  const editProductOrder = (body: any) => {
     return axiosAuth.patch(`${baseEndpoint}/${id}`, body);
   };
 
   return useMutation({
-    mutationFn: editOrder,
+    mutationFn: editProductOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "product"] });
     },
   });
 };
 
-export const useOrderCalculate = () => {
+export const useProductOrderCalculate = () => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
@@ -93,30 +94,29 @@ export const useOrderCalculate = () => {
   return useMutation({
     mutationFn: calculatePrice,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "product"] });
     },
   });
 };
 
-export const useOrdersStatusCount = () => {
+export const useProductOrdersStatusCount = () => {
   const { user } = useUser();
   const axiosAuth = useAxiosAuth();
   const getStatusCountFn = () => {
     return axiosAuth.get(`${baseEndpoint}/status/count`);
   };
   return useQuery({
-    queryKey: ["orders", "vehicle"],
+    queryKey: ["orders", "product"],
     queryFn: getStatusCountFn,
     enabled: user?.role !== "owner",
   });
 };
 
-export const useDeleteOrder = (id: number, force: boolean) => {
+export const useDeleteProductOrder = (id: number, force: boolean) => {
   const axiosAuth = useAxiosAuth();
-
   const queryClient = useQueryClient();
 
-  const deleteOrder = (id: number) => {
+  const deleteProductOrder = (id: number) => {
     return axiosAuth.delete(`${baseEndpoint}/${id}`, {
       params: {
         force,
@@ -125,41 +125,41 @@ export const useDeleteOrder = (id: number, force: boolean) => {
   };
 
   return useMutation({
-    mutationFn: deleteOrder,
+    mutationFn: deleteProductOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "product"] });
     },
   });
 };
 
-export const useAcceptOrder = (id: string | number) => {
+export const useAcceptProductOrder = (id: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
-  const acceptOrder = (body: any) => {
+  const acceptProductOrder = (body: any) => {
     return axiosAuth.post(`${baseEndpoint}/${id}/accept`, body);
   };
 
   return useMutation({
-    mutationFn: acceptOrder,
+    mutationFn: acceptProductOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "product"] });
     },
   });
 };
 
-export const useRejectOrder = () => {
+export const useRejectProductOrder = () => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
-  const rejectOrder = ({ orderId, reason }: any) => {
+  const rejectProductOrder = ({ orderId, reason }: any) => {
     return axiosAuth.post(`${baseEndpoint}/${orderId}/reject`, { reason });
   };
 
   return useMutation({
-    mutationFn: rejectOrder,
+    mutationFn: rejectProductOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "product"] });
     },
   });
-};
+}; 

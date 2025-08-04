@@ -25,7 +25,7 @@ import {
 import { useToast } from "../ui/use-toast";
 import { cn, convertTime, makeUrlsClickable } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGetDetailFleet, useGetInfinityFleets } from "@/hooks/api/useFleet";
+import { useGetDetailProduct, useGetAvailableProducts } from "@/hooks/api/useProduct";
 import { isEmpty, isNull, isString } from "lodash";
 import { useDebounce } from "use-debounce";
 import { Select as AntdSelect, ConfigProvider, DatePicker, Space } from "antd";
@@ -46,16 +46,14 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "../ui/label";
 import { useGetInsurances } from "@/hooks/api/useInsurance";
 import {
-  useAcceptOrder,
-  useEditOrder,
-  useOrderCalculate,
-  usePostOrder,
-  useRejectOrder,
-} from "@/hooks/api/useOrder";
+  useEditProductOrder,
+  usePostProductOrder,
+} from "@/hooks/api/useProductOrder";
+import { useProductOrderCalculate } from "@/hooks/api/useProductOrder";
 import { ApprovalModal } from "../modal/approval-modal";
 import { NumericFormat } from "react-number-format";
 import "dayjs/locale/id";
-import FleetDetail from "./section/fleet-detail";
+// import ProductDetail from "./section/product-detail";
 import CustomerDetail from "./section/customer-detail";
 import DriverDetail from "./section/driver-detail";
 import PriceDetail from "./section/price-detail";
@@ -73,23 +71,25 @@ import {
 import { PreviewImage } from "../modal/preview-image";
 
 import { Trash2 } from "lucide-react";
-import { DetailPrice, OrderFormProps, OrderFormValues } from "./types/order";
-import { generateSchema } from "./validation/orderSchema";
+import { DetailPrice, ProductOrderFormProps, ProductOrderFormValues, productOrderSchema } from "@/components/forms/types/product-order";
 import {
   getPaymentStatusLabel,
   getStatusVariant,
   OrderStatus,
 } from "@/app/(dashboard)/dashboard/orders/[orderId]/types/order";
 import { useUser } from "@/context/UserContext";
+import { ProductDetail } from "@/components/product-detail";
 
 export const IMG_MAX_LIMIT = 3;
 
-export const OrderForm: React.FC<OrderFormProps> = ({
+export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   initialData,
   isEdit,
+  productOrderId,
 }) => {
   const { user } = useUser();
   const { orderId } = useParams();
+  const finalOrderId = productOrderId || orderId;
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -119,25 +119,22 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     : "Pesanan berhasil dibuat";
   const action = initialData ? "Save changes" : "Create";
   const queryClient = useQueryClient();
-  const { mutate: createOrder } = usePostOrder();
-  const { mutate: editOrder } = useEditOrder(orderId as string);
-  const { mutate: acceptOrder } = useAcceptOrder(orderId as string);
-
-  const { mutate: rejectOrder } = useRejectOrder();
+  const { mutate: createProductOrder } = usePostProductOrder();
+  const { mutate: editProductOrder } = useEditProductOrder(finalOrderId && finalOrderId !== "undefined" ? (Array.isArray(finalOrderId) ? finalOrderId[0] : finalOrderId) : "" as string);
   const [searchCustomerTerm, setSearchCustomerTerm] = useState("");
-  const [searchFleetTerm, setSearchFleetTerm] = useState("");
+  const [searchProductTerm, setSearchProductTerm] = useState("");
   const [searchCustomerDebounce] = useDebounce(searchCustomerTerm, 500);
-  const [searchFleetDebounce] = useDebounce(searchFleetTerm, 500);
+  const [searchProductDebounce] = useDebounce(searchProductTerm, 500);
   const days: number[] = Array.from({ length: 30 });
   const [detail, setDetail] = useState<DetailPrice | null>(null);
   const [openApprovalModal, setOpenApprovalModal] = useState<boolean>(false);
   const [openRejectModal, setOpenRejectModal] = useState<boolean>(false);
   const [openCustomerDetail, setOpenCustomerDetail] = useState<boolean>(false);
-  const [openFleetDetail, setOpenFleetDetail] = useState<boolean>(false);
+  const [openProductDetail, setOpenProductDetail] = useState<boolean>(false);
   const [openDriverDetail, setOpenDriverDetail] = useState<boolean>(false);
   const [showServicePrice, setShowServicePrice] = useState<boolean>(true);
   const [type, setType] = useState<string>("");
-  const [schema, setSchema] = useState(() => generateSchema(true, true));
+  const [schema, setSchema] = useState(() => productOrderSchema);
   const [messages, setMessages] = useState<any>({});
   const detailRef = React.useRef<HTMLDivElement>(null);
 
@@ -153,14 +150,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   } = useGetInfinityCustomers(searchCustomerDebounce, "verified");
 
   const {
-    data: fleets,
-    isFetching: isFetchingFleets,
-    fetchNextPage: fetchNextFleets,
-    hasNextPage: hasNextFleets,
-    isFetchingNextPage: isFetchingNextFleets,
-  } = useGetInfinityFleets(searchFleetDebounce);
+    data: products,
+    isFetching: isFetchingProducts,
+  } = useGetAvailableProducts({ q: searchProductDebounce });
 
   const { data: insurances } = useGetInsurances();
+  const { mutate: calculatePrice } = useProductOrderCalculate();
 
   const manipulateInsurance = insurances?.data?.items?.map((item: any) => {
     let newName;
@@ -202,7 +197,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           driver_id: initialData?.end_request?.driver?.id?.toString(),
         },
         customer: initialData?.customer?.id?.toString(),
-        fleet: initialData?.fleet?.id?.toString(),
+        product: initialData?.product?.id?.toString(),
         description: initialData?.description,
         is_with_driver: initialData?.is_with_driver,
         is_out_of_town: initialData?.is_out_of_town,
@@ -212,7 +207,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         insurance_id: initialData?.insurance
           ? initialData?.insurance?.id.toString()
           : "0",
-        service_price: initialData?.service_price.toString(),
+        service_price: initialData?.service_price?.toString() || "0",
         additionals: initialData?.additional_services?.map((service: any) => ({
           name: service.name,
           price: service.price?.toString() || "",
@@ -231,8 +226,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           distance: 0,
           driver_id: "",
         },
-        customer: "",
-        fleet: "",
+        customer: undefined,
+        product: undefined,
         description: "",
         is_with_driver: false,
         is_out_of_town: false,
@@ -240,11 +235,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         duration: "1",
         discount: "0",
         insurance_id: "0",
-        service_price: "",
+        service_price: "0",
         additionals: [],
       };
 
-  const form = useForm<OrderFormValues>({
+  const form = useForm<ProductOrderFormValues>({
     resolver: zodResolver(schema),
     defaultValues,
   });
@@ -255,7 +250,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   });
 
   const customerField = form.watch("customer");
-  const fleetField = form.watch("fleet");
+  const productField = form.watch("product");
   const dateField = form.watch("date");
   const durationField = form.watch("duration");
   const isOutOfTownField = form.watch("is_out_of_town");
@@ -274,19 +269,24 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const serviceField = form.watch("service_price");
   const additionalField = form.watch("additionals");
 
+
+
   const watchServicePrice = !(startSelfPickUpField && endSelfPickUpField);
   const servicePrice = serviceField ?? 0;
 
   const { data: customerData, isFetching: isFetchingCustomer } =
-    useGetDetailCustomer(form.getValues("customer"));
-  const { data: fleetData, isFetching: isFetchingFleet } = useGetDetailFleet(
-    form.getValues("fleet"),
+    useGetDetailCustomer(form.getValues("customer") || "");
+  const { data: productData, isFetching: isFetchingProduct } = useGetDetailProduct(
+    form.getValues("product") || "",
   );
 
-  const { data: driver, isFetching: isFetchingDriver } = useGetDetailDriver(
-    type == "start"
+  const driverId =
+    type === "start"
       ? form.getValues("start_request.driver_id")
-      : form.getValues("end_request.driver_id"),
+      : form.getValues("end_request.driver_id");
+
+  const { data: driver, isFetching: isFetchingDriver } = useGetDetailDriver(
+    driverId || ""
   );
 
   const [end, setEnd] = useState("");
@@ -299,44 +299,63 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     setEnd(end);
   }, [now, form.getValues("duration")]);
 
-  const onSubmit = async (data: OrderFormValues) => {
+  const onSubmit = async (data: ProductOrderFormValues) => {
     setLoading(true);
 
-    const createPayload = (data: OrderFormValues) => ({
+    // Validate required fields
+    if (!data.customer || !data.product) {
+      toast({
+        variant: "destructive",
+        title: "Customer and Product are required",
+      });
+      setLoading(false);
+      return;
+    }
+
+    const createPayload = (data: ProductOrderFormValues) => ({
       start_request: {
         is_self_pickup: data.start_request.is_self_pickup,
-        driver_id: +data.start_request.driver_id,
-        ...(!startSelfPickUpField && {
-          address: data.start_request.address,
-          distance: +data.start_request.distance,
-        }),
+        driver_id: data.start_request.driver_id && data.start_request.driver_id !== "" ? +data.start_request.driver_id : undefined,
+        distance: data.start_request.distance && data.start_request.distance !== "" ? +data.start_request.distance : undefined,
+        address: data.start_request.address,
       },
       end_request: {
         is_self_pickup: data.end_request.is_self_pickup,
-        driver_id: +data.end_request.driver_id,
-        ...(!endSelfPickUpField && {
-          distance: +data.end_request.distance,
-          address: data.end_request.address,
-        }),
+        driver_id: data.end_request.driver_id && data.end_request.driver_id !== "" ? +data.end_request.driver_id : undefined,
+        distance: data.end_request.distance && data.end_request.distance !== "" ? +data.end_request.distance : undefined,
+        address: data.end_request.address,
       },
-      customer_id: +data.customer,
-      fleet_id: +data.fleet,
+      customer_id: data.customer ? Number(data.customer) : undefined,
+      product_id: data.product ? Number(data.product) : undefined,
       description: data.description,
-      is_with_driver: data.is_with_driver,
-      is_out_of_town: data.is_out_of_town,
-      date: data.date.toISOString(),
-      duration: +data.duration,
-      discount: +data.discount,
-      insurance_id: +data.insurance_id === 0 ? null : +data.insurance_id,
-      ...(showServicePrice &&
-        data?.service_price && {
-          service_price: +data.service_price.replace(/,/g, ""),
-        }),
-      ...(additionalField && additionalField.length !== 0 && {
-        additional_services: additionalField.map((field: any) => {
+      is_with_driver: false, // Product orders don't use driver
+      is_out_of_town: false, // Product orders don't use out of town
+      date: data.date,
+      duration: data.duration ? Number(data.duration) : undefined,
+      discount: data.discount ? (isString(data.discount) 
+        ? Number(data.discount.replace(/,/g, "")) 
+        : Number(data.discount)) : undefined,
+      insurance_id: data.insurance_id && data.insurance_id !== "0" && data.insurance_id !== "" ? +data.insurance_id : undefined,
+      service_price: data.service_price ? (isString(data.service_price) 
+        ? Number(data.service_price.replace(/,/g, "")) 
+        : Number(data.service_price)) : undefined,
+      ...(data.additionals && data.additionals.length > 0 && {
+        additional_services: data.additionals.map((service: any) => {
+          let price: number;
+          if (typeof service.price === 'string') {
+            const cleanPrice = service.price.replace(/,/g, "");
+            price = Number(cleanPrice);
+          } else {
+            price = Number(service.price);
+          }
+          
+          if (isNaN(price) || price <= 0) {
+            throw new Error("Harga harus berupa angka yang valid");
+          }
+          
           return {
-            name: field.name,
-            price: typeof field.price === "string" ? Number(field.price.replace(/,/g, "")) : Number(field.price),
+            name: service.name,
+            price: price,
           };
         }),
       }),
@@ -379,13 +398,22 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
     switch (lastPath) {
       case "edit":
-        handleResponse(payload, editOrder);
+        if (!finalOrderId || finalOrderId === "undefined") {
+          toast({
+            variant: "destructive",
+            title: "Order ID tidak valid",
+          });
+          setLoading(false);
+          return;
+        }
+        handleResponse(payload, editProductOrder);
         break;
       case "preview":
-        handleResponse(payload, acceptOrder);
+        // TODO: Implement accept product order functionality
+        // handleResponse(payload, acceptOrder);
         break;
       default:
-        handleResponse(payload, createOrder);
+                  handleResponse(payload, createProductOrder);
         break;
     }
   };
@@ -398,11 +426,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }
   };
 
-  const handleScrollFleets = (event: React.UIEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement;
-    if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
-      fetchNextFleets();
-    }
+  const handleScrollProducts = (event: React.UIEvent<HTMLDivElement>) => {
+    // Products dropdown uses regular query, no infinite scroll needed
   };
 
   const pengambilan = [
@@ -427,83 +452,95 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     },
   ];
 
-  const { mutate: calculatePrice } = useOrderCalculate();
+  // const { mutate: calculatePrice } = useOrderCalculate();
 
   useEffect(() => {
     if (startSelfPickUpField && endSelfPickUpField) {
       // Jika start_request.is_self_pickup dan end_request.is_self_pickup keduanya true
-      setSchema(generateSchema(true, true));
+      setSchema(productOrderSchema);
       setShowServicePrice(false);
     } else if (startSelfPickUpField) {
       // Jika hanya start_request.is_self_pickup yang true
-      setSchema(generateSchema(true, false));
+              setSchema(productOrderSchema);
       setShowServicePrice(true);
     } else if (endSelfPickUpField) {
       // Jika hanya end_request.is_self_pickup yang true
-      setSchema(generateSchema(false, true));
+              setSchema(productOrderSchema);
       setShowServicePrice(true);
     } else {
       // Jika keduanya false
-      setSchema(generateSchema(false, false));
+      setSchema(productOrderSchema);
       setShowServicePrice(true);
     }
   }, [startSelfPickUpField, endSelfPickUpField]);
 
   useEffect(() => {
     const payload = {
-      customer_id: +(customerField ?? 0),
-      fleet_id: +(fleetField ?? 0),
+      customer_id: Number(customerField ?? 0),
+      product_id: Number(productField ?? 0),
       is_out_of_town: isOutOfTownField,
       is_with_driver: isWithDriverField,
-      insurance_id: +(insuranceField ?? 0),
+              insurance_id: Number(insuranceField ?? 0),
       start_request: {
-        is_self_pickup: startSelfPickUpField,
-        driver_id: +(startDriverField ?? 0),
+        is_self_pickup: startSelfPickUpField == true ? true : false,
+                  driver_id: Number(startDriverField ?? 0),
         ...(!startSelfPickUpField && {
-          distance: +(startDistanceField ?? 0),
+                      distance: Number(startDistanceField ?? 0),
           address: startAddressField,
         }),
       },
       end_request: {
-        is_self_pickup: endSelfPickUpField,
-        driver_id: +(endDriverField ?? 0),
+        is_self_pickup: endSelfPickUpField == true ? true : false,
+                  driver_id: Number(endDriverField ?? 0),
         ...(!endSelfPickUpField && {
-          distance: +(endDistanceField ?? 0),
+                      distance: Number(endDistanceField ?? 0),
           address: endAddressField,
         }),
       },
       description: descriptionField,
       ...(!isEmpty(dateField) && {
         date: dateField,
-        duration: +(durationField ?? 1),
+        duration: Number(durationField ?? 1),
       }),
-      discount: +(discountField ?? 0),
+      discount: isString(discountField) 
+        ? Number(discountField.replace(/,/g, "")) 
+        : Number(discountField ?? 0),
       ...(watchServicePrice && {
         service_price: isString(serviceField)
           ? +serviceField.replace(/,/g, "")
           : serviceField,
       }),
       ...(additionalField && additionalField.length !== 0 && {
-        additional_services: additionalField.map((field: any) => {
+        additional_services: (additionalField ?? []).map((field: any) => {
           return {
             name: field.name,
-            price: typeof field.price === "string" ? Number(field.price.replace(/,/g, "")) : Number(field.price),
+            price: (() => {
+              const price = typeof field.price === 'string' ? Number(field.price.replace(/,/g, "")) : Number(field.price);
+              if (isNaN(price) || price <= 0) {
+                return 0; // fallback value
+              }
+              return price;
+            })(),
           };
         }),
       }),
     };
 
-    if (fleetField) {
+    // Calculate price for product orders
+    if (productField && customerField && dateField && durationField) {
       calculatePrice(payload, {
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
           setDetail(data.data);
+        },
+        onError: (error: any) => {
+          console.error('Calculate price error:', error);
         },
       });
     }
   }, [
     additionalField,
     customerField,
-    fleetField,
+    productField,
     dateField,
     durationField,
     isOutOfTownField,
@@ -534,33 +571,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   // function for handle reject
   const handleRejectOrder = (reason: string) => {
-    setRejectLoading(true);
-    rejectOrder(
-      { orderId, reason },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["orders"] });
-          toast({
-            variant: "success",
-            title: "berhasil ditolak",
-          });
-          setOpenRejectModal(false);
-          router.refresh();
-          router.push(`/dashboard/orders`);
-        },
-        onSettled: () => {
-          setLoading(false);
-        },
-        onError: (error) => {
-          toast({
-            variant: "destructive",
-            title: "Uh oh! ada sesuatu yang error",
-            //@ts-ignore
-            description: `error: ${error?.response?.message}`,
-          });
-        },
-      },
-    );
+    // TODO: Implement reject product order functionality
+    setRejectLoading(false);
+    setOpenRejectModal(false);
   };
 
   const handleReset = () => {
@@ -584,8 +597,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   useEffect(() => {
     const newMessages = {
-      customer: generateMessage(customerField, defaultValues.customer),
-      fleet: generateMessage(fleetField, defaultValues.fleet),
+              customer_id: generateMessage(customerField, defaultValues.customer),
+        product: generateMessage(productField, defaultValues.product),
       date: generateMessage(dateField, defaultValues.date),
       duration: generateMessage(durationField, defaultValues.duration),
       is_out_of_town: generateMessage(
@@ -643,7 +656,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }
   }, [
     customerField,
-    fleetField,
+    productField,
     dateField,
     durationField,
     isOutOfTownField,
@@ -695,30 +708,40 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           initialData?.request_status === "pending" &&
           lastPath !== "pending" && (
             <div className="flex gap-2">
-              {lastPath === "edit" && (
-                <>
-                  <Button
-                    onClick={handleReset}
-                    disabled={!form.formState.isDirty}
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "text-black",
-                    )}
-                  >
-                    Reset berdasarkan data Pelanggan
-                  </Button>
-                  <Button
-                    onClick={() => setOpenApprovalModal(true)}
-                    className={cn(buttonVariants({ variant: "main" }))}
-                    type="button"
-                  >
-                    {loading ? <Spinner className="h-4 w-4" /> : "Selesai"}
-                  </Button>
-                </>
+                      {lastPath === "edit" && (
+          <>
+            <Button
+              onClick={handleReset}
+              disabled={!form.formState.isDirty}
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "text-black",
               )}
+            >
+              Reset berdasarkan data Pelanggan
+            </Button>
+            <Button
+              onClick={() => setOpenApprovalModal(true)}
+              className={cn(buttonVariants({ variant: "main" }))}
+              type="button"
+            >
+              {loading ? <Spinner className="h-4 w-4" /> : "Selesai"}
+            </Button>
+          </>
+        )}
+        {lastPath === "create" && (
+          <Button
+            onClick={() => setOpenApprovalModal(true)}
+            className={cn(buttonVariants({ variant: "main" }))}
+            type="button"
+            disabled={loading}
+          >
+            {loading ? <Spinner className="h-4 w-4" /> : "Create"}
+          </Button>
+        )}
               {lastPath !== "edit" && (
                 <Link
-                  href={`/dashboard/orders/${orderId}/edit`}
+                  href={`/dashboard/orders/${finalOrderId}/edit`}
                   onClick={(e) => {
                     if (user?.role !== "admin") {
                       e.preventDefault();
@@ -779,7 +802,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
             {lastPath !== "edit" && (
               <Link
-                href={`/dashboard/orders/${orderId}/edit`}
+                                  href={`/dashboard/orders/${finalOrderId}/edit`}
                 className={cn(
                   buttonVariants({ variant: "outline" }),
                   "text-black",
@@ -823,55 +846,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             className="space-y-8 w-full basis-2/3"
           >
             <div className="relative space-y-8" id="parent">
-              <FormField
-                name="is_with_driver"
-                control={form.control}
-                render={({ field }) => {
-                  return (
-                    <FormItem>
-                      <FormControl>
-                        <Tabs
-                          defaultValue={
-                            defaultValues.is_with_driver
-                              ? "dengan_supir"
-                              : "lepas_kunci"
-                          }
-                          onValueChange={field.onChange}
-                          value={field.value ? "dengan_supir" : "lepas_kunci"}
-                          className="w-full lg:w-[235px]"
-                        >
-                          <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger
-                              disabled={!isEdit || loading}
-                              value="lepas_kunci"
-                              onClick={() =>
-                                form.setValue("is_with_driver", false)
-                              }
-                            >
-                              Lepas Kunci
-                            </TabsTrigger>
-                            <TabsTrigger
-                              disabled={!isEdit || loading}
-                              value="dengan_supir"
-                              onClick={() =>
-                                form.setValue("is_with_driver", true)
-                              }
-                            >
-                              Dengan Supir
-                            </TabsTrigger>
-                          </TabsList>
-                        </Tabs>
-                      </FormControl>
-                      <FormMessage />
-                      {messages.is_with_driver && (
-                        <FormMessage className="text-main">
-                          {messages.is_with_driver}
-                        </FormMessage>
-                      )}
-                    </FormItem>
-                  );
-                }}
-              />
+
 
               {/*
               perhitungan lebar content
@@ -924,9 +899,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                       {initialData?.customer?.name}
                                     </Option>
                                   )}
-                                  {customers?.pages.map(
+                                  {customers?.pages?.map(
                                     (page: any, pageIndex: any) =>
-                                      page.data.items.map(
+                                      page.data?.items?.map(
                                         (item: any, itemIndex: any) => {
                                           return (
                                             <Option
@@ -937,8 +912,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                             </Option>
                                           );
                                         },
-                                      ),
-                                  )}
+                                      ) || []
+                                  ) || []}
 
                                   {isFetchingNextCustomers && (
                                     <Option disabled>
@@ -959,7 +934,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                 type="button"
                                 onClick={() => {
                                   setOpenCustomerDetail(true);
-                                  setOpenFleetDetail(false);
+                                  setOpenProductDetail(false);
                                   setOpenDriverDetail(false);
                                   scrollDetail();
                                 }}
@@ -1006,7 +981,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                           type="button"
                           onClick={() => {
                             setOpenCustomerDetail(true);
-                            setOpenFleetDetail(false);
+                            setOpenProductDetail(false);
                             setOpenDriverDetail(false);
                             scrollDetail();
                           }}
@@ -1029,31 +1004,31 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   )}
                 </div>
                 <div className="flex items-end">
-                  {isEdit ? (
+                  {lastPath !== "preview" && isEdit ? (
                     <FormField
-                      name="fleet"
+                      name="product"
                       control={form.control}
                       render={({ field }) => {
                         return (
                           <div className="space-y-2 w-full">
                             <FormLabel className="relative label-required">
-                              Armada
+                              Produk
                             </FormLabel>
                             <div className="flex">
                               <FormControl>
                                 <AntdSelect
                                   className={cn("mr-2 flex-1")}
                                   showSearch
-                                  placeholder="Pilih Armada"
+                                  placeholder="Pilih Produk"
                                   style={{
                                     height: "40px",
                                   }}
-                                  onSearch={setSearchFleetTerm}
+                                  onSearch={setSearchProductTerm}
                                   onChange={field.onChange}
-                                  onPopupScroll={handleScrollFleets}
+                                  onPopupScroll={handleScrollProducts}
                                   filterOption={false}
                                   notFoundContent={
-                                    isFetchingNextFleets ? (
+                                    isFetchingProducts ? (
                                       <p className="px-3 text-sm">loading</p>
                                     ) : null
                                   }
@@ -1064,14 +1039,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                 >
                                   {lastPath !== "create" && isEdit && (
                                     <Option
-                                      value={initialData?.fleet?.id?.toString()}
+                                      value={initialData?.product?.id?.toString()}
                                     >
-                                      {initialData?.fleet?.name}
+                                      {initialData?.product?.name}
                                     </Option>
                                   )}
-                                  {fleets?.pages.map(
+                                  {products?.pages?.map(
                                     (page: any, pageIndex: any) =>
-                                      page.data.items.map(
+                                      page.data?.items?.map(
                                         (item: any, itemIndex: any) => {
                                           return (
                                             <Option
@@ -1082,10 +1057,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                             </Option>
                                           );
                                         },
-                                      ),
-                                  )}
+                                      ) || []
+                                  ) || []}
 
-                                  {isFetchingNextFleets && (
+                                  {isFetchingProducts && (
                                     <Option disabled>
                                       <p className="px-3 text-sm">loading</p>
                                     </Option>
@@ -1098,12 +1073,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                   "w-[65px] h-[40px]",
                                 )}
                                 disabled={
-                                  !form.getFieldState("fleet").isDirty &&
-                                  isEmpty(form.getValues("fleet"))
+                                  !form.getFieldState("product").isDirty &&
+                                  isEmpty(form.getValues("product"))
                                 }
                                 type="button"
                                 onClick={() => {
-                                  setOpenFleetDetail(true);
+                                  setOpenProductDetail(true);
                                   setOpenCustomerDetail(false);
                                   setOpenDriverDetail(false);
                                   scrollDetail();
@@ -1113,9 +1088,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                               </Button>
                             </div>
                             <FormMessage />
-                            {messages.fleet && (
+                            {messages.product && (
                               <FormMessage className="text-main">
-                                {messages.fleet}
+                                {messages.product}
                               </FormMessage>
                             )}
                           </div>
@@ -1124,7 +1099,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     />
                   ) : (
                     <FormItem>
-                      <FormLabel>Armada</FormLabel>
+                      <FormLabel>Produk</FormLabel>
                       <div className="flex">
                         <FormControl className="disabled:opacity-100">
                           <Input
@@ -1133,7 +1108,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                               height: "40px",
                             }}
                             disabled
-                            value={initialData?.fleet?.name ?? "-"}
+                            value={initialData?.product?.name ?? "-"}
                           />
                         </FormControl>
                         <Button
@@ -1142,12 +1117,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                             "w-[65px] h-[40px]",
                           )}
                           disabled={
-                            !form.getFieldState("fleet").isDirty &&
-                            isEmpty(form.getValues("fleet"))
+                            !form.getFieldState("product").isDirty &&
+                            isEmpty(form.getValues("product"))
                           }
                           type="button"
                           onClick={() => {
-                            setOpenFleetDetail(true);
+                            setOpenProductDetail(true);
                             setOpenCustomerDetail(false);
                             setOpenDriverDetail(false);
                             scrollDetail();
@@ -1161,7 +1136,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 </div>
               </div>
               <div className={cn("gap-2 lg:gap-5 flex flex-col lg:flex-row")}>
-                {isEdit ? (
+                {lastPath !== "preview" && isEdit ? (
                   <FormField
                     control={form.control}
                     name="date"
@@ -1287,100 +1262,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   <FormMessage />
                 </FormItem>
               </div>
-              <div className={cn("lg:grid grid-cols-2 gap-5")}>
-                <FormField
-                  control={form.control}
-                  name="is_out_of_town"
-                  render={({ field }) => {
-                    return (
-                      <FormItem>
-                        <FormLabel className="relative label-required">
-                          Pemakaian
-                        </FormLabel>
-                        <FormControl>
-                          <Tabs
-                            onValueChange={field.onChange}
-                            value={
-                              field.value == false ? "dalam_kota" : "luar_kota"
-                            }
-                          >
-                            <TabsList className="grid w-full grid-cols-2 h-[40px]">
-                              <TabsTrigger
-                                disabled={!isEdit || loading}
-                                value="dalam_kota"
-                                onClick={() =>
-                                  form.setValue("is_out_of_town", false)
-                                }
-                                className="h-[30px]"
-                              >
-                                Dalam Kota
-                              </TabsTrigger>
-                              <TabsTrigger
-                                disabled={!isEdit || loading}
-                                value="luar_kota"
-                                onClick={() =>
-                                  form.setValue("is_out_of_town", true)
-                                }
-                                className="h-[30px]"
-                              >
-                                Luar Kota
-                              </TabsTrigger>
-                            </TabsList>
-                          </Tabs>
-                        </FormControl>
-                        <FormMessage />
-                        {messages.is_out_of_town && (
-                          <FormMessage className="text-main">
-                            {messages.is_out_of_town}
-                          </FormMessage>
-                        )}
-                      </FormItem>
-                    );
-                  }}
-                />
-                <FormField
-                  control={form.control}
-                  name="insurance_id"
-                  render={({ field }) => {
-                    return (
-                      <FormItem>
-                        <FormLabel className="relative label-required">
-                          Asuransi
-                        </FormLabel>
-                        <Select
-                          disabled={!isEdit || loading}
-                          onValueChange={field.onChange}
-                          value={field.value || "0"}
-                        >
-                          <FormControl className="disabled:opacity-100 h-[40px]">
-                            <SelectTrigger>
-                              <SelectValue defaultValue="0" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="0">Tidak Ada</SelectItem>
-                            {/* @ts-ignore  */}
-                            {manipulateInsurance?.map((insurance) => (
-                              <SelectItem
-                                key={insurance.id}
-                                value={insurance.id.toString()}
-                              >
-                                {insurance.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                        {messages.insurance_id && (
-                          <FormMessage className="text-main">
-                            {messages.insurance_id}
-                          </FormMessage>
-                        )}
-                      </FormItem>
-                    );
-                  }}
-                />
-              </div>
               <Separator className={cn("mt-1")} />
               <DetailSection
                 title="Detail Pengambilan"
@@ -1393,7 +1274,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 type="start"
                 handleButton={() => {
                   setOpenCustomerDetail(false);
-                  setOpenFleetDetail(false);
+                  setOpenProductDetail(false);
                   setOpenDriverDetail(true);
                   setType("start");
                   scrollDetail();
@@ -1412,7 +1293,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 type="end"
                 handleButton={() => {
                   setOpenCustomerDetail(false);
-                  setOpenFleetDetail(false);
+                  setOpenProductDetail(false);
                   setOpenDriverDetail(true);
                   setType("end");
                   scrollDetail();
@@ -1509,7 +1390,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                     allowLeadingZeros
                                     thousandSeparator=","
                                     value={field.value}
-                                    onChange={field.onChange}
+                                    onValueChange={(values) => {
+                                      field.onChange(values.value);
+                                    }}
                                     onBlur={field.onBlur}
                                   />
                                 </div>
@@ -1531,10 +1414,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                           )}
                           onClick={() => {
                             remove(index);
-
-                            const updatedAdditionals = [...additionalField];
-                            updatedAdditionals.splice(index, 1);
-                            form.setValue("additionals", updatedAdditionals);
                           }}
                         >
                           <Trash2 className="w-5 h-5 text-red-500 hover:text-white" />
@@ -1561,14 +1440,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     <p
                       className="border border-gray-200 rounded-md px-3 break-words"
                       dangerouslySetInnerHTML={{
-                        __html: !isEmpty(defaultValues?.description)
-                          ? makeUrlsClickable(
-                              defaultValues?.description.replace(
-                                /\n/g,
-                                "<br />",
-                              ),
-                            )
-                          : "-",
+                                              __html: !isEmpty(initialData?.description)
+                        ? makeUrlsClickable(
+                            initialData?.description.replace(
+                              /\n/g,
+                              "<br />",
+                            ),
+                          )
+                        : "-",
                       }}
                     />
                   </FormItem>
@@ -1620,17 +1499,17 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               onClose={() => setOpenCustomerDetail(false)}
             />
           )}
-          {openFleetDetail && isFetchingFleet && (
+          {openProductDetail && isFetchingProduct && (
             <div className="flex justify-center items-center h-[100px] w-full">
               <Spinner />
             </div>
           )}
 
-          {openFleetDetail && !isFetchingFleet && (
-            <FleetDetail
+          {openProductDetail && !isFetchingProduct && (
+            <ProductDetail
               innerRef={detailRef}
-              data={fleetData?.data}
-              onClose={() => setOpenFleetDetail(false)}
+              data={productData?.data}
+              onClose={() => setOpenProductDetail(false)}
             />
           )}
 
@@ -1648,7 +1527,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             />
           )}
 
-          {!openCustomerDetail && !openFleetDetail && !openDriverDetail && (
+          {!openCustomerDetail && !openProductDetail && !openDriverDetail && (
             <PriceDetail
               innerRef={detailRef}
               initialData={initialData}
@@ -1889,15 +1768,15 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                                 : initialData?.end_request?.driver?.name}
                             </Option>
                           )}
-                        {drivers?.pages.map((page: any, pageIndex: any) =>
-                          page.data.items.map((item: any, itemIndex: any) => {
+                        {drivers?.pages?.map((page: any, pageIndex: any) =>
+                          page.data?.items?.map((item: any, itemIndex: any) => {
                             return (
                               <Option key={item.id} value={item.id.toString()}>
                                 {item.name}
                               </Option>
                             );
-                          }),
-                        )}
+                          }) || []
+                        ) || []}
 
                         {isFetchingNextDrivers && (
                           <Option disabled>
@@ -2015,16 +1894,16 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                 dangerouslySetInnerHTML={{
                   __html: !isEmpty(
                     type === "start"
-                      ? defaultValues?.start_request?.address
-                      : defaultValues?.end_request?.address,
+                      ? initialData?.start_request?.address
+                      : initialData?.end_request?.address,
                   )
                     ? makeUrlsClickable(
                         type === "start"
-                          ? defaultValues?.start_request?.address.replace(
+                          ? initialData?.start_request?.address.replace(
                               /\n/g,
                               "<br />",
                             )
-                          : defaultValues?.end_request?.address.replace(
+                          : initialData?.end_request?.address.replace(
                               /\n/g,
                               "<br />",
                             ),

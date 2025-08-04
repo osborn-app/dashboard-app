@@ -160,16 +160,38 @@ export const navItems: NavItem[] = [
   },
   {
     title: "Pesanan",
-    href: "/dashboard/orders",
     icon: "ticket",
     label: "orders",
     roles: ["admin"],
+    items: [
+      {
+        title: "Pesanan Kendaraan",
+        href: "/dashboard/orders",
+        icon: "car",
+        label: "fleet-orders",
+        roles: ["admin"],
+      },
+      {
+        title: "Pesanan Produk",
+        href: "/dashboard/product-orders",
+        icon: "package",
+        label: "product-orders",
+        roles: ["admin"],
+      },
+    ],
   },
   {
     title: "Fleets",
     href: "/dashboard/fleets",
     icon: "car",
     label: "Fleet",
+    roles: ["admin", "owner"],
+  },
+  {
+    title: "Products",
+    href: "/dashboard/products",
+    icon: "package",
+    label: "products",
     roles: ["admin", "owner"],
   },
   {

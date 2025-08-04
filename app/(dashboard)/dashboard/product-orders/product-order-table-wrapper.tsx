@@ -4,31 +4,32 @@ import { CalendarDateRangePicker } from "@/components/date-range-picker";
 import SearchInput from "@/components/search-input";
 import Spinner from "@/components/spinner";
 import {
-  completedColumns,
-  onProgressColumns,
-  confirmedColumns,
-  pendingColumns,
-} from "@/components/tables/order-tables/columns";
+  completedProductOrderColumns,
+  onProgressProductOrderColumns,
+  confirmedProductOrderColumns,
+  pendingProductOrderColumns,
+} from "@/components/tables/order-tables/product-order-columns";
 import { OrderTable } from "@/components/tables/order-tables/order-table";
 import { TabsContent } from "@/components/ui/tabs";
-import { useGetOrders } from "@/hooks/api/useOrder";
+import { useGetProductOrders } from "@/hooks/api/useProductOrder";
 import { SortingState } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { DateRange } from "react-day-picker";
 import { useDebounce } from "use-debounce";
-import { OrderStatus } from "./[orderId]/types/order";
+import { OrderStatus } from "../orders/[orderId]/types/order";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Fleet types enum to match backend
-const FleetTypes = {
-  CAR: 'car',
-  MOTORCYCLE: 'motorcycle',
+// Product types enum to match backend
+const ProductTypes = {
+  IPHONE: 'iphone',
+  CAMERA: 'camera',
+  OUTDOOR: 'outdoor',
+  STARLINK: 'starlink',
 } as const;
 
-const OrderTableWrapper = () => {
-  // THIS MORNING I WOULD LIKE TO FIX THIS !!!!!!
+const ProductOrderTableWrapper = () => {
   const [dateRange, setDateRange] = React.useState<DateRange>({
     from: undefined,
     to: undefined,
@@ -36,14 +37,15 @@ const OrderTableWrapper = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
   const page = Number(searchParams.get("page")) || 1;
   const pageLimit = Number(searchParams.get("limit")) || 10;
   const defaultTab = searchParams.get("status") ?? "pending";
   const q = searchParams.get("q");
 
   // >>> PERUBAHAN DI SINI <<<
-  // Inisialisasi 'type' dengan 'car' jika tidak ada di URL
-  const initialType = searchParams.get("type") || FleetTypes.CAR;
+  // Inisialisasi 'type' dengan 'iphone' jika tidak ada di URL
+  const initialType = searchParams.get("type") || ProductTypes.IPHONE;
   const startDate = searchParams.get("start_date") || "";
   const endDate = searchParams.get("end_date") || "";
   const orderColumn = searchParams.get("order_column") || "";
@@ -60,7 +62,7 @@ const OrderTableWrapper = () => {
     page: page,
     q: searchDebounce,
     status: status,
-    order_type: "vehicle",
+    order_type: "product",
     ...(selectedType ? { type: selectedType } : {}),
     ...(startDate ? { start_date: startDate } : {}),
     ...(endDate ? { end_date: endDate } : {}),
@@ -68,7 +70,7 @@ const OrderTableWrapper = () => {
     ...(orderColumn ? { order_column: orderColumn } : {}),
   });
 
-  const { data: pendingData, isFetching: isFetchingPendingData } = useGetOrders(
+  const { data: pendingData, isFetching: isFetchingPendingData } = useGetProductOrders(
     getOrderParams(OrderStatus.PENDING),
     {
       enabled: defaultTab === OrderStatus.PENDING,
@@ -77,21 +79,21 @@ const OrderTableWrapper = () => {
   );
 
   const { data: confirmedData, isFetching: isFetchingConfirmedData } =
-    useGetOrders(
+    useGetProductOrders(
       getOrderParams(OrderStatus.CONFIRMED),
       { enabled: defaultTab === OrderStatus.CONFIRMED },
       OrderStatus.CONFIRMED,
     );
 
   const { data: onProgressData, isFetching: isFetchingOnProgressData } =
-    useGetOrders(
+    useGetProductOrders(
       getOrderParams(OrderStatus.ON_PROGRESS),
       { enabled: defaultTab === OrderStatus.ON_PROGRESS },
       OrderStatus.ON_PROGRESS,
     );
 
   const { data: completedData, isFetching: isFetchingCompletedData } =
-    useGetOrders(
+    useGetProductOrders(
       getOrderParams(OrderStatus.DONE),
       { enabled: defaultTab === OrderStatus.DONE },
       OrderStatus.DONE,
@@ -107,7 +109,6 @@ const OrderTableWrapper = () => {
           newSearchParams.set(key, String(value));
         }
       }
-
       return newSearchParams.toString();
     },
     [],
@@ -148,9 +149,11 @@ const OrderTableWrapper = () => {
     },
   ];
 
-  const fleetTypeOptions = [
-    { label: "Car", value: FleetTypes.CAR },
-    { label: "Motorcycle", value: FleetTypes.MOTORCYCLE },
+  const productTypeOptions = [
+    { label: "iPhone", value: ProductTypes.IPHONE },
+    { label: "Camera", value: ProductTypes.CAMERA },
+    { label: "Outdoor", value: ProductTypes.OUTDOOR },
+    { label: "Starlink", value: ProductTypes.STARLINK },
   ];
 
   // Efek untuk dateRange, searchDebounce, sorting, defaultTab (seperti yang sudah ada)
@@ -250,11 +253,11 @@ const OrderTableWrapper = () => {
                 placeholder="Pilih Kategori"
               >
                 {/* Tampilkan label yang sesuai dengan selectedType */}
-                {fleetTypeOptions.find(option => option.value === selectedType)?.label || "Semua Kategori"}
+                {productTypeOptions.find(option => option.value === selectedType)?.label || "Semua Kategori"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {fleetTypeOptions.map((option) => (
+              {productTypeOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -269,7 +272,7 @@ const OrderTableWrapper = () => {
           <SearchInput
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
-            placeholder="Cari pesanan berdasarkan Pelanggan / Armada / Penanggung Jawab"
+            placeholder="Cari product orders berdasarkan Pelanggan / Produk / Invoice"
           />
         </div>
       </div>
@@ -277,7 +280,7 @@ const OrderTableWrapper = () => {
         {isFetchingPendingData && <Spinner />}
         {!isFetchingPendingData && pendingData && (
           <OrderTable
-            columns={pendingColumns}
+            columns={pendingProductOrderColumns}
             data={pendingData.items}
             searchKey="name"
             totalUsers={pendingData.meta?.total_items}
@@ -293,7 +296,7 @@ const OrderTableWrapper = () => {
         {isFetchingConfirmedData && <Spinner />}
         {!isFetchingConfirmedData && confirmedData && (
           <OrderTable
-            columns={confirmedColumns}
+            columns={confirmedProductOrderColumns}
             sorting={sorting}
             setSorting={setSorting}
             data={confirmedData.items}
@@ -309,7 +312,7 @@ const OrderTableWrapper = () => {
         {isFetchingOnProgressData && <Spinner />}
         {!isFetchingOnProgressData && onProgressData && (
           <OrderTable
-            columns={onProgressColumns}
+            columns={onProgressProductOrderColumns}
             sorting={sorting}
             setSorting={setSorting}
             data={onProgressData.items}
@@ -327,7 +330,7 @@ const OrderTableWrapper = () => {
           <OrderTable
             sorting={sorting}
             setSorting={setSorting}
-            columns={completedColumns}
+            columns={completedProductOrderColumns}
             data={completedData.items}
             searchKey="name"
             totalUsers={completedData.meta?.total_items}
@@ -341,4 +344,4 @@ const OrderTableWrapper = () => {
   );
 };
 
-export default OrderTableWrapper;
+export default ProductOrderTableWrapper;

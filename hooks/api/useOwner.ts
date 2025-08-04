@@ -8,7 +8,7 @@ import useAxiosAuth from "../axios/use-axios-auth";
 import { useUser } from "@/context/UserContext";
 
 const baseEndpoint = "/owners";
-export const useGetOwners = (params: any) => {
+export const useGetOwners = (params: any, p0: string) => {
   const axiosAuth = useAxiosAuth();
 
   const getOwners = () => {

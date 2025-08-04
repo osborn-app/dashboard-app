@@ -10,15 +10,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { Tabs } from "@/components/ui/tabs";
 import type { Metadata } from "next";
-import OrderTableWrapper from "./order-table-wrapper";
+import ProductOrderTableWrapper from "./product-order-table-wrapper";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import { getOrders } from "@/client/orderClient";
+import { getProductOrders } from "@/client/orderClient";
 
-const breadcrumbItems = [{ title: "Pesanan", link: "/dashboard/orders" }];
+const breadcrumbItems = [{ title: "Product Orders", link: "/dashboard/product-orders" }];
 type paramsProps = {
   searchParams: {
     [key: string]: string | undefined;
@@ -26,16 +26,16 @@ type paramsProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Pesanan | Transgo",
-  description: "Requests page",
+  title: "Product Orders | Transgo",
+  description: "Product Orders page",
 };
 
 const page = async ({ searchParams }: paramsProps) => {
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ["orders", "vehicle"],
-    queryFn: getOrders,
+    queryKey: ["orders", "product"],
+    queryFn: () => getProductOrders(),
   });
 
   const defaultTab = searchParams.status ?? "pending";
@@ -46,19 +46,19 @@ const page = async ({ searchParams }: paramsProps) => {
         <BreadCrumb items={breadcrumbItems} />
 
         <div className="flex items-start justify-between">
-          <Heading title="Pesanan" />
+          <Heading title="Product Orders" />
 
           <Link
-            href={"/dashboard/orders/create"}
+            href={"/dashboard/product-orders/create"}
             className={cn(buttonVariants({ variant: "main" }))}
           >
-            <Plus className="mr-2 h-4 w-4" /> Tambah Pesanan
+            <Plus className="mr-2 h-4 w-4" /> Tambah Product Order
           </Link>
         </div>
         <Separator />
         <Tabs defaultValue={defaultTab} className="space-y-4">
           <HydrationBoundary state={dehydrate(queryClient)}>
-            <OrderTableWrapper />
+            <ProductOrderTableWrapper />
           </HydrationBoundary>
         </Tabs>
       </div>

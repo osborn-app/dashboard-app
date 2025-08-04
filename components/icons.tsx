@@ -3,8 +3,10 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   CircuitBoardIcon,
   Command,
   CreditCard,
@@ -21,6 +23,7 @@ import {
   Moon,
   HandIcon,
   MoreVertical,
+  Package,
   Percent,
   Pizza,
   Plus,
@@ -123,6 +126,8 @@ export const Icons = {
   kanban: CircuitBoardIcon,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
+  chevronDown: ChevronDown,
+  chevronUp: ChevronUp,
   trash: Trash,
   employee: UserX2Icon,
   post: FileText,
@@ -154,6 +159,7 @@ export const Icons = {
   owners: Owners,
   notebookText: NotebookText,
   discount: Percent,
+  package: Package,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

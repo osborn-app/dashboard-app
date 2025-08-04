@@ -97,3 +97,29 @@ export function getNavItemsByRole(role?: string) {
 
   return filteredNavItems;
 }
+
+export function getCategoryLabel(category: string): string {
+  switch (category) {
+    case "iphone":
+      return "iPhone";
+    case "camera":
+      return "Camera";
+    case "outdoor":
+      return "Outdoor";
+    case "starlink":
+      return "Starlink";
+    default:
+      return category;
+  }
+}
+
+export function getProductStatusLabel(status: string): string {
+  switch (status) {
+    case "available":
+      return "Available";
+    case "unavailable":
+      return "Unavailable";
+    default:
+      return status;
+  }
+}

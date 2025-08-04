@@ -309,7 +309,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
             title: toastMessage,
           });
           router.refresh();
-          router.push(`/dashboard/fleets`);
+          router.push("/dashboard/fleets");
         },
         onSettled: () => {
           setLoading(false);
@@ -350,7 +350,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
             title: toastMessage,
           });
           router.refresh();
-          router.push(`/dashboard/fleets`);
+          router.push("/dashboard/fleets");
         },
         onSettled: () => {
           setLoading(false);
