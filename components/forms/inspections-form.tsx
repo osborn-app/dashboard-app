@@ -64,10 +64,28 @@ export default function InspectionsForm({
   const { data: availableFleets, isLoading: loadingFleets } =
     useGetAvailableFleets(fleetType);
 
+  // Debug: Log initialData structure
+  console.log("InspectionsForm initialData:", initialData);
+
+  // Validate initialData structure
+  if (isEdit && !initialData) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Data inspeksi tidak ditemukan</p>
+        </div>
+      </div>
+    );
+  }
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fleet_id: initialData?.fleet_id || fleetId || "",
+      fleet_id:
+        initialData?.fleet?.id?.toString() ||
+        initialData?.fleet_id ||
+        fleetId ||
+        "",
       inspector_name: initialData?.inspector_name || "",
       kilometer: initialData?.kilometer?.toString() || "",
       oil_status: initialData?.oil_status || "aman",
@@ -137,7 +155,10 @@ export default function InspectionsForm({
       <Separator />
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8 w-full"
+        >
           {/* Fleet Type Selection */}
           <FormField
             control={form.control}
@@ -184,7 +205,15 @@ export default function InspectionsForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Pilih fleet" />
+                      <SelectValue placeholder="Pilih fleet">
+                        {isEdit &&
+                        initialData?.fleet?.name &&
+                        initialData?.fleet?.plate_number
+                          ? `${initialData.fleet.name} - ${initialData.fleet.plate_number}`
+                          : isEdit && initialData?.fleet_id
+                          ? `Fleet ID: ${initialData.fleet_id}`
+                          : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -211,7 +240,7 @@ export default function InspectionsForm({
                   <Input
                     placeholder="Masukkan nama inspector"
                     {...field}
-                    disabled={!isEdit || loading}
+                    readOnly={isEdit || loading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -231,7 +260,7 @@ export default function InspectionsForm({
                     type="number"
                     placeholder="Masukkan kilometer"
                     {...field}
-                    disabled={!isEdit || loading}
+                    disabled={isEdit || loading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -250,7 +279,7 @@ export default function InspectionsForm({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={!isEdit || loading}
+                    disabled={isEdit || loading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -276,7 +305,7 @@ export default function InspectionsForm({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={!isEdit || loading}
+                    disabled={isEdit || loading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -302,7 +331,7 @@ export default function InspectionsForm({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={!isEdit || loading}
+                    disabled={isEdit || loading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -332,7 +361,7 @@ export default function InspectionsForm({
                     placeholder="Masukkan deskripsi inspeksi"
                     className="min-h-[100px]"
                     {...field}
-                    disabled={!isEdit || loading}
+                    disabled={isEdit || loading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -352,7 +381,7 @@ export default function InspectionsForm({
                     type="number"
                     placeholder="Masukkan durasi perbaikan (opsional)"
                     {...field}
-                    disabled={!isEdit || loading}
+                    disabled={isEdit || loading}
                   />
                 </FormControl>
                 <FormDescription>
@@ -366,7 +395,9 @@ export default function InspectionsForm({
           {!isEdit && (
             <div className="flex gap-4">
               <Button type="submit" disabled={createInspection.isPending}>
-                {createInspection.isPending ? "Menyimpan..." : "Simpan Inspeksi"}
+                {createInspection.isPending
+                  ? "Menyimpan..."
+                  : "Simpan Inspeksi"}
               </Button>
               <Button
                 type="button"
