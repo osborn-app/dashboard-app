@@ -16,7 +16,7 @@ export type Inspection = {
   repair_photo_url: string | null;
   repair_completion_date: string | null;
   repair_duration_days?: number;
-  fleet: {
+  fleet?: {
     id: number;
     name: string;
     type: string;
@@ -25,34 +25,81 @@ export type Inspection = {
   };
 };
 
-// Columns dengan struktur: Fleet | Plat | Type | Aksi
-export const SimpleInspectionsColumns: ColumnDef<Inspection>[] = [
+export type Fleet = {
+  id: number;
+  name: string;
+  type: string;
+  color: string;
+  plate_number?: string;
+  "plate number"?: string;
+  status: string;
+  slug: string;
+  created_at: string;
+  updated_at: string;
+};
+
+// Type guard to check if data is Fleet
+const isFleet = (data: any): data is Fleet => {
+  return "name" in data && "type" in data && !("inspector_name" in data);
+};
+
+// Type guard to check if data is Inspection
+const isInspection = (data: any): data is Inspection => {
+  return "inspector_name" in data;
+};
+
+// Columns untuk Available Fleets (Tersedia tab)
+export const SimpleInspectionsColumns: ColumnDef<Fleet | Inspection>[] = [
   {
-    accessorKey: "fleet",
+    accessorKey: "name",
     header: "Fleet",
     cell: ({ row }) => {
-      const fleet = row.getValue("fleet") as any;
+      const data = row.original;
+      let name = "N/A";
+      
+      if (isFleet(data)) {
+        name = data.name;
+      } else if (isInspection(data) && data.fleet) {
+        name = data.fleet.name;
+      }
+      
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{fleet.name}</span>
+          <span className="font-medium">{name}</span>
         </div>
       );
     },
   },
   {
-    accessorKey: "fleet",
+    accessorKey: "plate_number",
     header: "Plat",
     cell: ({ row }) => {
-      const fleet = row.getValue("fleet") as any;
-      return <span>{fleet.plate_number}</span>;
+      const data = row.original;
+      let plateNumber = "N/A";
+      
+      if (isFleet(data)) {
+        plateNumber = data.plate_number || data["plate number"] || "N/A";
+      } else if (isInspection(data) && data.fleet) {
+        plateNumber = data.fleet.plate_number || "N/A";
+      }
+      
+      return <span>{plateNumber}</span>;
     },
   },
   {
-    accessorKey: "fleet",
+    accessorKey: "type",
     header: "Type",
     cell: ({ row }) => {
-      const fleet = row.getValue("fleet") as any;
-      return <span className="capitalize">{fleet.type}</span>;
+      const data = row.original;
+      let type = "N/A";
+      
+      if (isFleet(data)) {
+        type = data.type;
+      } else if (isInspection(data) && data.fleet) {
+        type = data.fleet.type;
+      }
+      
+      return <span className="capitalize">{type}</span>;
     },
   },
 ];

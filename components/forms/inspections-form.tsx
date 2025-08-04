@@ -29,6 +29,10 @@ import {
   useCreateInspection,
   useGetAvailableFleets,
 } from "@/hooks/api/useInspections";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Heading } from "@/components/ui/heading";
+import { format } from "date-fns";
 
 const formSchema = z.object({
   fleet_id: z.string().min(1, "Fleet harus dipilih"),
@@ -41,12 +45,21 @@ const formSchema = z.object({
   repair_duration_days: z.string().optional(),
 });
 
-export default function InspectionsForm() {
+interface InspectionsFormProps {
+  initialData?: any;
+  isEdit?: boolean;
+}
+
+export default function InspectionsForm({
+  initialData,
+  isEdit,
+}: InspectionsFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fleetId = searchParams.get("fleet_id");
 
   const [fleetType, setFleetType] = useState<string>("car");
+  const [loading, setLoading] = useState(false);
   const createInspection = useCreateInspection();
   const { data: availableFleets, isLoading: loadingFleets } =
     useGetAvailableFleets(fleetType);
@@ -54,14 +67,14 @@ export default function InspectionsForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fleet_id: fleetId || "",
-      inspector_name: "",
-      kilometer: "",
-      oil_status: "aman",
-      tire_status: "aman",
-      battery_status: "aman",
-      description: "",
-      repair_duration_days: "",
+      fleet_id: initialData?.fleet_id || fleetId || "",
+      inspector_name: initialData?.inspector_name || "",
+      kilometer: initialData?.kilometer?.toString() || "",
+      oil_status: initialData?.oil_status || "aman",
+      tire_status: initialData?.tire_status || "aman",
+      battery_status: initialData?.battery_status || "aman",
+      description: initialData?.description || "",
+      repair_duration_days: initialData?.repair_duration_days?.toString() || "",
     },
   });
 
@@ -96,10 +109,35 @@ export default function InspectionsForm() {
     }
   };
 
+  const getComponentStatusBadge = (status: string) => {
+    return status === "aman" ? (
+      <Badge
+        variant="default"
+        className="bg-green-100 text-green-800 hover:bg-green-100"
+      >
+        Aman
+      </Badge>
+    ) : (
+      <Badge variant="destructive">Tidak Aman</Badge>
+    );
+  };
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <>
+      <div className="flex items-center justify-between">
+        <Heading
+          title={isEdit ? "Detail Inspeksi" : "Tambah Inspeksi"}
+          description={
+            isEdit
+              ? "Informasi lengkap inspeksi kendaraan"
+              : "Buat inspeksi baru"
+          }
+        />
+      </div>
+      <Separator />
+
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
           {/* Fleet Type Selection */}
           <FormField
             control={form.control}
@@ -113,6 +151,7 @@ export default function InspectionsForm() {
                     setFleetType(value);
                     form.setValue("fleet_id", "");
                   }}
+                  disabled={isEdit}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -141,7 +180,7 @@ export default function InspectionsForm() {
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
-                  disabled={loadingFleets}
+                  disabled={loadingFleets || isEdit}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -169,7 +208,11 @@ export default function InspectionsForm() {
               <FormItem>
                 <FormLabel>Nama Inspector</FormLabel>
                 <FormControl>
-                  <Input placeholder="Masukkan nama inspector" {...field} />
+                  <Input
+                    placeholder="Masukkan nama inspector"
+                    {...field}
+                    disabled={!isEdit || loading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -188,6 +231,7 @@ export default function InspectionsForm() {
                     type="number"
                     placeholder="Masukkan kilometer"
                     {...field}
+                    disabled={!isEdit || loading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -206,6 +250,7 @@ export default function InspectionsForm() {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={!isEdit || loading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -231,6 +276,7 @@ export default function InspectionsForm() {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={!isEdit || loading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -256,6 +302,7 @@ export default function InspectionsForm() {
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={!isEdit || loading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -285,6 +332,7 @@ export default function InspectionsForm() {
                     placeholder="Masukkan deskripsi inspeksi"
                     className="min-h-[100px]"
                     {...field}
+                    disabled={!isEdit || loading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -304,6 +352,7 @@ export default function InspectionsForm() {
                     type="number"
                     placeholder="Masukkan durasi perbaikan (opsional)"
                     {...field}
+                    disabled={!isEdit || loading}
                   />
                 </FormControl>
                 <FormDescription>
@@ -314,20 +363,22 @@ export default function InspectionsForm() {
             )}
           />
 
-          <div className="flex gap-4">
-            <Button type="submit" disabled={createInspection.isPending}>
-              {createInspection.isPending ? "Menyimpan..." : "Simpan Inspeksi"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/dashboard/inspections")}
-            >
-              Batal
-            </Button>
-          </div>
+          {!isEdit && (
+            <div className="flex gap-4">
+              <Button type="submit" disabled={createInspection.isPending}>
+                {createInspection.isPending ? "Menyimpan..." : "Simpan Inspeksi"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/dashboard/inspections")}
+              >
+                Batal
+              </Button>
+            </div>
+          )}
         </form>
       </Form>
-    </div>
+    </>
   );
 }
