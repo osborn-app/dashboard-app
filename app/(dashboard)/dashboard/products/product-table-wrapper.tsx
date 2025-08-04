@@ -13,7 +13,7 @@ import { DateRange } from "react-day-picker";
 import { useDebounce } from "use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Product categories enum
+// Product categories enum (trigger deploy)
 const ProductCategories = {
   IPHONE: 'iphone',
   CAMERA: 'camera', 
