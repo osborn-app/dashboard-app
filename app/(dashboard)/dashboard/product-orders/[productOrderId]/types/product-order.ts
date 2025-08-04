@@ -58,6 +58,13 @@ export function getPaymentStatusLabel(payment_status: string): string {
     }
 }
 
+export enum ProductCategory {
+    IPHONE = 'iphone',
+    CAMERA = 'camera',
+    OUTDOOR = 'outdoor',
+    STARLINK = 'starlink',
+}
+
 export function getCategoryLabel(category: string): string {
     switch (category) {
         case 'iphone':
