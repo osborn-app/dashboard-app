@@ -65,6 +65,7 @@ export function FleetTable<TData, TValue>({
   // Search params
   const page = searchParams?.get("page") ?? "1";
   const q = searchParams?.get("q");
+  const status = searchParams?.get("status");
   const pageAsNumber = Number(page);
   const fallbackPage =
     isNaN(pageAsNumber) || pageAsNumber < 1 ? 1 : pageAsNumber;
@@ -76,7 +77,11 @@ export function FleetTable<TData, TValue>({
   const [searchQuery, setSearchQuery] = React.useState<string | undefined>(
     q ?? "",
   );
+  const [statusFilter, setStatusFilter] = React.useState<string | undefined>(
+    status ?? "",
+  );
   const [searchDebounce] = useDebounce(searchQuery, 500);
+  const [statusDebounce] = useDebounce(statusFilter, 300);
 
   // Create query string
   const createQueryString = React.useCallback(
@@ -117,13 +122,14 @@ export function FleetTable<TData, TValue>({
         page: pageIndex + 1,
         limit: pageSize,
         q: searchDebounce || undefined,
+        status: statusDebounce || undefined,
       })}`,
       {
         scroll: false,
       },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageIndex, pageSize, searchDebounce]);
+  }, [pageIndex, pageSize, searchDebounce, statusDebounce]);
 
   const table = useReactTable({
     data,
@@ -148,6 +154,11 @@ export function FleetTable<TData, TValue>({
     setSearchQuery(value);
   };
 
+  // Handle status filter change
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value === "all" ? "" : value);
+  };
+
   React.useEffect(() => {
     if (searchDebounce !== undefined) {
       router.push(
@@ -155,6 +166,7 @@ export function FleetTable<TData, TValue>({
           page: null,
           limit: null,
           q: searchDebounce,
+          status: statusDebounce || undefined,
         })}`,
         {
           scroll: false,
@@ -170,6 +182,7 @@ export function FleetTable<TData, TValue>({
             page: null,
             limit: null,
             q: null,
+            status: statusDebounce || undefined,
           })}`,
           {
             scroll: false,
@@ -181,6 +194,23 @@ export function FleetTable<TData, TValue>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchDebounce]);
 
+  // Handle status filter changes
+  React.useEffect(() => {
+    router.push(
+      `${pathname}?${createQueryString({
+        page: null,
+        limit: null,
+        q: searchDebounce || undefined,
+        status: statusDebounce || undefined,
+      })}`,
+      {
+        scroll: false,
+      },
+    );
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusDebounce]);
+
   // Reset search query when URL q parameter is null or undefined
   React.useEffect(() => {
     if (!q) {
@@ -188,14 +218,36 @@ export function FleetTable<TData, TValue>({
     }
   }, [q]);
 
+  // Reset status filter when URL status parameter is null or undefined
+  React.useEffect(() => {
+    if (!status) {
+      setStatusFilter("");
+    }
+  }, [status]);
+
   return (
     <>
-      <Input
-        placeholder={`Cari fleets...`}
-        value={searchQuery}
-        onChange={handleSearchInputChange}
-        className="w-full md:max-w-sm mb-5"
-      />
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-5">
+        <Input
+          placeholder={`Cari fleets...`}
+          value={searchQuery}
+          onChange={handleSearchInputChange}
+          className="w-full md:max-w-sm"
+        />
+        <Select
+          value={statusFilter || "all"}
+          onValueChange={handleStatusFilterChange}
+        >
+          <SelectTrigger className="w-full md:w-[180px]">
+            <SelectValue placeholder="Filter Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="available">Available</SelectItem>
+            <SelectItem value="preparation">Preparation</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <ScrollArea className="rounded-md border h-[calc(80vh-220px)]">
         <Table className="relative">
           <TableHeader>

@@ -115,3 +115,27 @@ export const useDeleteFleet = (id: number) => {
     },
   });
 };
+
+export const useUpdateFleetStatus = () => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const updateFleetStatus = (id: string | number) => {
+    return axiosAuth.put(`${baseEndpoint}/${id}/status`, {
+      status: "preparation",
+    });
+  };
+
+  return useMutation({
+    mutationFn: updateFleetStatus,
+    onSuccess: () => {
+      // Invalidate fleets queries
+      queryClient.invalidateQueries({ queryKey: ["fleets"] });
+      // Invalidate available fleets queries for inspections
+      queryClient.invalidateQueries({ queryKey: ["available-fleets"] });
+    },
+    onError: (error) => {
+      console.error("Error updating fleet status:", error);
+    },
+  });
+};
