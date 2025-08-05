@@ -2,17 +2,30 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAxiosAuth from "../axios/use-axios-auth";
 
 // Get available fleets for inspection
-export const useGetAvailableFleets = (type: string) => {
+export const useGetAvailableFleets = (type?: string, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getAvailableFleetsFn = () => {
-    return axiosAuth.get(`/inspections/available?type=${type}`);
+    const queryParams = new URLSearchParams();
+
+    if (type) {
+      queryParams.append("type", type);
+    }
+
+    if (params?.q) {
+      queryParams.append("q", params.q);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/inspections/available${queryString ? `?${queryString}` : ""}`;
+
+    return axiosAuth.get(url);
   };
 
   return useQuery({
-    queryKey: ["available-fleets", type],
+    queryKey: ["available-fleets", type, params],
     queryFn: getAvailableFleetsFn,
-    enabled: !!type,
+    enabled: true, // Always enabled since we handle undefined type
   });
 };
 

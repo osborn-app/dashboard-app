@@ -22,12 +22,22 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { CellAction } from "./cell-action";
-import { Inspection } from "./columns";
+import { Inspection, Fleet } from "./columns";
 import { useRouter } from "next/navigation";
 
+// Type guard to check if data is Fleet
+const isFleet = (data: any): data is Fleet => {
+  return "name" in data && "type" in data && !("inspector_name" in data);
+};
+
+// Type guard to check if data is Inspection
+const isInspection = (data: any): data is Inspection => {
+  return "inspector_name" in data;
+};
+
 interface InspectionsTableProps {
-  columns: ColumnDef<Inspection>[];
-  data: Inspection[];
+  columns: ColumnDef<any>[];
+  data: any[];
   status: "active" | "pending_repair" | "completed";
 }
 
@@ -55,10 +65,18 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
     },
   });
 
-  const handleRowClick = (inspection: Inspection) => {
+  const handleRowClick = (rowData: any) => {
     // Navigate to detail page when row is clicked
     if (status === "pending_repair" || status === "completed") {
-      router.push(`/dashboard/inspections/${inspection.id}/detail`);
+      if (isInspection(rowData)) {
+        // Untuk pending_repair, arahkan ke preview
+        if (status === "pending_repair") {
+          router.push(`/dashboard/inspections/${rowData.id}/preview`);
+        } else {
+          // Untuk completed, arahkan ke detail
+          router.push(`/dashboard/inspections/${rowData.id}/detail`);
+        }
+      }
     }
   };
 
@@ -81,7 +99,6 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                     </TableHead>
                   );
                 })}
-                <TableHead>Actions</TableHead>
               </TableRow>
             ))}
           </TableHeader>
@@ -106,17 +123,12 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
                       )}
                     </TableCell>
                   ))}
-                  <TableCell>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <CellAction data={row.original} status={status} />
-                    </div>
-                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + 1}
+                  colSpan={columns.length}
                   className="h-24 text-center"
                 >
                   No results.

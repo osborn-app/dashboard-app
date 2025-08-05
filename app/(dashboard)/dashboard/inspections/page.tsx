@@ -17,6 +17,8 @@ import {
   getInspectionsByStatus,
   getAvailableFleets,
 } from "@/client/inspectionsClient";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export const metadata: Metadata = {
   title: "Inspections | Transgo",
@@ -25,7 +27,7 @@ export const metadata: Metadata = {
 
 type paramsProps = {
   searchParams: {
-    [key: string]: string | undefined;
+    [key: string]: string | string[] | undefined;
   };
 };
 
@@ -34,29 +36,81 @@ const breadcrumbItems = [
 ];
 
 export default async function InspectionsPage({ searchParams }: paramsProps) {
+  const session = await getServerSession(authOptions);
+  const page = Number(searchParams.page) || 1;
+  const pageLimit = Number(searchParams.limit) || 10;
+  const q = searchParams.q || null;
+  const fleetType = searchParams.fleet_type || "all";
+  const status = searchParams.status || "tersedia";
+
   const queryClient = new QueryClient();
+
+  // Build query string for available fleets
+  let availableFleetsQueryString = `page=${page}&limit=${pageLimit}`;
+  if (q) availableFleetsQueryString += `&q=${q}`;
+  if (fleetType !== "all") availableFleetsQueryString += `&type=${fleetType}`;
+
+  // Build query string for inspections
+  let inspectionsQueryString = `page=${page}&limit=${pageLimit}`;
+  if (q) inspectionsQueryString += `&q=${q}`;
+  if (fleetType !== "all") inspectionsQueryString += `&fleet_type=${fleetType}`;
 
   // Prefetch data for all statuses
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: ["available-fleets", "car"],
-      queryFn: () => getAvailableFleets("car"),
+      queryKey: [
+        "available-fleets",
+        fleetType === "all" ? undefined : fleetType,
+        { q, page, limit: pageLimit },
+      ],
+      queryFn: () =>
+        getAvailableFleets(fleetType === "all" ? undefined : fleetType, {
+          q,
+          page,
+          limit: pageLimit,
+        }),
     }),
     queryClient.prefetchQuery({
-      queryKey: ["available-fleets", "motorcycle"],
-      queryFn: () => getAvailableFleets("motorcycle"),
+      queryKey: [
+        "inspections",
+        "pending_repair",
+        {
+          q,
+          fleet_type: fleetType === "all" ? undefined : fleetType,
+          page,
+          limit: pageLimit,
+        },
+      ],
+      queryFn: () =>
+        getInspectionsByStatus("pending_repair", {
+          q,
+          fleet_type: fleetType === "all" ? undefined : fleetType,
+          page,
+          limit: pageLimit,
+        }),
     }),
     queryClient.prefetchQuery({
-      queryKey: ["inspections", "pending_repair"],
-      queryFn: () => getInspectionsByStatus("pending_repair"),
-    }),
-    queryClient.prefetchQuery({
-      queryKey: ["inspections", "completed"],
-      queryFn: () => getInspectionsByStatus("completed"),
+      queryKey: [
+        "inspections",
+        "completed",
+        {
+          q,
+          fleet_type: fleetType === "all" ? undefined : fleetType,
+          page,
+          limit: pageLimit,
+        },
+      ],
+      queryFn: () =>
+        getInspectionsByStatus("completed", {
+          q,
+          fleet_type: fleetType === "all" ? undefined : fleetType,
+          page,
+          limit: pageLimit,
+        }),
     }),
   ]);
 
-  const defaultTab = searchParams.status ?? "tersedia";
+  const defaultTab = status;
 
   return (
     <>
@@ -73,7 +127,12 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
             <TabsTrigger value="selesai">Selesai</TabsTrigger>
           </TabsList>
           <HydrationBoundary state={dehydrate(queryClient)}>
-            <InspectionsTableWrapper />
+            <InspectionsTableWrapper
+              pageNo={page}
+              pageLimit={pageLimit}
+              searchQuery={q as string}
+              fleetType={fleetType as string}
+            />
           </HydrationBoundary>
         </Tabs>
       </div>

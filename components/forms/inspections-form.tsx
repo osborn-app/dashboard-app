@@ -29,21 +29,56 @@ import {
   useCreateInspection,
   useGetAvailableFleets,
 } from "@/hooks/api/useInspections";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
-import { format } from "date-fns";
+import MulitpleImageUpload, {
+  MulitpleImageUploadResponse,
+} from "@/components/multiple-image-upload";
+import useAxiosAuth from "@/hooks/axios/use-axios-auth";
+import axios from "axios";
+
+// File schema for photo upload
+const fileSchema = z.custom<any>(
+  (val: any) => {
+    if (val.length == 0) return false;
+    for (let i = 0; i < val.length; i++) {
+      const file = val[i];
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
+      if (!allowedTypes.includes(file.type)) return false;
+    }
+    return true;
+  },
+  {
+    message:
+      "Foto inspeksi kosong. Pastikan file yang kamu pilih adalah tipe JPEG, PNG.",
+  },
+);
 
 const formSchema = z.object({
   fleet_id: z.string().min(1, "Fleet harus dipilih"),
   inspector_name: z.string().min(1, "Nama inspector harus diisi"),
-  kilometer: z.string().min(1, "Kilometer harus diisi"),
+  kilometer: z
+    .string()
+    .min(1, "Kilometer harus diisi")
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "Kilometer harus berupa angka positif",
+    }),
   oil_status: z.enum(["aman", "tidak_aman"]),
   tire_status: z.enum(["aman", "tidak_aman"]),
   battery_status: z.enum(["aman", "tidak_aman"]),
   description: z.string().min(1, "Deskripsi harus diisi"),
-  repair_duration_days: z.string().optional(),
+  repair_duration_days: z
+    .string()
+    .optional()
+    .refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "Durasi perbaikan harus berupa angka positif",
+    }),
+  repair_photo_url: fileSchema,
 });
+
+type InspectionsFormValues = z.infer<typeof formSchema> & {
+  repair_photo_url: MulitpleImageUploadResponse;
+};
 
 interface InspectionsFormProps {
   initialData?: any;
@@ -63,22 +98,32 @@ export default function InspectionsForm({
   const createInspection = useCreateInspection();
   const { data: availableFleets, isLoading: loadingFleets } =
     useGetAvailableFleets(fleetType);
+  const axiosAuth = useAxiosAuth();
 
-  // Debug: Log initialData structure
-  console.log("InspectionsForm initialData:", initialData);
+  const uploadImage = async (file: any) => {
+    const file_names = [];
+    for (let i = 0; i < file?.length; i++) {
+      file_names.push(file?.[i].name);
+    }
 
-  // Validate initialData structure
-  if (isEdit && !initialData) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <p className="text-muted-foreground">Data inspeksi tidak ditemukan</p>
-        </div>
-      </div>
-    );
-  }
+    const response = await axiosAuth.post("/storages/presign/list", {
+      file_names: file_names,
+      folder: "fleet",
+    });
 
-  const form = useForm<z.infer<typeof formSchema>>({
+    for (let i = 0; i < file_names.length; i++) {
+      const file_data = file;
+      await axios.put(response.data[i].upload_url, file_data[i], {
+        headers: {
+          "Content-Type": file_data[i].type,
+        },
+      });
+    }
+
+    return response.data;
+  };
+
+  const form = useForm<InspectionsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       fleet_id:
@@ -93,14 +138,24 @@ export default function InspectionsForm({
       battery_status: initialData?.battery_status || "aman",
       description: initialData?.description || "",
       repair_duration_days: initialData?.repair_duration_days?.toString() || "",
+      repair_photo_url: initialData?.repair_photo_url || [],
     },
   });
 
   useEffect(() => {
     if (fleetId) {
       form.setValue("fleet_id", fleetId);
+      // Set fleet type based on the selected fleet
+      if (availableFleets?.data) {
+        const fleet = availableFleets.data.find(
+          (f: any) => f.id.toString() === fleetId,
+        );
+        if (fleet) {
+          setFleetType(fleet.type || "car");
+        }
+      }
     }
-  }, [fleetId, form]);
+  }, [fleetId, form, availableFleets]);
 
   // Auto-set fleet type if fleet_id is provided
   useEffect(() => {
@@ -117,8 +172,28 @@ export default function InspectionsForm({
     }
   }, [fleetId, availableFleets, isEdit]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  // Validate initialData structure
+  if (isEdit && !initialData) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-muted-foreground">Data inspeksi tidak ditemukan</p>
+        </div>
+      </div>
+    );
+  }
+
+  const onSubmit = async (values: InspectionsFormValues) => {
+    setLoading(true);
+
     try {
+      // Upload foto terlebih dahulu
+      let repairPhotoUrl = "";
+      if (values.repair_photo_url && values.repair_photo_url.length > 0) {
+        const uploadImageRes = await uploadImage(values.repair_photo_url);
+        repairPhotoUrl = uploadImageRes[0]?.download_url || "";
+      }
+
       await createInspection.mutateAsync({
         ...values,
         fleet_id: parseInt(values.fleet_id),
@@ -126,9 +201,11 @@ export default function InspectionsForm({
         repair_duration_days: values.repair_duration_days
           ? parseInt(values.repair_duration_days)
           : undefined,
-        has_issue: values.oil_status === "tidak_aman" || 
-                   values.tire_status === "tidak_aman" || 
-                   values.battery_status === "tidak_aman",
+        has_issue:
+          values.oil_status === "tidak_aman" ||
+          values.tire_status === "tidak_aman" ||
+          values.battery_status === "tidak_aman",
+        repair_photo_url: repairPhotoUrl,
       });
 
       toast({
@@ -137,26 +214,17 @@ export default function InspectionsForm({
       });
 
       router.push("/dashboard/inspections");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Gagal membuat inspeksi",
+        description: `Gagal membuat inspeksi: ${
+          error?.response?.data?.message || error?.message
+        }`,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const getComponentStatusBadge = (status: string) => {
-    return status === "aman" ? (
-      <Badge
-        variant="default"
-        className="bg-green-100 text-green-800 hover:bg-green-100"
-      >
-        Aman
-      </Badge>
-    ) : (
-      <Badge variant="destructive">Tidak Aman</Badge>
-    );
   };
 
   return (
@@ -219,41 +287,71 @@ export default function InspectionsForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Fleet</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  disabled={loadingFleets || isEdit || !!fleetId}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih fleet">
-                        {isEdit &&
-                        initialData?.fleet?.name &&
-                        initialData?.fleet?.plate_number
-                          ? `${initialData.fleet.name} - ${initialData.fleet.plate_number}`
-                          : isEdit && initialData?.fleet_id
-                          ? `Fleet ID: ${initialData.fleet_id}`
-                          : fleetId && availableFleets?.data
-                          ? (() => {
-                              const fleet = availableFleets.data.find(
-                                (f: any) => f.id.toString() === fleetId,
-                              );
-                              return fleet
-                                ? `${fleet.name} - ${fleet.plate_number}`
-                                : `Fleet ID: ${fleetId}`;
-                            })()
-                          : undefined}
-                      </SelectValue>
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {availableFleets?.data?.map((fleet: any) => (
-                      <SelectItem key={fleet.id} value={fleet.id.toString()}>
-                        {fleet.name} - {fleet.plate_number}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {fleetId ? (
+                  // Show selected fleet info when fleet_id is provided
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 p-3 border rounded-md bg-green-50">
+                      <div className="flex-1">
+                        {availableFleets?.data ? (
+                          (() => {
+                            const fleet = availableFleets.data.find(
+                              (f: any) => f.id.toString() === fleetId,
+                            );
+                            return fleet ? (
+                              <div>
+                                <p className="font-medium text-green-800">
+                                  {fleet.name} - {fleet.plate_number}
+                                </p>
+                                <p className="text-sm text-green-600">
+                                  Type: {fleet.type}
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-green-800">
+                                Fleet ID: {fleetId}
+                              </p>
+                            );
+                          })()
+                        ) : (
+                          <p className="text-green-800">
+                            Loading fleet data...
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <FormDescription className="text-green-600">
+                      Fleet telah dipilih otomatis dari table Tersedia
+                    </FormDescription>
+                  </div>
+                ) : (
+                  // Show fleet selection dropdown when no fleet_id
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={loadingFleets || isEdit}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih fleet">
+                          {isEdit &&
+                          initialData?.fleet?.name &&
+                          initialData?.fleet?.plate_number
+                            ? `${initialData.fleet.name} - ${initialData.fleet.plate_number}`
+                            : isEdit && initialData?.fleet_id
+                            ? `Fleet ID: ${initialData.fleet_id}`
+                            : undefined}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {availableFleets?.data?.map((fleet: any) => (
+                        <SelectItem key={fleet.id} value={fleet.id.toString()}>
+                          {fleet.name} - {fleet.plate_number}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -417,6 +515,28 @@ export default function InspectionsForm({
                 <FormDescription>
                   Kosongkan jika tidak ada perbaikan yang diperlukan
                 </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Repair Photo Upload */}
+          <FormField
+            control={form.control}
+            name="repair_photo_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="relative label-required">
+                  Foto Perbaikan
+                </FormLabel>
+                <FormControl className="disabled:opacity-100">
+                  <MulitpleImageUpload
+                    onChange={field.onChange}
+                    value={field.value}
+                    onRemove={field.onChange}
+                    disabled={loading}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
