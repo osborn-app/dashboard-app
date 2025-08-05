@@ -37,7 +37,7 @@ import useAxiosAuth from "@/hooks/axios/use-axios-auth";
 import axios from "axios";
 import { omitBy } from "lodash";
 
-// Product Category Enum
+// Product Category Enums
 enum ProductCategory {
   IPHONE = "iphone",
   CAMERA = "camera",
