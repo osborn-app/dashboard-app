@@ -5,5 +5,7 @@ export const getFleets = () => {
 };
 
 export const updateStatus = (id: string) => {
-  return client.put(`/fleets/${id}/status`);
+  return client.put(`/fleets/${id}/status`, {
+    status: "preparation",
+  });
 };
