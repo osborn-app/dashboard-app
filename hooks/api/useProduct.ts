@@ -40,10 +40,11 @@ export const useGetAvailableProducts = (params: GetProductsParams = {}, options 
   const axiosAuth = useAxiosAuth();
 
   const getAvailableProducts = async () => {
-    const { data } = await axiosAuth.get(`${baseEndpoint}/available`, {
+    const { data } = await axiosAuth.get(baseEndpoint, {
       params: {
         limit: 10,
         page: 1,
+        status: 'available',
         ...params,
       },
     });
@@ -52,9 +53,9 @@ export const useGetAvailableProducts = (params: GetProductsParams = {}, options 
       pages: [
         {
           data: {
-            items: Array.isArray(data) ? data : [],
-            meta: {},
-            pagination: {}
+            items: Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []),
+            meta: data?.meta || {},
+            pagination: data?.pagination || {}
           }
         }
       ]
