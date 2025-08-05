@@ -40,7 +40,9 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
   const page = Number(searchParams.page) || 1;
   const pageLimit = Number(searchParams.limit) || 10;
   const q = searchParams.q || null;
-  const fleetType = searchParams.fleet_type || "all";
+  const fleetType = Array.isArray(searchParams.fleet_type)
+    ? searchParams.fleet_type[0] || "all"
+    : searchParams.fleet_type || "all";
   const status = searchParams.status || "tersedia";
 
   const queryClient = new QueryClient();
@@ -110,7 +112,9 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
     }),
   ]);
 
-  const defaultTab = status;
+  const defaultTab = Array.isArray(searchParams.status)
+    ? searchParams.status[0] || "tersedia"
+    : searchParams.status || "tersedia";
 
   return (
     <>

@@ -1,8 +1,14 @@
 import client from "./apiClient";
 
 // Get available fleets for inspection
-export const getAvailableFleets = (type: string) => {
-  return client.get(`/inspections/available?type=${type}`);
+export const getAvailableFleets = (type?: string, params?: any) => {
+  const requestParams: any = { ...params };
+
+  if (type) {
+    requestParams.type = type;
+  }
+
+  return client.get("/inspections/available", { params: requestParams });
 };
 
 // Get inspections by status
