@@ -3,7 +3,7 @@
 import * as z from "zod";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +17,9 @@ import {
 import { Select as AntdSelect, DatePicker, ConfigProvider } from "antd";
 import idID from 'antd/es/locale/id_ID';
 import { useGetInfinityFleets } from "@/hooks/api/useFleet";
-import { useGetInfinityLocation } from "@/hooks/api/useLocation";
+
 import { useDebounce } from "use-debounce";
-import { isEmpty } from "lodash";
+
 import dayjs from "dayjs";
 import 'dayjs/locale/id';
 
@@ -50,15 +50,8 @@ export default function NeedsForm({ onSubmit }: NeedsFormProps) {
     hasNextPage: hasNextFleets,
     isFetchingNextPage: isFetchingNextFleets,
   } = useGetInfinityFleets(searchFleetDebounce);
-  const [searchLocationTerm, setSearchLocationTerm] = useState("");
-  const [searchLocationDebounce] = useDebounce(searchLocationTerm, 500);
-  const {
-    data: locations,
-    isFetching: isFetchingLocations,
-    fetchNextPage: fetchNextLocations,
-    hasNextPage: hasNextLocations,
-    isFetchingNextPage: isFetchingNextLocations,
-  } = useGetInfinityLocation(searchLocationDebounce);
+
+
 
   const form = useForm<NeedsFormValues>({
     resolver: zodResolver(formSchema),
@@ -148,36 +141,7 @@ export default function NeedsForm({ onSubmit }: NeedsFormProps) {
               )}
             />
 
-            {/* Dropdown Cabang pakai API lokasi */}
-            <FormItem>
-              <FormLabel>Cabang</FormLabel>
-              <FormControl>
-                <AntdSelect
-                  showSearch
-                  placeholder="Pilih cabang"
-                  style={{ width: "100%" }}
-                  onSearch={setSearchLocationTerm}
-                  onPopupScroll={() => {
-                    if (hasNextLocations && !isFetchingNextLocations) fetchNextLocations();
-                  }}
-                  filterOption={false}
-                  notFoundContent={isFetchingNextLocations ? <p className="px-3 text-sm">loading</p> : null}
-                >
-                  {locations?.pages?.map((page: any) =>
-                    page.data.items.map((item: any) => (
-                      <AntdSelect.Option key={item.id} value={item.id.toString()}>
-                        {item.name || item.location_name || item.nama || `Cabang ${item.id}`}
-                      </AntdSelect.Option>
-                    ))
-                  )}
-                  {isFetchingNextLocations && (
-                    <AntdSelect.Option disabled>
-                      <p className="px-3 text-sm">loading</p>
-                    </AntdSelect.Option>
-                  )}
-                </AntdSelect>
-              </FormControl>
-            </FormItem>
+
           </div>
           <FormField
             control={form.control}

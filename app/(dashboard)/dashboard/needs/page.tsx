@@ -33,17 +33,17 @@ export default async function NeedsPage({ searchParams }: paramsProps) {
 
   await queryClient.prefetchQuery({
     queryKey: ["maintenances", {}], // params bisa disesuaikan
-    queryFn: ({ queryKey }) => getMaintenances(queryKey[1], ""), // token bisa diisi jika ada
+    queryFn: ({ queryKey }) => getMaintenances(queryKey[1], ""), // tambah parameter token
   });
 
-  const defaultTab = searchParams.status ?? "pending";
+  const defaultTab = searchParams.status ?? "ongoing";
 
   return (
     <>
       <div className="flex-1 space-y-4  p-4 md:p-8 pt-6">
         <BreadCrumb items={breadcrumbItems} />
         <div className="flex items-start justify-between">
-          <Heading title="Perbaikan Keperluan" />
+          <Heading title="Maintenance Management" />
           <Link
             href={"/dashboard/needs/create"}
             className={cn(buttonVariants({ variant: "main" }))}

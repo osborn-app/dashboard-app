@@ -1,11 +1,11 @@
 "use client";
 import BreadCrumb from "@/components/breadcrumb";
 import NeedsForm from "@/components/forms/needs-form";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { createMaintenance } from "@/client/needsClient";
-import { getFleets } from "@/client/fleetClient";
 
-type Fleet = { id: number; name: string; status: string };
+
+
 type MaintenanceFormData = {
   fleet_id: number;
   description: string;
@@ -15,31 +15,16 @@ type MaintenanceFormData = {
 
 export default function Page() {
   const breadcrumbItems = [
-    { title: "needs", link: "/dashboard/needs" },
+    { title: "Maintenance", link: "/dashboard/needs" },
     { title: "Create", link: "/dashboard/needs/create" },
   ];
 
-  const [fleets, setFleets] = useState<Fleet[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Ambil JWT token dari localStorage
   const getToken = () => (typeof window !== "undefined" ? localStorage.getItem("token_jwt") : null);
 
-  useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-  getFleets(token)
-    .then((res: { data: Fleet[] }) => {
-      setFleets(res.data);
-      setLoading(false);
-    })
-    .catch(() => {
-      setLoading(false);
-    });
-  }, []);
+
 
   const handleSubmit = async (formData: MaintenanceFormData) => {
     const token = getToken();

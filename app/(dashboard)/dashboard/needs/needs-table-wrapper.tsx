@@ -2,17 +2,16 @@
 import TabLists from "@/components/TabLists";
 import SearchInput from "@/components/search-input";
 import Spinner from "@/components/spinner";
-import { needsColumns } from "@/components/tables/needs-tables/columns";
+
 import NeedsTable from "@/components/tables/needs-tables/needs-tables";
 import { TabsContent } from "@/components/ui/tabs";
 import { useGetMaintenances } from "@/hooks/api/useNeeds";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDebounce } from "use-debounce";
 
 const NeedsTableWrapper = () => {
-  const router = useRouter();
-  const pathname = usePathname();
+
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
   const pageLimit = Number(searchParams.get("limit")) || 10;
@@ -31,20 +30,7 @@ const NeedsTableWrapper = () => {
     ""
   );
 
-  const createQueryString = React.useCallback(
-    (params: Record<string, string | number | null | undefined>) => {
-      const newSearchParams = new URLSearchParams();
-      for (const [key, value] of Object.entries(params)) {
-        if (value === null || value === undefined) {
-          newSearchParams.delete(key);
-        } else {
-          newSearchParams.set(key, String(value));
-        }
-      }
-      return newSearchParams.toString();
-    },
-    [],
-  );
+
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -73,7 +59,7 @@ const NeedsTableWrapper = () => {
           <SearchInput
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
-            placeholder="Cari Unit"
+            placeholder="Cari Maintenance"
           />
         </div>
       </div>

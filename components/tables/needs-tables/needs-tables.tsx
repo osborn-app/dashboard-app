@@ -1,5 +1,5 @@
 import React from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { needsColumns } from "./columns";
 
 type NeedsTableProps = {
@@ -10,7 +10,7 @@ const NeedsTable: React.FC<NeedsTableProps> = ({ data }) => {
   const router = useRouter();
 
   const handleRowClick = (row: any) => {
-    router.push(`/dashboard/maintenance/${row.id}/detail`);
+    router.push(`/dashboard/needs/${row.id}/detail`);
   };
 
   return (
