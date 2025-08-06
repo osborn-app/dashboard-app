@@ -21,6 +21,7 @@ const TabLists: React.FC<TabListsProps> = ({ lists }) => {
     (name: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set(name, value);
+      params.set('page', '1'); // Reset to first page when changing status
       return params.toString();
     },
     [searchParams],

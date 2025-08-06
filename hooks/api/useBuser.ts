@@ -5,8 +5,8 @@ import { Buser } from "@/components/tables/buser-tables/columns";
 export const useGetBuser = (params: any, options = {}, queryKeyPrefix: string = "buser") => {
   const getBuser = async () => {
     // Pastikan params.status dikirim ke getBussersByStatus
-    const { data } = await import("@/client/busserClient").then(mod => mod.getBussersByStatus(params.status, params));
-    return data;
+    const response = await import("@/client/busserClient").then(mod => mod.getBussersByStatus(params.status, params));
+    return response.data;
   };
 
   return useQuery({
@@ -79,7 +79,7 @@ export const useGetAllBuser = (params = {}) => {
       BUSSER_STATUSES.map((status) =>
         import("@/client/busserClient")
           .then((mod) => mod.getBussersByStatus(status, params))
-          .then((res) => res.data)
+          .then((res) => res.data.data || [])
           .catch((err) => [])
       )
     )
