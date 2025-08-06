@@ -1,7 +1,11 @@
 import client from "./apiClient";
 
-export const getFleets = () => {
-  return client.get("/fleets");
+export const getFleets = (token: string) => {
+  return client.get("/fleets", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 export const updateStatus = (id: string) => {

@@ -270,6 +270,13 @@ export const navItems: NavItem[] = [
   roles: ["admin"],
   },
   {
+  title: "Keperluan Perbaikan",
+  href: "/dashboard/needs",
+  icon: "wrench",
+  label: "Keperluan Perbaikan",
+  roles: ["admin"],
+  },
+  {
   title: "Template Pesan Fleet",
   href: "/dashboard/wa-blas-partner",
   icon: "phonecall",
