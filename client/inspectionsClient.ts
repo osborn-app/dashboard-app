@@ -26,6 +26,11 @@ export const getInspectionDetail = (id: string | number) => {
   return client.get(`/inspections/${id}`);
 };
 
+// Get completed inspections
+export const getCompletedInspections = (params?: any) => {
+  return client.get("/inspections/status/completed", { params });
+};
+
 // Complete inspection
 export const completeInspection = (fleetId: string | number) => {
   return client.patch(`/inspections/fleets/${fleetId}/complete`);

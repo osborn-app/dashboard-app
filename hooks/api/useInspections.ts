@@ -49,7 +49,7 @@ export const useGetCompletedInspections = (params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getCompletedInspectionsFn = () => {
-    return axiosAuth.get("/inspections", { params });
+    return axiosAuth.get("/inspections/status/completed", { params });
   };
 
   return useQuery({
