@@ -3,15 +3,17 @@ import TabLists from "@/components/TabLists";
 import SearchInput from "@/components/search-input";
 import Spinner from "@/components/spinner";
 
-import NeedsTable from "@/components/tables/needs-tables/needs-tables";
+import { NeedsTable } from "@/components/tables/needs-tables/needs-tables";
+import { needsColumns } from "@/components/tables/needs-tables/columns";
 import { TabsContent } from "@/components/ui/tabs";
 import { useGetMaintenances } from "@/hooks/api/useNeeds";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDebounce } from "use-debounce";
+import { useSession } from "next-auth/react";
 
 const NeedsTableWrapper = () => {
-
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
   const pageLimit = Number(searchParams.get("limit")) || 10;
@@ -27,7 +29,7 @@ const NeedsTableWrapper = () => {
       q: searchDebounce,
       status: defaultTab,
     },
-    ""
+    session?.user?.accessToken || ""
   );
 
 
@@ -70,19 +72,28 @@ const NeedsTableWrapper = () => {
           {defaultTab === list.value && (
             <>
               {isFetching && <Spinner />}
-              {!isFetching && NeedsData && (
+              {!isFetching && NeedsData && NeedsData.items && NeedsData.items.length > 0 && (
                 <NeedsTable
+                  columns={needsColumns}
                   data={
-                    Array.isArray(NeedsData.data) && NeedsData.data.length > 0
-                      ? NeedsData.data.map((item: any) => ({
-                          ...item,
-                          armada: item.fleet?.name ?? "-",
-                          mulai: item.start_date,
-                          estimasi: item.estimate_days,
-                        }))
-                      : []
+                    NeedsData.items.map((item: any) => ({
+                      ...item,
+                      armada: item.fleet?.name ?? "-",
+                      plate_number: item.fleet?.plate_number ?? "-",
+                      mulai: item.start_date,
+                      estimasi: item.estimate_days,
+                    }))
                   }
+                  searchKey="name"
+                  totalItems={NeedsData.meta?.total_items || 0}
+                  pageCount={NeedsData.pagination?.total_page || 1}
+                  pageNo={page}
                 />
+              )}
+              {!isFetching && (!NeedsData || !NeedsData.items || NeedsData.items.length === 0) && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Tidak ada data maintenance untuk status ini</p>
+                </div>
               )}
             </>
           )}

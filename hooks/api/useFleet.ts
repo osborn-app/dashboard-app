@@ -46,6 +46,32 @@ export const useGetInfinityFleets = (query?: string) => {
   });
 };
 
+export const useGetInfinityFleetsForNeeds = (query?: string) => {
+  const axiosAuth = useAxiosAuth();
+  const getFleets = ({
+    pageParam = 1,
+    query,
+  }: {
+    pageParam?: number;
+    query?: string;
+  }) => {
+    return axiosAuth.get(`${baseEndpoint}?status=preparation`, {
+      params: {
+        limit: 10,
+        page: pageParam,
+        // q: query,
+      },
+    });
+  };
+
+  return useInfiniteQuery({
+    queryKey: ["fleets", query],
+    queryFn: ({ pageParam }) => getFleets({ pageParam, query }),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.data.pagination?.next_page,
+  });
+};
+
 export const useGetDetailFleet = (id: number | string) => {
   const axiosAuth = useAxiosAuth();
 

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Select as AntdSelect, DatePicker, ConfigProvider } from "antd";
 import idID from 'antd/es/locale/id_ID';
-import { useGetInfinityFleets } from "@/hooks/api/useFleet";
+import { useGetInfinityFleetsForNeeds } from "@/hooks/api/useFleet";
 
 import { useDebounce } from "use-debounce";
 
@@ -49,7 +49,7 @@ export default function NeedsForm({ onSubmit }: NeedsFormProps) {
     fetchNextPage: fetchNextFleets,
     hasNextPage: hasNextFleets,
     isFetchingNextPage: isFetchingNextFleets,
-  } = useGetInfinityFleets(searchFleetDebounce);
+  } = useGetInfinityFleetsForNeeds(searchFleetDebounce);
 
 
 
@@ -125,7 +125,7 @@ export default function NeedsForm({ onSubmit }: NeedsFormProps) {
                       {fleets?.pages?.map((page: any) =>
                         page.data.items.map((item: any) => (
                           <AntdSelect.Option key={item.id} value={item.id.toString()}>
-                            {item.name}
+                            {item.name} - {item.plate_number}
                           </AntdSelect.Option>
                         ))
                       )}

@@ -31,10 +31,11 @@ const breadcrumbItems = [{ title: "Maintenance", link: "/dashboard/needs" }];
 export default async function NeedsPage({ searchParams }: paramsProps) {
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchQuery({
-    queryKey: ["maintenances", {}], // params bisa disesuaikan
-    queryFn: ({ queryKey }) => getMaintenances(queryKey[1], ""), // tambah parameter token
-  });
+  // Note: We can't use session in server component, so we'll let the client component handle the token
+  // await queryClient.prefetchQuery({
+  //   queryKey: ["maintenances", {}], // params bisa disesuaikan
+  //   queryFn: ({ queryKey }) => getMaintenances(queryKey[1], ""), // tambah parameter token
+  // });
 
   const defaultTab = searchParams.status ?? "ongoing";
 

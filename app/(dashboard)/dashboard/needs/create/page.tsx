@@ -3,6 +3,8 @@ import BreadCrumb from "@/components/breadcrumb";
 import NeedsForm from "@/components/forms/needs-form";
 import React, { useState } from "react";
 import { createMaintenance } from "@/client/needsClient";
+import { useSession } from "next-auth/react";
+import Swal from "sweetalert2";
 
 
 
@@ -14,6 +16,7 @@ type MaintenanceFormData = {
 };
 
 export default function Page() {
+  const { data: session } = useSession();
   const breadcrumbItems = [
     { title: "Maintenance", link: "/dashboard/needs" },
     { title: "Create", link: "/dashboard/needs/create" },
@@ -21,23 +24,36 @@ export default function Page() {
 
   const [loading, setLoading] = useState(false);
 
-  // Ambil JWT token dari localStorage
-  const getToken = () => (typeof window !== "undefined" ? localStorage.getItem("token_jwt") : null);
-
-
-
   const handleSubmit = async (formData: MaintenanceFormData) => {
-    const token = getToken();
+    const token = session?.user?.accessToken;
     if (!token) {
-      alert("Token JWT tidak ditemukan. Silakan login ulang.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Token tidak ditemukan. Silakan login ulang.",
+        confirmButtonColor: "#ef4444",
+      });
       return;
     }
+    
+    setLoading(true);
     try {
       await createMaintenance(formData, token);
-      // tampilkan pesan sukses atau redirect
-      alert("Maintenance berhasil dibuat!");
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Maintenance berhasil dibuat!",
+        confirmButtonColor: "#10b981",
+      });
     } catch (err) {
-      alert("Gagal membuat maintenance. Silakan coba lagi.");
+      Swal.fire({
+        icon: "error",
+        title: "Gagal!",
+        text: "Gagal membuat maintenance. Silakan coba lagi.",
+        confirmButtonColor: "#ef4444",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
