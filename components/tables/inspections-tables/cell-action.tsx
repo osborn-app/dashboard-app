@@ -60,46 +60,16 @@ export const CellAction: React.FC<CellActionProps> = ({ data, status }) => {
     );
   }
 
-  // Untuk status lainnya (completed), tetap gunakan dropdown menu
-  const getActions = () => {
-    switch (status) {
-      case "completed":
-        return [
-          {
-            label: "Preview",
-            icon: Eye,
-            onClick: handlePreview,
-          },
-        ];
-      default:
-        return [];
-    }
-  };
-
-  const actions = getActions();
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {actions.map((action) => (
-          <DropdownMenuItem
-            key={action.label}
-            onClick={action.onClick}
-            className="cursor-pointer"
-          >
-            <action.icon className="mr-2 h-4 w-4" />
-            {action.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  // Untuk status "completed" (selesai), tampilkan button "Detail"
+  if (status === "completed") {
+    return (
+      <Button
+        onClick={handlePreview}
+        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+      >
+        <Eye className="mr-2 h-4 w-4" />
+        Detail
+      </Button>
+    );
+  }
 };
