@@ -66,13 +66,13 @@ const formSchema = z.object({
   tire_status: z.enum(["aman", "tidak_aman"]),
   battery_status: z.enum(["aman", "tidak_aman"]),
   description: z.string().min(1, "Deskripsi harus diisi"),
-  repair_duration_days: z
+
+  repair_completion_date: z
     .string()
-    .optional()
-    .refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), {
-      message: "Durasi perbaikan harus berupa angka positif",
-    }),
-  repair_photo_url: fileSchema.optional(),
+    .min(1, "Tanggal selesai perbaikan harus diisi"),
+  repair_photo_url: fileSchema.refine((val) => val && val.length > 0, {
+    message: "Foto perbaikan harus diupload",
+  }),
 });
 
 type InspectionsFormValues = z.infer<typeof formSchema> & {
@@ -102,7 +102,11 @@ export default function InspectionsForm({
   const uploadImage = async (file: any) => {
     const file_names = [];
     for (let i = 0; i < file?.length; i++) {
-      file_names.push(file?.[i].file.name);
+      // Handle both File objects and objects with .file property
+      const fileObj = file[i];
+      const fileName =
+        fileObj instanceof File ? fileObj.name : fileObj.file?.name;
+      file_names.push(fileName);
     }
 
     const response = await axiosAuth.post("/storages/presign/list", {
@@ -111,10 +115,11 @@ export default function InspectionsForm({
     });
 
     for (let i = 0; i < file_names.length; i++) {
-      const file_data = file;
-      await axios.put(response.data[i].upload_url, file_data[i].file, {
+      const fileObj = file[i];
+      const fileToUpload = fileObj instanceof File ? fileObj : fileObj.file;
+      await axios.put(response.data[i].upload_url, fileToUpload, {
         headers: {
-          "Content-Type": file_data[i].file.type,
+          "Content-Type": fileToUpload.type,
         },
       });
     }
@@ -136,7 +141,8 @@ export default function InspectionsForm({
       tire_status: initialData?.tire_status || "aman",
       battery_status: initialData?.battery_status || "aman",
       description: initialData?.description || "",
-      repair_duration_days: initialData?.repair_duration_days?.toString() || "",
+
+      repair_completion_date: initialData?.repair_completion_date || "",
       repair_photo_url: initialData?.repair_photo_url || [],
     },
   });
@@ -186,26 +192,41 @@ export default function InspectionsForm({
     setLoading(true);
 
     try {
+      // DEBUG: Log form values
+      console.log("=== DEBUG FORM VALUES ===");
+      console.log(
+        "values.repair_completion_date:",
+        values.repair_completion_date,
+      );
+      console.log("values.repair_photo_url:", values.repair_photo_url);
+      console.log(
+        "values.repair_photo_url length:",
+        values.repair_photo_url?.length,
+      );
+
       // Upload foto terlebih dahulu
       let repairPhotoUrls: string[] = [];
       if (values.repair_photo_url && values.repair_photo_url.length > 0) {
-        // Check if photos are new files (need upload) or existing URLs
-        const hasNewPhotos = values.repair_photo_url.some(
-          (photo: any) => photo.file,
-        );
+        console.log("=== DEBUG PHOTO UPLOAD ===");
+        console.log("repair_photo_url length:", values.repair_photo_url.length);
+        console.log("repair_photo_url structure:", values.repair_photo_url);
 
-        if (hasNewPhotos) {
+        // Always treat as new files since we're in create mode
+        console.log("Uploading new photos...");
+        try {
           const uploadImageRes = await uploadImage(values.repair_photo_url);
+          console.log("uploadImageRes:", uploadImageRes);
           repairPhotoUrls = uploadImageRes.map(
             (item: { download_url: string; upload_url: string }) =>
               item.download_url,
           );
-        } else {
-          // Use existing URLs
-          repairPhotoUrls = values.repair_photo_url.map(
-            (photo: any) => photo.photo,
-          );
+        } catch (error) {
+          console.error("Upload error:", error);
+          throw error;
         }
+        console.log("Final repairPhotoUrls:", repairPhotoUrls);
+      } else {
+        console.log("No photos to upload");
       }
 
       const payload = {
@@ -220,14 +241,19 @@ export default function InspectionsForm({
           values.oil_status === "tidak_aman" ||
           values.tire_status === "tidak_aman" ||
           values.battery_status === "tidak_aman",
-        ...(values.repair_duration_days &&
-          values.repair_duration_days !== "" && {
-            repair_duration_days: parseInt(values.repair_duration_days),
-          }),
-        ...(repairPhotoUrls.length > 0 && {
-          repair_photo_url: repairPhotoUrls,
-        }),
+        repair_photo_url: repairPhotoUrls[0], // ambil satu string (required)
+        repair_completion_date: new Date(
+          values.repair_completion_date,
+        ).toISOString(), // required
       };
+
+      console.log("=== DEBUG FINAL PAYLOAD ===");
+      console.log("payload:", payload);
+      console.log("repair_photo_url in payload:", payload.repair_photo_url);
+      console.log(
+        "repair_completion_date in payload:",
+        payload.repair_completion_date,
+      );
 
       await createInspection.mutateAsync(payload);
 
@@ -520,23 +546,24 @@ export default function InspectionsForm({
             )}
           />
 
-          {/* Repair Duration Days */}
+          {/* Repair Completion Date */}
           <FormField
             control={form.control}
-            name="repair_duration_days"
+            name="repair_completion_date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Durasi Perbaikan (Hari)</FormLabel>
+                <FormLabel>Tanggal Selesai Perbaikan *</FormLabel>
                 <FormControl>
                   <Input
-                    type="number"
-                    placeholder="Masukkan durasi perbaikan (opsional)"
+                    type="date"
+                    placeholder="Pilih tanggal selesai perbaikan"
                     {...field}
                     readOnly={isEdit || loading}
+                    required
                   />
                 </FormControl>
                 <FormDescription>
-                  Kosongkan jika tidak ada perbaikan yang diperlukan
+                  Pilih tanggal estimasi selesai perbaikan (wajib diisi)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -549,7 +576,7 @@ export default function InspectionsForm({
             name="repair_photo_url"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Foto Perbaikan (Opsional)</FormLabel>
+                <FormLabel>Foto Perbaikan *</FormLabel>
                 <FormControl className="disabled:opacity-100">
                   <MulitpleImageUpload
                     onChange={field.onChange}
@@ -558,6 +585,9 @@ export default function InspectionsForm({
                     disabled={loading}
                   />
                 </FormControl>
+                <FormDescription>
+                  Upload foto perbaikan (wajib diisi)
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
