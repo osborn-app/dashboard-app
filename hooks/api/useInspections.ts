@@ -98,8 +98,20 @@ export const useCompleteInspection = () => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
-  const completeInspectionFn = (fleetId: string | number) => {
-    return axiosAuth.patch(`/inspections/fleets/${fleetId}/complete`);
+  const completeInspectionFn = (data: {
+    fleetId: string | number;
+    repairPhotoUrl?: string;
+  }) => {
+    const payload: any = {};
+
+    if (data.repairPhotoUrl) {
+      payload.repair_photo_url = data.repairPhotoUrl;
+    }
+
+    return axiosAuth.patch(
+      `/inspections/fleets/${data.fleetId}/complete`,
+      payload,
+    );
   };
 
   return useMutation({

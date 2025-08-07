@@ -22,7 +22,7 @@ import { authOptions } from "@/lib/auth-options";
 
 export const metadata: Metadata = {
   title: "Inspections | Transgo",
-  description: "Inspections page",
+  description: "Inspections page", //redeployment
 };
 
 type paramsProps = {

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,11 +32,6 @@ import {
 } from "@/hooks/api/useInspections";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
-import MulitpleImageUpload, {
-  MulitpleImageUploadResponse,
-} from "@/components/multiple-image-upload";
-import useAxiosAuth from "@/hooks/axios/use-axios-auth";
-import axios from "axios";
 
 // File schema for photo upload
 const fileSchema = z.custom<any>(
@@ -62,22 +58,40 @@ const formSchema = z.object({
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
       message: "Kilometer harus berupa angka positif",
     }),
-  oil_status: z.enum(["aman", "tidak_aman"]),
-  tire_status: z.enum(["aman", "tidak_aman"]),
-  battery_status: z.enum(["aman", "tidak_aman"]),
-  description: z.string().min(1, "Deskripsi harus diisi"),
+  has_issue: z.boolean().optional(),
+  oil_status: z.enum(["aman", "tidak_aman"]).optional(),
+  tire_status: z.enum(["aman", "tidak_aman"]).optional(),
+  battery_status: z.enum(["aman", "tidak_aman"]).optional(),
+  description: z.string().optional(),
+  repair_duration_days: z
+    .number()
+    .min(1, "Durasi perbaikan harus diisi")
+    .max(7, "Durasi perbaikan maksimal 7 hari")
+    .optional(),
 
-  repair_completion_date: z
-    .string()
-    .min(1, "Tanggal selesai perbaikan harus diisi"),
-  repair_photo_url: fileSchema.refine((val) => val && val.length > 0, {
-    message: "Foto perbaikan harus diupload",
-  }),
+  repair_completion_date: z.string().optional(),
+  repair_photo_url: fileSchema.optional(),
+}).refine((data) => {
+  // Check if there are any issues
+  const hasIssue = 
+    data.oil_status === "tidak_aman" ||
+    data.tire_status === "tidak_aman" ||
+    data.battery_status === "tidak_aman";
+  
+  // If there are issues, all issue-related fields are required
+  if (hasIssue) {
+    if (!data.oil_status || !data.tire_status || !data.battery_status || !data.description) {
+      return false;
+    }
+  }
+  
+  return true;
+}, {
+  message: "Jika ada komponen yang tidak aman, semua field status dan deskripsi harus diisi",
+  path: ["description"], // This will show the error on the description field
 });
 
-type InspectionsFormValues = z.infer<typeof formSchema> & {
-  repair_photo_url: MulitpleImageUploadResponse;
-};
+type InspectionsFormValues = z.infer<typeof formSchema>;
 
 interface InspectionsFormProps {
   initialData?: any;
@@ -94,38 +108,10 @@ export default function InspectionsForm({
 
   const [fleetType, setFleetType] = useState<string>("car");
   const [loading, setLoading] = useState(false);
+  const [hasIssue, setHasIssue] = useState(false);
   const createInspection = useCreateInspection();
   const { data: availableFleets, isLoading: loadingFleets } =
     useGetAvailableFleets(fleetType);
-  const axiosAuth = useAxiosAuth();
-
-  const uploadImage = async (file: any) => {
-    const file_names = [];
-    for (let i = 0; i < file?.length; i++) {
-      // Handle both File objects and objects with .file property
-      const fileObj = file[i];
-      const fileName =
-        fileObj instanceof File ? fileObj.name : fileObj.file?.name;
-      file_names.push(fileName);
-    }
-
-    const response = await axiosAuth.post("/storages/presign/list", {
-      file_names: file_names,
-      folder: "fleet",
-    });
-
-    for (let i = 0; i < file_names.length; i++) {
-      const fileObj = file[i];
-      const fileToUpload = fileObj instanceof File ? fileObj : fileObj.file;
-      await axios.put(response.data[i].upload_url, fileToUpload, {
-        headers: {
-          "Content-Type": fileToUpload.type,
-        },
-      });
-    }
-
-    return response.data;
-  };
 
   const form = useForm<InspectionsFormValues>({
     resolver: zodResolver(formSchema),
@@ -137,15 +123,25 @@ export default function InspectionsForm({
         "",
       inspector_name: initialData?.inspector_name || "",
       kilometer: initialData?.kilometer?.toString() || "",
+      has_issue: initialData?.has_issue || false,
       oil_status: initialData?.oil_status || "aman",
       tire_status: initialData?.tire_status || "aman",
       battery_status: initialData?.battery_status || "aman",
       description: initialData?.description || "",
-
       repair_completion_date: initialData?.repair_completion_date || "",
-      repair_photo_url: initialData?.repair_photo_url || [],
+      repair_duration_days: initialData?.repair_duration_days || undefined,
     },
   });
+
+  // Initialize hasIssue state based on form values
+  useEffect(() => {
+    const values = form.getValues();
+    const hasIssueValue = 
+      values.oil_status === "tidak_aman" ||
+      values.tire_status === "tidak_aman" ||
+      values.battery_status === "tidak_aman";
+    setHasIssue(hasIssueValue);
+  }, [form]);
 
   useEffect(() => {
     if (fleetId) {
@@ -192,68 +188,31 @@ export default function InspectionsForm({
     setLoading(true);
 
     try {
-      // DEBUG: Log form values
-      console.log("=== DEBUG FORM VALUES ===");
-      console.log(
-        "values.repair_completion_date:",
-        values.repair_completion_date,
-      );
-      console.log("values.repair_photo_url:", values.repair_photo_url);
-      console.log(
-        "values.repair_photo_url length:",
-        values.repair_photo_url?.length,
-      );
+      // Check if there are any issues
+      const hasIssue = 
+        values.oil_status === "tidak_aman" ||
+        values.tire_status === "tidak_aman" ||
+        values.battery_status === "tidak_aman";
 
-      // Upload foto terlebih dahulu
-      let repairPhotoUrls: string[] = [];
-      if (values.repair_photo_url && values.repair_photo_url.length > 0) {
-        console.log("=== DEBUG PHOTO UPLOAD ===");
-        console.log("repair_photo_url length:", values.repair_photo_url.length);
-        console.log("repair_photo_url structure:", values.repair_photo_url);
-
-        // Always treat as new files since we're in create mode
-        console.log("Uploading new photos...");
-        try {
-          const uploadImageRes = await uploadImage(values.repair_photo_url);
-          console.log("uploadImageRes:", uploadImageRes);
-          repairPhotoUrls = uploadImageRes.map(
-            (item: { download_url: string; upload_url: string }) =>
-              item.download_url,
-          );
-        } catch (error) {
-          console.error("Upload error:", error);
-          throw error;
-        }
-        console.log("Final repairPhotoUrls:", repairPhotoUrls);
-      } else {
-        console.log("No photos to upload");
-      }
-
-      const payload = {
+      const payload: any = {
         fleet_id: parseInt(values.fleet_id),
         inspector_name: values.inspector_name,
         kilometer: parseInt(values.kilometer),
-        oil_status: values.oil_status,
-        tire_status: values.tire_status,
-        battery_status: values.battery_status,
-        description: values.description,
-        has_issue:
-          values.oil_status === "tidak_aman" ||
-          values.tire_status === "tidak_aman" ||
-          values.battery_status === "tidak_aman",
-        repair_photo_url: repairPhotoUrls[0], // ambil satu string (required)
-        repair_completion_date: new Date(
-          values.repair_completion_date,
-        ).toISOString(), // required
+        has_issue: hasIssue,
       };
 
-      console.log("=== DEBUG FINAL PAYLOAD ===");
-      console.log("payload:", payload);
-      console.log("repair_photo_url in payload:", payload.repair_photo_url);
-      console.log(
-        "repair_completion_date in payload:",
-        payload.repair_completion_date,
-      );
+      // Only include issue-related fields if there are issues
+      if (hasIssue) {
+        payload.oil_status = values.oil_status;
+        payload.tire_status = values.tire_status;
+        payload.battery_status = values.battery_status;
+        payload.description = values.description;
+        
+        // Only add repair duration if it has value
+        if (values.repair_duration_days) {
+          payload.repair_duration_days = values.repair_duration_days;
+        }
+      }
 
       await createInspection.mutateAsync(payload);
 
@@ -352,19 +311,34 @@ export default function InspectionsForm({
                                   {fleet.name} - {fleet.plate_number}
                                 </p>
                                 <p className="text-sm text-green-600">
-                                  Type: {fleet.type}
+                                  Type: {fleet.type === 'car' ? 'Mobil' : 'Motor'}
                                 </p>
                               </div>
                             ) : (
-                              <p className="text-green-800">
-                                Fleet ID: {fleetId}
-                              </p>
+                              <div>
+                                <p className="font-medium text-green-800">
+                                  Fleet ID: {fleetId}
+                                </p>
+                                <p className="text-sm text-green-600">
+                                  Fleet tidak ditemukan dalam daftar tersedia
+                                </p>
+                              </div>
                             );
                           })()
+                        ) : loadingFleets ? (
+                          <div>
+                            <p className="text-green-800">Loading fleet data...</p>
+                            <p className="text-sm text-green-600">Memuat informasi fleet</p>
+                          </div>
                         ) : (
-                          <p className="text-green-800">
-                            Loading fleet data...
-                          </p>
+                          <div>
+                            <p className="font-medium text-green-800">
+                              Fleet ID: {fleetId}
+                            </p>
+                            <p className="text-sm text-green-600">
+                              Fleet telah dipilih
+                            </p>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -393,11 +367,21 @@ export default function InspectionsForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {availableFleets?.data?.map((fleet: any) => (
-                        <SelectItem key={fleet.id} value={fleet.id.toString()}>
-                          {fleet.name} - {fleet.plate_number}
+                      {loadingFleets ? (
+                        <SelectItem value="" disabled>
+                          Loading fleets...
                         </SelectItem>
-                      ))}
+                      ) : availableFleets?.data && availableFleets.data.length > 0 ? (
+                        availableFleets.data.map((fleet: any) => (
+                          <SelectItem key={fleet.id} value={fleet.id.toString()}>
+                            {fleet.name} - {fleet.plate_number}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          Tidak ada fleet tersedia
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 )}
@@ -445,153 +429,180 @@ export default function InspectionsForm({
             )}
           />
 
-          {/* Component Statuses */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="oil_status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status Oli</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isEdit || loading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="aman">Aman</SelectItem>
-                      <SelectItem value="tidak_aman">Tidak Aman</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="tire_status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status Ban</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isEdit || loading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="aman">Aman</SelectItem>
-                      <SelectItem value="tidak_aman">Tidak Aman</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="battery_status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status Aki</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isEdit || loading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="aman">Aman</SelectItem>
-                      <SelectItem value="tidak_aman">Tidak Aman</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          {/* Description */}
+          {/* Has Issue Checkbox */}
           <FormField
             control={form.control}
-            name="description"
+            name="has_issue"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Deskripsi</FormLabel>
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                 <FormControl>
-                  <Textarea
-                    placeholder="Masukkan deskripsi inspeksi"
-                    className="min-h-[100px]"
-                    {...field}
-                    readOnly={isEdit || loading}
+                  <Checkbox
+                    checked={hasIssue}
+                    onCheckedChange={(checked) => {
+                      setHasIssue(checked as boolean);
+                      if (!checked) {
+                        // Reset issue-related fields when unchecking
+                        form.setValue("oil_status", "aman");
+                        form.setValue("tire_status", "aman");
+                        form.setValue("battery_status", "aman");
+                        form.setValue("description", "");
+                        form.setValue("repair_duration_days", undefined);
+                      }
+                    }}
+                    disabled={isEdit || loading}
                   />
                 </FormControl>
-                <FormMessage />
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Ada kendala/masalah</FormLabel>
+                  <FormDescription>
+                    Centang jika ditemukan masalah pada kendaraan
+                  </FormDescription>
+                </div>
               </FormItem>
             )}
           />
 
-          {/* Repair Completion Date */}
-          <FormField
-            control={form.control}
-            name="repair_completion_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tanggal Selesai Perbaikan *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    placeholder="Pilih tanggal selesai perbaikan"
-                    {...field}
-                    readOnly={isEdit || loading}
-                    required
-                  />
-                </FormControl>
-                <FormDescription>
-                  Pilih tanggal estimasi selesai perbaikan (wajib diisi)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Component Statuses - Only show if hasIssue is true */}
+          {hasIssue && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="oil_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status Oli</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isEdit || loading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="aman">Aman</SelectItem>
+                        <SelectItem value="tidak_aman">Tidak Aman</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          {/* Repair Photo Upload */}
-          <FormField
-            control={form.control}
-            name="repair_photo_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Foto Perbaikan *</FormLabel>
-                <FormControl className="disabled:opacity-100">
-                  <MulitpleImageUpload
-                    onChange={field.onChange}
-                    value={field.value}
-                    onRemove={field.onChange}
-                    disabled={loading}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Upload foto perbaikan (wajib diisi)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="tire_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status Ban</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isEdit || loading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="aman">Aman</SelectItem>
+                        <SelectItem value="tidak_aman">Tidak Aman</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="battery_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status Aki</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isEdit || loading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="aman">Aman</SelectItem>
+                        <SelectItem value="tidak_aman">Tidak Aman</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+
+          {/* Description - Only show if hasIssue is true */}
+          {hasIssue && (
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Deskripsi Masalah</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Masukkan deskripsi masalah yang ditemukan"
+                      className="min-h-[100px]"
+                      {...field}
+                      readOnly={isEdit || loading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* Repair Duration - Only show if hasIssue is true */}
+          {hasIssue && (
+            <FormField
+              control={form.control}
+              name="repair_duration_days"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estimasi Durasi Perbaikan</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(parseInt(value))}
+                    defaultValue={field.value?.toString()}
+                    disabled={isEdit || loading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih durasi perbaikan" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="1">1 Hari</SelectItem>
+                      <SelectItem value="2">2 Hari</SelectItem>
+                      <SelectItem value="3">3 Hari</SelectItem>
+                      <SelectItem value="4">4 Hari</SelectItem>
+                      <SelectItem value="5">5 Hari</SelectItem>
+                      <SelectItem value="6">6 Hari</SelectItem>
+                      <SelectItem value="7">7 Hari</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Pilih estimasi durasi perbaikan untuk masalah yang ditemukan
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           {!isEdit && (
             <div className="flex gap-4">
