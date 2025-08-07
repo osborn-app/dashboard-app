@@ -31,11 +31,6 @@ import {
 } from "@/hooks/api/useInspections";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
-import MulitpleImageUpload, {
-  MulitpleImageUploadResponse,
-} from "@/components/multiple-image-upload";
-import useAxiosAuth from "@/hooks/axios/use-axios-auth";
-import axios from "axios";
 
 // File schema for photo upload
 const fileSchema = z.custom<any>(
@@ -67,21 +62,16 @@ const formSchema = z.object({
   battery_status: z.enum(["aman", "tidak_aman"]),
   description: z.string().min(1, "Deskripsi harus diisi"),
 
-  repair_completion_date: z
-    .string()
-    .min(1, "Tanggal selesai perbaikan harus diisi"),
-  repair_photo_url: fileSchema.refine((val) => val && val.length > 0, {
-    message: "Foto perbaikan harus diupload",
-  }),
+  repair_completion_date: z.string().optional(),
+  repair_photo_url: fileSchema.optional(),
   repair_duration_days: z
     .number()
     .min(1, "Durasi perbaikan harus diisi")
-    .max(7, "Durasi perbaikan maksimal 7 hari"),
+    .max(7, "Durasi perbaikan maksimal 7 hari")
+    .optional(),
 });
 
-type InspectionsFormValues = z.infer<typeof formSchema> & {
-  repair_photo_url: MulitpleImageUploadResponse;
-};
+type InspectionsFormValues = z.infer<typeof formSchema>;
 
 interface InspectionsFormProps {
   initialData?: any;
@@ -101,35 +91,6 @@ export default function InspectionsForm({
   const createInspection = useCreateInspection();
   const { data: availableFleets, isLoading: loadingFleets } =
     useGetAvailableFleets(fleetType);
-  const axiosAuth = useAxiosAuth();
-
-  const uploadImage = async (file: any) => {
-    const file_names = [];
-    for (let i = 0; i < file?.length; i++) {
-      // Handle both File objects and objects with .file property
-      const fileObj = file[i];
-      const fileName =
-        fileObj instanceof File ? fileObj.name : fileObj.file?.name;
-      file_names.push(fileName);
-    }
-
-    const response = await axiosAuth.post("/storages/presign/list", {
-      file_names: file_names,
-      folder: "fleet",
-    });
-
-    for (let i = 0; i < file_names.length; i++) {
-      const fileObj = file[i];
-      const fileToUpload = fileObj instanceof File ? fileObj : fileObj.file;
-      await axios.put(response.data[i].upload_url, fileToUpload, {
-        headers: {
-          "Content-Type": fileToUpload.type,
-        },
-      });
-    }
-
-    return response.data;
-  };
 
   const form = useForm<InspectionsFormValues>({
     resolver: zodResolver(formSchema),
@@ -146,8 +107,7 @@ export default function InspectionsForm({
       battery_status: initialData?.battery_status || "aman",
       description: initialData?.description || "",
       repair_completion_date: initialData?.repair_completion_date || "",
-      repair_photo_url: initialData?.repair_photo_url || [],
-      repair_duration_days: initialData?.repair_duration_days || 0,
+      repair_duration_days: initialData?.repair_duration_days || undefined,
     },
   });
 
@@ -196,21 +156,7 @@ export default function InspectionsForm({
     setLoading(true);
 
     try {
-      let repairPhotoUrls: string[] = [];
-      if (values.repair_photo_url && values.repair_photo_url.length > 0) {
-        try {
-          const uploadImageRes = await uploadImage(values.repair_photo_url);
-          repairPhotoUrls = uploadImageRes.map(
-            (item: { download_url: string; upload_url: string }) =>
-              item.download_url,
-          );
-        } catch (error) {
-          console.error("Upload error:", error);
-          throw error;
-        }
-      }
-
-      const payload = {
+      const payload: any = {
         fleet_id: parseInt(values.fleet_id),
         inspector_name: values.inspector_name,
         kilometer: parseInt(values.kilometer),
@@ -222,12 +168,12 @@ export default function InspectionsForm({
           values.oil_status === "tidak_aman" ||
           values.tire_status === "tidak_aman" ||
           values.battery_status === "tidak_aman",
-        repair_photo_url: repairPhotoUrls[0],
-        repair_duration_days: values.repair_duration_days,
-        repair_completion_date: new Date(
-          values.repair_completion_date,
-        ).toISOString(),
       };
+
+      // Only add repair duration if it has value
+      if (values.repair_duration_days) {
+        payload.repair_duration_days = values.repair_duration_days;
+      }
 
       await createInspection.mutateAsync(payload);
 

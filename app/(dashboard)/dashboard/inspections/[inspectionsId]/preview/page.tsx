@@ -172,9 +172,16 @@ export default function Page({
       <div className="flex-1 space-y-4 p-5">
         <div className="flex items-center justify-between">
           <BreadCrumb items={breadcrumbItems} />
-          {!isFetching &&
-            data?.data &&
-            data.data.status === "pending_repair" && (
+        </div>
+        {isFetching && <Spinner />}
+        {!isFetching && data?.data && (
+          <InspectionsForm initialData={data?.data} isEdit />
+        )}
+
+        {/* Tombol Selesai - Posisi di bawah form inspection */}
+        {!isFetching && data?.data && data.data.status === "pending_repair" && (
+          <div className="flex justify-end mt-6">
+            {!showUploadForm ? (
               <Button
                 onClick={() => setShowUploadForm(true)}
                 disabled={completeInspection.isPending}
@@ -183,11 +190,12 @@ export default function Page({
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Selesai
               </Button>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                Upload foto perbaikan untuk menyelesaikan inspeksi
+              </div>
             )}
-        </div>
-        {isFetching && <Spinner />}
-        {!isFetching && data?.data && (
-          <InspectionsForm initialData={data?.data} isEdit />
+          </div>
         )}
 
         {/* Inline Upload Form */}
