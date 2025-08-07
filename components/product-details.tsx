@@ -8,10 +8,10 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { ArrowLeft, Package, MapPin, User, Calendar, Edit } from "lucide-react";
-import Image from "next/image";
 import { useGetDetailProduct } from "@/hooks/api/useProduct";
 import Spinner from "@/components/spinner";
 import dayjs from "dayjs";
+import Swal from "sweetalert2";
 
 interface ProductDetailsProps {
   productId: string;
@@ -91,37 +91,74 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
               {/* Product Image */}
               {data.photo && (
                 <div className="flex justify-center mb-4">
-                  <Image
-                    src={data.photo.photo}
+                  <img
+                    src={data.photo.photo || data.photo}
                     alt={data.name}
-                    width={200}
-                    height={200}
-                    className="rounded-lg object-cover"
+                    className="w-48 h-48 rounded-lg object-cover border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => {
+                      Swal.fire({
+                        imageUrl: data.photo.photo || data.photo,
+                        imageAlt: data.name,
+                        width: '80%',
+                        confirmButtonText: 'Tutup',
+                        confirmButtonColor: '#3085d6',
+                        showCloseButton: true,
+                        customClass: {
+                          image: 'max-h-[70vh] object-contain'
+                        }
+                      });
+                    }}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
                   />
                 </div>
               )}
 
               {/* Multiple Photos */}
-              {data.photos && data.photos.length > 0 && (
+              {/* {data.photos && data.photos.length > 0 && (
                 <div className="mb-4">
                   <label className="text-sm font-medium text-gray-500 mb-2">
                     Foto Produk
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {data.photos.map((photo: any, index: number) => (
-                      <div key={index} className="relative">
-                        <Image
+                      <div key={index} className="relative group">
+                        <img
                           src={photo.photo || photo}
                           alt={`${data.name} - ${index + 1}`}
-                          width={150}
-                          height={150}
-                          className="rounded-lg object-cover w-full h-32"
+                          className="w-full h-32 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => {
+                            Swal.fire({
+                              imageUrl: photo.photo || photo,
+                              imageAlt: `${data.name} - ${index + 1}`,
+                              width: '80%',
+                              confirmButtonText: 'Tutup',
+                              confirmButtonColor: '#3085d6',
+                              showCloseButton: true,
+                              customClass: {
+                                image: 'max-h-[70vh] object-contain'
+                              }
+                            });
+                          }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
                         />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <p className="text-white text-sm font-medium">
+                              Klik untuk memperbesar
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
