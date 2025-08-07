@@ -31,11 +31,6 @@ import {
 } from "@/hooks/api/useInspections";
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
-import MulitpleImageUpload, {
-  MulitpleImageUploadResponse,
-} from "@/components/multiple-image-upload";
-import useAxiosAuth from "@/hooks/axios/use-axios-auth";
-import axios from "axios";
 
 // File schema for photo upload
 const fileSchema = z.custom<any>(
@@ -67,17 +62,16 @@ const formSchema = z.object({
   battery_status: z.enum(["aman", "tidak_aman"]),
   description: z.string().min(1, "Deskripsi harus diisi"),
 
-  repair_completion_date: z
-    .string()
-    .min(1, "Tanggal selesai perbaikan harus diisi"),
-  repair_photo_url: fileSchema.refine((val) => val && val.length > 0, {
-    message: "Foto perbaikan harus diupload",
-  }),
+  repair_completion_date: z.string().optional(),
+  repair_photo_url: fileSchema.optional(),
+  repair_duration_days: z
+    .number()
+    .min(1, "Durasi perbaikan harus diisi")
+    .max(7, "Durasi perbaikan maksimal 7 hari")
+    .optional(),
 });
 
-type InspectionsFormValues = z.infer<typeof formSchema> & {
-  repair_photo_url: MulitpleImageUploadResponse;
-};
+type InspectionsFormValues = z.infer<typeof formSchema>;
 
 interface InspectionsFormProps {
   initialData?: any;
@@ -97,35 +91,6 @@ export default function InspectionsForm({
   const createInspection = useCreateInspection();
   const { data: availableFleets, isLoading: loadingFleets } =
     useGetAvailableFleets(fleetType);
-  const axiosAuth = useAxiosAuth();
-
-  const uploadImage = async (file: any) => {
-    const file_names = [];
-    for (let i = 0; i < file?.length; i++) {
-      // Handle both File objects and objects with .file property
-      const fileObj = file[i];
-      const fileName =
-        fileObj instanceof File ? fileObj.name : fileObj.file?.name;
-      file_names.push(fileName);
-    }
-
-    const response = await axiosAuth.post("/storages/presign/list", {
-      file_names: file_names,
-      folder: "fleet",
-    });
-
-    for (let i = 0; i < file_names.length; i++) {
-      const fileObj = file[i];
-      const fileToUpload = fileObj instanceof File ? fileObj : fileObj.file;
-      await axios.put(response.data[i].upload_url, fileToUpload, {
-        headers: {
-          "Content-Type": fileToUpload.type,
-        },
-      });
-    }
-
-    return response.data;
-  };
 
   const form = useForm<InspectionsFormValues>({
     resolver: zodResolver(formSchema),
@@ -141,9 +106,8 @@ export default function InspectionsForm({
       tire_status: initialData?.tire_status || "aman",
       battery_status: initialData?.battery_status || "aman",
       description: initialData?.description || "",
-
       repair_completion_date: initialData?.repair_completion_date || "",
-      repair_photo_url: initialData?.repair_photo_url || [],
+      repair_duration_days: initialData?.repair_duration_days || undefined,
     },
   });
 
@@ -192,44 +156,7 @@ export default function InspectionsForm({
     setLoading(true);
 
     try {
-      // DEBUG: Log form values
-      console.log("=== DEBUG FORM VALUES ===");
-      console.log(
-        "values.repair_completion_date:",
-        values.repair_completion_date,
-      );
-      console.log("values.repair_photo_url:", values.repair_photo_url);
-      console.log(
-        "values.repair_photo_url length:",
-        values.repair_photo_url?.length,
-      );
-
-      // Upload foto terlebih dahulu
-      let repairPhotoUrls: string[] = [];
-      if (values.repair_photo_url && values.repair_photo_url.length > 0) {
-        console.log("=== DEBUG PHOTO UPLOAD ===");
-        console.log("repair_photo_url length:", values.repair_photo_url.length);
-        console.log("repair_photo_url structure:", values.repair_photo_url);
-
-        // Always treat as new files since we're in create mode
-        console.log("Uploading new photos...");
-        try {
-          const uploadImageRes = await uploadImage(values.repair_photo_url);
-          console.log("uploadImageRes:", uploadImageRes);
-          repairPhotoUrls = uploadImageRes.map(
-            (item: { download_url: string; upload_url: string }) =>
-              item.download_url,
-          );
-        } catch (error) {
-          console.error("Upload error:", error);
-          throw error;
-        }
-        console.log("Final repairPhotoUrls:", repairPhotoUrls);
-      } else {
-        console.log("No photos to upload");
-      }
-
-      const payload = {
+      const payload: any = {
         fleet_id: parseInt(values.fleet_id),
         inspector_name: values.inspector_name,
         kilometer: parseInt(values.kilometer),
@@ -241,19 +168,12 @@ export default function InspectionsForm({
           values.oil_status === "tidak_aman" ||
           values.tire_status === "tidak_aman" ||
           values.battery_status === "tidak_aman",
-        repair_photo_url: repairPhotoUrls[0], // ambil satu string (required)
-        repair_completion_date: new Date(
-          values.repair_completion_date,
-        ).toISOString(), // required
       };
 
-      console.log("=== DEBUG FINAL PAYLOAD ===");
-      console.log("payload:", payload);
-      console.log("repair_photo_url in payload:", payload.repair_photo_url);
-      console.log(
-        "repair_completion_date in payload:",
-        payload.repair_completion_date,
-      );
+      // Only add repair duration if it has value
+      if (values.repair_duration_days) {
+        payload.repair_duration_days = values.repair_duration_days;
+      }
 
       await createInspection.mutateAsync(payload);
 
@@ -546,47 +466,36 @@ export default function InspectionsForm({
             )}
           />
 
-          {/* Repair Completion Date */}
+          {/* Repair Duration */}
           <FormField
             control={form.control}
-            name="repair_completion_date"
+            name="repair_duration_days"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tanggal Selesai Perbaikan *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    placeholder="Pilih tanggal selesai perbaikan"
-                    {...field}
-                    readOnly={isEdit || loading}
-                    required
-                  />
-                </FormControl>
+                <FormLabel>Estimasi Durasi Perbaikan</FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange(parseInt(value))}
+                  defaultValue={field.value?.toString()}
+                  disabled={isEdit || loading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih durasi perbaikan" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="1">1 Hari</SelectItem>
+                    <SelectItem value="2">2 Hari</SelectItem>
+                    <SelectItem value="3">3 Hari</SelectItem>
+                    <SelectItem value="4">4 Hari</SelectItem>
+                    <SelectItem value="5">5 Hari</SelectItem>
+                    <SelectItem value="6">6 Hari</SelectItem>
+                    <SelectItem value="7">7 Hari</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormDescription>
-                  Pilih tanggal estimasi selesai perbaikan (wajib diisi)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Repair Photo Upload */}
-          <FormField
-            control={form.control}
-            name="repair_photo_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Foto Perbaikan *</FormLabel>
-                <FormControl className="disabled:opacity-100">
-                  <MulitpleImageUpload
-                    onChange={field.onChange}
-                    value={field.value}
-                    onRemove={field.onChange}
-                    disabled={loading}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Upload foto perbaikan (wajib diisi)
+                  Pilih estimasi durasi perbaikan jika ada komponen yang tidak
+                  aman
                 </FormDescription>
                 <FormMessage />
               </FormItem>
