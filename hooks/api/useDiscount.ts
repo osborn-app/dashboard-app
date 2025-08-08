@@ -21,21 +21,39 @@ export const useGetInfinityDiscount = () => {
     const axiosAuth = useAxiosAuth();
     const getDiscount = async () => {
         const data = await axiosAuth.get(baseEndpoint, {});
+        
+        // Transform the data to match expected format
         const itemsWithLocation = await Promise.all(data.data.items.map(async (item: any) => {
+            // Transform fleet_type
             if (item.fleet_type === 'all') {
                 item.fleet_type = "Semua Jenis Kendaraan";
+            } else if (item.fleet_type === 'motorcycle') {
+                item.fleet_type = "Motor";
+            } else if (item.fleet_type === 'car') {
+                item.fleet_type = "Mobil";
             }
 
+            // Handle location based on location_id
             if (item.location_id === 0) {
                 return { ...item, location: { name: "Semua Lokasi" } };
             }
 
-            const location = await axiosAuth.get(`/locations/${item.location_id}`);
-            return { ...item, location: location.data };
+            try {
+                const location = await axiosAuth.get(`/locations/${item.location_id}`);
+                return { ...item, location: location.data };
+            } catch (error) {
+                // If location fetch fails, use location_id as fallback
+                return { ...item, location: { name: `Location ID: ${item.location_id}` } };
+            }
         }));
 
-        data.data.items = itemsWithLocation;
-        return data;
+        return {
+            ...data,
+            data: {
+                ...data.data,
+                items: itemsWithLocation
+            }
+        };
     }
 
     return useQuery({
@@ -63,6 +81,10 @@ export const usePostDiscount = () => {
         mutationFn: createDiscount,
         onMutate: async () => {
             await queryClient.cancelQueries({ queryKey: ["discount"] });
+        },
+        onSuccess: () => {
+            // Invalidate and refetch discount data after successful create
+            queryClient.invalidateQueries({ queryKey: ["discount"] });
         }
     });
 }
@@ -79,11 +101,15 @@ export const useEditDiscount = (id: string | number) => {
         mutationFn: editDiscount,
         onMutate: async () => {
             await queryClient.cancelQueries({ queryKey: ["discount"] });
+        },
+        onSuccess: () => {
+            // Invalidate and refetch discount data after successful edit
+            queryClient.invalidateQueries({ queryKey: ["discount"] });
         }
     });
 }
 
-export const useDeleteDiscount = (id: string | number) => {
+export const useDeleteDiscount = () => {
     const axiosAuth = useAxiosAuth();
     const queryClient = useQueryClient();
 
@@ -95,6 +121,10 @@ export const useDeleteDiscount = (id: string | number) => {
         mutationFn: deleteDiscount,
         onMutate: async () => {
             await queryClient.cancelQueries({ queryKey: ["discount"] });
+        },
+        onSuccess: () => {
+            // Invalidate and refetch discount data after successful delete
+            queryClient.invalidateQueries({ queryKey: ["discount"] });
         }
     });
 }

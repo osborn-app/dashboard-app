@@ -46,10 +46,11 @@ import { RejectCustomerModal } from "../modal/reject-customer-modal";
 import Spinner from "../spinner";
 import { ConfirmModalWithInput } from "../modal/confirm-modal-input";
 import CommentDialog from "@/app/(dashboard)/dashboard/verification/table/detail/comment-dialog";
+import Swal from "sweetalert2";
 const fileSchema = z.custom<any>(
   (val: any) => {
     // if (!(val instanceof FileList)) return false;
-    if (val.length == 0) return false;
+    if (val.length != 0) return false;
     for (let i = 0; i < val.length; i++) {
       const file = val[i];
       const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
@@ -81,6 +82,7 @@ const formSchema = z.object({
     .string({ required_error: "Email diperlukan" })
     .email({ message: "Email harus valid" }),
   gender: z.string().optional().nullable(),
+  role: z.enum(["customer", "product_customer"]).optional(),
   password: z
     .string()
     .optional()
@@ -131,6 +133,8 @@ const formEditSchema = z.object({
 
 type CustomerFormValues = z.infer<typeof formSchema> & {
   id_cards: MulitpleImageUploadResponse;
+  additional_data_status: string;
+  additional_data: any[];
 };
 
 interface CustomerFormProps {
@@ -187,7 +191,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const axiosAuth = useAxiosAuth();
 
 
-  const defaultValues = initialData
+  const defaultValues: Partial<CustomerFormValues> = initialData
     ? {
         name: initialData?.name,
         email: initialData?.email,
@@ -204,6 +208,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         email: "",
         date_of_birth: "",
         gender: "",
+        role: 'customer' as const,
         id_cards: [],
         phone_number: "",
         emergency_phone_number: "",
@@ -520,6 +525,36 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                 </FormItem>
               )}
             />
+            {/* {!initialData && (
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="relative label-required">
+                      Role Customer
+                    </FormLabel>
+                    <Select
+                      disabled={!isEdit || loading}
+                      onValueChange={field.onChange}
+                      value={field.value ?? 'customer'}
+                      defaultValue={field.value ?? 'customer'}
+                    >
+                      <FormControl className="disabled:opacity-100">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih role customer" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="customer">Customer Fleet</SelectItem>
+                        <SelectItem value="product_customer">Customer Product</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )} */}
             {!initialData && (
               <FormField
                 control={form.control}
@@ -673,12 +708,68 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
               />
             )}
           </div>
+          <div className="space-y-2">
+            <FormLabel>Dokumen Pendukung</FormLabel>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {(() => {
+                // Normalize to array in case API later returns an array; currently it's a single string
+                const raw = initialData?.supporting_documents_url;
+                const docs: string[] = Array.isArray(raw)
+                  ? raw
+                  : raw
+                  ? [raw]
+                  : [];
+
+                if (docs.length === 0) {
+                  return (
+                    <div className="col-span-full">
+                      <Input disabled value="-" />
+                    </div>
+                  );
+                }
+
+                return docs.map((url: string, idx: number) => (
+                  <div
+                    key={`${url}-${idx}`}
+                    className="relative group border rounded-md overflow-hidden cursor-pointer"
+                    onClick={() => {
+                      Swal.fire({
+                        imageUrl: url,
+                        imageAlt: `Supporting Document ${idx + 1}`,
+                        width: '80%',
+                        confirmButtonText: 'Tutup',
+                        confirmButtonColor: '#3085d6',
+                        showCloseButton: true,
+                        customClass: {
+                          image: 'max-h-[70vh] object-contain'
+                        }
+                      });
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt={`Supporting Document ${idx + 1}`}
+                      className="w-full h-40 object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">Klik untuk memperbesar</span>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
           <FormField
             control={form.control}
             name="id_cards"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="relative label-required">
+                <FormLabel className="relative">
                   Foto KTP
                 </FormLabel>
                 <FormControl className="disabled:opacity-100">
@@ -694,8 +785,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             )}
           />
            {(() => {
-            const status = defaultValues?.additional_data_status;
-            const additionalData = defaultValues?.additional_data || [];
+            const status = initialData?.additional_data_status;
+            const additionalData = initialData?.additional_data || [];
             const additionalDataLength = additionalData.length;
 
             const baseClass =

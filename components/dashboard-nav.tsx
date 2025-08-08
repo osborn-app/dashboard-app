@@ -28,19 +28,7 @@ export function DashboardNav({
 }: DashboardNavProps) {
   const path = usePathname();
   const { isMinimized, toggle } = useSidebar();
-  const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
-  
-  const toggleDropdown = (title: string) => {
-    setOpenDropdowns(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(title)) {
-        newSet.delete(title);
-      } else {
-        newSet.add(title);
-      }
-      return newSet;
-    });
-  };
+  // Sidebar groups are always expanded; no dropdown state
 
   const { data: orderStatusCount, isFetching: isFetchingOrderStatus } =
     useOrdersStatusCount();
@@ -142,21 +130,16 @@ export function DashboardNav({
           );
         };
 
-        // If item has children (dropdown), render dropdown
+        // If item has children (group), render header and always-visible children
         if (item.items && item.items.length > 0) {
-          const isDropdownOpen = openDropdowns.has(item.title);
-          const ChevronIcon = isDropdownOpen ? Icons.chevronUp : Icons.chevronDown;
-          
           return (
             <div key={index}>
-              {/* Dropdown Header */}
+              {/* Group Header (non-clickable) */}
               <div
                 className={cn(
-                  "group flex items-center rounded-md p-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer",
-                  isActive() ? "bg-[#EDEFF3] text-main" : "transparent",
+                  "group flex items-center rounded-md p-3 text-sm font-medium text-main",
                   item.disabled && "cursor-not-allowed opacity-80",
                 )}
-                onClick={() => toggleDropdown(item.title)}
               >
                 <Icon className="h-4 w-4" />
                 {isMobileNav || (!isMinimized && !isMobileNav) ? (
@@ -168,21 +151,20 @@ export function DashboardNav({
                           {orderCount?.[0]?.count ?? 0}
                         </div>
                       )}
-                      <ChevronIcon className="h-4 w-4" />
                     </div>
                   </div>
                 ) : (
                   ""
                 )}
               </div>
-              
-              {/* Dropdown Items */}
-              {isDropdownOpen && (isMobileNav || (!isMinimized && !isMobileNav)) && (
+
+              {/* Group Items (always visible when sidebar has width to show text) */}
+              {(isMobileNav || (!isMinimized && !isMobileNav)) && (
                 <div className="ml-6 space-y-1">
                   {item.items.map((subItem, subIndex) => {
                     const SubIcon = Icons[subItem.icon || "arrowRight"];
                     const isSubActive = subItem.href && path.startsWith(subItem.href);
-                    
+
                     return (
                       <Link
                         key={subIndex}
@@ -210,7 +192,7 @@ export function DashboardNav({
           );
         }
 
-        // Regular menu item (no dropdown)
+        // Regular menu item (no group)
         return (
           item.href && (
             <Link

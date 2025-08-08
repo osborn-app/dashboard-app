@@ -34,7 +34,7 @@ export const pendingColumns: ColumnDef<any>[] = [
         accessorKey: "location",
         header: "Location",
         cell: ({ row }) => (
-            <span>{row.original.location.name}</span>
+            <span>{row.original.location?.name || `Location ID: ${row.original.location_id}`}</span>
         ),
     },
     {
@@ -76,7 +76,7 @@ export const completedColumns: ColumnDef<any>[] = [
         accessorKey: "location",
         header: "Location",
         cell: ({ row }) => (
-            <span>{row.original.location.name}</span>
+            <span>{row.original.location?.name || `Location ID: ${row.original.location_id}`}</span>
         ),
     },
     {

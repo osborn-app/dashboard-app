@@ -19,7 +19,8 @@ const DiscountTableWrapper = () => {
 
   const {
     data: response,
-    isFetching: isFetchingData
+    isFetching: isFetchingData,
+    error
   } = useGetInfinityDiscount()
 
   const createQueryString = React.useCallback(
@@ -44,10 +45,10 @@ const DiscountTableWrapper = () => {
       {!isFetchingData && response?.data && (
         <DiscountTable
           columns={completedColumns}
-          data={response.data.items}
-          searchKey="name"
-          totalUsers={response.data.meta?.total_items}
-          pageCount={Math.ceil(response.data.meta?.total_items / limit)}
+          data={response.data.items || []}
+          searchKey="discount"
+          totalUsers={response.data.meta?.total_items || 0}
+          pageCount={Math.ceil((response.data.meta?.total_items || 0) / limit)}
           pageNo={page}
           searchQuery={searchQuery}
         />
