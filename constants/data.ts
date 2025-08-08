@@ -141,7 +141,7 @@ export const navItems: NavItem[] = [
     roles: ["admin", "owner"],
     items: [
       {
-        title: "Dashboard",
+        title: "Data",
         href: "/dashboard",
         icon: "dashboard",
         label: "Dashboard",
