@@ -127,7 +127,7 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
         <Tabs defaultValue={defaultTab} className="space-y-4">
           <TabsList>
             <TabsTrigger value="tersedia">Tersedia</TabsTrigger>
-            <TabsTrigger value="ongoing">Ongoing</TabsTrigger>
+            <TabsTrigger value="ongoing">Sedang Berjalan</TabsTrigger>
             <TabsTrigger value="selesai">Selesai</TabsTrigger>
           </TabsList>
           <HydrationBoundary state={dehydrate(queryClient)}>
