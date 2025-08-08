@@ -13,7 +13,6 @@ import { ChevronFirst, ChevronLast } from "lucide-react";
 import { useOrdersStatusCount } from "@/hooks/api/useOrder";
 import { useReimburseStatusCount } from "@/hooks/api/useReimburse";
 import { customerVerificationStatusCount, useCustomersStatusCount } from "@/hooks/api/useCustomer";
-import { useUser } from "@/context/UserContext";
 
 interface DashboardNavProps {
   items: NavItem[];
@@ -38,29 +37,14 @@ export function DashboardNav({
     useCustomersStatusCount();
   const { data: customerVerificationCount, isFetching: isFetchingVerificationStatus } =
   customerVerificationStatusCount();
-  const { user } = useUser();
   const orderCount = orderStatusCount?.data;
   const customerCount = customerStatusCount?.data;
   const reimburseCount = reimburseStatusCount?.data;
   const verificationCount = customerVerificationCount?.data;
 
   const navItems = useMemo(() => {
-    const baseItems = [...items];
-
-    // Avoid adding "Discount" if it already exists in the base items
-    const discountExists = baseItems.some((item) => item.title === "Discount");
-
-    if (user?.role === "admin" && !discountExists) {
-      baseItems.push({
-        title: "Discount",
-        href: "/dashboard/discount",
-        icon: "discount",
-        roles: ["admin"],
-      });
-    }
-
-    return baseItems;
-  }, [items, user]);
+    return [...items];
+  }, [items]);
 
   if (!navItems?.length) {
     return null;
@@ -232,8 +216,7 @@ export function DashboardNav({
                           </div>
                         )}
                       {item.title === "Reimburse" &&
-                        !isFetchingReimburseStatus &&
-                        user?.role !== "driver" && (
+                        !isFetchingReimburseStatus && (
                           <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
                             {reimburseCount?.[0]?.count ?? 0}
                           </div>

@@ -204,7 +204,7 @@ export const navItems: NavItem[] = [
         roles: ["admin", "owner"],
       },
       {
-        title: "Fleet Mitra",
+        title: "Fleets Mitra Ojol",
         href: "/dashboard/partner-fleets",
         icon: "carpartner",
         label: "Fleet Mitra",
@@ -215,6 +215,13 @@ export const navItems: NavItem[] = [
         href: "/dashboard/location",
         icon: "maps",
         label: "Location",
+        roles: ["admin"],
+      },
+      {
+        title: "Discount",
+        href: "/dashboard/discount",
+        icon: "discount",
+        label: "Discount",
         roles: ["admin"],
       },
     ],
@@ -232,7 +239,7 @@ export const navItems: NavItem[] = [
         roles: ["admin"],
       },
       {
-        title: "Driver Mitra",
+        title: "Driver Mitra Ojol",
         href: "/dashboard/mitra-drivers",
         icon: "usersicon",
         label: "Driver Mitra",
