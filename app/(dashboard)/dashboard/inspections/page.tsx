@@ -122,7 +122,7 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
         <BreadCrumb items={breadcrumbItems} />
         <div className="flex items-start justify-between">
           <Heading title="Inspections" />
-        </div>
+        </div> //redeploy
         <Separator />
         <Tabs defaultValue={defaultTab} className="space-y-4">
           <TabsList>
