@@ -21,27 +21,64 @@ const useCalendarViewStore = (filter?: any) => {
     ...filter,
   });
 
-  const data = calendar?.pages?.flatMap((page) => page?.data?.items) || [];
+  const data = calendar?.pages?.flatMap((page) => page?.data?.items || []) || [];
 
-  const mappedData: ICalendarData[] = data.map((item) => ({
-    id: item.id,
-    name: item.name,
-    location: item?.location?.location,
-    price: formatRupiah(item.price),
-    image: item?.photo?.photo,
-    usage: item?.orders?.map((order: any) => ({
-      id: order.id,
-      start: dayjs(order.start_date).tz("Asia/Jakarta"),
-      end: dayjs(order.end_date).tz("Asia/Jakarta"),
-      startDriver: order?.start_request?.driver?.name || "-",
-      endDriver: order?.end_request?.driver?.name || "-",
-      duration: order?.duration + " hari",
-      paymentStatus: order.payment_status,
-      orderStatus: order.order_status,
-      title: order.customer.name,
-      price: formatRupiah(order.total_price),
-    })),
-  }));
+  let mappedData: ICalendarData[] = [];
+
+  try {
+    mappedData = data?.map((item) => {
+      if (!item) {
+        return {
+          id: "",
+          name: "",
+          location: "",
+          price: "",
+          image: "",
+          usage: [],
+        };
+      }
+
+      return {
+        id: item?.id || "",
+        name: item?.name || "",
+        location: item?.location?.location || "",
+        price: item?.price ? formatRupiah(item.price) : "",
+        image: item?.photo?.photo || "",
+        usage: item?.orders?.map((order: any) => {
+          if (!order) {
+            return {
+              id: "",
+              start: dayjs(),
+              end: dayjs(),
+              startDriver: "-",
+              endDriver: "-",
+              duration: "0 hari",
+              paymentStatus: "",
+              orderStatus: "",
+              title: "-",
+              price: "Rp 0",
+            };
+          }
+
+          return {
+            id: order?.id || "",
+            start: order?.start_date ? dayjs(order.start_date).tz("Asia/Jakarta") : dayjs(),
+            end: order?.end_date ? dayjs(order.end_date).tz("Asia/Jakarta") : dayjs(),
+            startDriver: order?.start_request?.driver?.name || "-",
+            endDriver: order?.end_request?.driver?.name || "-",
+            duration: (order?.duration || 0) + " hari",
+            paymentStatus: order?.payment_status || "",
+            orderStatus: order?.order_status || "",
+            title: order?.customer?.name || "-",
+            price: order?.total_price ? formatRupiah(order.total_price) : "Rp 0",
+          };
+        }) || [],
+      };
+    }) || [];
+  } catch (error) {
+    console.error("Error mapping calendar data:", error);
+    mappedData = [];
+  }
 
   if (!isFetching && mappedData.length < 5) {
     const emptyDataCount = 5;
