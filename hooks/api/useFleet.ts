@@ -91,6 +91,7 @@ type PayloadBody = {
   color?: string;
   plate_number: string;
   photos?: string[];
+  status: string;
 };
 
 export const usePostFleet = () => {
