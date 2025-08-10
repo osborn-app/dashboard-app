@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Upload, Loader2 } from "lucide-react"
 import Swal from "sweetalert2"
 import useAxiosAuth from "@/hooks/axios/use-axios-auth"
+import Image from "next/image"
 
 // Function Sementara nunggu update aws
 export async function handleImageUpload(file: File, axiosAuth: any): Promise<string> {
@@ -22,7 +23,6 @@ export async function handleImageUpload(file: File, axiosAuth: any): Promise<str
 
     return res.data.download_url;
   } catch (error) {
-    console.error("Upload gagal", error);
     throw new Error("Gagal meng-upload gambar");
   }
 }
@@ -66,7 +66,6 @@ const Page = () => {
         setUploadedImageUrl(uploadedUrl)
         Swal.fire("Berhasil", "Gambar berhasil diupload!", "success")
       } catch (error) {
-        console.error("Gagal upload gambar:", error)
         Swal.fire("Gagal", "Gagal mengupload gambar ke server.", "error")
         setImagePreview(null)
       } finally {
@@ -74,19 +73,19 @@ const Page = () => {
       }
     }
   }
-// deploy
+
   const handleImageClick = () => {
     if (imagePreview) {
       const newWindow = window.open('', '_blank')
       if (newWindow) {
-        newWindow.document.write(`
-          <html>
+        newWindow.document.write(
+          `<html>
             <head><title>Preview Gambar</title></head>
             <body style="margin:0">
               <img src="${imagePreview}" style="width:100vw; height:auto; display:block;" />
             </body>
-          </html>
-        `)
+          </html>`
+        )
         newWindow.document.close()
       }
     }
@@ -129,7 +128,6 @@ const Page = () => {
     setIsSubmitting(true)
     try {
       const response = await axiosAuth.post('/cms', payload)
-      console.log("Sukses upload:", response.data)
       Swal.fire({
         title: "Berhasil",
         text: "Artikel berhasil diupload!",
@@ -151,7 +149,6 @@ const Page = () => {
         inputFileRef.current.value = ''
       }
     } catch (error) {
-      console.error("Gagal upload:", error)
       Swal.fire("Gagal", "Terjadi kesalahan saat mengupload artikel.", "error")
     } finally {
       setIsSubmitting(false)
@@ -165,7 +162,7 @@ const Page = () => {
           <p className="font-semibold mb-1">Masukkan Judul Dibawah Ini</p>
           <p className="text-[13px] mb-2">
             Untuk mengoptimalkan SEO, pastikan judul (title) halaman mengandung kata kunci utama dan ditulis menarik, seperti <br />
-            "Sewa Mobil Jakarta Murah - TransGo". Panjang idealnya 50-60 karakter agar tidak terpotong di hasil pencarian.
+            &ldquo;Sewa Mobil Jakarta Murah - TransGo&rdquo;. Panjang idealnya 50-60 karakter agar tidak terpotong di hasil pencarian.
           </p>
           <Textarea
             placeholder="Masukkan Judul Disini"
@@ -203,10 +200,13 @@ const Page = () => {
                     className="h-full w-full flex items-center justify-center cursor-pointer relative"
                     onClick={handleImageClick}
                   >
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Preview"
+                      width={200}
+                      height={130}
                       className="h-full object-contain"
+                      unoptimized
                     />
                     {uploadedImageUrl && (
                       <div className="absolute top-1 right-1 bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
@@ -261,7 +261,7 @@ const Page = () => {
             <div className="mt-5">
               <p className="font-semibold mb-1">Masukkan Deskripsi Dibawah Ini</p>
               <p className="text-[12px] mb-2">
-                Deskripsi (meta description) idealnya 150-160 karakter, berisi ringkasan konten yang menggoda untuk diklik, contohnya: "Butuh sewa mobil di Jakarta? TransGo siap antar jemput dengan harga terjangkau dan driver profesional."
+                Deskripsi (meta description) idealnya 150-160 karakter, berisi ringkasan konten yang menggoda untuk diklik, contohnya: &ldquo;Butuh sewa mobil di Jakarta? TransGo siap antar jemput dengan harga terjangkau dan driver profesional.&rdquo;
               </p>
               <Textarea
                 placeholder="Masukkan Deskripsi Disini"
