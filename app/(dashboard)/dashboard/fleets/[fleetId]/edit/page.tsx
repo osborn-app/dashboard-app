@@ -24,6 +24,10 @@ export default function Page({ params }: { params: { fleetId: number } }) {
           type={[
             { id: "motorcycle", name: "Motor" },
             { id: "car", name: "Mobil" },
+          ]}  
+          statusOptions={[
+            { id: "available", name: "Available" },
+            { id: "preparation", name: "Preparation" }
           ]}
           statusOptions={[
             { id: "available", name: "Available" },

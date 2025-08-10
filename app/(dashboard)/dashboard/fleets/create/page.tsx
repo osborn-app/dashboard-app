@@ -22,6 +22,7 @@ export default function Page() {
         statusOptions={[
           { id: "available", name: "Available" },
           { id: "preparation", name: "Preparation" },
+          { id: "preparation", name: "Preparation" }
         ]}
         isEdit
       />

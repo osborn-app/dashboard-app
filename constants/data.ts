@@ -331,5 +331,12 @@ export const navItems: NavItem[] = [
       },
     ],
   },
+  {
+  title: "Content Management",
+  href: "/dashboard/cms",
+  icon: "contentImage",
+  label: "Content Management",
+  roles: ["admin"],
+  },
 ];
 
