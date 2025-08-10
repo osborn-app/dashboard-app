@@ -249,4 +249,11 @@ export const navItems: NavItem[] = [
   label: "Template Pesan Fleet",
   roles: ["admin"],
   },
+  {
+  title: "Content Management",
+  href: "/dashboard/cms",
+  icon: "contentImage",
+  label: "Content Management",
+  roles: ["admin"],
+  },
 ];

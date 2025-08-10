@@ -1,0 +1,152 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "paragraph",
+      "attrs": { "textAlign": null },
+      "content": [
+        { "type": "text", "text": "Untuk Melanjutkan edit silahkan hapus konten dibawah ini" }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "textAlign": null, "level": 1 },
+      "content": [
+        { "type": "text", "text": "Panduan Lengkap Memanfaatkan Editor untuk SEO" }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": { "textAlign": null },
+      "content": [
+        { "type": "text", "text": "Editor membantu Anda membuat konten yang terstruktur, menarik, dan mudah dibaca oleh audiens. Dengan memanfaatkan fitur-fitur seperti pengaturan heading, daftar poin, dan format teks, Anda dapat membuat artikel yang lebih disukai pembaca dan mesin pencari." }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "content": [
+        {
+          "type": "paragraph",
+          "attrs": { "textAlign": null },
+          "content": [
+            { "type": "text", "marks": [{ "type": "italic" }], "text": "Konten yang relevan dan mudah dipahami akan selalu memiliki peluang lebih tinggi untuk mendapatkan peringkat baik di hasil pencarian." }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "textAlign": null, "level": 2 },
+      "content": [{ "type": "text", "text": "Langkah Persiapan Konten SEO-Friendly" }]
+    },
+    {
+      "type": "bulletList",
+      "content": [
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": { "textAlign": "left" },
+              "content": [
+                { "type": "text", "marks": [{ "type": "bold" }], "text": "Riset kata kunci" },
+                { "type": "text", "text": " - Temukan kata kunci utama dan turunan yang relevan dengan topik artikel." }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": { "textAlign": "left" },
+              "content": [
+                { "type": "text", "marks": [{ "type": "bold" }], "text": "Gunakan heading secara tepat" },
+                { "type": "text", "text": " - H1 untuk judul utama, H2 untuk subjudul, dan H3 untuk rincian pendukung." }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "listItem",
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": { "textAlign": "left" },
+              "content": [
+                { "type": "text", "marks": [{ "type": "bold" }], "text": "Buat konten yang mudah dibaca" },
+                { "type": "text", "text": " - Gunakan paragraf singkat, poin-poin, dan bahasa yang jelas." }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "textAlign": null, "level": 2 },
+      "content": [{ "type": "text", "text": "Checklist Optimasi Sebelum Publish" }]
+    },
+    {
+      "type": "taskList",
+      "content": [
+        {
+          "type": "taskItem",
+          "attrs": { "checked": false },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": { "textAlign": "left" },
+              "content": [{ "type": "text", "text": "Pastikan kata kunci utama muncul di judul" }]
+            }
+          ]
+        },
+        {
+          "type": "taskItem",
+          "attrs": { "checked": false },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": { "textAlign": "left" },
+              "content": [{ "type": "text", "text": "Gunakan subjudul untuk memecah topik" }]
+            }
+          ]
+        },
+        {
+          "type": "taskItem",
+          "attrs": { "checked": false },
+          "content": [
+            {
+              "type": "paragraph",
+              "attrs": { "textAlign": "left" },
+              "content": [{ "type": "text", "text": "Tambahkan link ke konten terkait" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": { "textAlign": null, "level": 2 },
+      "content": [{ "type": "text", "text": "Contoh Struktur Artikel SEO-Friendly" }]
+    },
+    {
+      "type": "codeBlock",
+      "attrs": { "language": "html" },
+      "content": [
+        {
+          "type": "text",
+          "text": "<h1>Judul Artikel Utama</h1>\n<p>Paragraf pembuka yang menjelaskan topik.</p>\n<h2>Subjudul 1</h2>\n<p>Konten detail...</p>\n<h2>Subjudul 2</h2>\n<p>Penjelasan tambahan...</p>"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "attrs": { "textAlign": "left" },
+      "content": [
+        { "type": "text", "text": "Dengan mengikuti panduan ini, Anda dapat memaksimalkan potensi Editor untuk membuat konten yang terstruktur, relevan, dan disukai pembaca. Kombinasi riset kata kunci, penulisan yang jelas, dan format yang rapi akan membantu konten Anda lebih mudah ditemukan di hasil pencarian." }
+      ]
+    }
+  ]
+}

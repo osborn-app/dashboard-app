@@ -3,7 +3,7 @@ import Providers from "@/components/layout/providers";
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
+import "./globals.scss";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import { extractRouterConfig } from "uploadthing/server";
 import { getServerSession } from "next-auth";
