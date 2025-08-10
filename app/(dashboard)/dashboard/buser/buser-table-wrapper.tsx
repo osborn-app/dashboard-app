@@ -52,6 +52,15 @@ const BuserTableWrapper = () => {
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+    // Update URL with search parameter
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    if (query) {
+      newSearchParams.set('q', query);
+    } else {
+      newSearchParams.delete('q');
+    }
+    newSearchParams.set('page', '1'); // Reset to first page when searching
+    router.push(`${pathname}?${newSearchParams.toString()}`, { scroll: false });
   };
 
   const lists = [
@@ -91,11 +100,11 @@ const BuserTableWrapper = () => {
           {defaultTab === list.value && (
             <>
               {isFetching && <Spinner />}
-              {!isFetching && buserData && buserData.length > 0 && (
+              {!isFetching && buserData && buserData.data && buserData.data.length > 0 && (
                 <BuserTable
                   columns={BuserColumns}
                   data={
-                    (buserData ?? [])
+                    (buserData.data ?? [])
                       .map((item: any) => ({
                         ...item,
                         name: item.order?.customer?.name ?? "-",
@@ -104,47 +113,19 @@ const BuserTableWrapper = () => {
                           item.order?.customer?.emergency_number ?? "-",
                         email: item.order?.customer?.email ?? "-",
                       }))
-                      .filter(
-                        (item: any) =>
-                          !searchQuery ||
-                          item.name.toLowerCase().includes(searchQuery.toLowerCase()),
-                      )
                       .sort(
                         (a: any, b: any) =>
                           new Date(b.status_updated_at).getTime() -
                           new Date(a.status_updated_at).getTime(),
                       )
-                      .slice((page - 1) * pageLimit, page * pageLimit)
                   }
                   searchKey="name"
-                  totalItems={
-                    (buserData ?? [])
-                      .map((item: any) => ({
-                        ...item,
-                        name: item.order?.customer?.name ?? "-",
-                      }))
-                      .filter(
-                        (item: any) =>
-                          !searchQuery ||
-                          item.name.toLowerCase().includes(searchQuery.toLowerCase()),
-                      ).length
-                  }
-                  pageCount={Math.ceil(
-                    ((buserData ?? [])
-                      .map((item: any) => ({
-                        ...item,
-                        name: item.order?.customer?.name ?? "-",
-                      }))
-                      .filter(
-                        (item: any) =>
-                          !searchQuery ||
-                          item.name.toLowerCase().includes(searchQuery.toLowerCase()),
-                      ).length ?? 0) / pageLimit,
-                  )}
+                  totalItems={buserData.total || 0}
+                  pageCount={buserData.totalPages || 1}
                   pageNo={page}
                 />
               )}
-              {!isFetching && (!buserData || buserData.length === 0) && (
+              {!isFetching && (!buserData || !buserData.data || buserData.data.length === 0) && (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Tidak ada data buser untuk status</p>
                 </div>

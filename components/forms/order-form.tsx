@@ -213,7 +213,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           ? initialData?.insurance?.id.toString()
           : "0",
         service_price: initialData?.service_price.toString(),
-        additionals: initialData?.additional_services,
+        additionals: initialData?.additional_services?.map((service: any) => ({
+          name: service.name,
+          price: service.price?.toString() || "",
+        })) || [],
       }
     : {
         start_request: {
@@ -301,7 +304,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
     const createPayload = (data: OrderFormValues) => ({
       start_request: {
-        is_self_pickup: data.start_request.is_self_pickup == "1" ? true : false,
+        is_self_pickup: data.start_request.is_self_pickup,
         driver_id: +data.start_request.driver_id,
         ...(!startSelfPickUpField && {
           address: data.start_request.address,
@@ -309,7 +312,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         }),
       },
       end_request: {
-        is_self_pickup: data.end_request.is_self_pickup == "1" ? true : false,
+        is_self_pickup: data.end_request.is_self_pickup,
         driver_id: +data.end_request.driver_id,
         ...(!endSelfPickUpField && {
           distance: +data.end_request.distance,
@@ -329,13 +332,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         data?.service_price && {
           service_price: +data.service_price.replace(/,/g, ""),
         }),
-      ...(fields.length !== 0 && {
-        additional_services: additionalField.map((field) => {
+      ...(additionalField && additionalField.length !== 0 && {
+        additional_services: additionalField.map((field: any) => {
           return {
             name: field.name,
-            price: isString(field.price)
-              ? +field.price.replace(/,/g, "")
-              : field.price,
+            price: typeof field.price === "string" ? Number(field.price.replace(/,/g, "")) : Number(field.price),
           };
         }),
       }),
@@ -456,7 +457,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       is_with_driver: isWithDriverField,
       insurance_id: +(insuranceField ?? 0),
       start_request: {
-        is_self_pickup: startSelfPickUpField == "1" ? true : false,
+        is_self_pickup: startSelfPickUpField,
         driver_id: +(startDriverField ?? 0),
         ...(!startSelfPickUpField && {
           distance: +(startDistanceField ?? 0),
@@ -464,7 +465,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         }),
       },
       end_request: {
-        is_self_pickup: endSelfPickUpField == "1" ? true : false,
+        is_self_pickup: endSelfPickUpField,
         driver_id: +(endDriverField ?? 0),
         ...(!endSelfPickUpField && {
           distance: +(endDistanceField ?? 0),
@@ -482,13 +483,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           ? +serviceField.replace(/,/g, "")
           : serviceField,
       }),
-      ...(fields.length !== 0 && {
-        additional_services: additionalField.map((field) => {
+      ...(additionalField && additionalField.length !== 0 && {
+        additional_services: additionalField.map((field: any) => {
           return {
             name: field.name,
-            price: isString(field.price)
-              ? +field.price.replace(/,/g, "")
-              : field.price,
+            price: typeof field.price === "string" ? Number(field.price.replace(/,/g, "")) : Number(field.price),
           };
         }),
       }),
@@ -1548,7 +1547,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       <Button
                         type="button"
                         className={cn(buttonVariants({ variant: "secondary" }))}
-                        onClick={() => append({ name: "", price: "0" })}
+                        onClick={() => append({ name: "", price: "" } as any)}
                       >
                         + Add Item
                       </Button>
@@ -1795,9 +1794,11 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                   </FormLabel>
                   <FormControl>
                     <Tabs
-                      defaultValue={field.value == true ? "1" : "0"}
-                      value={field.value == true ? "1" : "0"}
-                      onValueChange={field.onChange}
+                      defaultValue={field.value === true ? "1" : "0"}
+                      value={field.value === true ? "1" : "0"}
+                      onValueChange={(value) => {
+                        field.onChange(value === "1" ? true : false);
+                      }}
                     >
                       <TabsList className="grid w-full grid-rows-2 lg:grid-cols-2 lg:grid-rows-none h-[100px] lg:h-[40px]">
                         {lists.map((list, index) => {
@@ -1809,7 +1810,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                               onClick={() => {
                                 form.setValue(
                                   `${type}_request.is_self_pickup`,
-                                  list.value == "0" ? false : true,
+                                  list.value === "0" ? false : true,
                                 );
                               }}
                               className="h-[40px] lg:h-[30px]"

@@ -27,17 +27,18 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
     const id = data?.id;
     const queryClient = useQueryClient();
 
-    const { mutateAsync: deleteDiscount } = useDeleteDiscount(id);
+    const { mutate: deleteDiscount, isPending } = useDeleteDiscount();
 
     const onConfirm = async () => {
+        setLoading(true);
         deleteDiscount(id, {
             onSuccess: () => {
                 toast({
                     variant: "success",
                     title: "Diskon berhasil dihapus!",
                 });
-                router.refresh();
-                router.push("/dashboard/discount");
+                setOpen(false);
+                setLoading(false);
             },
             onError: (error) => {
                 toast({
@@ -45,11 +46,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                     title: "Oops! Ada error.",
                     description: `Something went wrong: ${error.message}`,
                 });
-                queryClient.invalidateQueries({ queryKey: ["requests"] });
+                setLoading(false);
             },
             onSettled: () => {
-                queryClient.invalidateQueries({ queryKey: ["requests"] });
-                setOpen(false);
+                setLoading(false);
             },
         });
     };
@@ -60,7 +60,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
                 isOpen={open}
                 onClose={() => setOpen(false)}
                 onConfirm={onConfirm}
-                loading={loading}
+                loading={loading || isPending}
             />
             <DropdownMenu modal={false}>
                 <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} asChild>

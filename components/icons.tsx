@@ -3,8 +3,10 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   CircuitBoardIcon,
   Command,
   CreditCard,
@@ -21,6 +23,7 @@ import {
   Moon,
   HandIcon,
   MoreVertical,
+  Package,
   Percent,
   Pizza,
   Plus,
@@ -42,6 +45,8 @@ import {
   LucideCarTaxiFront,
   PhoneCall,
   Footprints,
+  ListChecks,
+  Wrench
   Album
 } from "lucide-react";
 
@@ -124,6 +129,8 @@ export const Icons = {
   kanban: CircuitBoardIcon,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
+  chevronDown: ChevronDown,
+  chevronUp: ChevronUp,
   trash: Trash,
   employee: UserX2Icon,
   post: FileText,
@@ -151,11 +158,14 @@ export const Icons = {
   carpartner: LucideCarTaxiFront,
   phonecall : PhoneCall,
   footprints: Footprints,
+  wrench: Wrench,
   contentImage: Album,
   pdf: PDFIcon,
   owners: Owners,
+  listchecks: ListChecks,
   notebookText: NotebookText,
   discount: Percent,
+  package: Package,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

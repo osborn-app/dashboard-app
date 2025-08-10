@@ -229,7 +229,7 @@ export function FleetTable<TData, TValue>({
     <>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-5">
         <Input
-          placeholder="Cari fleets..."
+          placeholder={`Cari fleets...`}
           value={searchQuery}
           onChange={handleSearchInputChange}
           className="w-full md:max-w-sm"

@@ -29,6 +29,10 @@ export default function Page({ params }: { params: { fleetId: number } }) {
             { id: "available", name: "Available" },
             { id: "preparation", name: "Preparation" }
           ]}
+          statusOptions={[
+            { id: "available", name: "Available" },
+            { id: "preparation", name: "Preparation" },
+          ]}
           isEdit
         />
       )}

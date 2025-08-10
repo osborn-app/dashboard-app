@@ -48,6 +48,8 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
   messages,
   innerRef,
 }) => {
+  // Watch discount field for real-time updates
+  const discountValue = form.watch("discount");
   return (
     <div
       className="p-5 top-10 border rounded-md w-full basis-1/3"
@@ -57,55 +59,93 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
       <div className="">
         <h4 className="text-center font-semibold text-xl mb-4 mt-4">
           Rincian Harga{" "}
-          {form.getValues("is_with_driver") ? "Dengan Supir" : "Lepas Kunci"}
+          {type === "product" 
+            ? "Product Order"
+            : form.getValues("is_with_driver") ? "Dengan Supir" : "Lepas Kunci"
+          }
         </h4>
         <div className="flex flex-col justify-between gap-8 h-full">
           <div className="overflow-auto">
             <div className="border border-neutral-200 rounded-md p-[10px] mb-4 ">
-              {form.getValues("is_with_driver") && (
+              {type === "product" ? (
                 <>
-                  <p className="font-medium text-sm text-neutral-700">
-                    Dengan Supir
+                  <p className="font-medium text-sm text-neutral-700 mb-1">
+                    Nama Product
                   </p>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between mb-1">
                     <p className="font-medium text-sm text-neutral-700">
-                      {form.getValues("is_out_of_town")
-                        ? "Luar Kota"
-                        : "Dalam Kota"}
+                      {detail?.product?.name
+                        ? `${detail?.product?.name} (per hari)`
+                        : "Product"}
                     </p>
                     <p className="font-semibold text-base">
-                      {formatRupiah(detail?.total_driver_price ?? 0)}
+                      {formatRupiah(detail?.rent_price || 0)}
                     </p>
                   </div>
+
+                  {detail?.product && form.getValues("duration") && detail?.total_rent_price && (
+                    <div className="flex justify-between mb-1">
+                      <p className="font-medium text-sm text-neutral-700">
+                        {form.getValues("duration")} Hari
+                      </p>
+                      <p className="font-semibold text-base">
+                        {formatRupiah(detail?.total_rent_price)}
+                      </p>
+                    </div>
+                  )}
                 </>
-              )}
+              ) : (
+                <>
+                  {type !== "product" && form.getValues("is_with_driver") && (
+                    <>
+                      <p className="font-medium text-sm text-neutral-700">
+                        Dengan Supir
+                      </p>
+                      <div className="flex justify-between">
+                        <p className="font-medium text-sm text-neutral-700">
+                          {form.getValues("is_out_of_town")
+                            ? "Luar Kota"
+                            : "Dalam Kota"}
+                        </p>
+                        <p className="font-semibold text-base">
+                          {formatRupiah(detail?.total_driver_price ?? 0)}
+                        </p>
+                      </div>
+                    </>
+                  )}
 
-              <p className="font-medium text-sm text-neutral-700 mb-1">
-                Nama Armada
-              </p>
-              <div className="flex justify-between mb-1">
-                <p className="font-medium text-sm text-neutral-700">
-                  {detail?.fleet?.name
-                    ? `${detail?.fleet?.name} (per 24 jam)`
-                    : "Armada"}
-                </p>
-                <p className="font-semibold text-base">
-                  {formatRupiah(detail?.fleet?.price ?? 0)}
-                </p>
-              </div>
+                  {type !== "product" && (
+                    <>
+                      <p className="font-medium text-sm text-neutral-700 mb-1">
+                        Nama Armada
+                      </p>
+                      <div className="flex justify-between mb-1">
+                        <p className="font-medium text-sm text-neutral-700">
+                          {detail?.fleet?.name
+                            ? `${detail?.fleet?.name} (per 24 jam)`
+                            : "Armada"}
+                        </p>
+                        <p className="font-semibold text-base">
+                          {formatRupiah(detail?.fleet?.price ?? 0)}
+                        </p>
+                      </div>
 
-              {detail?.fleet && (
-                <div className="flex justify-between mb-1">
-                  <p className="font-medium text-sm text-neutral-700">
-                    {form.getValues("duration")} Hari
-                  </p>
-                  <p className="font-semibold text-base">
-                    {formatRupiah(detail?.total_rent_price)}
-                  </p>
-                </div>
-              )}
+                      {detail?.fleet && (
+                        <div className="flex justify-between mb-1">
+                          <p className="font-medium text-sm text-neutral-700">
+                            {form.getValues("duration")} Hari
+                          </p>
+                          <p className="font-semibold text-base">
+                            {formatRupiah(detail?.total_rent_price)}
+                          </p>
+                        </div>
+                                             )}
+                     </>
+                   )}
+                 </>
+               )}
               <Separator className="mb-1" />
-              {form.getValues("is_out_of_town") && (
+              {type !== "product" && form.getValues("is_out_of_town") && (
                 <>
                   <p className="font-medium text-sm text-neutral-700 mb-1">
                     Pemakaian
@@ -176,18 +216,22 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
               {(showAdditional || showServicePrice) && (
                 <Separator className="mb-1" />
               )}
-              <p className="font-medium text-sm text-neutral-700 mb-1">
-                Biaya Asuransi
-              </p>
-              <div className="flex justify-between mb-1">
-                <p className="font-medium text-sm text-neutral-700">
-                  {detail?.insurance?.name ?? "Tidak ada"}
-                </p>
-                <p className="font-semibold text-base">
-                  {formatRupiah(detail?.insurance?.price ?? 0)}
-                </p>
-              </div>
-              {detail?.weekend_days?.length >= 1 && (
+              {detail?.insurance && (
+                <>
+                  <p className="font-medium text-sm text-neutral-700 mb-1">
+                    Biaya Asuransi
+                  </p>
+                  <div className="flex justify-between mb-1">
+                    <p className="font-medium text-sm text-neutral-700">
+                      {detail?.insurance?.name ?? "Tidak ada"}
+                    </p>
+                    <p className="font-semibold text-base">
+                      {formatRupiah(detail?.insurance?.price ?? 0)}
+                    </p>
+                  </div>
+                </>
+              )}
+              {type !== "product" && detail?.weekend_days?.length >= 1 && detail?.fleet && (
                 <>
                   <p className="font-medium text-sm text-neutral-700 mb-1">
                     Harga Akhir Pekan
@@ -212,8 +256,7 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                     )}
                     <p className="font-semibold text-base">
                       {formatRupiah(
-                        detail?.weekend_days.length * detail?.weekend_price ??
-                          0,
+                        (detail?.weekend_days?.length || 0) * (detail?.weekend_price || 0),
                       )}
                     </p>
                   </div>
@@ -231,45 +274,25 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
               <p className="text-base font-semibold mb-3 text-neutral-700 ">
                 Diskon
               </p>
-              <FormField
-                name="discount"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="relative mb-1">
-                        <span className="absolute right-4 top-1/2 z-10 -translate-y-1/2 ">
-                          %
-                        </span>
-                        <Input
-                          disabled={!isEdit}
-                          type="number"
-                          className="pr-4"
-                          value={field.value ?? 0}
-                          onChange={(e) => {
-                            const value = e.target.valueAsNumber;
-                            field.onChange(
-                              isNaN(value)
-                                ? 0
-                                : Math.max(0, Math.min(100, value)),
-                            );
-                          }}
-                          onBlur={field.onBlur}
-                          max={100}
-                          min={0}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                    <FormMessage />
-                    {messages.discount && (
-                      <FormMessage className="text-main">
-                        {messages.discount}
-                      </FormMessage>
-                    )}
-                  </FormItem>
-                )}
-              />
+                             <div className="relative mb-1">
+                 <span className="absolute right-4 top-1/2 z-10 -translate-y-1/2 ">
+                   %
+                 </span>
+                 <Input
+                   disabled={!isEdit}
+                   type="number"
+                   className="pr-4"
+                   value={discountValue ?? 0}
+                   onChange={(e) => {
+                     const value = e.target.valueAsNumber;
+                     form.setValue("discount", 
+                       isNaN(value) ? 0 : Math.max(0, Math.min(100, value))
+                     );
+                   }}
+                   max={100}
+                   min={0}
+                 />
+               </div>
               <div className="flex justify-between mb-1">
                 <p className="font-medium text-sm text-neutral-700">
                   Potongan Diskon

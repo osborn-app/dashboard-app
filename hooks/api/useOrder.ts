@@ -13,6 +13,7 @@ interface GetOrdersParams {
   end_date?: string | Date | undefined;
   order_by?: string | undefined;
   order_column?: string | undefined;
+  order_type?: string;
 }
 
 export const useGetOrders = (
@@ -30,7 +31,7 @@ export const useGetOrders = (
   };
 
   return useQuery({
-    queryKey: ["orders", params, type],
+    queryKey: ["orders", params, type, "vehicle"],
     queryFn: getOrders,
     ...options,
   });
@@ -44,7 +45,7 @@ export const useGetDetailOrder = (id: number | string) => {
   };
 
   return useQuery({
-    queryKey: ["orders", id],
+    queryKey: ["orders", id, "vehicle"],
     queryFn: getDetailOrder,
   });
 };
@@ -60,7 +61,7 @@ export const usePostOrder = () => {
   return useMutation({
     mutationFn: postOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
     },
   });
 };
@@ -76,7 +77,7 @@ export const useEditOrder = (id: string | number) => {
   return useMutation({
     mutationFn: editOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
     },
   });
 };
@@ -92,7 +93,7 @@ export const useOrderCalculate = () => {
   return useMutation({
     mutationFn: calculatePrice,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
     },
   });
 };
@@ -104,7 +105,7 @@ export const useOrdersStatusCount = () => {
     return axiosAuth.get(`${baseEndpoint}/status/count`);
   };
   return useQuery({
-    queryKey: ["orders"],
+    queryKey: ["orders", "vehicle"],
     queryFn: getStatusCountFn,
     enabled: user?.role !== "owner",
   });
@@ -126,7 +127,7 @@ export const useDeleteOrder = (id: number, force: boolean) => {
   return useMutation({
     mutationFn: deleteOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
     },
   });
 };
@@ -142,7 +143,7 @@ export const useAcceptOrder = (id: string | number) => {
   return useMutation({
     mutationFn: acceptOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
     },
   });
 };
@@ -158,7 +159,7 @@ export const useRejectOrder = () => {
   return useMutation({
     mutationFn: rejectOrder,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["orders"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", "vehicle"] });
     },
   });
 };

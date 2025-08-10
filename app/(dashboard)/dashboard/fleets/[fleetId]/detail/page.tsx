@@ -31,6 +31,7 @@ export default function Page({ params }: { params: { fleetId: number } }) {
           ]}
           statusOptions={[
             { id: "available", name: "Available" },
+            { id: "preparation", name: "Preparation" },
             { id: "preparation", name: "Preparation" }
           ]}
         />

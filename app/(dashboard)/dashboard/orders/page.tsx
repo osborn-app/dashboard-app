@@ -34,7 +34,7 @@ const page = async ({ searchParams }: paramsProps) => {
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ["orders"],
+    queryKey: ["orders", "vehicle"],
     queryFn: getOrders,
   });
 

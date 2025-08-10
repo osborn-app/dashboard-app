@@ -19,6 +19,13 @@ import React, { useEffect } from "react";
 import { DateRange } from "react-day-picker";
 import { useDebounce } from "use-debounce";
 import { OrderStatus } from "./[orderId]/types/order";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Fleet types enum to match backend
+const FleetTypes = {
+  CAR: 'car',
+  MOTORCYCLE: 'motorcycle',
+} as const;
 
 const OrderTableWrapper = () => {
   // THIS MORNING I WOULD LIKE TO FIX THIS !!!!!!
@@ -33,6 +40,10 @@ const OrderTableWrapper = () => {
   const pageLimit = Number(searchParams.get("limit")) || 10;
   const defaultTab = searchParams.get("status") ?? "pending";
   const q = searchParams.get("q");
+
+  // >>> PERUBAHAN DI SINI <<<
+  // Inisialisasi 'type' dengan 'car' jika tidak ada di URL
+  const initialType = searchParams.get("type") || FleetTypes.CAR;
   const startDate = searchParams.get("start_date") || "";
   const endDate = searchParams.get("end_date") || "";
   const orderColumn = searchParams.get("order_column") || "";
@@ -40,6 +51,8 @@ const OrderTableWrapper = () => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [searchQuery, setSearchQuery] = React.useState<string>(q ?? "");
+  // Inisialisasi selectedType dengan nilai dari initialType
+  const [selectedType, setSelectedType] = React.useState<string>(initialType);
   const [searchDebounce] = useDebounce(searchQuery, 500);
 
   const getOrderParams = (status: string) => ({
@@ -47,6 +60,8 @@ const OrderTableWrapper = () => {
     page: page,
     q: searchDebounce,
     status: status,
+    order_type: "vehicle",
+    ...(selectedType ? { type: selectedType } : {}),
     ...(startDate ? { start_date: startDate } : {}),
     ...(endDate ? { end_date: endDate } : {}),
     ...(orderBy ? { order_by: orderBy } : {}),
@@ -86,7 +101,7 @@ const OrderTableWrapper = () => {
     (params: Record<string, string | number | null | undefined>) => {
       const newSearchParams = new URLSearchParams();
       for (const [key, value] of Object.entries(params)) {
-        if (value === null || value === undefined) {
+        if (value === null || value === undefined || value === '') { // Tambahkan kondisi untuk string kosong
           newSearchParams.delete(key);
         } else {
           newSearchParams.set(key, String(value));
@@ -100,6 +115,10 @@ const OrderTableWrapper = () => {
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+  };
+
+  const handleTypeChange = (value: string) => {
+    setSelectedType(value);
   };
 
   const handleDateRangeChange = (range: DateRange) => {
@@ -129,95 +148,119 @@ const OrderTableWrapper = () => {
     },
   ];
 
-  useEffect(() => {
-    if (dateRange && dateRange.from && dateRange.to) {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          start_date: dayjs(dateRange?.from)
-            .locale("id")
-            .format("YYYY-MM-DDT00:00:00Z"),
-          end_date: dayjs(dateRange?.to)
-            .locale("id")
-            .format("YYYY-MM-DDT23:00:00Z"),
-        })}`,
-      );
-    } else {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          start_date: null,
-          end_date: null,
-        })}`,
-      );
-    }
-  }, [dateRange]);
+  const fleetTypeOptions = [
+    { label: "Car", value: FleetTypes.CAR },
+    { label: "Motorcycle", value: FleetTypes.MOTORCYCLE },
+  ];
+
+  // Efek untuk dateRange, searchDebounce, sorting, defaultTab (seperti yang sudah ada)
 
   useEffect(() => {
-    if (
-      searchDebounce !== undefined ||
-      searchDebounce !== "" ||
-      searchDebounce
-    ) {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          q: searchDebounce,
-          page: null,
-          limit: pageLimit,
-        })}`,
-      );
+    // Saat ada perubahan pada dateRange, perbarui URL
+    const newParams: Record<string, string | null | undefined> = {
+      status: defaultTab,
+      type: selectedType || null, // Pastikan 'type' disetel ke 'null' jika selectedType kosong
+      q: searchQuery || null, // Pertahankan nilai q
+      page: null, // Reset page
+      limit: pageLimit?.toString() ?? null, // Pastikan limit adalah string
+    };
+    
+    if (dateRange && dateRange.from && dateRange.to) {
+      newParams.start_date = dayjs(dateRange?.from).locale("id").format("YYYY-MM-DDT00:00:00Z");
+      newParams.end_date = dayjs(dateRange?.to).locale("id").format("YYYY-MM-DDT23:00:00Z");
     } else {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          q: null,
-          page: null,
-          limit: null,
-        })}`,
-      );
+      newParams.start_date = null;
+      newParams.end_date = null;
     }
-  }, [searchDebounce]);
+
+    router.push(`${pathname}?${createQueryString(newParams)}`);
+  }, [dateRange, defaultTab, selectedType, searchQuery, pageLimit]); // Tambahkan dependensi yang relevan
+
+  useEffect(() => {
+    // Saat searchDebounce berubah, perbarui URL
+    router.push(
+      `${pathname}?${createQueryString({
+        status: defaultTab,
+        type: selectedType || null,
+        q: searchDebounce || null, // Pastikan q null jika string kosong
+        page: null,
+        limit: pageLimit,
+      })}`,
+    );
+  }, [searchDebounce, defaultTab, selectedType, pageLimit]); // Tambahkan dependensi
+
+  useEffect(() => {
+    // Saat selectedType berubah, perbarui URL
+    router.push(
+      `${pathname}?${createQueryString({
+        status: defaultTab,
+        type: selectedType || null,
+        q: searchQuery || null,
+        page: null,
+        limit: pageLimit,
+      })}`,
+    );
+  }, [selectedType, defaultTab, searchQuery, pageLimit]); // Tambahkan dependensi
 
   React.useEffect(() => {
+    // Saat sorting berubah, perbarui URL
+    const newParams: Record<string, string | null | undefined> = {
+      status: defaultTab,
+      type: selectedType || null,
+      q: searchQuery || null, // Pertahankan nilai q
+      page: page?.toString() ?? null, // Pastikan page adalah string
+      limit: pageLimit?.toString() ?? null, // Pastikan limit adalah string
+    };
+
     if (sorting.length > 0) {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          order_by: sorting[0]?.desc ? "DESC" : "ASC",
-          order_column: sorting[0]?.id,
-        })}`,
-      );
+      newParams.order_by = sorting[0]?.desc ? "DESC" : "ASC";
+      newParams.order_column = sorting[0]?.id;
     } else {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          order_by: null,
-          order_column: null,
-        })}`,
-      );
+      newParams.order_by = null;
+      newParams.order_column = null;
     }
+    router.push(`${pathname}?${createQueryString(newParams)}`);
+  }, [sorting, defaultTab, selectedType, searchQuery, page, pageLimit]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sorting]);
 
+  // Effect untuk defaultTab. Ini harus memicu URL update saat tab berubah.
   useEffect(() => {
     router.push(
       `${pathname}?${createQueryString({
         status: defaultTab,
+        type: selectedType || null,
+        q: searchQuery || null,
         page: null,
         limit: null,
         order_by: null,
         order_column: null,
       })}`,
     );
-  }, [defaultTab]);
+  }, [defaultTab, selectedType, searchQuery]); // Tambahkan dependensi yang relevan
 
   return (
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <TabLists lists={lists} />
         <div className="flex items-center justify-between gap-4 flex-wrap w-full lg:!w-auto">
+          <Select value={selectedType} onValueChange={handleTypeChange}>
+            <SelectTrigger className="w-48">
+              {/* Ini yang menentukan teks yang ditampilkan */}
+              <SelectValue
+                placeholder="Pilih Kategori"
+              >
+                {/* Tampilkan label yang sesuai dengan selectedType */}
+                {fleetTypeOptions.find(option => option.value === selectedType)?.label || "Semua Kategori"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {fleetTypeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <CalendarDateRangePicker
             onDateRangeChange={handleDateRangeChange}
             onClearDate={handleClearDate}

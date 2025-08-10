@@ -49,6 +49,15 @@ export const PendingColumns: ColumnDef<any>[] = [
     cell: ({ row }) => <span>{row.original.email ?? "-"}</span>,
   },
   {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => (
+      <span>
+        {row.original.role === "customer" ? "Customer" : "Product Customer"}
+      </span>
+    ),
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
@@ -111,6 +120,15 @@ export const VerifiedColumns: ColumnDef<any>[] = [
     accessorKey: "email",
     header: "Email",
     cell: ({ row }) => <span>{row.original.email ?? "-"}</span>,
+  },
+  {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => (
+      <span>
+        {row.original.role === "customer" ? "Customer" : "Product Customer"}
+      </span>
+    ),
   },
   {
     id: "actions",

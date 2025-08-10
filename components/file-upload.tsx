@@ -1,9 +1,11 @@
 "use client";
 import { Trash } from "lucide-react";
 import Image from "next/image";
-import { IMG_MAX_LIMIT } from "./forms/product-form";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+
+// Define IMG_MAX_LIMIT here instead of importing from product-form
+export const IMG_MAX_LIMIT = 3;
 
 interface UploadFileRes {
   fileName: string;

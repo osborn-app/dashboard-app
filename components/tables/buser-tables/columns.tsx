@@ -14,6 +14,28 @@ export type Buser = {
   emergency_number: string;
   email: string;
   status: string;
+  status_updated_at: string;
+  investigator_id: number | null;
+  notes: string | null;
+  order: {
+    id: number;
+    customer: {
+      id: number;
+      name: string;
+      phone_number: string;
+      emergency_number?: string;
+      email?: string;
+    } | null;
+    fleet: {
+      id: number;
+      name: string;
+      plate_number: string;
+      type: string;
+      color: string;
+    };
+  };
+  days_late: number;
+  late_fee_total: number;
 };
 
 const BACKEND_BASE_URL = "https://dev.api.transgo.id/api";
@@ -106,6 +128,24 @@ export const BuserColumns: ColumnDef<Buser>[] = [
     accessorKey: "email",
     header: "Email",
     cell: ({ row }) => row.original.email,
+  },
+  {
+    accessorKey: "days_late",
+    header: "Hari Terlambat",
+    cell: ({ row }) => (
+      <span className="text-sm font-medium">
+        {row.original.days_late} hari
+      </span>
+    ),
+  },
+  {
+    accessorKey: "late_fee_total",
+    header: "Total Denda",
+    cell: ({ row }) => (
+      <span className="text-sm font-medium text-red-600">
+        Rp {row.original.late_fee_total?.toLocaleString() || 0}
+      </span>
+    ),
   },
   {
     accessorKey: "status",
