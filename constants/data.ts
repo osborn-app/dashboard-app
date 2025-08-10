@@ -285,21 +285,21 @@ export const navItems: NavItem[] = [
   {
     title: "INSPEKSI & PERBAIKAN",
     label: "Inspections",
-    roles: ["admin"],
+    roles: ["admin", "owner"],
     items: [
       {
         title: "Inspections",
         href: "/dashboard/inspections",
         icon: "listchecks",
         label: "Inspections",
-        roles: ["admin"],
+        roles: ["admin", "owner"],
       },
       {
         title: "Keperluan Perbaikan",
         href: "/dashboard/needs",
         icon: "wrench",
         label: "Keperluan Perbaikan",
-        roles: ["admin"],
+        roles: ["admin", "owner"],
       },
     ],
   },
