@@ -74,7 +74,7 @@ const Page = () => {
       }
     }
   }
-
+// deploy
   const handleImageClick = () => {
     if (imagePreview) {
       const newWindow = window.open('', '_blank')
