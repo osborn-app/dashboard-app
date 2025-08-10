@@ -29,10 +29,15 @@ const page = async ({ searchParams }: paramsProps) => {
   const page = Number(searchParams.page) || 1;
   const pageLimit = Number(searchParams.limit) || 10;
   const q = searchParams.q || null;
+  const status = searchParams.status || null;
+
+  // Build query string with status filter
+  let queryString = `page=${page}&limit=${pageLimit}`;
+  if (q) queryString += `&q=${q}`;
+  if (status) queryString += `&status=${status}`;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_HOST}/fleets?page=${page}&limit=${pageLimit}` +
-      (q ? `&q=${q}` : ""),
+    `${process.env.NEXT_PUBLIC_API_HOST}/fleets?${queryString}`,
     {
       headers: {
         Authorization: `Bearer ${session?.user.accessToken}`,

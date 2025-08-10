@@ -46,6 +46,32 @@ export const useGetInfinityFleets = (query?: string) => {
   });
 };
 
+export const useGetInfinityFleetsForNeeds = (query?: string) => {
+  const axiosAuth = useAxiosAuth();
+  const getFleets = ({
+    pageParam = 1,
+    query,
+  }: {
+    pageParam?: number;
+    query?: string;
+  }) => {
+  return axiosAuth.get(`${baseEndpoint}?status=preparation`, {
+      params: {
+        limit: 10,
+        page: pageParam,
+        // q: query,
+      },
+    });
+  };
+
+  return useInfiniteQuery({
+    queryKey: ["fleets", query],
+    queryFn: ({ pageParam }) => getFleets({ pageParam, query }),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.data.pagination?.next_page,
+  });
+};
+
 export const useGetDetailFleet = (id: number | string) => {
   const axiosAuth = useAxiosAuth();
 
@@ -65,6 +91,7 @@ type PayloadBody = {
   color?: string;
   plate_number: string;
   photos?: string[];
+  status: string;
 };
 
 export const usePostFleet = () => {
@@ -112,6 +139,54 @@ export const useDeleteFleet = (id: number) => {
     mutationFn: deleteFleet,
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["fleets"] });
+    },
+  });
+};
+
+export const useUpdateFleetStatusToPreparation = () => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const updateFleetStatusToPreparation = (id: string | number) => {
+    return axiosAuth.put(`${baseEndpoint}/${id}/status`, {
+      status: "preparation",
+    });
+  };
+
+  return useMutation({
+    mutationFn: updateFleetStatusToPreparation,
+    onSuccess: () => {
+      // Invalidate fleets queries
+      queryClient.invalidateQueries({ queryKey: ["fleets"] });
+      // Invalidate available fleets queries for inspections
+      queryClient.invalidateQueries({ queryKey: ["available-fleets"] });
+    },
+    onError: (error) => {
+      console.error("Error updating fleet status to preparation:", error);
+    },
+  });
+};
+
+export const useUpdateFleetStatusToAvailable = () => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const updateFleetStatusToAvailable = (id: string | number) => {
+    return axiosAuth.put(`${baseEndpoint}/${id}/status`, {
+      status: "available",
+    });
+  };
+
+  return useMutation({
+    mutationFn: updateFleetStatusToAvailable,
+    onSuccess: () => {
+      // Invalidate fleets queries
+      queryClient.invalidateQueries({ queryKey: ["fleets"] });
+      // Invalidate available fleets queries for inspections
+      queryClient.invalidateQueries({ queryKey: ["available-fleets"] });
+    },
+    onError: (error) => {
+      console.error("Error updating fleet status to available:", error);
     },
   });
 };

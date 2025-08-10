@@ -98,6 +98,7 @@ const formSchema = z.object({
   }),
   location_id: z.string().min(1, { message: "Tolong pilih lokasi" }),
   owner_id: z.number().nullable(),
+  status: z.string().min(1, { message: "status is required" }),
   commission: z
     .object({
       transgo: z.number(),
@@ -151,6 +152,7 @@ const editFormSchema = z.object({
         "Total persentase dari Owner dan Partner tidak boleh melebihi 100%",
       path: ["owner", "partner"],
     }),
+  status: z.string().min(1, { message: "status is required" }),
 });
 
 type CustomerFormValues = z.infer<typeof formSchema> & {
@@ -163,6 +165,7 @@ type FleetType = {
 interface FleetFormProps {
   initialData: any | null;
   type: FleetType[];
+  statusOptions: { id: string; name: string }[];
   isEdit?: boolean | null;
 }
 
@@ -170,6 +173,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
   initialData,
   type,
   isEdit,
+  statusOptions,
 }) => {
   const { fleetId } = useParams();
   const { user } = useUser();
@@ -223,6 +227,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
         color: initialData?.color,
         owner_id: initialData?.owner?.id,
         commission: initialData?.commission,
+        status: initialData?.status,
       }
     : {
         name: "",
@@ -234,6 +239,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
         color: "",
         owner_id: null,
         commission: { transgo: 0, owner: 0, partner: 0 },
+        status: "available",
       };
 
   const form = useForm<CustomerFormValues>({
@@ -309,7 +315,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
             title: toastMessage,
           });
           router.refresh();
-          router.push(`/dashboard/fleets`);
+          router.push("/dashboard/fleets");
         },
         onSettled: () => {
           setLoading(false);
@@ -350,7 +356,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
             title: toastMessage,
           });
           router.refresh();
-          router.push(`/dashboard/fleets`);
+          router.push("/dashboard/fleets");
         },
         onSettled: () => {
           setLoading(false);
@@ -483,6 +489,40 @@ export const FleetForm: React.FC<FleetFormProps> = ({
                       }}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="relative label-required">
+                    Status
+                  </FormLabel>
+                  <Select
+                    disabled={!isEdit || loading}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue={field.value}
+                  >
+                    <FormControl className="disabled:opacity-100">
+                      <SelectTrigger>
+                        <SelectValue
+                          defaultValue={field.value}
+                          placeholder="Pilih status"
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status.id} value={status.id}>
+                          {status.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -813,7 +853,6 @@ export const FleetForm: React.FC<FleetFormProps> = ({
                     )}
                   />
                 )}
-
                 {!isEdit ? (
                   <FormItem>
                     <FormLabel>Komisi Partner %</FormLabel>
