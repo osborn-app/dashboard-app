@@ -10,24 +10,24 @@ import Swal from "sweetalert2"
 import useAxiosAuth from "@/hooks/axios/use-axios-auth"
 import Image from "next/image"
 
-// Function Sementara nunggu update aws
-export async function handleImageUpload(file: File, axiosAuth: any): Promise<string> {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", "user");
+export default function CreateCMSPage() {
+  // Function untuk upload gambar ke server
+  const handleImageUploadToServer = async (file: File, axiosAuth: any): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "user");
 
-    const res = await axiosAuth.post("/storages/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+      const res = await axiosAuth.post("/storages/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    return res.data.download_url;
-  } catch (error) {
-    throw new Error("Gagal meng-upload gambar");
-  }
-}
+      return res.data.download_url;
+    } catch (error) {
+      throw new Error("Gagal meng-upload gambar");
+    }
+  };
 
-const Page = () => {
   const inputFileRef = useRef<HTMLInputElement>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
@@ -62,7 +62,7 @@ const Page = () => {
 
       setIsUploading(true)
       try {
-        const uploadedUrl = await handleImageUpload(file, axiosAuth)
+        const uploadedUrl = await handleImageUploadToServer(file, axiosAuth)
         setUploadedImageUrl(uploadedUrl)
         Swal.fire("Berhasil", "Gambar berhasil diupload!", "success")
       } catch (error) {
@@ -305,5 +305,3 @@ const Page = () => {
     </div>
   )
 }
-
-export default Page

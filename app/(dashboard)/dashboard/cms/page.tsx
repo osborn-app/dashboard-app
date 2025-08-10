@@ -10,7 +10,7 @@ import Link from "next/link";
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CMSTable } from "@/components/tables/cms-tables/cms-table";
-import { CMSResponse } from "@/components/forms/types/cms";
+import { CMSItem, CMSResponse } from "@/components/forms/types/cms";
 import useCMSService from "@/hooks/api/useCMS";
 
 const breadcrumbItems = [{ title: "Content Management", link: "/dashboard/cms" }];
@@ -96,7 +96,7 @@ export default function Page() {
       <Separator />
 
       <CMSTable
-        data={Array.isArray(data?.items) ? data.items : []}
+        data={data?.items && Array.isArray(data.items) ? data.items as CMSItem[] : []}
         totalUsers={totalItems}
         pageCount={pageCount}
         pageNo={pageNo}
