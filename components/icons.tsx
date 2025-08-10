@@ -46,7 +46,7 @@ import {
   PhoneCall,
   Footprints,
   ListChecks,
-  Wrench
+  Wrench,
   Album
 } from "lucide-react";
 
