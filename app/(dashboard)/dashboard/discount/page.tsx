@@ -1,18 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React from "react";
 import { Heading } from "@/components/ui/heading";
-import { useToast } from "@/components/ui/use-toast";
-import { useUser } from "@/context/UserContext";
 import BreadCrumb from "@/components/breadcrumb";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import DiscountTableWrapper from "./discount-table-wrapper";
 
 export default function Page() {

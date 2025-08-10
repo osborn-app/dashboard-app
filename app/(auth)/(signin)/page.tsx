@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import UserAuthForm from "@/components/forms/user-auth-form";
-import Logo from "@/components/Logo";
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -23,9 +22,11 @@ export default async function AuthenticationPage() {
       <div className="p-4 h-full flex items-center">
         <div className="mx-auto flex w-full flex-col justify-center sm:w-[350px]">
           <div className="flex items-center justify-center">
-            <img
+            <Image
               alt="logo"
               src="/image 3.svg"
+              width={200}
+              height={120}
               style={{ scale: "1.8", marginBottom: "10px" }}
             />
             {/* <Logo className="fill-main  w-full h-[120px] border-black border" /> */}
