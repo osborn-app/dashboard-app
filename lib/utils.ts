@@ -95,7 +95,26 @@ export function getNavItemsByRole(role?: string) {
     item.roles.includes(role || "admin"),
   );
 
-  return filteredNavItems;
+  // Filter items within each menu based on role
+  const navItemsWithFilteredSubItems = filteredNavItems.map((item) => {
+    if (item.items) {
+      return {
+        ...item,
+        items: item.items.filter((subItem) =>
+          subItem.roles.includes(role || "admin")
+        ),
+      };
+    }
+    return item;
+  });
+
+  // Remove menus that have no items after filtering
+  return navItemsWithFilteredSubItems.filter((item) => {
+    if (item.items) {
+      return item.items.length > 0; // Only show menu if it has items
+    }
+    return true; // Show menu without items (like single page menus)
+  });
 }
 
 export function getCategoryLabel(category: string): string {
