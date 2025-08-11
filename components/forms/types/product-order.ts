@@ -37,8 +37,27 @@ export const productOrderSchema = z.object({
     address: z.string().optional(),
   }),
   additionals: z.array(z.object({
-    name: z.string(),
-    price: z.coerce.number().min(1, { message: "tolong masukkan harga layanan" }),
+    name: z.string().min(1, "deskripsi layanan"),
+    price: z.string()
+      .optional()
+      .refine((val) => {
+        // If value is empty or undefined, it's valid (will be filtered out later)
+        if (!val || val.trim() === "") return true;
+        
+        // If value exists, validate it's a valid number (including negative numbers)
+        const cleanVal = val.replace(/,/g, "");
+        const num = Number(cleanVal);
+        return !isNaN(num); // Allow negative numbers, just ensure it's a valid number
+      }, { message: "Harga harus berupa angka yang valid" })
+      .transform((val) => {
+        // If value is empty or undefined, return undefined
+        if (!val || val.trim() === "") return undefined;
+        
+        // Transform valid values to numbers (including negative)
+        const cleanVal = val.replace(/,/g, "");
+        const num = Number(cleanVal);
+        return num;
+      }),
   })).optional(),
 }).refine((data) => {
   // Additional validation for required fields when creating
