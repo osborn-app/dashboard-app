@@ -5,7 +5,7 @@ const additionalSchema = z.object({
   price: z.string()
     .optional()
     .refine((val) => {
-      // If value is empty or undefined, it's valid (will be filtered out later)
+      // If value is an empty or undefined, it's valid (will be filtered out later)
       if (!val || val.trim() === "") return true;
       
       // If value exists, validate it's a valid number (including negative numbers)
