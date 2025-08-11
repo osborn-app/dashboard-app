@@ -994,7 +994,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                       <p className="px-3 text-sm">loading</p>
                                     ) : null
                                   }
-                                  // append value attribute when field is not  empty
+                                  // append value attribute when field is not empty
                                   {...(!isEmpty(field.value) && {
                                     value: field.value,
                                   })}
