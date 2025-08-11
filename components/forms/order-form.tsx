@@ -277,6 +277,35 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const watchServicePrice = !(startSelfPickUpField && endSelfPickUpField);
   const servicePrice = serviceField ?? 0;
 
+  // Perbaikan: Memoize schema untuk mencegah re-render yang tidak perlu
+  const currentSchema = useMemo(() => {
+    if (startSelfPickUpField && endSelfPickUpField) {
+      return generateSchema(true, true);
+    } else if (startSelfPickUpField) {
+      return generateSchema(true, false);
+    } else if (endSelfPickUpField) {
+      return generateSchema(false, true);
+    } else {
+      return generateSchema(false, false);
+    }
+  }, [startSelfPickUpField, endSelfPickUpField]);
+
+  // Perbaikan: Update schema hanya jika berubah
+  useEffect(() => {
+    if (currentSchema !== schema) {
+      setSchema(currentSchema);
+    }
+  }, [currentSchema, schema]);
+
+  // Perbaikan: Update showServicePrice dengan memoization
+  const shouldShowServicePrice = useMemo(() => {
+    return !(startSelfPickUpField && endSelfPickUpField);
+  }, [startSelfPickUpField, endSelfPickUpField]);
+
+  useEffect(() => {
+    setShowServicePrice(shouldShowServicePrice);
+  }, [shouldShowServicePrice]);
+
   const { data: customerData, isFetching: isFetchingCustomer } =
     useGetDetailCustomer(form.getValues("customer"));
   const { data: fleetData, isFetching: isFetchingFleet } = useGetDetailFleet(
@@ -343,16 +372,18 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     });
 
     const handleSuccess = () => {
+      setLoading(false);
+      setOpenApprovalModal(false);
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       toast({
         variant: "success",
         title: toastMessage,
       });
-      // router.refresh();
       router.push(`/dashboard/orders`);
     };
 
     const handleError = (error: any) => {
+      setLoading(false);
       setOpenApprovalModal(false);
       toast({
         variant: "destructive",
@@ -367,7 +398,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     };
 
     const handleResponse = (payload: any, action: Function) => {
-      setLoading(true);
       action(payload, {
         onSuccess: handleSuccess,
         onSettled: () => setLoading(false),
@@ -429,25 +459,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const { mutate: calculatePrice } = useOrderCalculate();
 
-  useEffect(() => {
-    if (startSelfPickUpField && endSelfPickUpField) {
-      // Jika start_request.is_self_pickup dan end_request.is_self_pickup keduanya true
-      setSchema(generateSchema(true, true));
-      setShowServicePrice(false);
-    } else if (startSelfPickUpField) {
-      // Jika hanya start_request.is_self_pickup yang true
-      setSchema(generateSchema(true, false));
-      setShowServicePrice(true);
-    } else if (endSelfPickUpField) {
-      // Jika hanya end_request.is_self_pickup yang true
-      setSchema(generateSchema(false, true));
-      setShowServicePrice(true);
-    } else {
-      // Jika keduanya false
-      setSchema(generateSchema(false, false));
-      setShowServicePrice(true);
-    }
-  }, [startSelfPickUpField, endSelfPickUpField]);
+  // useEffect lama sudah diganti dengan memoization di atas
 
   useEffect(() => {
     const payload = {
@@ -539,19 +551,22 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       { orderId, reason },
       {
         onSuccess: () => {
+          setRejectLoading(false);
+          setOpenRejectModal(false);
           queryClient.invalidateQueries({ queryKey: ["orders"] });
           toast({
             variant: "success",
             title: "berhasil ditolak",
           });
-          setOpenRejectModal(false);
           router.refresh();
           router.push(`/dashboard/orders`);
         },
         onSettled: () => {
-          setLoading(false);
+          setRejectLoading(false);
         },
         onError: (error) => {
+          setRejectLoading(false);
+          setOpenRejectModal(false);
           toast({
             variant: "destructive",
             title: "Uh oh! ada sesuatu yang error",
@@ -568,16 +583,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   };
 
   const errors = form.formState.errors;
+  
+  // Perbaikan: Tambahkan state untuk tracking apakah modal sedang diproses
+  const [isModalProcessing, setIsModalProcessing] = useState(false);
+  
   useEffect(() => {
-    if (!isEmpty(errors)) {
+    if (!isEmpty(errors) && isModalProcessing) {
       toast({
         variant: "destructive",
         title: "Harap isi semua field yang wajib diisi sebelum konfirmasi",
       });
-
       setOpenApprovalModal(false);
+      setIsModalProcessing(false);
     }
-  }, [errors]);
+  }, [errors, isModalProcessing]);
 
   const generateMessage = (currentValue: any, defaultValue: any) =>
     currentValue !== defaultValue ? "Data telah diubah" : "";
@@ -666,13 +685,74 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       ? "Apakah Anda Yakin Ingin Mengedit Pesanan ini?"
       : "Apakah Anda Yakin Ingin Mengonfirmasi Pesanan ini?";
 
+  // Perbaikan: Tambahkan handler untuk membuka modal dengan proper state management
+  const handleOpenApprovalModal = () => {
+    // Validasi form terlebih dahulu
+    const formErrors = form.formState.errors;
+    if (!isEmpty(formErrors)) {
+      toast({
+        variant: "destructive",
+        title: "Harap isi semua field yang wajib diisi sebelum konfirmasi",
+      });
+      return;
+    }
+    
+    // Pastikan tidak ada proses yang sedang berjalan
+    if (loading || isModalProcessing) {
+      return;
+    }
+    
+    setIsModalProcessing(true);
+    setOpenApprovalModal(true);
+  };
+
+  // Perbaikan: Handler untuk menutup modal
+  const handleCloseApprovalModal = () => {
+    setOpenApprovalModal(false);
+    setIsModalProcessing(false);
+    setLoading(false);
+  };
+
+  // Perbaikan: Handler untuk reject modal
+  const handleOpenRejectModal = () => {
+    if (rejectLoading) return;
+    setOpenRejectModal(true);
+  };
+
+  const handleCloseRejectModal = () => {
+    setOpenRejectModal(false);
+    setRejectLoading(false);
+  };
+
+  // Perbaikan: Tambahkan debounce untuk mencegah multiple calls
+  const debouncedOpenModal = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    return () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        handleOpenApprovalModal();
+      }, 100);
+    };
+  }, []);
+
+  // Perbaikan: Tambahkan cleanup untuk useEffect
+  useEffect(() => {
+    return () => {
+      setLoading(false);
+      setOpenApprovalModal(false);
+      setIsModalProcessing(false);
+      setRejectLoading(false);
+      setOpenRejectModal(false);
+    };
+  }, []);
+
   return (
     <>
       {openApprovalModal && (
         <ApprovalModal
           heading="pesanan"
           isOpen={openApprovalModal}
-          onClose={() => setOpenApprovalModal(false)}
+          onClose={handleCloseApprovalModal}
           onConfirm={form.handleSubmit(onSubmit)}
           loading={loading}
           title={approvalModalTitle}
@@ -681,7 +761,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       {openRejectModal && (
         <RejectModal
           isOpen={openRejectModal}
-          onClose={() => setOpenRejectModal(false)}
+          onClose={handleCloseRejectModal}
           onConfirm={handleRejectOrder}
           loading={rejectLoading}
         />
@@ -708,9 +788,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     Reset berdasarkan data Pelanggan
                   </Button>
                   <Button
-                    onClick={() => setOpenApprovalModal(true)}
+                    onClick={debouncedOpenModal}
                     className={cn(buttonVariants({ variant: "main" }))}
                     type="button"
+                    disabled={loading || isModalProcessing}
                   >
                     {loading ? <Spinner className="h-4 w-4" /> : "Selesai"}
                   </Button>
@@ -768,9 +849,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   Reset berdasarkan data Pelanggan
                 </Button>
                 <Button
-                  onClick={() => setOpenApprovalModal(true)}
+                  onClick={debouncedOpenModal}
                   className={cn(buttonVariants({ variant: "main" }))}
                   type="button"
+                  disabled={loading || isModalProcessing}
                 >
                   Selesai
                 </Button>
@@ -1657,8 +1739,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               showAdditional={additionalField?.length !== 0}
               form={form}
               detail={detail}
-              handleOpenApprovalModal={() => setOpenApprovalModal(true)}
-              handleOpenRejectModal={() => setOpenRejectModal(true)}
+              handleOpenApprovalModal={debouncedOpenModal}
+              handleOpenRejectModal={handleOpenRejectModal}
               confirmLoading={loading}
               type={lastPath}
               messages={messages}
