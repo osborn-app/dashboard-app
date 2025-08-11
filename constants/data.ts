@@ -107,7 +107,7 @@ export type Employee = {
   longitude?: number; // Optional field
   latitude?: number; // Optional field
   job: string;
-  profile_picture?: string | null; // Profile picture can be a string (URL) or null (if no picture)
+  profile_picture?: string | null; // Profile picture can be a string (URL) or null (if no picture).
 };
 
 export type Drivers = {
