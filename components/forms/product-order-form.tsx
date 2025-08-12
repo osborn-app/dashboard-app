@@ -49,6 +49,7 @@ import {
   useEditProductOrder,
   usePostProductOrder,
 } from "@/hooks/api/useProductOrder";
+import { useAcceptProductOrder } from "@/hooks/api/useProductOrder";
 import { useProductOrderCalculate } from "@/hooks/api/useProductOrder";
 import { ApprovalModal } from "../modal/approval-modal";
 import { NumericFormat } from "react-number-format";
@@ -85,6 +86,7 @@ export const IMG_MAX_LIMIT = 3;
 export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   initialData,
   isEdit,
+  isPreview,
   productOrderId,
 }) => {
   const { user } = useUser();
@@ -121,6 +123,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   const queryClient = useQueryClient();
   const { mutate: createProductOrder } = usePostProductOrder();
   const { mutate: editProductOrder } = useEditProductOrder(finalOrderId && finalOrderId !== "undefined" ? (Array.isArray(finalOrderId) ? finalOrderId[0] : finalOrderId) : "" as string);
+  const { mutate: acceptProductOrder } = useAcceptProductOrder(finalOrderId && finalOrderId !== "undefined" ? (Array.isArray(finalOrderId) ? finalOrderId[0] : finalOrderId) : "" as string);
   const [searchCustomerTerm, setSearchCustomerTerm] = useState("");
   const [searchProductTerm, setSearchProductTerm] = useState("");
   const [searchCustomerDebounce] = useDebounce(searchCustomerTerm, 500);
@@ -409,8 +412,15 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
         handleResponse(payload, editProductOrder);
         break;
       case "preview":
-        // TODO: Implement accept product order functionality
-        // handleResponse(payload, acceptOrder);
+        if (!finalOrderId || finalOrderId === "undefined") {
+          toast({
+            variant: "destructive",
+            title: "Order ID tidak valid",
+          });
+          setLoading(false);
+          return;
+        }
+        handleResponse(payload, acceptProductOrder);
         break;
       default:
                   handleResponse(payload, createProductOrder);
@@ -830,13 +840,23 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           </div>
         )}
         {initialData?.status === "pending" && lastPath === "preview" && (
-          <Button
-            onClick={handleReset}
-            disabled={!form.formState.isDirty}
-            className={cn(buttonVariants({ variant: "outline" }), "text-black")}
-          >
-            Reset berdasarkan data Pelanggan
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleReset}
+              disabled={!form.formState.isDirty}
+              className={cn(buttonVariants({ variant: "outline" }), "text-black")}
+            >
+              Reset berdasarkan data Pelanggan
+            </Button>
+            <Button
+              onClick={() => setOpenApprovalModal(true)}
+              className={cn(buttonVariants({ variant: "main" }))}
+              type="button"
+              disabled={loading}
+            >
+              {loading ? <Spinner className="h-4 w-4" /> : "Konfirmasi Pesanan"}
+            </Button>
+          </div>
         )}
       </div>
       <div className="flex gap-4 flex-col lg:!flex-row">
@@ -859,7 +879,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
               */}
               <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
                 <div className="flex items-end">
-                  {lastPath !== "preview" && isEdit ? (
+                  {(lastPath !== "preview" && isEdit) || isPreview ? (
                     <FormField
                       name="customer"
                       control={form.control}
@@ -892,7 +912,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                                     value: field.value,
                                   })}
                                 >
-                                  {lastPath !== "create" && isEdit && (
+                                  {(lastPath !== "create" && isEdit) || isPreview && (
                                     <Option
                                       value={initialData?.customer?.id?.toString()}
                                     >
@@ -1004,7 +1024,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                   )}
                 </div>
                 <div className="flex items-end">
-                  {lastPath !== "preview" && isEdit ? (
+                  {(lastPath !== "preview" && isEdit) || isPreview ? (
                     <FormField
                       name="product"
                       control={form.control}
@@ -1037,7 +1057,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                                     value: field.value,
                                   })}
                                 >
-                                  {lastPath !== "create" && isEdit && (
+                                  {(lastPath !== "create" && isEdit) || isPreview && (
                                     <Option
                                       value={initialData?.product?.id?.toString()}
                                     >
@@ -1210,7 +1230,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                         Lama Hari
                       </FormLabel>
                       <Select
-                        disabled={!isEdit || loading}
+                        disabled={(!isEdit && !isPreview) || loading}
                         onValueChange={field.onChange}
                         defaultValue={defaultValues.duration}
                         value={field.value}
@@ -1270,6 +1290,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                 defaultValues={defaultValues}
                 loading={loading}
                 isEdit={isEdit}
+                isPreview={isPreview}
                 lists={pengambilan}
                 type="start"
                 handleButton={() => {
@@ -1289,6 +1310,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                 defaultValues={defaultValues}
                 loading={loading}
                 isEdit={isEdit}
+                isPreview={isPreview}
                 lists={pengembalian}
                 type="end"
                 handleButton={() => {
@@ -1317,7 +1339,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                               Rp.
                             </span>
                             <NumericFormat
-                              disabled={!isEdit || loading}
+                              disabled={(!isEdit && !isPreview) || loading}
                               customInput={Input}
                               type="text"
                               className="pl-9 disabled:opacity-90"
@@ -1355,7 +1377,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                               <FormControl className="disabled:opacity-100 h-[40px]">
                                 <Input
                                   key={field_item.id}
-                                  disabled={!isEdit || loading}
+                                  disabled={(!isEdit && !isPreview) || loading}
                                   placeholder="Deskripsi Layanan"
                                   value={field.value ?? ""}
                                   onChange={field.onChange}
@@ -1383,7 +1405,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                                   </span>
                                   <NumericFormat
                                     key={field_item.id}
-                                    disabled={!isEdit || loading}
+                                    disabled={(!isEdit && !isPreview) || loading}
                                     customInput={Input}
                                     type="text"
                                     className="h-[40px] pl-9 disabled:opacity-90"
@@ -1402,7 +1424,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                           );
                         }}
                       />
-                      {isEdit && (
+                      {(isEdit || isPreview) && (
                         <Button
                           type="button"
                           className={cn(
@@ -1558,6 +1580,7 @@ interface DetailSectionProps {
   title: string;
   form: any;
   isEdit?: boolean | null;
+  isPreview?: boolean;
   initialData: any;
   defaultValues: any;
   loading: boolean;
@@ -1572,6 +1595,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
   title,
   form,
   isEdit,
+  isPreview,
   initialData,
   defaultValues,
   loading,
@@ -1683,7 +1707,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                         {lists.map((list, index) => {
                           return (
                             <TabsTrigger
-                              disabled={!isEdit || loading || switchValue}
+                              disabled={(!isEdit && !isPreview) || loading || switchValue}
                               key={index}
                               value={list.value}
                               onClick={() => {
@@ -1714,7 +1738,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
         </div>
         {/* Penanggung Jawab */}
         <div className="flex gap-2">
-          {isEdit ? (
+          {(isEdit || isPreview) ? (
             <FormField
               name={`${type}_request.driver_id`}
               control={form.control}
@@ -1755,7 +1779,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                       >
                         {lastPath !== "preview" &&
                           lastPath !== "create" &&
-                          isEdit && (
+                          (isEdit || isPreview) && (
                             <Option
                               value={
                                 type == "start"
@@ -1862,7 +1886,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                     <FormControl>
                       <Input
                         min={0}
-                        disabled={!isEdit || loading || switchValue}
+                        disabled={(!isEdit && !isPreview) || loading || switchValue}
                         type="number"
                         placeholder="Masukkan jarak (contoh 10 Km)"
                         className={cn("h-[40px]")}
@@ -1886,7 +1910,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
         )}
         {/* Alamat */}
         <div>
-          {!isEdit ? (
+          {(!isEdit && !isPreview) ? (
             <FormItem>
               <FormLabel>Alamat</FormLabel>
               <p
@@ -1928,7 +1952,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                         placeholder="Masukkan alamat lengkap...."
                         className="col-span-3"
                         rows={3}
-                        disabled={!isEdit || loading || switchValue}
+                        disabled={(!isEdit && !isPreview) || loading || switchValue}
                         value={field.value || ""}
                         onChange={field.onChange}
                       />
