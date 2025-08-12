@@ -60,7 +60,7 @@ const fileSchema = z.custom<any>(
   },
   {
     message:
-      "Foto kosong. Pastikan file yang kamu pilih adalah tipe JPEG, JPG, PNG yaa!!.",
+      "Foto kosong. Pastikan file yang kamu pilih adalah tipe JPEG, JPG, PNG",
   },
 );
 const editFileSchema = z.custom<any>(
