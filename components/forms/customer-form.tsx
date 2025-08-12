@@ -53,14 +53,14 @@ const fileSchema = z.custom<any>(
     if (val.length != 0) return false;
     for (let i = 0; i < val.length; i++) {
       const file = val[i];
-      const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
       if (!allowedTypes.includes(file.type)) return false; // Limit file types
     }
     return true;
   },
   {
     message:
-      "Foto kosong. Pastikan file yang kamu pilih adalah tipe JPEG, PNG.",
+      "Foto kosong. Pastikan file yang kamu pilih adalah tipe JPEG, JPG, PNG.",
   },
 );
 const editFileSchema = z.custom<any>(
