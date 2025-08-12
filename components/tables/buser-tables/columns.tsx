@@ -120,14 +120,14 @@ export const BuserColumns: ColumnDef<Buser>[] = [
     cell: ({ row }) => row.original.phone_number,
   },
   {
-    accessorKey: "emergency_number",
-    header: "Nomor Emergency",
-    cell: ({ row }) => row.original.emergency_number,
+    accessorKey: "order.fleet.name",
+    header: "Fleet",
+    cell: ({ row }) => row.original.order.fleet.name,
   },
   {
-    accessorKey: "email",
-    header: "Email",
-    cell: ({ row }) => row.original.email,
+    accessorKey: "order.fleet.plate_number",
+    header: "Plat Nomor",
+    cell: ({ row }) => row.original.order.fleet.plate_number,
   },
   {
     accessorKey: "days_late",

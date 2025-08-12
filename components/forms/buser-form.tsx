@@ -20,27 +20,27 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
           <Input value={initialData?.name || "-"} readOnly />
         </div>
         <div>
-          <label className="font-medium">Email</label>
-          <Input value={initialData?.email || "-"} readOnly />
-        </div>
-        <div>
           <label className="font-medium">Nomor Telepon</label>
           <Input value={initialData?.phone_number || "-"} readOnly />
-        </div>
-      </div>
-      {/* Row 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="font-medium">Nomor Emergency</label>
-          <Input value={initialData?.emergency_number || "-"} readOnly />
         </div>
         <div>
           <label className="font-medium">Status</label>
           <Input value={initialData?.status || "-"} readOnly />
         </div>
+      </div>
+      {/* Row 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="font-medium">Tanggal Lahir</label>
-          <Input value={initialData?.birth_date || "-"} readOnly />
+          <label className="font-medium">Fleet</label>
+          <Input value={initialData?.order.fleet.name || "-"} readOnly />
+        </div>
+        <div>
+          <label className="font-medium">Plat Nomor</label>
+          <Input value={initialData?.order.fleet.plate_number || "-"} readOnly />
+        </div>
+        <div>
+          <label className="font-medium">Tipe Mobil/Motor</label>
+          <Input value={initialData?.order.fleet.type_label || "-"} readOnly />
         </div>
       </div>
       {/* Row 3: Foto KTP */}
@@ -62,21 +62,32 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
         )}
       </div>
       {/* Row 4 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="font-medium">Total Pembayaran</label>
           <Input
             value={
               typeof initialData?.total_payment === "number"
                 ? formatRupiah(initialData.total_payment)
-                : initialData?.total_payment || "-"
+                : initialData?.total_payment || "0"
             }
             readOnly
           />
         </div>
         <div>
-          <label className="font-medium">Jenis Mobil/Motor</label>
-          <Input value={initialData?.vehicle_type || "-"} readOnly />
+          <label className="font-medium">Denda</label>
+          <Input
+            value={
+              typeof initialData?.late_fee_total   === "number"
+                ? formatRupiah(initialData.late_fee_total)
+                : initialData?.late_fee_total || "0"
+            }
+            readOnly
+          />
+        </div>
+        <div>
+          <label className="font-medium">Days Late</label>
+          <Input value={initialData?.days_late || "-"} readOnly />
         </div>
       </div>
       {/* Row 5: Keterangan (full width) */}
