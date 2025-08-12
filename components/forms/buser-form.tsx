@@ -45,15 +45,21 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
       </div>
       {/* Row 3: Foto KTP */}
       <div>
-        <label className="font-medium">Foto KTP</label>
-        {initialData?.id_photo ? (
-          <div className="relative w-48 h-32">
-            <Image
-              src={initialData.id_photo}
-              alt="Foto KTP"
-              fill
-              className="object-cover rounded border"
-            />
+        <label className="font-medium">Berkas</label>
+        {initialData?.order?.customer?.id_cards &&
+        initialData.order.customer.id_cards.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {initialData.order.customer.id_cards.map(
+              (card: any, index: number) => (
+                <div key={card.id} className="relative w-48 h-32">
+                  <img
+                    src={card.photo}
+                    alt={`Foto KTP ${index + 1}`}
+                    className="object-cover rounded border"
+                  />
+                </div>
+              ),
+            )}
           </div>
         ) : (
           <div className="w-48 h-32 bg-gray-200 flex items-center justify-center rounded">
