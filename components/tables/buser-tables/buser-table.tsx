@@ -127,7 +127,7 @@ export function BuserTable<TData, TValue>({
 
   return (
     <>
-      <ScrollArea className="rounded-md border h-[calc(80vh-300px)]">
+      <ScrollArea className="rounded-md border h-[calc(80vh-220px)]">
         <Table className="relative">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

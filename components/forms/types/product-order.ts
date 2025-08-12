@@ -3,6 +3,7 @@ import { z } from "zod";
 export interface ProductOrderFormProps {
   initialData?: any;
   isEdit?: boolean | null;
+  isPreview?: boolean;
   productOrderId?: string;
 }
 
