@@ -48,16 +48,16 @@ import { useGetInsurances } from "@/hooks/api/useInsurance";
 import {
   useEditProductOrder,
   usePostProductOrder,
+  useAcceptProductOrder,
+  useRejectProductOrder,
 } from "@/hooks/api/useProductOrder";
-import { useAcceptProductOrder } from "@/hooks/api/useProductOrder";
 import { useProductOrderCalculate } from "@/hooks/api/useProductOrder";
 import { ApprovalModal } from "../modal/approval-modal";
 import { NumericFormat } from "react-number-format";
 import "dayjs/locale/id";
-// import ProductDetail from "./section/product-detail";
 import CustomerDetail from "./section/customer-detail";
 import DriverDetail from "./section/driver-detail";
-import PriceDetail from "./section/price-detail";
+import ProductPriceDetail from "./section/product-price";
 import Spinner from "../spinner";
 import { RejectModal } from "../modal/reject-modal";
 import Link from "next/link";
@@ -124,6 +124,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   const { mutate: createProductOrder } = usePostProductOrder();
   const { mutate: editProductOrder } = useEditProductOrder(finalOrderId && finalOrderId !== "undefined" ? (Array.isArray(finalOrderId) ? finalOrderId[0] : finalOrderId) : "" as string);
   const { mutate: acceptProductOrder } = useAcceptProductOrder(finalOrderId && finalOrderId !== "undefined" ? (Array.isArray(finalOrderId) ? finalOrderId[0] : finalOrderId) : "" as string);
+  const { mutate: rejectProductOrder } = useRejectProductOrder();
   const [searchCustomerTerm, setSearchCustomerTerm] = useState("");
   const [searchProductTerm, setSearchProductTerm] = useState("");
   const [searchCustomerDebounce] = useDebounce(searchCustomerTerm, 500);
@@ -159,6 +160,71 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
 
   const { data: insurances } = useGetInsurances();
   const { mutate: calculatePrice } = useProductOrderCalculate();
+
+  // Calculate price on component mount with initialData (like in detailorder-form.tsx)
+  useEffect(() => {
+    if (initialData) {
+      const payload = {
+        ...(initialData?.product?.id ? { product_id: +initialData?.product?.id } : { fleet_id: +initialData?.fleet?.id }),
+        customer_id: +initialData?.customer?.id,
+        description: initialData?.description,
+        is_out_of_town: initialData?.is_out_of_town,
+        is_with_driver: initialData?.is_with_driver,
+        insurance_id: +initialData?.insurance?.id,
+        start_request: {
+          is_self_pickup: initialData?.start_request?.is_self_pickup,
+          address: initialData?.start_request?.address,
+          distance: +initialData?.start_request?.distance,
+          driver_id: +initialData?.start_request?.driver_id,
+        },
+        end_request: {
+          is_self_pickup: initialData?.end_request?.is_self_pickup,
+          address: initialData?.end_request?.address,
+          distance: +initialData?.end_request?.distance,
+          driver_id: +initialData?.end_request?.driver_id,
+        },
+        date: initialData?.start_date,
+        duration: +initialData?.duration,
+        discount: +initialData?.discount,
+        service_price: +initialData?.service_price,
+        out_of_town_price: +initialData?.out_of_town_price,
+        out_of_town_price_description: initialData?.out_of_town_price_description,
+        other_price: +initialData?.other_price,
+        other_price_description: initialData?.other_price_description,
+        ...(initialData?.additional_services && {
+          additional_services: initialData?.additional_services.map(
+            (field: { name: string; price: string }) => {
+              return {
+                name: field.name,
+                price: isString(field.price)
+                  ? +field.price.replace(/,/g, '')
+                  : field.price,
+              };
+            },
+          ),
+        }),
+      };
+
+      calculatePrice(payload, {
+        onSuccess: (data) => {
+          setDetail(data.data);
+        },
+      });
+    }
+  }, [
+    initialData?.product?.id,
+    initialData?.fleet?.id,
+    initialData?.description,
+    initialData?.is_out_of_town,
+    initialData?.is_with_driver,
+    initialData?.insurance?.id,
+    initialData?.start_request?.is_self_pickup,
+    initialData?.start_request?.address,
+    initialData?.end_request?.is_self_pickup,
+    initialData?.end_request?.address,
+    initialData?.start_date,
+    initialData?.duration,
+  ]);
 
   const manipulateInsurance = insurances?.data?.items?.map((item: any) => {
     let newName;
@@ -302,6 +368,55 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     setEnd(end);
   }, [now, form.getValues("duration")]);
 
+  const createPayload = (data: ProductOrderFormValues) => ({
+    start_request: {
+      is_self_pickup: data.start_request.is_self_pickup,
+      driver_id: data.start_request.driver_id && data.start_request.driver_id !== "" ? +data.start_request.driver_id : undefined,
+      distance: data.start_request.distance && data.start_request.distance !== "" ? +data.start_request.distance : undefined,
+      address: data.start_request.address,
+    },
+    end_request: {
+      is_self_pickup: data.end_request.is_self_pickup,
+      driver_id: data.end_request.driver_id && data.end_request.driver_id !== "" ? +data.end_request.driver_id : undefined,
+      distance: data.end_request.distance && data.end_request.distance !== "" ? +data.end_request.distance : undefined,
+      address: data.end_request.address,
+    },
+    customer_id: data.customer ? Number(data.customer) : undefined,
+    product_id: data.product ? Number(data.product) : undefined,
+    description: data.description,
+    is_with_driver: false, // Product orders don't use driver
+    is_out_of_town: false, // Product orders don't use out of town
+    date: data.date,
+    duration: data.duration ? Number(data.duration) : undefined,
+    discount: data.discount ? (isString(data.discount) 
+      ? Number(data.discount.replace(/,/g, "")) 
+      : Number(data.discount)) : undefined,
+    insurance_id: data.insurance_id && data.insurance_id !== "0" && data.insurance_id !== "" ? +data.insurance_id : undefined,
+    service_price: data.service_price ? (isString(data.service_price) 
+      ? Number(data.service_price.replace(/,/g, "")) 
+      : Number(data.service_price)) : undefined,
+    ...(data.additionals && data.additionals.length > 0 && {
+      additional_services: data.additionals.map((service: any) => {
+        let price: number;
+        if (typeof service.price === 'string') {
+          const cleanPrice = service.price.replace(/,/g, "");
+          price = Number(cleanPrice);
+        } else {
+          price = Number(service.price);
+        }
+        
+        if (isNaN(price) || price <= 0) {
+          throw new Error("Harga harus berupa angka yang valid");
+        }
+        
+        return {
+          name: service.name,
+          price: price,
+        };
+      }),
+    }),
+  });
+
   const onSubmit = async (data: ProductOrderFormValues) => {
     setLoading(true);
 
@@ -315,63 +430,20 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
       return;
     }
 
-    const createPayload = (data: ProductOrderFormValues) => ({
-      start_request: {
-        is_self_pickup: data.start_request.is_self_pickup,
-        driver_id: data.start_request.driver_id && data.start_request.driver_id !== "" ? +data.start_request.driver_id : undefined,
-        distance: data.start_request.distance && data.start_request.distance !== "" ? +data.start_request.distance : undefined,
-        address: data.start_request.address,
-      },
-      end_request: {
-        is_self_pickup: data.end_request.is_self_pickup,
-        driver_id: data.end_request.driver_id && data.end_request.driver_id !== "" ? +data.end_request.driver_id : undefined,
-        distance: data.end_request.distance && data.end_request.distance !== "" ? +data.end_request.distance : undefined,
-        address: data.end_request.address,
-      },
-      customer_id: data.customer ? Number(data.customer) : undefined,
-      product_id: data.product ? Number(data.product) : undefined,
-      description: data.description,
-      is_with_driver: false, // Product orders don't use driver
-      is_out_of_town: false, // Product orders don't use out of town
-      date: data.date,
-      duration: data.duration ? Number(data.duration) : undefined,
-      discount: data.discount ? (isString(data.discount) 
-        ? Number(data.discount.replace(/,/g, "")) 
-        : Number(data.discount)) : undefined,
-      insurance_id: data.insurance_id && data.insurance_id !== "0" && data.insurance_id !== "" ? +data.insurance_id : undefined,
-      service_price: data.service_price ? (isString(data.service_price) 
-        ? Number(data.service_price.replace(/,/g, "")) 
-        : Number(data.service_price)) : undefined,
-      ...(data.additionals && data.additionals.length > 0 && {
-        additional_services: data.additionals.map((service: any) => {
-          let price: number;
-          if (typeof service.price === 'string') {
-            const cleanPrice = service.price.replace(/,/g, "");
-            price = Number(cleanPrice);
-          } else {
-            price = Number(service.price);
-          }
-          
-          if (isNaN(price) || price <= 0) {
-            throw new Error("Harga harus berupa angka yang valid");
-          }
-          
-          return {
-            name: service.name,
-            price: price,
-          };
-        }),
-      }),
-    });
-
     const handleSuccess = () => {
+      // Invalidate all relevant queries for real-time updates
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+      if (finalOrderId) {
+        queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
+        queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
+      }
       toast({
         variant: "success",
         title: toastMessage,
       });
       // router.refresh();
-      router.push(`/dashboard/orders`);
+      router.push(`/dashboard/product-orders`);
     };
 
     const handleError = (error: any) => {
@@ -581,10 +653,68 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
 
   // function for handle reject
   const handleRejectOrder = (reason: string) => {
-    // TODO: Implement reject product order functionality
-    setRejectLoading(false);
-    setOpenRejectModal(false);
+    console.log("handleRejectOrder called with reason:", reason);
+    console.log("finalOrderId:", finalOrderId);
+    
+    if (!finalOrderId || finalOrderId === "undefined") {
+      toast({
+        variant: "destructive",
+        title: "Order ID tidak valid",
+      });
+      setRejectLoading(false);
+      return;
+    }
+
+    if (!reason || !reason.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Alasan penolakan harus diisi",
+      });
+      return;
+    }
+
+    setRejectLoading(true);
+    console.log("Calling rejectProductOrder with:", { orderId: finalOrderId, reason });
+    
+    rejectProductOrder(
+      { 
+        orderId: finalOrderId, 
+        reason 
+      },
+      {
+        onSuccess: () => {
+          console.log("Reject success");
+          // Invalidate all relevant queries for real-time updates
+          queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
+          if (finalOrderId) {
+            queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
+            queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
+          }
+          toast({
+            variant: "success",
+            title: "Pesanan berhasil ditolak",
+          });
+          router.push(`/dashboard/product-orders`);
+        },
+        onSettled: () => {
+          console.log("Reject settled");
+          setRejectLoading(false);
+          setOpenRejectModal(false);
+        },
+        onError: (error: any) => {
+          console.log("Reject error:", error);
+          toast({
+            variant: "destructive",
+            title: "Uh oh! ada sesuatu yang error",
+            description: `error: ${error?.response?.data?.message}`,
+          });
+        },
+      }
+    );
   };
+
+
 
   const handleReset = () => {
     form.reset();
@@ -696,7 +826,40 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           heading="pesanan"
           isOpen={openApprovalModal}
           onClose={() => setOpenApprovalModal(false)}
-          onConfirm={form.handleSubmit(onSubmit)}
+          onConfirm={() => {
+            const currentData = form.getValues();
+            const payload = createPayload(currentData);
+            acceptProductOrder(payload, {
+              onSuccess: () => {
+                // Invalidate all relevant queries for real-time updates
+                queryClient.invalidateQueries({ queryKey: ["orders"] });
+                queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+                if (finalOrderId) {
+                  queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
+                  queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
+                }
+                toast({
+                  variant: "success",
+                  title: "Pesanan berhasil dikonfirmasi!",
+                });
+                router.push(`/dashboard/product-orders`);
+              },
+              onSettled: () => setLoading(false),
+              onError: (error: any) => {
+                setOpenApprovalModal(false);
+                toast({
+                  variant: "destructive",
+                  title: `Uh oh! ${
+                    //@ts-ignore
+                    error?.response?.data?.message == "Customer must be verified."
+                      ? "Customer belum diverifikasi"
+                      : //@ts-ignore
+                        error?.response?.data?.message
+                  }`,
+                });
+              },
+            });
+          }}
           loading={loading}
           title={approvalModalTitle}
         />
@@ -751,7 +914,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
         )}
               {lastPath !== "edit" && (
                 <Link
-                  href={`/dashboard/orders/${finalOrderId}/edit`}
+                  href={`/dashboard/product-orders/${finalOrderId}/edit`}
                   onClick={(e) => {
                     if (user?.role !== "admin") {
                       e.preventDefault();
@@ -812,7 +975,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
 
             {lastPath !== "edit" && (
               <Link
-                                  href={`/dashboard/orders/${finalOrderId}/edit`}
+                href={`/dashboard/orders/${finalOrderId}/edit`}
                 className={cn(
                   buttonVariants({ variant: "outline" }),
                   "text-black",
@@ -866,7 +1029,6 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
             className="space-y-8 w-full basis-2/3"
           >
             <div className="relative space-y-8" id="parent">
-
 
               {/*
               perhitungan lebar content
@@ -1550,7 +1712,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           )}
 
           {!openCustomerDetail && !openProductDetail && !openDriverDetail && (
-            <PriceDetail
+            <ProductPriceDetail
               innerRef={detailRef}
               initialData={initialData}
               isEdit={isEdit ?? false}
@@ -1561,6 +1723,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
               handleOpenApprovalModal={() => setOpenApprovalModal(true)}
               handleOpenRejectModal={() => setOpenRejectModal(true)}
               confirmLoading={loading}
+              rejectLoading={rejectLoading}
               type={lastPath}
               messages={messages}
             />

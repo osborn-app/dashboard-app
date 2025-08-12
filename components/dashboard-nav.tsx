@@ -42,6 +42,8 @@ export function DashboardNav({
   const reimburseCount = reimburseStatusCount?.data;
   const verificationCount = customerVerificationCount?.data;
 
+
+
   const navItems = useMemo(() => {
     return [...items];
   }, [items]);
@@ -129,13 +131,8 @@ export function DashboardNav({
                 {isMobileNav || (!isMinimized && !isMobileNav) ? (
                   <div className="flex justify-between w-full items-center">
                     <span className="ml-2 mr-2 truncate">{item.title}</span>
-                    <div className="flex items-center gap-2">
-                      {item.title === "Pesanan" && !isFetchingOrderStatus && (
-                        <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
-                          {orderCount?.[0]?.count ?? 0}
-                        </div>
-                      )}
-                    </div>
+                                         <div className="flex items-center gap-2">
+                     </div>
                   </div>
                 ) : (
                   ""
@@ -157,7 +154,7 @@ export function DashboardNav({
                           if (setOpen) setOpen(false);
                         }}
                       >
-                        <span
+                        <div
                           className={cn(
                             "group flex items-center rounded-md p-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
                             isSubActive ? "bg-[#EDEFF3] text-main" : "transparent",
@@ -165,8 +162,32 @@ export function DashboardNav({
                           )}
                         >
                           <SubIcon className="h-4 w-4" />
-                          <span className="ml-2 truncate">{subItem.title}</span>
-                        </span>
+                          <div className="flex justify-between w-full items-center">
+                            <span className="ml-2 truncate">{subItem.title}</span>
+                            <div className="flex items-center gap-2">
+                              {subItem.title === "Pesanan Kendaraan" && !isFetchingOrderStatus && (
+                                <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                                  {orderCount?.[0]?.count ?? 0}
+                                </div>
+                              )}
+                              {subItem.title === "Customers" && !isFetchingCustomerStatus && (
+                                <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                                  {customerCount?.[0]?.count ?? 0}
+                                </div>
+                              )}
+                              {subItem.title === "Verifikasi Tambahan" && !isFetchingVerificationStatus && (
+                                <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                                  {verificationCount?.[0]?.count ?? 0}
+                                </div>
+                              )}
+                              {subItem.title === "Reimburse" && !isFetchingReimburseStatus && (
+                                <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                                  {reimburseCount?.[0]?.count ?? 0}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </Link>
                     );
                   })}
@@ -202,25 +223,6 @@ export function DashboardNav({
                   {isMobileNav || (!isMinimized && !isMobileNav) ? (
                     <div className="flex justify-between w-full">
                       <span className="ml-2 mr-2 truncate">{item.title}</span>
-
-                      {item.title === "Customers" &&
-                        !isFetchingCustomerStatus && (
-                          <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
-                            {customerCount?.[0]?.count ?? 0}
-                          </div>
-                        )}
-                      {item.title === "Verifikasi Tambahan" &&
-                        !isFetchingVerificationStatus && (
-                          <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
-                            {verificationCount?.[0]?.count ?? 0}
-                          </div>
-                        )}
-                      {item.title === "Reimburse" &&
-                        !isFetchingReimburseStatus && (
-                          <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
-                            {reimburseCount?.[0]?.count ?? 0}
-                          </div>
-                        )}
                     </div>
                   ) : (
                     ""

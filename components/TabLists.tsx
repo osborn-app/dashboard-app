@@ -2,6 +2,7 @@
 import React from "react";
 import { TabsList, TabsTrigger } from "./ui/tabs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ListProps {
   name: string;
@@ -16,6 +17,7 @@ const TabLists: React.FC<TabListsProps> = ({ lists }) => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const createQueryString = React.useCallback(
     (name: string, value: string) => {
@@ -33,6 +35,9 @@ const TabLists: React.FC<TabListsProps> = ({ lists }) => {
           key={index}
           value={list.value}
           onClick={() => {
+            // Invalidate queries to trigger data re-fetch when tab changes
+            queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+            queryClient.invalidateQueries({ queryKey: ["orders"] });
             router.push(
               pathname + "?" + createQueryString("status", list.value),
             );

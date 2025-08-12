@@ -12,7 +12,7 @@ export default function Page({ params }: { params: { productOrderId: number } })
 
   const breadcrumbItems = [
     { title: "Product Orders", link: "/dashboard/product-orders" },
-    { title: "Preview Product Order", link: "/dashboard/product-orders/preview" },
+    { title: "Tinjau Product Order", link: "/dashboard/product-orders/tinjau" },
   ];
 
   const { data, isFetching } = useGetDetailProductOrder(params.productOrderId);
@@ -24,8 +24,7 @@ export default function Page({ params }: { params: { productOrderId: number } })
       {!isFetching && data?.data && (
         <ProductOrderForm 
           initialData={data.data} 
-          isEdit={false}
-          isPreview={true}
+          isEdit={true}
           productOrderId={params.productOrderId.toString()} 
         />
       )}

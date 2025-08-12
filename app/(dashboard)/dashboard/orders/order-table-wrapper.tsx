@@ -13,6 +13,7 @@ import { OrderTable } from "@/components/tables/order-tables/order-table";
 import { TabsContent } from "@/components/ui/tabs";
 import { useGetOrders } from "@/hooks/api/useOrder";
 import { SortingState } from "@tanstack/react-table";
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
@@ -36,6 +37,7 @@ const OrderTableWrapper = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const page = Number(searchParams.get("page")) || 1;
   const pageLimit = Number(searchParams.get("limit")) || 10;
   const defaultTab = searchParams.get("status") ?? "pending";
@@ -115,18 +117,26 @@ const OrderTableWrapper = () => {
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+    // Invalidate queries to trigger data re-fetch when search changes
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
   };
 
   const handleTypeChange = (value: string) => {
     setSelectedType(value);
+    // Invalidate queries to trigger data re-fetch when fleet type changes
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
   };
 
   const handleDateRangeChange = (range: DateRange) => {
     setDateRange(range);
+    // Invalidate queries to trigger data re-fetch when date range changes
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
   };
 
   const handleClearDate = () => {
     setDateRange({ from: undefined, to: undefined });
+    // Invalidate queries to trigger data re-fetch when date range is cleared
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
   };
 
   const lists = [

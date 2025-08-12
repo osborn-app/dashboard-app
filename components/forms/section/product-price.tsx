@@ -1,23 +1,10 @@
 import { Icons } from "@/components/icons";
 import Spinner from "@/components/spinner";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { formatRupiah } from "@/lib/utils";
-import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
-import dayjs from "dayjs";
-import { ChevronDown, EyeIcon, Info, Link2 } from "lucide-react";
+import { EyeIcon, Info, Link2 } from "lucide-react";
 
 interface PriceDetailProps {
   form: any;
@@ -35,7 +22,7 @@ interface PriceDetailProps {
   innerRef?: any;
 }
 
-const ProductPriceDetail: React.FC<PriceDetailProps> = ({
+const PriceDetail: React.FC<PriceDetailProps> = ({
   form,
   detail,
   handleOpenApprovalModal,
@@ -60,110 +47,36 @@ const ProductPriceDetail: React.FC<PriceDetailProps> = ({
     >
       <div className="">
         <h4 className="text-center font-semibold text-xl mb-4 mt-4">
-          Rincian Harga{" "}
-          {type === "product" 
-            ? "Product Order"
-            : form.getValues("is_with_driver") ? "Dengan Supir" : "Lepas Kunci"
-          }
+          Rincian Harga Product Order
         </h4>
         <div className="flex flex-col justify-between gap-8 h-full">
           <div className="overflow-auto">
             <div className="border border-neutral-200 rounded-md p-[10px] mb-4 ">
-              {type === "product" ? (
-                <>
-                  <p className="font-medium text-sm text-neutral-700 mb-1">
-                    Nama Product
+              <p className="font-medium text-sm text-neutral-700 mb-1">
+                Nama Product
+              </p>
+              <div className="flex justify-between mb-1">
+                <p className="font-medium text-sm text-neutral-700">
+                  {initialData?.product?.name || detail?.product?.name || detail?.product_name
+                    ? `${initialData?.product?.name || detail?.product?.name || detail?.product_name} (per hari)`
+                    : "Product"}
+                </p>
+                <p className="font-semibold text-base">
+                  {formatRupiah(detail?.rent_price || detail?.product?.price || detail?.product_price || initialData?.product?.price || 0)}
+                </p>
+              </div>
+
+              {detail?.product && form.getValues("duration") && detail?.total_rent_price && (
+                <div className="flex justify-between mb-1">
+                  <p className="font-medium text-sm text-neutral-700">
+                    {form.getValues("duration")} Hari
                   </p>
-                  <div className="flex justify-between mb-1">
-                    <p className="font-medium text-sm text-neutral-700">
-                      {detail?.product?.name || initialData?.product?.name || detail?.product_name
-                        ? `${detail?.product?.name || initialData?.product?.name || detail?.product_name} (per hari)`
-                        : "Product"}
-                    </p>
-                    <p className="font-semibold text-base">
-                      {formatRupiah(detail?.rent_price || detail?.product?.price || detail?.product_price || 0)}
-                    </p>
-                  </div>
-
-                  {detail?.product && form.getValues("duration") && detail?.total_rent_price && (
-                    <div className="flex justify-between mb-1">
-                      <p className="font-medium text-sm text-neutral-700">
-                        {form.getValues("duration")} Hari
-                      </p>
-                      <p className="font-semibold text-base">
-                        {formatRupiah(detail?.total_rent_price)}
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  {type !== "product" && form.getValues("is_with_driver") && (
-                    <>
-                      <p className="font-medium text-sm text-neutral-700">
-                        Dengan Supir
-                      </p>
-                      <div className="flex justify-between">
-                        <p className="font-medium text-sm text-neutral-700">
-                          {form.getValues("is_out_of_town")
-                            ? "Luar Kota"
-                            : "Dalam Kota"}
-                        </p>
-                        <p className="font-semibold text-base">
-                          {formatRupiah(detail?.total_driver_price ?? 0)}
-                        </p>
-                      </div>
-                    </>
-                  )}
-
-                  {type !== "product" && (
-                    <>
-                      <p className="font-medium text-sm text-neutral-700 mb-1">
-                        Nama Armada
-                      </p>
-                      <div className="flex justify-between mb-1">
-                        <p className="font-medium text-sm text-neutral-700">
-                          {detail?.fleet?.name
-                            ? `${detail?.fleet?.name} (per 24 jam)`
-                            : "Armada"}
-                        </p>
-                        <p className="font-semibold text-base">
-                          {formatRupiah(detail?.fleet?.price ?? 0)}
-                        </p>
-                      </div>
-
-                      {detail?.fleet && (
-                        <div className="flex justify-between mb-1">
-                          <p className="font-medium text-sm text-neutral-700">
-                            {form.getValues("duration")} Hari
-                          </p>
-                          <p className="font-semibold text-base">
-                            {formatRupiah(detail?.total_rent_price)}
-                          </p>
-                        </div>
-                                             )}
-                     </>
-                   )}
-                 </>
-               )}
-              <Separator className="mb-1" />
-              {type !== "product" && form.getValues("is_out_of_town") && (
-                <>
-                  <p className="font-medium text-sm text-neutral-700 mb-1">
-                    Pemakaian
+                  <p className="font-semibold text-base">
+                    {formatRupiah(detail?.total_rent_price)}
                   </p>
-                  <div className="flex justify-between mb-1">
-                    <p className="font-medium text-sm text-neutral-700">
-                      Luar Kota
-                    </p>
-                    <p className="font-semibold text-base">
-                      {formatRupiah(detail?.out_of_town_price ?? 0)}
-                    </p>
-                  </div>
-
-                  <Separator className="mb-1" />
-                </>
+                </div>
               )}
+              <Separator className="mb-1" />
               {(showServicePrice || showAdditional) && (
                 <p className="font-medium text-sm text-neutral-700 mb-1">
                   Biaya Layanan
@@ -233,37 +146,7 @@ const ProductPriceDetail: React.FC<PriceDetailProps> = ({
                   </div>
                 </>
               )}
-              {type !== "product" && detail?.weekend_days?.length >= 1 && detail?.fleet && (
-                <>
-                  <p className="font-medium text-sm text-neutral-700 mb-1">
-                    Harga Akhir Pekan
-                  </p>
-                  <div className="flex justify-between mb-1">
-                    {detail?.weekend_days.length == 1 ? (
-                      <p className="font-medium text-sm text-neutral-700">
-                        {dayjs(detail?.weekend_days)
-                          .locale("id")
-                          .format("dddd, D MMMM YYYY")}
-                      </p>
-                    ) : (
-                      <div className="flex">
-                        <p className="font-medium text-sm text-neutral-700 mr-4">
-                          {detail?.weekend_days.length} Hari
-                        </p>
-                        <DropdownWeekend
-                          days={detail?.weekend_days}
-                          weekendPrice={detail?.weekend_price}
-                        />
-                      </div>
-                    )}
-                    <p className="font-semibold text-base">
-                      {formatRupiah(
-                        (detail?.weekend_days?.length || 0) * (detail?.weekend_price || 0),
-                      )}
-                    </p>
-                  </div>
-                </>
-              )}
+
               <Separator className="mb-1" />
               <div className="flex justify-between mb-1">
                 <p className="font-medium text-sm text-neutral-700">Subtotal</p>
@@ -434,32 +317,4 @@ const ProductPriceDetail: React.FC<PriceDetailProps> = ({
   );
 };
 
-export default ProductPriceDetail;
-
-interface DropdownWeekendProps {
-  days: string[];
-  weekendPrice?: number;
-}
-
-const DropdownWeekend: React.FC<DropdownWeekendProps> = ({
-  days,
-  weekendPrice,
-}) => {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
-        <ChevronDown />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        {days?.map((day, index) => (
-          <DropdownMenuItem key={index} className="justify-between w-[224px]">
-            <p>{dayjs(day).locale("id").format("D MMMM YYYY")}</p>
-            <span className="text-slate-500">
-              {formatRupiah(weekendPrice as number)}
-            </span>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
+export default PriceDetail;
