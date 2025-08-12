@@ -36,11 +36,6 @@ const breadcrumbItems = [
   // Calculate price when product order data is loaded
   useEffect(() => {
     if (productOrder?.data) {
-      // Debug: Log the product data
-      console.log("Product Order Data:", productOrder.data);
-      console.log("Product ID:", productOrder.data.product?.id);
-      console.log("Product ID type:", typeof productOrder.data.product?.id);
-      
       const calculatePayload = {
         customer_id: parseInt(productOrder.data.customer_id?.toString() || "0"),
         product_id: parseInt(productOrder.data.product?.id?.toString() || "0"), // Use product_id for product orders

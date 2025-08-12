@@ -1,69 +1,85 @@
 "use client";
 
+import { AlertForceModal } from "@/components/modal/alertforce-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { useDeleteProductOrder } from "@/hooks/api/useProductOrder";
+import { useQueryClient } from "@tanstack/react-query";
+import { Edit, MoreHorizontal, Trash, Eye } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useDeleteProductOrder } from "@/hooks/api/useProductOrder";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
 
 interface CellActionProps {
   data: any;
 }
 
 export const ProductOrderCellAction: React.FC<CellActionProps> = ({ data }) => {
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [force, setForce] = useState(false);
+
   const router = useRouter();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isForceDelete, setIsForceDelete] = useState(false);
+  const queryClient = useQueryClient();
 
-  const deleteProductOrderMutation = useDeleteProductOrder(data.id, isForceDelete);
+  const { mutateAsync: deleteProductOrder } = useDeleteProductOrder(data.id, force);
 
-  const handleDelete = async () => {
-    try {
-      await deleteProductOrderMutation.mutateAsync(data.id);
-      toast.success("Product order berhasil dihapus");
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      toast.error("Gagal menghapus product order");
-    }
-  };
-
-  const handleForceDelete = async () => {
-    setIsForceDelete(true);
-    try {
-      await deleteProductOrderMutation.mutateAsync(data.id);
-      toast.success("Product order berhasil dihapus secara permanen");
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      toast.error("Gagal menghapus product order secara permanen");
-    } finally {
-      setIsForceDelete(false);
-    }
+  const onConfirm = async () => {
+    setLoading(true);
+    deleteProductOrder(data.id, {
+      onSuccess: () => {
+        // Invalidate all relevant queries for real-time updates
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+        queryClient.invalidateQueries({ queryKey: ["orders", data.id] });
+        queryClient.invalidateQueries({ queryKey: ["orders", "product", data.id] });
+        toast({
+          variant: "success",
+          title: "Product order berhasil dihapus!",
+        });
+        router.refresh();
+      },
+      onError: (error) => {
+        toast({
+          variant: "destructive",
+          title: "Oops! Ada error.",
+          //@ts-ignore
+          description: `Something went wrong: ${error?.response?.data?.message}`,
+        });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+      },
+      onSettled: () => {
+        // Invalidate all relevant queries for real-time updates
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+        queryClient.invalidateQueries({ queryKey: ["orders", data.id] });
+        queryClient.invalidateQueries({ queryKey: ["orders", "product", data.id] });
+        setLoading(false);
+        setOpen(false);
+      },
+    });
   };
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <AlertForceModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        onConfirm={onConfirm}
+        loading={loading}
+        data={data}
+        checked={force}
+        setChecked={setForce}
+      />
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
             <span className="sr-only">Open menu</span>
             <MoreHorizontal className="h-4 w-4" />
@@ -71,7 +87,6 @@ export const ProductOrderCellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link href={`/dashboard/product-orders/${data.id}/detail`}>
               <Eye className="mr-2 h-4 w-4" />
@@ -84,43 +99,18 @@ export const ProductOrderCellAction: React.FC<CellActionProps> = ({ data }) => {
               Edit
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-red-600"
+            className="text-red-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(true);
+            }}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash className="mr-2 h-4 w-4" />
             Hapus
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Product Order</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus product order ini? Tindakan ini
-              tidak dapat dibatalkan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Hapus
-            </AlertDialogAction>
-            <AlertDialogAction
-              onClick={handleForceDelete}
-              className="bg-red-800 hover:bg-red-900"
-            >
-              Hapus Permanen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }; 

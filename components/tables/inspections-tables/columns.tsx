@@ -104,6 +104,22 @@ export const SimpleInspectionsColumns: ColumnDef<Fleet | Inspection>[] = [
     },
   },
   {
+    accessorKey: "color",
+    header: "Warna",
+    cell: ({ row }) => {
+      const data = row.original;
+      let color = "N/A";
+
+      if (isFleet(data)) {
+        color = data.color;
+      } else if (isInspection(data) && data.fleet) {
+        color = data.fleet.color;
+      }
+
+      return <span className="capitalize">{color}</span>;
+    },
+  },
+  {
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
