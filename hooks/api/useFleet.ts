@@ -190,3 +190,20 @@ export const useUpdateFleetStatusToAvailable = () => {
     },
   });
 };
+
+// New hook specifically for fleet table with network visibility
+export const useFleetTableData = (params: any) => {
+  const axiosAuth = useAxiosAuth();
+
+  const getFleetTableData = async () => {
+    const response = await axiosAuth.get(baseEndpoint, { params });
+    return response.data;
+  };
+
+  return useQuery({
+    queryKey: ["fleets", "table", params],
+    queryFn: getFleetTableData,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
+};

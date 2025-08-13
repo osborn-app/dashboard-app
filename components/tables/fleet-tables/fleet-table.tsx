@@ -38,6 +38,8 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useUser } from "@/context/UserContext";
+import { useFleetTableData } from "@/hooks/api/useFleet";
+import Spinner from "@/components/spinner";
 
 interface DataTableProps<TData, TValue> {
   data: TData[];
@@ -82,6 +84,22 @@ export function FleetTable<TData, TValue>({
   );
   const [searchDebounce] = useDebounce(searchQuery, 500);
   const [statusDebounce] = useDebounce(statusFilter, 300);
+
+  // Build query parameters for API call
+  const queryParams = {
+    page: fallbackPage,
+    limit: fallbackPerPage,
+    ...(searchDebounce && { q: searchDebounce }),
+    ...(statusDebounce && { status: statusDebounce }),
+  };
+
+  // Use the hook to fetch data with network visibility
+  const { data: fleetData, isLoading, error } = useFleetTableData(queryParams);
+
+  // Use fetched data or fallback to props data
+  const tableData = fleetData?.items || data || [];
+  const tablePageCount = fleetData?.meta?.total_items ? Math.ceil(fleetData.meta.total_items / fallbackPerPage) : pageCount;
+  const tableTotalUsers = fleetData?.meta?.total_items || totalUsers;
 
   // Create query string
   const createQueryString = React.useCallback(
@@ -132,9 +150,9 @@ export function FleetTable<TData, TValue>({
   }, [pageIndex, pageSize, searchDebounce, statusDebounce]);
 
   const table = useReactTable({
-    data,
+    data: tableData,
     columns: filteredColumns,
-    pageCount: pageCount ?? -1,
+    pageCount: tablePageCount ?? -1,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {
@@ -225,6 +243,23 @@ export function FleetTable<TData, TValue>({
     }
   }, [status]);
 
+  // Show loading state
+  if (isLoading) {
+    return <Spinner />;
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error loading fleet data</p>
+          <p className="text-sm text-gray-500">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-5">
@@ -242,9 +277,10 @@ export function FleetTable<TData, TValue>({
             <SelectValue placeholder="Filter Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="available">Available</SelectItem>
-            <SelectItem value="preparation">Preparation</SelectItem>
+            <SelectItem value="all">Semua Status</SelectItem>
+            <SelectItem value="available">Tersedia</SelectItem>
+            <SelectItem value="preparation">Persiapan</SelectItem>
+            <SelectItem value="ordered">Sedang Disewa</SelectItem>
           </SelectContent>
         </Select>
       </div>

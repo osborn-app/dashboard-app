@@ -31,21 +31,6 @@ const page = async ({ searchParams }: paramsProps) => {
   const q = searchParams.q || null;
   const status = searchParams.status || null;
 
-  // Build query string with status filter
-  let queryString = `page=${page}&limit=${pageLimit}`;
-  if (q) queryString += `&q=${q}`;
-  if (status) queryString += `&status=${status}`;
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_HOST}/fleets?${queryString}`,
-    {
-      headers: {
-        Authorization: `Bearer ${session?.user.accessToken}`,
-      },
-    },
-  );
-  const fleetRes = await res.json();
-
   return (
     <>
       <div className="flex-1 space-y-4  p-4 md:p-8 pt-6">
@@ -65,10 +50,10 @@ const page = async ({ searchParams }: paramsProps) => {
         </div>
         <Separator />
         <FleetTable
-          data={fleetRes.items || []}
+          data={[]}
           searchKey="name"
-          totalUsers={fleetRes.meta?.total_items}
-          pageCount={Math.ceil(fleetRes.meta?.total_items / pageLimit)}
+          totalUsers={0}
+          pageCount={0}
           pageNo={page}
         />
       </div>
