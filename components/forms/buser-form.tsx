@@ -1,7 +1,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { formatRupiah } from "@/lib/utils";
+import { formatRupiah, formatDateTime } from "@/lib/utils";
 import CustomImage from "../custom-image";
 
 interface BuserFormProps {
@@ -104,9 +104,18 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
         </div>
       </div>
       {/* Row 5: Keterangan (full width) */}
-      <div>
-        <label className="font-medium">Keterangan</label>
-        <Input value={initialData?.notes || "-"} readOnly />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="font-medium">Keterangan</label>
+          <Input value={initialData?.notes || "-"} readOnly />
+        </div>
+        <div>
+          <label className="font-medium">Sewa Berakhir</label>
+          <Input
+            value={formatDateTime(new Date(initialData?.order?.end_date || ""))}
+            readOnly
+          />
+        </div>
       </div>
       {/* Row 6: Action buttons (kanan) */}
       {children && <div className="flex justify-end gap-4">{children}</div>}

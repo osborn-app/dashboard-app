@@ -101,7 +101,7 @@ export function getNavItemsByRole(role?: string) {
       return {
         ...item,
         items: item.items.filter((subItem) =>
-          subItem.roles.includes(role || "admin")
+          subItem.roles.includes(role || "admin"),
         ),
       };
     }
@@ -142,3 +142,19 @@ export function getProductStatusLabel(status: string): string {
       return status;
   }
 }
+
+export const formatDateTime = (
+  date: Date,
+  locale: string = "en-GB",
+  timeZone: string = "Asia/Jakarta",
+) => {
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone,
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  };
+  return new Intl.DateTimeFormat(locale, options).format(date) + " WIB";
+};
