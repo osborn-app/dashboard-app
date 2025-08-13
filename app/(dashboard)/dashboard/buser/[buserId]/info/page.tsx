@@ -63,6 +63,7 @@ export default function InfoPage({ params }: { params: { buserId: string } }) {
               vehicle_type:
                 buser.order?.fleet?.vehicle_type ?? buser.vehicle_type ?? "-",
               notes: buser.order?.description ?? buser.notes ?? "-",
+              resolve_notes: buser.notes || "-",
             }}
           >
             {buser.status !== "selesai" && (
