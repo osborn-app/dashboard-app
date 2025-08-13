@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 // Product types enum to match backend
 const ProductTypes = {
+  ALL: 'all',
   IPHONE: 'iphone',
   CAMERA: 'camera',
   OUTDOOR: 'outdoor',
@@ -46,8 +47,8 @@ const ProductOrderTableWrapper = () => {
   const q = searchParams.get("q");
 
   // >>> PERUBAHAN DI SINI <<<
-  // Inisialisasi 'type' dengan 'iphone' jika tidak ada di URL
-  const initialType = searchParams.get("type") || ProductTypes.IPHONE;
+  // Inisialisasi 'type' dengan 'all' jika tidak ada di URL
+  const initialType = searchParams.get("type") || ProductTypes.ALL;
   const startDate = searchParams.get("start_date") || "";
   const endDate = searchParams.get("end_date") || "";
   const orderColumn = searchParams.get("order_column") || "";
@@ -59,18 +60,32 @@ const ProductOrderTableWrapper = () => {
   const [selectedType, setSelectedType] = React.useState<string>(initialType);
   const [searchDebounce] = useDebounce(searchQuery, 500);
 
-  const getOrderParams = (status: string) => ({
-    limit: pageLimit,
-    page: page,
-    q: searchDebounce,
-    status: status,
-    order_type: "product",
-    ...(selectedType ? { type: selectedType } : {}),
-    ...(startDate ? { start_date: startDate } : {}),
-    ...(endDate ? { end_date: endDate } : {}),
-    ...(orderBy ? { order_by: orderBy } : {}),
-    ...(orderColumn ? { order_column: orderColumn } : {}),
-  });
+  const getOrderParams = (status: string) => {
+    const baseParams = {
+      limit: pageLimit,
+      page: page,
+      q: searchDebounce,
+      status: status,
+      ...(startDate ? { start_date: startDate } : {}),
+      ...(endDate ? { end_date: endDate } : {}),
+      ...(orderBy ? { order_by: orderBy } : {}),
+      ...(orderColumn ? { order_column: orderColumn } : {}),
+    };
+
+    // Jika "All" dipilih, kirim order_type=product
+    if (selectedType === ProductTypes.ALL) {
+      return {
+        ...baseParams,
+        order_type: "product",
+      };
+    }
+
+    // Jika filter spesifik dipilih, kirim type=value
+    return {
+      ...baseParams,
+      ...(selectedType ? { type: selectedType } : {}),
+    };
+  };
 
   const { data: pendingData, isFetching: isFetchingPendingData } = useGetProductOrders(
     getOrderParams(OrderStatus.PENDING),
@@ -164,6 +179,7 @@ const ProductOrderTableWrapper = () => {
   ];
 
   const productTypeOptions = [
+    { label: "Semua Kategori", value: ProductTypes.ALL },
     { label: "iPhone", value: ProductTypes.IPHONE },
     { label: "Camera", value: ProductTypes.CAMERA },
     { label: "Outdoor", value: ProductTypes.OUTDOOR },
