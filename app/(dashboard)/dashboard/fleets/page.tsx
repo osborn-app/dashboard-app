@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "Fleets | Transgo",
   description: "Fleets page",
 };
-
+// change to ssr
 const page = async ({ searchParams }: paramsProps) => {
   const session = await getServerSession(authOptions);
   const userRole = session?.user?.role || "admin";
