@@ -77,7 +77,7 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
       {/* Row 4 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="font-medium">Total Pembayaran</label>
+          <label className="font-medium">Harga Total Unit</label>
           <Input
             value={
               typeof initialData?.total_payment === "number"
@@ -88,7 +88,7 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
           />
         </div>
         <div>
-          <label className="font-medium">Denda</label>
+          <label className="font-medium">Total Pembayaran setelah denda</label>
           <Input
             value={
               typeof initialData?.late_fee_total === "number"
@@ -117,6 +117,15 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
           />
         </div>
       </div>
+      {/* Row 6: Keterangan Penyelesaian (full width) - hanya tampil jika ada */}
+      {initialData?.status === "selesai" && initialData?.resolve_notes && (
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label className="font-medium">Keterangan Penyelesaian</label>
+            <Input value={initialData?.resolve_notes || "-"} readOnly />
+          </div>
+        </div>
+      )}
       {/* Row 6: Action buttons (kanan) */}
       {children && <div className="flex justify-end gap-4">{children}</div>}
       <Separator />
