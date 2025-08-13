@@ -35,7 +35,7 @@ export const approveOrder = (id: string | number) => {
 };
 
 export const rejectOrder = (id: string | number, data: { reason: string }) => {
-  return client.put(`/orders/${id}/reject`, data);
+  return client.post(`/orders/${id}/reject`, data);
 };
 
 export const deleteOrder = (id: string | number) => {

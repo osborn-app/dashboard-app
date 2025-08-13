@@ -14,6 +14,7 @@ interface GetOrdersParams {
   order_by?: string | undefined;
   order_column?: string | undefined;
   order_type?: string;
+  type?: string;
 }
 
 export const useGetOrders = (

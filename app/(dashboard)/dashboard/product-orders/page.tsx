@@ -35,7 +35,24 @@ const page = async ({ searchParams }: paramsProps) => {
 
   await queryClient.prefetchQuery({
     queryKey: ["orders", "product"],
-    queryFn: () => getProductOrders(),
+    queryFn: () => {
+      const type = searchParams.type || "all";
+      const params: any = {
+        status: searchParams.status || "pending",
+        page: 1,
+        limit: 10,
+      };
+
+      // Jika "all" dipilih, kirim order_type=product
+      if (type === "all") {
+        params.order_type = "product";
+      } else {
+        // Jika filter spesifik dipilih, kirim type=value
+        params.type = type;
+      }
+
+      return getProductOrders(params);
+    },
   });
 
   const defaultTab = searchParams.status ?? "pending";
