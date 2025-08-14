@@ -6,7 +6,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   getFilteredRowModel,
@@ -21,9 +20,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { CellAction } from "./cell-action";
 import { Inspection, Fleet } from "./columns";
 import { useRouter } from "next/navigation";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DoubleArrowLeftIcon,
+  DoubleArrowRightIcon,
+} from "@radix-ui/react-icons";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 // Type guard to check if data is Fleet
 const isFleet = (data: any): data is Fleet => {
@@ -39,22 +51,35 @@ interface InspectionsTableProps {
   columns: ColumnDef<any>[];
   data: any[];
   status: "active" | "pending_repair" | "completed";
+  searchKey?: string;
+  pageNo?: number;
+  totalUsers?: number;
+  pageCount?: number;
+  pageSizeOptions?: number[];
 }
 
 export const InspectionsTable: React.FC<InspectionsTableProps> = ({
   columns,
   data,
   status,
+  searchKey,
+  pageNo = 1,
+  totalUsers = 0,
+  pageCount = 1,
+  pageSizeOptions = [10, 20, 30, 40, 50],
 }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page")) || pageNo;
+  const limit = Number(searchParams.get("limit")) || 10;
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
@@ -81,9 +106,9 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
   };
 
   return (
-    <div>
-      <div className="rounded-md border">
-        <Table>
+    <>
+      <ScrollArea className="rounded-md border h-[calc(110vh-220px)]">
+        <Table className="relative">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -137,31 +162,110 @@ export const InspectionsTable: React.FC<InspectionsTableProps> = ({
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+
+      {/* Pagination */}
+      <div className="flex flex-col gap-2 sm:flex-row items-center justify-between space-x-2 py-4">
+        <div className="flex items-center space-x-2">
+          <p className="whitespace-nowrap text-sm font-medium">
+            Data per halaman
+          </p>
+          <Select
+            value={`${limit}`}
+            onValueChange={(value) => {
+              const newSearchParams = new URLSearchParams(
+                searchParams.toString(),
+              );
+              newSearchParams.set("limit", value);
+              newSearchParams.set("page", "1");
+              router.push(`${pathname}?${newSearchParams.toString()}`, {
+                scroll: false,
+              });
+            }}
+          >
+            <SelectTrigger className="h-8 w-[70px]">
+              <SelectValue placeholder={limit} />
+            </SelectTrigger>
+            <SelectContent side="top">
+              {pageSizeOptions.map((pageSize) => (
+                <SelectItem key={pageSize} value={`${pageSize}`}>
+                  {pageSize}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div className="space-x-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Halaman {page} dari {pageCount}
+          </span>
           <Button
             variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            className="h-8 w-8 p-0"
+            onClick={() => {
+              const newSearchParams = new URLSearchParams(
+                searchParams.toString(),
+              );
+              newSearchParams.set("page", "1");
+              router.push(`${pathname}?${newSearchParams.toString()}`, {
+                scroll: false,
+              });
+            }}
+            disabled={page <= 1}
           >
-            Previous
+            <DoubleArrowLeftIcon className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            className="h-8 w-8 p-0"
+            onClick={() => {
+              const newSearchParams = new URLSearchParams(
+                searchParams.toString(),
+              );
+              newSearchParams.set("page", String(page - 1));
+              router.push(`${pathname}?${newSearchParams.toString()}`, {
+                scroll: false,
+              });
+            }}
+            disabled={page <= 1}
           >
-            Next
+            <ChevronLeftIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => {
+              const newSearchParams = new URLSearchParams(
+                searchParams.toString(),
+              );
+              newSearchParams.set("page", String(page + 1));
+              router.push(`${pathname}?${newSearchParams.toString()}`, {
+                scroll: false,
+              });
+            }}
+            disabled={page >= pageCount}
+          >
+            <ChevronRightIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            className="h-8 w-8 p-0"
+            onClick={() => {
+              const newSearchParams = new URLSearchParams(
+                searchParams.toString(),
+              );
+              newSearchParams.set("page", String(pageCount));
+              router.push(`${pathname}?${newSearchParams.toString()}`, {
+                scroll: false,
+              });
+            }}
+            disabled={page >= pageCount}
+          >
+            <DoubleArrowRightIcon className="h-4 w-4" />
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };

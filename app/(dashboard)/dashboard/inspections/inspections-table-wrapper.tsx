@@ -24,12 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import {
-  DoubleArrowLeftIcon,
-  DoubleArrowRightIcon,
-} from "@radix-ui/react-icons";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 interface InspectionsTableWrapperProps {
   pageNo?: number;
@@ -98,6 +92,15 @@ const InspectionsTableWrapper = ({
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+    // Update URL with search parameter
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    if (query) {
+      newSearchParams.set("q", query);
+    } else {
+      newSearchParams.delete("q");
+    }
+    newSearchParams.set("page", "1"); // Reset to first page when searching
+    router.push(`${pathname}?${newSearchParams.toString()}`, { scroll: false });
   };
 
   const handleFleetTypeChange = (type: string) => {
@@ -106,30 +109,7 @@ const InspectionsTableWrapper = ({
         status: defaultTab,
         fleet_type: type,
         q: searchDebounce,
-      })}`,
-    );
-  };
-
-  // Pagination handlers
-  const handlePageChange = (newPage: number) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        status: defaultTab,
-        page: newPage,
-        q: searchDebounce,
-        fleet_type: currentFleetType,
-      })}`,
-    );
-  };
-
-  const handlePageSizeChange = (newPageSize: number) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        status: defaultTab,
-        page: 1,
-        limit: newPageSize,
-        q: searchDebounce,
-        fleet_type: currentFleetType,
+        page: 1, // Reset to first page when changing filter
       })}`,
     );
   };
@@ -179,6 +159,7 @@ const InspectionsTableWrapper = ({
           status: defaultTab,
           q: searchDebounce,
           fleet_type: currentFleetType,
+          page: 1, // Reset to first page when search changes
         })}`,
       );
     }
@@ -203,7 +184,7 @@ const InspectionsTableWrapper = ({
               <SelectValue placeholder="Pilih tipe fleet" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Semua</SelectItem>
+              <SelectItem value="all">Semua Tipe</SelectItem>
               <SelectItem value="car">Mobil</SelectItem>
               <SelectItem value="motorcycle">Motor</SelectItem>
             </SelectContent>
@@ -227,6 +208,12 @@ const InspectionsTableWrapper = ({
                 columns={SimpleInspectionsColumns}
                 data={tersediaData.data}
                 status="active"
+                searchKey="name"
+                pageNo={page}
+                totalUsers={tersediaData.data.meta?.total_items || 0}
+                pageCount={Math.ceil(
+                  (tersediaData.data.meta?.total_items || 0) / limit,
+                )}
               />
             )}
           {!isFetchingTersedia &&
@@ -249,6 +236,12 @@ const InspectionsTableWrapper = ({
                 columns={OngoingInspectionsColumns}
                 data={ongoingData.data}
                 status="pending_repair"
+                searchKey="name"
+                pageNo={page}
+                totalUsers={ongoingData.data.meta?.total_items || 0}
+                pageCount={Math.ceil(
+                  (ongoingData.data.meta?.total_items || 0) / limit,
+                )}
               />
             )}
           {!isFetchingOngoing &&
@@ -271,6 +264,12 @@ const InspectionsTableWrapper = ({
                 columns={CompletedInspectionsColumns}
                 data={selesaiData.data}
                 status="completed"
+                searchKey="name"
+                pageNo={page}
+                totalUsers={selesaiData.data.meta?.total_items || 0}
+                pageCount={Math.ceil(
+                  (selesaiData.data.meta?.total_items || 0) / limit,
+                )}
               />
             )}
           {!isFetchingSelesai &&
@@ -281,79 +280,6 @@ const InspectionsTableWrapper = ({
             )}
         </>
       </TabsContent>
-
-      {/* Pagination */}
-      {!currentData.isLoading && totalItems > 0 && (
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            Menampilkan {(page - 1) * limit + 1} sampai{" "}
-            {Math.min(page * limit, totalItems)} dari {totalItems} data
-          </div>
-          <div className="flex items-center space-x-6 lg:space-x-8">
-            <div className="flex items-center space-x-2">
-              <p className="text-sm font-medium">Baris per halaman</p>
-              <Select
-                value={`${limit}`}
-                onValueChange={(value) => {
-                  handlePageSizeChange(Number(value));
-                }}
-              >
-                <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue placeholder={limit} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Halaman {page} dari {pageCount}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => handlePageChange(1)}
-                disabled={page <= 1}
-              >
-                <span className="sr-only">Go to first page</span>
-                <DoubleArrowLeftIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page <= 1}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <ChevronLeftIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page >= pageCount}
-              >
-                <span className="sr-only">Go to next page</span>
-                <ChevronRightIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => handlePageChange(pageCount)}
-                disabled={page >= pageCount}
-              >
-                <span className="sr-only">Go to last page</span>
-                <DoubleArrowRightIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

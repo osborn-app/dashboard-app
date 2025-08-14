@@ -8,6 +8,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InspectionsTableWrapper from "./inspections-table-wrapper";
+import InspectionsDailyReport from "@/components/inspections-daily-report";
 import {
   dehydrate,
   HydrationBoundary,
@@ -124,21 +125,31 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
           <Heading title="Inspections" />
         </div>
         <Separator />
-        <Tabs defaultValue={defaultTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="tersedia">Tersedia</TabsTrigger>
-            <TabsTrigger value="ongoing">Sedang Berjalan</TabsTrigger>
-            <TabsTrigger value="selesai">Selesai</TabsTrigger>
-          </TabsList>
-          <HydrationBoundary state={dehydrate(queryClient)}>
-            <InspectionsTableWrapper
-              pageNo={page}
-              pageLimit={pageLimit}
-              searchQuery={q as string}
-              fleetType={fleetType as string}
-            />
-          </HydrationBoundary>
-        </Tabs>
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* Left Column - Tabs Content */}
+          <div className="xl:col-span-3">
+            <Tabs defaultValue={defaultTab} className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="tersedia">Tersedia</TabsTrigger>
+                <TabsTrigger value="ongoing">Sedang Berjalan</TabsTrigger>
+                <TabsTrigger value="selesai">Selesai</TabsTrigger>
+              </TabsList>
+              <HydrationBoundary state={dehydrate(queryClient)}>
+                <InspectionsTableWrapper
+                  pageNo={page}
+                  pageLimit={pageLimit}
+                  searchQuery={q as string}
+                  fleetType={fleetType as string}
+                />
+              </HydrationBoundary>
+            </Tabs>
+          </div>
+
+          {/* Right Column - Daily Report */}
+          <div className="xl:col-span-1">
+            <InspectionsDailyReport />
+          </div>
+        </div>
       </div>
     </>
   );

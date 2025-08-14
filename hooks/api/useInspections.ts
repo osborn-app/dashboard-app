@@ -124,3 +124,17 @@ export const useCompleteInspection = () => {
     },
   });
 };
+
+
+export const useGetDailyReport = (params?: any) => {
+  const axiosAuth = useAxiosAuth();
+
+  const getDailyReportFn = () => {
+    return axiosAuth.get("/inspections/report/daily", { params });
+  };
+
+  return useQuery({
+    queryKey: ["inspections", "daily", params],
+    queryFn: getDailyReportFn,
+  });
+};
