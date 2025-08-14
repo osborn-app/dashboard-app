@@ -6,6 +6,7 @@ import { assignBusserTask } from "@/client/busserClient";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { useInvalidateBuserQueries } from "@/hooks/api/useBuser";
+import { cn } from "@/lib/utils";
 
 export type Buser = {
   id: string;
@@ -33,12 +34,49 @@ export type Buser = {
       type: string;
       color: string;
     };
+    payment_status: string;
   };
   days_late: number;
-  late_fee_total: number;
 };
 
 const BACKEND_BASE_URL = "https://dev.api.transgo.id/api";
+
+// Payment status styling functions
+export function getStatusVariant(status: string): string {
+  switch (status) {
+    case "pending":
+      return "bg-red-50 text-red-500";
+    case "waiting":
+      return "bg-yellow-50 text-yellow-500";
+    case "partially paid":
+      return "bg-yellow-50 text-yellow-500";
+    case "confirmed":
+      return "bg-orange-50 text-orange-500";
+    case "on_going":
+      return "bg-blue-50 text-blue-500";
+    case "on_progress":
+      return "bg-blue-50 text-blue-500";
+    case "done":
+      return "bg-green-50 text-green-500";
+    case "rejected":
+      return "bg-red-50 text-red-500";
+    case "failed":
+      return "bg-gray-50 text-gray-500";
+    default:
+      return "bg-red-50 text-red-500";
+  }
+}
+
+export function getPaymentStatusLabel(payment_status: string): string {
+  switch (payment_status) {
+    case "pending":
+      return "Belum Dibayar";
+    case "done":
+      return "Lunas";
+    default:
+      return payment_status;
+  }
+}
 
 const statusColorMap: Record<string, string> = {
   peringatan: "bg-yellow-50 text-yellow-500",
@@ -133,17 +171,20 @@ export const BuserColumns: ColumnDef<Buser>[] = [
     accessorKey: "days_late",
     header: "Hari Terlambat",
     cell: ({ row }) => (
-      <span className="text-sm font-medium">
-        {row.original.days_late} hari
-      </span>
+      <span className="text-sm font-medium">{row.original.days_late} hari</span>
     ),
   },
   {
-    accessorKey: "late_fee_total",
-    header: "Total Denda",
+    accessorKey: "order.payment_status",
+    header: "Status Pembayaran",
     cell: ({ row }) => (
-      <span className="text-sm font-medium text-red-600">
-        Rp {row.original.late_fee_total?.toLocaleString() || 0}
+      <span
+        className={cn(
+          getStatusVariant(row.original.order.payment_status),
+          "text-xs font-medium flex items-center justify-center py-1 rounded-md text-center",
+        )}
+      >
+        {getPaymentStatusLabel(row.original.order.payment_status)}
       </span>
     ),
   },

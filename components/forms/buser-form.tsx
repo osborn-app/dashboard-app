@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { formatRupiah, formatDateTime } from "@/lib/utils";
 import CustomImage from "../custom-image";
+import { useGetBuserTotals } from "@/hooks/api/useBuser";
 
 interface BuserFormProps {
   initialData: any;
@@ -10,6 +11,43 @@ interface BuserFormProps {
 }
 
 const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
+  // Get grouped buser data for estimated totals
+  const customerId = initialData?.order?.customer?.id?.toString();
+  const fleetId = initialData?.order?.fleet?.id?.toString();
+
+  // Debug logging for IDs
+  console.log("Customer ID:", customerId);
+  console.log("Fleet ID:", fleetId);
+  console.log("Initial Data:", initialData);
+  console.log("Should fetch:", !!(customerId && fleetId));
+
+  const {
+    data: totalsData,
+    isLoading: isLoadingTotals,
+    error: totalsError,
+  } = useGetBuserTotals(
+    {
+      customer_id: customerId || "",
+      fleet_id: fleetId || "",
+    },
+    {
+      enabled: !!(customerId && fleetId), // Only fetch if both IDs exist
+    },
+  );
+
+  console.log("Totals Data Response:", totalsData);
+  console.log("Is Loading:", isLoadingTotals);
+  console.log("Error:", totalsError);
+
+  // Get the first item from the data array
+  const totalsItem = totalsData?.data?.data?.[0];
+  const estimatedPaidTotal = totalsItem?.estimated_paid_total || 0;
+  const estimatedUnpaidTotal = totalsItem?.estimated_unpaid_total || 0;
+
+  console.log("Totals Item:", totalsItem);
+  console.log("Estimated Paid Total:", estimatedPaidTotal);
+  console.log("Estimated Unpaid Total:", estimatedUnpaidTotal);
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Tinjau Buser</h2>
@@ -75,46 +113,39 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
         )}
       </div>
       {/* Row 4 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="font-medium">Harga Total Unit</label>
+          <label className="font-medium">Total Terbayar</label>
           <Input
             value={
-              typeof initialData?.total_payment === "number"
-                ? formatRupiah(initialData.total_payment)
-                : initialData?.total_payment || "0"
+              isLoadingTotals
+                ? "Loading..."
+                : totalsError
+                ? "Error loading data"
+                : formatRupiah(estimatedPaidTotal)
             }
             readOnly
           />
         </div>
         <div>
-          <label className="font-medium">Total Pembayaran setelah denda</label>
+          <label className="font-medium">Total Belum Terbayar</label>
           <Input
             value={
-              typeof initialData?.late_fee_total === "number"
-                ? formatRupiah(initialData.late_fee_total)
-                : initialData?.late_fee_total || "0"
+              isLoadingTotals
+                ? "Loading..."
+                : totalsError
+                ? "Error loading data"
+                : formatRupiah(estimatedUnpaidTotal)
             }
             readOnly
           />
-        </div>
-        <div>
-          <label className="font-medium">Days Late</label>
-          <Input value={initialData?.days_late || "-"} readOnly />
         </div>
       </div>
       {/* Row 5: Keterangan (full width) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <div>
           <label className="font-medium">Keterangan</label>
           <Input value={initialData?.notes || "-"} readOnly />
-        </div>
-        <div>
-          <label className="font-medium">Sewa Berakhir</label>
-          <Input
-            value={formatDateTime(new Date(initialData?.order?.end_date || ""))}
-            readOnly
-          />
         </div>
       </div>
       {/* Row 6: Keterangan Penyelesaian (full width) - hanya tampil jika ada */}
