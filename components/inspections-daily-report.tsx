@@ -13,7 +13,7 @@ import {
 
 interface DailyReportData {
   report_date: string;
-  total_active_fleets: number;
+  total_fleets: number;
   monthly_target: number;
   deficit_from_last_month: number;
   inspections_completed_this_month: number;
@@ -57,7 +57,7 @@ export default function InspectionsDailyReport() {
 
   const data: DailyReportData = reportData.data || {
     report_date: new Date().toISOString().split("T")[0],
-    total_active_fleets: 0,
+    total_fleets: 0,
     monthly_target: 0,
     deficit_from_last_month: 0,
     inspections_completed_this_month: 0,
@@ -109,15 +109,15 @@ export default function InspectionsDailyReport() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-blue-800 text-sm font-medium">
               <TrendingUp className="h-4 w-4" />
-              Total Fleet Aktif
+              Total Fleet
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-900">
-              {(data.total_active_fleets || 0).toLocaleString()}
+              {(data.total_fleets || 0).toLocaleString()}
             </div>
             <p className="text-xs text-blue-700 mt-1">
-              Fleet yang tersedia untuk inspeksi
+              Total fleet yang tersedia untuk inspeksi
             </p>
           </CardContent>
         </Card>
