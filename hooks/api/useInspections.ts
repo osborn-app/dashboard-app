@@ -6,20 +6,7 @@ export const useGetAvailableFleets = (type?: string, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getAvailableFleetsFn = () => {
-    const queryParams = new URLSearchParams();
-
-    if (type) {
-      queryParams.append("type", type);
-    }
-
-    if (params?.q) {
-      queryParams.append("q", params.q);
-    }
-
-    const queryString = queryParams.toString();
-    const url = `/inspections/available${queryString ? `?${queryString}` : ""}`;
-
-    return axiosAuth.get(url);
+    return axiosAuth.get("/inspections/available", { params });
   };
 
   return useQuery({
@@ -124,7 +111,6 @@ export const useCompleteInspection = () => {
     },
   });
 };
-
 
 export const useGetDailyReport = (params?: any) => {
   const axiosAuth = useAxiosAuth();

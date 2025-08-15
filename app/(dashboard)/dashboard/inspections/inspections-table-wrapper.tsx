@@ -92,23 +92,14 @@ const InspectionsTableWrapper = ({
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
-    // Update URL with search parameter
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-    if (query) {
-      newSearchParams.set("q", query);
-    } else {
-      newSearchParams.delete("q");
-    }
-    newSearchParams.set("page", "1"); // Reset to first page when searching
-    router.push(`${pathname}?${newSearchParams.toString()}`, { scroll: false });
   };
 
   const handleFleetTypeChange = (type: string) => {
     router.push(
       `${pathname}?${createQueryString({
         status: defaultTab,
-        fleet_type: type,
-        q: searchDebounce,
+        fleet_type: type === "all" ? null : type,
+        q: searchDebounce || null,
         page: 1, // Reset to first page when changing filter
       })}`,
     );
@@ -120,49 +111,74 @@ const InspectionsTableWrapper = ({
       case "tersedia":
         return {
           data: tersediaData?.data?.data || tersediaData?.data || [],
-          meta: tersediaData?.data?.meta,
+          total: tersediaData?.data?.total || 0,
+          page: tersediaData?.data?.page || 1,
+          limit: tersediaData?.data?.limit || 10,
+          totalPages: tersediaData?.data?.totalPages || 1,
           isLoading: isFetchingTersedia,
         };
       case "ongoing":
         return {
           data: ongoingData?.data?.data || ongoingData?.data || [],
-          meta: ongoingData?.data?.meta,
+          total: ongoingData?.data?.total || 0,
+          page: ongoingData?.data?.page || 1,
+          limit: ongoingData?.data?.limit || 10,
+          totalPages: ongoingData?.data?.totalPages || 1,
           isLoading: isFetchingOngoing,
         };
       case "selesai":
         return {
           data: selesaiData?.data?.data || selesaiData?.data || [],
-          meta: selesaiData?.data?.meta,
+          total: selesaiData?.data?.total || 0,
+          page: selesaiData?.data?.page || 1,
+          limit: selesaiData?.data?.limit || 10,
+          totalPages: selesaiData?.data?.totalPages || 1,
           isLoading: isFetchingSelesai,
         };
       default:
         return {
           data: tersediaData?.data?.data || tersediaData?.data || [],
-          meta: tersediaData?.data?.meta,
+          total: tersediaData?.data?.total || 0,
+          page: tersediaData?.data?.page || 1,
+          limit: tersediaData?.data?.limit || 10,
+          totalPages: tersediaData?.data?.totalPages || 1,
           isLoading: isFetchingTersedia,
         };
     }
   };
 
   const currentData = getCurrentData();
-  const totalItems = currentData.meta?.total_items || 0;
-  const pageCount = Math.ceil(totalItems / limit);
+  const totalItems = currentData.total;
+  const pageCount = currentData.totalPages;
+
+  // Handle tab change
+  useEffect(() => {
+    router.push(
+      `${pathname}?${createQueryString({
+        status: defaultTab,
+        q: searchDebounce || null,
+        fleet_type: currentFleetType === "all" ? null : currentFleetType,
+        page: 1, // Reset to first page when tab changes
+      })}`,
+    );
+  }, [
+    defaultTab,
+    searchDebounce,
+    currentFleetType,
+    pathname,
+    createQueryString,
+    router,
+  ]);
 
   useEffect(() => {
-    if (
-      searchDebounce !== undefined ||
-      searchDebounce !== "" ||
-      searchDebounce
-    ) {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          q: searchDebounce,
-          fleet_type: currentFleetType,
-          page: 1, // Reset to first page when search changes
-        })}`,
-      );
-    }
+    router.push(
+      `${pathname}?${createQueryString({
+        status: defaultTab,
+        q: searchDebounce || null,
+        fleet_type: currentFleetType === "all" ? null : currentFleetType,
+        page: 1, // Reset to first page when search changes
+      })}`,
+    );
   }, [
     searchDebounce,
     defaultTab,
@@ -210,10 +226,8 @@ const InspectionsTableWrapper = ({
                 status="active"
                 searchKey="name"
                 pageNo={page}
-                totalUsers={tersediaData.data.meta?.total_items || 0}
-                pageCount={Math.ceil(
-                  (tersediaData.data.meta?.total_items || 0) / limit,
-                )}
+                totalUsers={tersediaData?.data?.total || 0}
+                pageCount={tersediaData?.data?.totalPages || 1}
               />
             )}
           {!isFetchingTersedia &&
@@ -230,22 +244,21 @@ const InspectionsTableWrapper = ({
         <>
           {isFetchingOngoing && <Spinner />}
           {!isFetchingOngoing &&
-            ongoingData?.data &&
-            ongoingData.data.length > 0 && (
+            ongoingData?.data?.data &&
+            ongoingData.data.data.length > 0 && (
               <InspectionsTable
                 columns={OngoingInspectionsColumns}
-                data={ongoingData.data}
+                data={ongoingData.data.data}
                 status="pending_repair"
                 searchKey="name"
                 pageNo={page}
-                totalUsers={ongoingData.data.meta?.total_items || 0}
-                pageCount={Math.ceil(
-                  (ongoingData.data.meta?.total_items || 0) / limit,
-                )}
+                totalUsers={ongoingData.data.total || 0}
+                pageCount={ongoingData.data.totalPages || 1}
               />
             )}
           {!isFetchingOngoing &&
-            (!ongoingData?.data || ongoingData.data.length === 0) && (
+            (!ongoingData?.data?.data ||
+              ongoingData.data.data.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">
                 Tidak ada inspeksi yang sedang berlangsung
               </div>
@@ -258,22 +271,21 @@ const InspectionsTableWrapper = ({
         <>
           {isFetchingSelesai && <Spinner />}
           {!isFetchingSelesai &&
-            selesaiData?.data &&
-            selesaiData.data.length > 0 && (
+            selesaiData?.data?.data &&
+            selesaiData.data.data.length > 0 && (
               <InspectionsTable
                 columns={CompletedInspectionsColumns}
-                data={selesaiData.data}
+                data={selesaiData.data.data}
                 status="completed"
                 searchKey="name"
                 pageNo={page}
-                totalUsers={selesaiData.data.meta?.total_items || 0}
-                pageCount={Math.ceil(
-                  (selesaiData.data.meta?.total_items || 0) / limit,
-                )}
+                totalUsers={selesaiData.data.total || 0}
+                pageCount={selesaiData.data.totalPages || 1}
               />
             )}
           {!isFetchingSelesai &&
-            (!selesaiData?.data || selesaiData.data.length === 0) && (
+            (!selesaiData?.data?.data ||
+              selesaiData.data.data.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">
                 Tidak ada inspeksi yang selesai
               </div>
