@@ -5,8 +5,12 @@ import React from "react";
 import { assignBusserTask } from "@/client/busserClient";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { useInvalidateBuserQueries } from "@/hooks/api/useBuser";
+import {
+  useInvalidateBuserQueries,
+  useGetBuserTotals,
+} from "@/hooks/api/useBuser";
 import { cn } from "@/lib/utils";
+import { formatRupiah } from "@/lib/utils";
 
 export type Buser = {
   id: string;
@@ -84,6 +88,43 @@ const statusColorMap: Record<string, string> = {
   urgent: "bg-red-50 text-red-500",
   tindak_lanjut: "bg-gray-50 text-gray-800",
   selesai: "bg-green-50 text-green-500",
+};
+
+// Custom cell component for estimated unpaid total
+const EstimatedUnpaidTotalCell: React.FC<{ row: Buser }> = ({ row }) => {
+  const customerId = row.order?.customer?.id?.toString();
+  const fleetId = row.order?.fleet?.id?.toString();
+
+  const {
+    data: totalsData,
+    isLoading: isLoadingTotals,
+    error: totalsError,
+  } = useGetBuserTotals(
+    {
+      customer_id: customerId || "",
+      fleet_id: fleetId || "",
+    },
+    {
+      enabled: !!(customerId && fleetId),
+    },
+  );
+
+  const totalsItem = totalsData?.data?.data?.[0];
+  const estimatedUnpaidTotal = totalsItem?.estimated_unpaid_total || 0;
+
+  if (isLoadingTotals) {
+    return <span className="text-sm text-gray-500">Loading...</span>;
+  }
+
+  if (totalsError) {
+    return <span className="text-sm text-red-500">Error</span>;
+  }
+
+  return (
+    <span className="text-sm font-medium text-red-600">
+      {formatRupiah(estimatedUnpaidTotal)}
+    </span>
+  );
 };
 
 const ActionButton: React.FC<{ row: Buser }> = ({ row }) => {
@@ -175,18 +216,9 @@ export const BuserColumns: ColumnDef<Buser>[] = [
     ),
   },
   {
-    accessorKey: "order.payment_status",
-    header: "Status Pembayaran",
-    cell: ({ row }) => (
-      <span
-        className={cn(
-          getStatusVariant(row.original.order.payment_status),
-          "text-xs font-medium flex items-center justify-center py-1 rounded-md text-center",
-        )}
-      >
-        {getPaymentStatusLabel(row.original.order.payment_status)}
-      </span>
-    ),
+    accessorKey: "estimatedUnpaidTotal",
+    header: "Total Belum Terbayar",
+    cell: ({ row }) => <EstimatedUnpaidTotalCell row={row.original} />,
   },
   {
     accessorKey: "status",
