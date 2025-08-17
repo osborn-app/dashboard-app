@@ -14,6 +14,7 @@ import BuserForm from "@/components/forms/buser-form";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ReviewPage({
   params,
@@ -28,6 +29,7 @@ export default function ReviewPage({
   const { data, isFetching } = useGetDetailBuser(params.buserId);
   const buser = data?.data;
   const invalidateBuserQueries = useInvalidateBuserQueries();
+  const { toast } = useToast();
 
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
@@ -35,7 +37,11 @@ export default function ReviewPage({
 
   const handleAman = async () => {
     if (!notes.trim()) {
-      alert("Mohon isi keterangan terlebih dahulu");
+      toast({
+        variant: "destructive",
+        title: "Keterangan Diperlukan",
+        description: "Mohon isi keterangan terlebih dahulu",
+      });
       return;
     }
 
@@ -44,9 +50,18 @@ export default function ReviewPage({
       await resolveBusser(params.buserId, notes);
       // Invalidate all buser queries to refresh the table
       invalidateBuserQueries();
+      toast({
+        variant: "success",
+        title: "Berhasil!",
+        description: "Kasus buser berhasil diselesaikan",
+      });
       router.back();
     } catch (e) {
-      alert("Gagal memindahkan ke selesai");
+      toast({
+        variant: "destructive",
+        title: "Gagal!",
+        description: "Gagal memindahkan ke selesai",
+      });
     } finally {
       setLoading(false);
     }

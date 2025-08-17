@@ -11,6 +11,7 @@ import {
 } from "@/hooks/api/useBuser";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 
 export type Buser = {
   id: string;
@@ -131,6 +132,7 @@ const ActionButton: React.FC<{ row: Buser }> = ({ row }) => {
   const status = row.status;
   const router = useRouter();
   const invalidateBuserQueries = useInvalidateBuserQueries();
+  const { toast } = useToast();
 
   if (status === "urgent") {
     return (
@@ -143,11 +145,20 @@ const ActionButton: React.FC<{ row: Buser }> = ({ row }) => {
             await assignBusserTask(row.id, 1); // TODO: ganti id sesuai user login
             // Invalidate all buser queries to refresh the table
             invalidateBuserQueries();
+            toast({
+              variant: "success",
+              title: "Berhasil!",
+              description: "Kasus berhasil dipindahkan ke Tindak Lanjut",
+            });
             router.push(
               "/dashboard/buser?status=tindak_lanjut&page=1&limit=10&q=",
             );
           } catch (e) {
-            alert("Gagal memindahkan ke Tindak Lanjut");
+            toast({
+              variant: "destructive",
+              title: "Gagal!",
+              description: "Gagal memindahkan ke Tindak Lanjut",
+            });
           }
         }}
       >
