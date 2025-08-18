@@ -20,7 +20,7 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { useDeleteAddon, useEditAddon } from "@/hooks/api/useProduct";
 import { useQueryClient } from "@tanstack/react-query";
-import { Edit, MoreHorizontal, Trash, Eye, ToggleLeft, ToggleRight } from "lucide-react";
+import { Edit, MoreHorizontal, Trash, ToggleLeft, ToggleRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -90,7 +90,7 @@ export const AddonCellAction: React.FC<AddonCellActionProps> = ({ data }) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Hapus Add-on</AlertDialogTitle>
             <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus add-on "{data?.name}"? 
+              Apakah Anda yakin ingin menghapus add-on `{data?.name}`? 
               Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
