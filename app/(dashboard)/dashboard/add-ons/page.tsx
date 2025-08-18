@@ -16,7 +16,7 @@ import { getAddons } from "@/client/productClient";
 import AddonTableWrapper from "./addon-table-wrapper";
 
 const breadcrumbItems = [{ title: "Add-ons", link: "/dashboard/add-ons" }];
-
+// redeploy
 export const metadata: Metadata = {
   title: "Add-ons | Transgo",
   description: "Manage add-ons for products and fleets",
