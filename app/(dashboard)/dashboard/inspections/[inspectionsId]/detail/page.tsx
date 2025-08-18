@@ -5,7 +5,7 @@ import InspectionsForm from "@/components/forms/inspections-form";
 import Spinner from "@/components/spinner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useGetInspectionDetail } from "@/hooks/api/useInspections";
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,9 @@ interface DetailPageProps {
 
 export default function InspectionDetailPage({ params }: DetailPageProps) {
   const router = useRouter();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
   const { data: inspection, isLoading } = useGetInspectionDetail(
     params.inspectionsId,
   );
@@ -59,6 +62,16 @@ export default function InspectionDetailPage({ params }: DetailPageProps) {
     ) : (
       <Badge className="bg-red-500">Tidak Aman</Badge>
     );
+  };
+
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setIsImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setIsImageModalOpen(false);
+    setSelectedImage(null);
   };
 
   return (
@@ -228,9 +241,16 @@ export default function InspectionDetailPage({ params }: DetailPageProps) {
                               src={photo}
                               alt={`Foto perbaikan ${index + 1}`}
                               className="w-full h-48 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                              onClick={() => window.open(photo, "_blank")}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleImageClick(photo);
+                              }}
                             />
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                            <div
+                              className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center pointer-events-none"
+                              onClick={() => handleImageClick(photo)}
+                            >
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                 <p className="text-white text-sm font-medium">
                                   Klik untuk memperbesar
@@ -246,14 +266,18 @@ export default function InspectionDetailPage({ params }: DetailPageProps) {
                           src={inspection.data.repair_photo_url}
                           alt="Foto perbaikan"
                           className="w-full h-48 object-cover rounded-lg border shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                          onClick={() =>
-                            window.open(
-                              inspection.data.repair_photo_url,
-                              "_blank",
-                            )
-                          }
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleImageClick(inspection.data.repair_photo_url);
+                          }}
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                        <div
+                          className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center pointer-events-none"
+                          onClick={() =>
+                            handleImageClick(inspection.data.repair_photo_url)
+                          }
+                        >
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <p className="text-white text-sm font-medium">
                               Klik untuk memperbesar
@@ -269,6 +293,41 @@ export default function InspectionDetailPage({ params }: DetailPageProps) {
           </div>
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      {isImageModalOpen && selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={handleCloseImageModal}
+        >
+          <div className="relative max-w-4xl max-h-full p-4">
+            <button
+              onClick={handleCloseImageModal}
+              className="absolute top-2 right-2 z-10 bg-white rounded-full p-2 hover:bg-gray-200 transition-colors"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <img
+              src={selectedImage}
+              alt="Preview"
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </ScrollArea>
   );
 }

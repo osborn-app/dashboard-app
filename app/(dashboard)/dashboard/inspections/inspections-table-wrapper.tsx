@@ -17,13 +17,6 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDebounce } from "use-debounce";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface InspectionsTableWrapperProps {
   pageNo?: number;
@@ -192,19 +185,6 @@ const InspectionsTableWrapper = ({
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center justify-between gap-4 flex-wrap w-full lg:!w-auto">
-          <Select
-            value={currentFleetType}
-            onValueChange={handleFleetTypeChange}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Pilih tipe fleet" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Tipe</SelectItem>
-              <SelectItem value="car">Mobil</SelectItem>
-              <SelectItem value="motorcycle">Motor</SelectItem>
-            </SelectContent>
-          </Select>
           <SearchInput
             searchQuery={searchQueryState}
             onSearchChange={handleSearchChange}
