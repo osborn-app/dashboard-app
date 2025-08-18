@@ -204,6 +204,13 @@ export const navItems: NavItem[] = [
         roles: ["admin", "owner"],
       },
       {
+        title: "Add-ons",
+        href: "/dashboard/add-ons",
+        icon: "package",
+        label: "add-ons",
+        roles: ["admin", "owner"],
+      },
+      {
         title: "Fleets Mitra Ojol",
         href: "/dashboard/partner-fleets",
         icon: "carpartner",

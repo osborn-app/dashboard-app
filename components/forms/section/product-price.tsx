@@ -54,27 +54,69 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
             <div className="border border-neutral-200 rounded-md p-[10px] mb-4 ">
               <p className="font-medium text-sm text-neutral-700 mb-1">
                 Nama Product
+                {/* ✅ Tambahkan informasi jenis sewa */}
+                {initialData?.rental_type && (
+                  <span className="ml-2 text-xs text-blue-600">
+                    ({initialData?.rental_type?.is_daily && 'Harian'}
+                    {initialData?.rental_type?.is_weekly && 'Mingguan'}
+                    {initialData?.rental_type?.is_monthly && 'Bulanan'})
+                  </span>
+                )}
               </p>
               <div className="flex justify-between mb-1">
                 <p className="font-medium text-sm text-neutral-700">
                   {initialData?.product?.name || detail?.product?.name || detail?.product_name
-                    ? `${initialData?.product?.name || detail?.product?.name || detail?.product_name} (per hari)`
+                    ? `${initialData?.product?.name || detail?.product?.name || detail?.product_name} / Hari`
                     : "Product"}
+                  {/* ✅ Tambahkan informasi jenis sewa untuk produk */}
+                  {initialData?.rental_type && (
+                    <span className="block text-xs text-blue-600 mt-1">
+                      Sewa {initialData?.rental_type?.is_daily && 'Harian'}
+                      {initialData?.rental_type?.is_weekly && 'Mingguan'}
+                      {initialData?.rental_type?.is_monthly && 'Bulanan'}
+                    </span>
+                  )}
                 </p>
                 <p className="font-semibold text-base">
                   {formatRupiah(detail?.rent_price || detail?.product?.price || detail?.product_price || initialData?.product?.price || 0)}
                 </p>
               </div>
 
-              {detail?.product && form.getValues("duration") && detail?.total_rent_price && (
+              {detail?.product && (form.getValues("duration") || initialData?.duration) && detail?.total_rent_price && (
                 <div className="flex justify-between mb-1">
                   <p className="font-medium text-sm text-neutral-700">
-                    {form.getValues("duration")} Hari
+                    {form.getValues("duration") || initialData?.duration} Hari
                   </p>
                   <p className="font-semibold text-base">
                     {formatRupiah(detail?.total_rent_price)}
                   </p>
                 </div>
+              )}
+              
+              {/* ✅ Tambahkan informasi harga asli dan diskon untuk sewa mingguan/bulanan */}
+              {initialData?.rental_type && (initialData?.rental_type?.is_weekly || initialData?.rental_type?.is_monthly) && (initialData?.product || detail?.product) && (
+                <>
+                  {/* Harga asli harian */}
+                  <div className="flex justify-between mb-1">
+                    <p className="font-medium text-sm text-neutral-500">
+                      Harga asli harian
+                    </p>
+                    <p className="font-medium text-sm text-neutral-500 line-through">
+                      {formatRupiah(initialData?.product?.price || detail?.product?.price || 0)}
+                    </p>
+                  </div>
+                  
+                  {/* Harga sewa mingguan/bulanan */}
+                  <div className="flex justify-between mb-1">
+                    <p className="font-medium text-sm text-neutral-700">
+                      {initialData?.rental_type?.is_weekly && `Harga mingguan (${initialData?.product?.weekly_price ? formatRupiah(initialData?.product?.weekly_price) : 'N/A'})`}
+                      {initialData?.rental_type?.is_monthly && `Harga bulanan (${initialData?.product?.monthly_price ? formatRupiah(initialData?.product?.monthly_price) : 'N/A'})`}
+                    </p>
+                    <p className="font-medium text-sm text-green-600">
+                      Hemat {initialData?.rental_type?.is_weekly ? 25 : initialData?.rental_type?.is_monthly ? 50 : 0}%
+                    </p>
+                  </div>
+                </>
               )}
               <Separator className="mb-1" />
               {(showServicePrice || showAdditional) && (
@@ -99,35 +141,40 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                     </p>
                   </div>
                 )}
-              {showAdditional && isEdit
-                ? detail?.additional_services?.length !== 0 &&
-                  detail?.additional_services?.map((item: any, index: any) => {
-                    return (
-                      <div className="flex justify-between mb-1" key={index}>
-                        <p className="font-medium text-sm text-neutral-700">
-                          {item.name}
-                        </p>
-                        <p className="font-semibold text-base">
-                          {formatRupiah(item.price)}
-                        </p>
-                      </div>
-                    );
-                  })
-                : initialData?.additional_services?.length !== 0 &&
-                  initialData?.additional_services?.map(
-                    (item: any, index: any) => {
-                      return (
-                        <div className="flex justify-between mb-1" key={index}>
-                          <p className="font-medium text-sm text-neutral-700">
-                            {item.name}
-                          </p>
-                          <p className="font-semibold text-base">
-                            {formatRupiah(item.price)}
-                          </p>
-                        </div>
-                      );
-                    },
-                  )}
+              {/* Display add-ons for product orders */}
+              {showAdditional && (
+                <>
+                  {isEdit
+                    ? detail?.additional_services?.length > 0 &&
+                      detail?.additional_services?.map((item: any, index: any) => {
+                        return (
+                          <div className="flex justify-between mb-1" key={index}>
+                            <p className="font-medium text-sm text-neutral-700">
+                              {item.name}
+                            </p>
+                            <p className="font-semibold text-base">
+                              {formatRupiah(item.price)}
+                            </p>
+                          </div>
+                        );
+                      })
+                    : initialData?.additional_services?.length > 0 &&
+                      initialData?.additional_services?.map(
+                        (item: any, index: any) => {
+                          return (
+                            <div className="flex justify-between mb-1" key={index}>
+                              <p className="font-medium text-sm text-neutral-700">
+                                {item.name}
+                              </p>
+                              <p className="font-semibold text-base">
+                                {formatRupiah(item.price)}
+                              </p>
+                            </div>
+                          );
+                        },
+                      )}
+                </>
+              )}
               {(showAdditional || showServicePrice) && (
                 <Separator className="mb-1" />
               )}

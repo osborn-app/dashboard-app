@@ -277,6 +277,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           ? initialData?.insurance?.id.toString()
           : "0",
         service_price: initialData?.service_price?.toString() || "0",
+        rental_type: initialData?.rental_type || {
+          is_daily: true,
+          is_weekly: false,
+          is_monthly: false,
+        },
+        selected_price_type: initialData?.selected_price_type || "daily",
         additionals: initialData?.additional_services?.map((service: any) => ({
           name: service.name,
           price: service.price?.toString() || "",
@@ -305,6 +311,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
         discount: "0",
         insurance_id: "0",
         service_price: "0",
+        rental_type: {
+          is_daily: true,
+          is_weekly: false,
+          is_monthly: false,
+        },
+        selected_price_type: "daily",
         additionals: [],
       };
 
@@ -337,6 +349,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   const descriptionField = form.watch("description");
   const serviceField = form.watch("service_price");
   const additionalField = form.watch("additionals");
+  const rentalTypeField = form.watch("rental_type");
+  const selectedPriceTypeField = form.watch("selected_price_type");
 
 
 
@@ -395,6 +409,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     service_price: data.service_price ? (isString(data.service_price) 
       ? Number(data.service_price.replace(/,/g, "")) 
       : Number(data.service_price)) : undefined,
+    rental_type: data.rental_type || {
+      is_daily: true,
+      is_weekly: false,
+      is_monthly: false,
+    },
+    selected_price_type: data.selected_price_type || "daily",
     ...(data.additionals && data.additionals.length > 0 && {
       additional_services: data.additionals.map((service: any) => {
         let price: number;
@@ -592,6 +612,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           ? +serviceField.replace(/,/g, "")
           : serviceField,
       }),
+      rental_type: rentalTypeField || {
+        is_daily: true,
+        is_weekly: false,
+        is_monthly: false,
+      },
+      selected_price_type: selectedPriceTypeField || "daily",
       ...(additionalField && additionalField.length !== 0 && {
         additional_services: (additionalField ?? []).map((field: any) => {
           return {
@@ -640,6 +666,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     descriptionField,
     showServicePrice,
     servicePrice,
+    rentalTypeField,
+    selectedPriceTypeField,
     JSON.stringify(additionalField),
   ]);
 
@@ -1426,6 +1454,58 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                           {messages.duration}
                         </FormMessage>
                       )}
+                    </FormItem>
+                  )}
+                />
+
+                {/* Rental Type Selection */}
+                <FormField
+                  control={form.control}
+                  name="selected_price_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="relative label-required">
+                        Jenis Sewa
+                      </FormLabel>
+                      <Select
+                        disabled={(!isEdit && !isPreview) || loading}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Update rental_type based on selection
+                          const rentalType = {
+                            is_daily: value === "daily",
+                            is_weekly: value === "weekly", 
+                            is_monthly: value === "monthly",
+                          };
+                          form.setValue("rental_type", rentalType);
+                        }}
+                        defaultValue={defaultValues.selected_price_type || "daily"}
+                        value={field.value}
+                      >
+                        <FormControl
+                          className={cn(
+                            "disabled:opacity-100",
+                            "w-full",
+                            "h-[40px]",
+                          )}
+                        >
+                          <SelectTrigger className="">
+                            <SelectValue placeholder="Pilih jenis sewa" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="daily">
+                            Harian
+                          </SelectItem>
+                          <SelectItem value="weekly">
+                            Mingguan (Hemat 25%)
+                          </SelectItem>
+                          <SelectItem value="monthly">
+                            Bulanan (Hemat 50%)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
