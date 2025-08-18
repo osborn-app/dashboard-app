@@ -208,7 +208,7 @@ export const OngoingInspectionsColumns: ColumnDef<Inspection>[] = [
       const duration = data.repair_duration_days;
 
       if (!duration) {
-        return <span className="text-muted-foreground">muncul pls</span>;
+        return <span className="text-muted-foreground">estimasi belum ditentukan</span>;
       }
 
       return (

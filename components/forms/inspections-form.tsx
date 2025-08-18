@@ -49,47 +49,58 @@ const fileSchema = z.custom<any>(
   },
 );
 
-const formSchema = z.object({
-  fleet_id: z.string().min(1, "Fleet harus dipilih"),
-  inspector_name: z.string().min(1, "Nama inspector harus diisi"),
-  kilometer: z
-    .string()
-    .min(1, "Kilometer harus diisi")
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Kilometer harus berupa angka positif",
-    }),
-  has_issue: z.boolean().optional(),
-  oil_status: z.enum(["aman", "tidak_aman"]).optional(),
-  tire_status: z.enum(["aman", "tidak_aman"]).optional(),
-  battery_status: z.enum(["aman", "tidak_aman"]).optional(),
-  description: z.string().optional(),
-  repair_duration_days: z
-    .number()
-    .min(1, "Durasi perbaikan harus diisi")
-    .max(7, "Durasi perbaikan maksimal 7 hari")
-    .optional(),
+const formSchema = z
+  .object({
+    fleet_id: z.string().min(1, "Fleet harus dipilih"),
+    inspector_name: z.string().min(1, "Nama inspector harus diisi"),
+    kilometer: z
+      .string()
+      .min(1, "Kilometer harus diisi")
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+        message: "Kilometer harus berupa angka positif",
+      }),
+    has_issue: z.boolean().optional(),
+    oil_status: z.enum(["aman", "tidak_aman"]).optional(),
+    tire_status: z.enum(["aman", "tidak_aman"]).optional(),
+    battery_status: z.enum(["aman", "tidak_aman"]).optional(),
+    description: z.string().optional(),
+    repair_duration_days: z
+      .number()
+      .min(1, "Durasi perbaikan harus diisi")
+      .max(7, "Durasi perbaikan maksimal 7 hari")
+      .optional(),
 
-  repair_completion_date: z.string().optional(),
-  repair_photo_url: fileSchema.optional(),
-}).refine((data) => {
-  // Check if there are any issues
-  const hasIssue = 
-    data.oil_status === "tidak_aman" ||
-    data.tire_status === "tidak_aman" ||
-    data.battery_status === "tidak_aman";
-  
-  // If there are issues, all issue-related fields are required
-  if (hasIssue) {
-    if (!data.oil_status || !data.tire_status || !data.battery_status || !data.description) {
-      return false;
-    }
-  }
-  
-  return true;
-}, {
-  message: "Jika ada komponen yang tidak aman, semua field status dan deskripsi harus diisi",
-  path: ["description"], // This will show the error on the description field
-});
+    repair_completion_date: z.string().optional(),
+    repair_photo_url: fileSchema.optional(),
+  })
+  .refine(
+    (data) => {
+      // Check if there are any issues
+      const hasIssue =
+        data.oil_status === "tidak_aman" ||
+        data.tire_status === "tidak_aman" ||
+        data.battery_status === "tidak_aman";
+
+      // If there are issues, all issue-related fields are required
+      if (hasIssue) {
+        if (
+          !data.oil_status ||
+          !data.tire_status ||
+          !data.battery_status ||
+          !data.description
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    {
+      message:
+        "Jika ada komponen yang tidak aman, semua field status dan deskripsi harus diisi",
+      path: ["description"], // This will show the error on the description field
+    },
+  );
 
 type InspectionsFormValues = z.infer<typeof formSchema>;
 
@@ -136,7 +147,7 @@ export default function InspectionsForm({
   // Initialize hasIssue state based on form values
   useEffect(() => {
     const values = form.getValues();
-    const hasIssueValue = 
+    const hasIssueValue =
       values.oil_status === "tidak_aman" ||
       values.tire_status === "tidak_aman" ||
       values.battery_status === "tidak_aman";
@@ -147,8 +158,8 @@ export default function InspectionsForm({
     if (fleetId) {
       form.setValue("fleet_id", fleetId);
       // Set fleet type based on the selected fleet
-      if (availableFleets?.data) {
-        const fleet = availableFleets.data.find(
+      if (availableFleets && Array.isArray(availableFleets)) {
+        const fleet = availableFleets.find(
           (f: any) => f.id.toString() === fleetId,
         );
         if (fleet) {
@@ -162,8 +173,8 @@ export default function InspectionsForm({
   useEffect(() => {
     if (fleetId && !isEdit) {
       // Try to determine fleet type from available fleets
-      if (availableFleets?.data) {
-        const fleet = availableFleets.data.find(
+      if (availableFleets && Array.isArray(availableFleets)) {
+        const fleet = availableFleets.find(
           (f: any) => f.id.toString() === fleetId,
         );
         if (fleet) {
@@ -189,7 +200,7 @@ export default function InspectionsForm({
 
     try {
       // Check if there are any issues
-      const hasIssue = 
+      const hasIssue =
         values.oil_status === "tidak_aman" ||
         values.tire_status === "tidak_aman" ||
         values.battery_status === "tidak_aman";
@@ -207,7 +218,7 @@ export default function InspectionsForm({
         payload.tire_status = values.tire_status;
         payload.battery_status = values.battery_status;
         payload.description = values.description;
-        
+
         // Only add repair duration if it has value
         if (values.repair_duration_days) {
           payload.repair_duration_days = values.repair_duration_days;
@@ -300,9 +311,9 @@ export default function InspectionsForm({
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2 p-3 border rounded-md bg-green-50">
                       <div className="flex-1">
-                        {availableFleets?.data ? (
+                        {availableFleets && Array.isArray(availableFleets) ? (
                           (() => {
-                            const fleet = availableFleets.data.find(
+                            const fleet = availableFleets.find(
                               (f: any) => f.id.toString() === fleetId,
                             );
                             return fleet ? (
@@ -311,7 +322,8 @@ export default function InspectionsForm({
                                   {fleet.name} - {fleet.plate_number}
                                 </p>
                                 <p className="text-sm text-green-600">
-                                  Type: {fleet.type === 'car' ? 'Mobil' : 'Motor'}
+                                  Type:{" "}
+                                  {fleet.type === "car" ? "Mobil" : "Motor"}
                                 </p>
                               </div>
                             ) : (
@@ -327,8 +339,12 @@ export default function InspectionsForm({
                           })()
                         ) : loadingFleets ? (
                           <div>
-                            <p className="text-green-800">Loading fleet data...</p>
-                            <p className="text-sm text-green-600">Memuat informasi fleet</p>
+                            <p className="text-green-800">
+                              Loading fleet data...
+                            </p>
+                            <p className="text-sm text-green-600">
+                              Memuat informasi fleet
+                            </p>
                           </div>
                         ) : (
                           <div>
@@ -371,9 +387,14 @@ export default function InspectionsForm({
                         <SelectItem value="" disabled>
                           Loading fleets...
                         </SelectItem>
-                      ) : availableFleets?.data && availableFleets.data.length > 0 ? (
-                        availableFleets.data.map((fleet: any) => (
-                          <SelectItem key={fleet.id} value={fleet.id.toString()}>
+                      ) : availableFleets &&
+                        Array.isArray(availableFleets) &&
+                        availableFleets.length > 0 ? (
+                        availableFleets.map((fleet: any) => (
+                          <SelectItem
+                            key={fleet.id}
+                            value={fleet.id.toString()}
+                          >
                             {fleet.name} - {fleet.plate_number}
                           </SelectItem>
                         ))
