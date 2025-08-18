@@ -110,7 +110,7 @@ const InspectionsTableWrapper = ({
     switch (defaultTab) {
       case "tersedia":
         return {
-          data: tersediaData?.data?.data || tersediaData?.data || [],
+          data: tersediaData?.data?.data || [],
           total: tersediaData?.data?.total || 0,
           page: tersediaData?.data?.page || 1,
           limit: tersediaData?.data?.limit || 10,
@@ -119,7 +119,7 @@ const InspectionsTableWrapper = ({
         };
       case "ongoing":
         return {
-          data: ongoingData?.data?.data || ongoingData?.data || [],
+          data: ongoingData?.data?.data || [],
           total: ongoingData?.data?.total || 0,
           page: ongoingData?.data?.page || 1,
           limit: ongoingData?.data?.limit || 10,
@@ -128,7 +128,7 @@ const InspectionsTableWrapper = ({
         };
       case "selesai":
         return {
-          data: selesaiData?.data?.data || selesaiData?.data || [],
+          data: selesaiData?.data?.data || [],
           total: selesaiData?.data?.total || 0,
           page: selesaiData?.data?.page || 1,
           limit: selesaiData?.data?.limit || 10,
@@ -137,7 +137,7 @@ const InspectionsTableWrapper = ({
         };
       default:
         return {
-          data: tersediaData?.data?.data || tersediaData?.data || [],
+          data: tersediaData?.data?.data || [],
           total: tersediaData?.data?.total || 0,
           page: tersediaData?.data?.page || 1,
           limit: tersediaData?.data?.limit || 10,
@@ -218,11 +218,11 @@ const InspectionsTableWrapper = ({
         <>
           {isFetchingTersedia && <Spinner />}
           {!isFetchingTersedia &&
-            tersediaData?.data &&
-            tersediaData.data.length > 0 && (
+            tersediaData?.data?.data &&
+            tersediaData.data.data.length > 0 && (
               <InspectionsTable
                 columns={SimpleInspectionsColumns}
-                data={tersediaData.data}
+                data={tersediaData.data.data}
                 status="active"
                 searchKey="name"
                 pageNo={page}
@@ -231,7 +231,8 @@ const InspectionsTableWrapper = ({
               />
             )}
           {!isFetchingTersedia &&
-            (!tersediaData?.data || tersediaData.data.length === 0) && (
+            (!tersediaData?.data?.data ||
+              tersediaData.data.data.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">
                 Tidak ada fleet tersedia untuk inspeksi
               </div>
