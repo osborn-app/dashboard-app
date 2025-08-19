@@ -51,7 +51,7 @@ const fileSchema = z.custom<any>(
   (val: any) => {
     // if (!(val instanceof FileList)) return false;
     if (val.length == 0) return false;
-    // Removed file type restrictions - now accepts any file type
+    // Removed file type restrictions - now accepts any file types
     return true;
   },
   {
