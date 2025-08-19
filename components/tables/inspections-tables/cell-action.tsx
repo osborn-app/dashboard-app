@@ -6,7 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Play, Search } from "lucide-react";
@@ -34,42 +33,53 @@ export const CellAction: React.FC<CellActionProps> = ({ data, status }) => {
     }
   };
 
-  // Untuk status "active" (tersedia), tampilkan button "Mulai Inspeksi"
-  if (status === "active") {
-    return (
-      <Button
-        onClick={handleStartInspection}
-        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-      >
-        <Play className="mr-2 h-4 w-4" />
-        Mulai Inspeksi
-      </Button>
-    );
-  }
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-  // Untuk status "pending_repair" (ongoing), tampilkan button "Tinjau"
-  if (status === "pending_repair") {
-    return (
-      <Button
-        onClick={handlePreview}
-        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-      >
-        <Search className="mr-2 h-4 w-4" />
-        Tinjau
-      </Button>
-    );
-  }
+        {/* Untuk status "active" (tersedia), tampilkan "Mulai Inspeksi" */}
+        {status === "active" && (
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStartInspection();
+            }}
+          >
+            <Play className="mr-2 h-4 w-4" /> Mulai Inspeksi
+          </DropdownMenuItem>
+        )}
 
-  // Untuk status "completed" (selesai), tampilkan button "Detail"
-  if (status === "completed") {
-    return (
-      <Button
-        onClick={handlePreview}
-        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-      >
-        <Eye className="mr-2 h-4 w-4" />
-        Detail
-      </Button>
-    );
-  }
+        {/* Untuk status "pending_repair" (ongoing), tampilkan "Tinjau" */}
+        {status === "pending_repair" && (
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePreview();
+            }}
+          >
+            <Search className="mr-2 h-4 w-4" /> Tinjau
+          </DropdownMenuItem>
+        )}
+
+        {/* Untuk status "completed" (selesai), tampilkan "Detail" */}
+        {status === "completed" && (
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePreview();
+            }}
+          >
+            <Eye className="mr-2 h-4 w-4" /> Detail
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 };

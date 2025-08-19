@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { CellAction } from "./cell-action";
+import { formatDateTime } from "@/lib/utils";
 
 export type Inspection = {
   id: number;
@@ -201,6 +202,14 @@ export const OngoingInspectionsColumns: ColumnDef<Inspection>[] = [
     },
   },
   {
+    accessorKey: "inspection_date",
+    header: "Tanggal Inspeksi",
+    cell: ({ row }) => {
+      const data = row.original;
+      return <span>{formatDateTime(new Date(data.inspection_date))}</span>;
+    },
+  },
+  {
     accessorKey: "repair_duration_days",
     header: "Estimasi",
     cell: ({ row }) => {
@@ -275,8 +284,16 @@ export const CompletedInspectionsColumns: ColumnDef<Inspection>[] = [
     },
   },
   {
+    accessorKey: "inspection_date",
+    header: "Tanggal Inspeksi",
+    cell: ({ row }) => {
+      const data = row.original;
+      return <span>{formatDateTime(new Date(data.inspection_date))}</span>;
+    },
+  },
+  {
     accessorKey: "repair_duration_days",
-    header: "Durasi",
+    header: "Estimasi",
     cell: ({ row }) => {
       const data = row.original;
       const estimation = data.repair_duration_days;
