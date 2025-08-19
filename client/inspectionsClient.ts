@@ -44,4 +44,4 @@ export const getDailyReport = (params?: any) => {
 // Trigger report update
 export const triggerReportUpdate = () => {
   return client.get("/inspections/report/trigger");
-};
+}; //trigger deploy
