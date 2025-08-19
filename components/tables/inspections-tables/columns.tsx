@@ -24,6 +24,7 @@ export type Inspection = {
     type: string;
     color: string;
     plate_number: string;
+    inspection_status?: string;
   };
 };
 
@@ -38,6 +39,7 @@ export type Fleet = {
   slug: string;
   created_at: string;
   updated_at: string;
+  inspection_status?: string;
 };
 
 // Type guard to check if data is Fleet
@@ -118,6 +120,55 @@ export const SimpleInspectionsColumns: ColumnDef<Fleet | Inspection>[] = [
       }
 
       return <span className="capitalize">{color}</span>;
+    },
+  },
+  {
+    accessorKey: "inspection_status",
+    header: "Status Inspeksi",
+    cell: ({ row }) => {
+      const data = row.original;
+      let inspectionStatus = "N/A";
+
+      if (isFleet(data)) {
+        inspectionStatus = data.inspection_status || "N/A";
+      } else if (isInspection(data) && data.fleet) {
+        inspectionStatus = data.fleet.inspection_status || "N/A";
+      }
+
+      // Render badge berdasarkan status
+      const getStatusBadge = (status: string) => {
+        switch (status) {
+          case "recently_inspected":
+            return (
+              <Badge
+                variant="default"
+                className="bg-green-100 text-green-800 hover:bg-green-100"
+              >
+                Baru Diinspeksi
+              </Badge>
+            );
+          case "needs_inspection":
+            return (
+              <Badge
+                variant="destructive"
+                className="bg-red-100 text-red-800 hover:bg-red-100"
+              >
+                Perlu Inspeksi
+              </Badge>
+            );
+          default:
+            return (
+              <Badge
+                variant="secondary"
+                className="bg-gray-100 text-gray-800 hover:bg-gray-100"
+              >
+                {status}
+              </Badge>
+            );
+        }
+      };
+
+      return getStatusBadge(inspectionStatus);
     },
   },
   {
