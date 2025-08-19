@@ -40,3 +40,8 @@ export const completeInspection = (fleetId: string | number) => {
 export const getDailyReport = (params?: any) => {
   return client.get("/inspections/report/daily", { params });
 };
+
+// Trigger report update
+export const triggerReportUpdate = () => {
+  return client.get("/inspections/report/trigger");
+};

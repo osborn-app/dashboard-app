@@ -124,3 +124,23 @@ export const useGetDailyReport = (params?: any) => {
     queryFn: getDailyReportFn,
   });
 };
+
+// Trigger report update
+export const useTriggerReportUpdate = () => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const triggerReportUpdateFn = () => {
+    return axiosAuth.get("/inspections/report/trigger");
+  };
+
+  return useMutation({
+    mutationFn: triggerReportUpdateFn,
+    onSuccess: () => {
+      // Invalidate daily report query to refresh data
+      queryClient.invalidateQueries({ queryKey: ["inspections", "daily"] });
+      // Also invalidate other inspection queries if needed
+      queryClient.invalidateQueries({ queryKey: ["inspections"] });
+    },
+  });
+};

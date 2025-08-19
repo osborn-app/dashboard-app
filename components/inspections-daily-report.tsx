@@ -1,7 +1,11 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGetDailyReport } from "@/hooks/api/useInspections";
+import { Button } from "@/components/ui/button";
+import {
+  useGetDailyReport,
+  useTriggerReportUpdate,
+} from "@/hooks/api/useInspections";
 import {
   Calendar,
   Target,
@@ -9,7 +13,9 @@ import {
   CheckCircle,
   AlertTriangle,
   Clock,
+  RefreshCw,
 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 interface DailyReportData {
   report_date: string;
@@ -22,6 +28,23 @@ interface DailyReportData {
 
 export default function InspectionsDailyReport() {
   const { data: reportData, isLoading, error } = useGetDailyReport();
+  const triggerReportMutation = useTriggerReportUpdate();
+
+  const handleTriggerReport = async () => {
+    try {
+      await triggerReportMutation.mutateAsync();
+      toast({
+        title: "Berhasil",
+        description: "Laporan harian berhasil diperbarui",
+      });
+    } catch (error) {
+      toast({
+        title: "Gagal",
+        description: "Gagal memperbarui laporan harian",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -92,14 +115,30 @@ export default function InspectionsDailyReport() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Calendar className="h-4 w-4" />
-        <span>
-          Laporan Harian -{" "}
-          {formatDate(
-            data.report_date || new Date().toISOString().split("T")[0],
-          )}
-        </span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <span>
+            Laporan Harian -{" "}
+            {formatDate(
+              data.report_date || new Date().toISOString().split("T")[0],
+            )}
+          </span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleTriggerReport}
+          disabled={triggerReportMutation.isPending}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${
+              triggerReportMutation.isPending ? "animate-spin" : ""
+            }`}
+          />
+          {triggerReportMutation.isPending ? "Memperbarui..." : "Perbarui"}
+        </Button>
       </div>
 
       {/* Metrics Grid */}
