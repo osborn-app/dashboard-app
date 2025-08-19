@@ -209,8 +209,12 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         email: initialData?.email,
         date_of_birth: initialData?.date_of_birth,
         gender: initialData?.gender,
-        id_cards: initialData?.id_cards,
-        supporting_documents_url: initialData?.supporting_documents_url || [],
+        id_cards: initialData?.id_cards || [],
+        supporting_documents_url: initialData?.supporting_documents_url 
+          ? (typeof initialData.supporting_documents_url === 'string' 
+              ? initialData.supporting_documents_url.split(',').map((url: string) => ({ photo: url.trim() }))
+              : initialData.supporting_documents_url)
+          : [],
         phone_number: initialData?.phone_number,
         emergency_phone_number: initialData?.emergency_phone_number,
         additional_data_status: initialData?.additional_data_status,
