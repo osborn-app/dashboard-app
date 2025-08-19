@@ -51,8 +51,8 @@ export const pendingColumns: ColumnDef<any>[] = [
     header: "Nama Kendaraan",
     cell: ({ row }) => (
       <span>
-        {row.original.fleet.name} (
-        {row.original.fleet.type == "car" ? "Mobil" : "Motor"})
+        {row.original.fleet?.name} (
+        {row.original.fleet?.type == "car" ? "Mobil" : "Motor"})
       </span>
     ),
   },
@@ -123,8 +123,8 @@ export const completedColumns: ColumnDef<any>[] = [
     header: "Nama Kendaraan",
     cell: ({ row }) => (
       <span>
-        {row.original.fleet.name} (
-        {row.original.fleet.type == "car" ? "Mobil" : "Motor"})
+        {row.original.fleet?.name} (
+        {row.original.fleet?.type == "car" ? "Mobil" : "Motor"})
       </span>
     ),
   },
