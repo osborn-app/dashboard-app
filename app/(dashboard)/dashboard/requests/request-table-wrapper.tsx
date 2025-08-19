@@ -2,6 +2,7 @@
 import TabLists from "@/components/TabLists";
 import { CalendarDateRangePicker } from "@/components/date-range-picker";
 import SearchInput from "@/components/search-input";
+import RequestTypeFilter from "@/components/request-type-filter";
 import Spinner from "@/components/spinner";
 import {
   completedColumns,
@@ -32,12 +33,14 @@ const RequestTableWrapper = () => {
   const q = searchParams.get("q");
   const startDate = searchParams.get("start_date") || "";
   const endDate = searchParams.get("end_date") || "";
+  const requestType = searchParams.get("request_type") || "all";
   const orderColumn = searchParams.get("order_column") || "";
   const orderBy = searchParams.get("order_by") || "";
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [searchQuery, setSearchQuery] = React.useState<string>(q ?? "");
   const [searchDebounce] = useDebounce(searchQuery, 500);
+  const [requestTypeFilter, setRequestTypeFilter] = React.useState<string>(requestType);
 
   const { data: pendingData, isFetching: isFetchingPendingData } = useGetRequests(
     {
@@ -47,6 +50,7 @@ const RequestTableWrapper = () => {
       status: "pending",
       start_date: startDate,
       end_date: endDate,
+      request_type: requestType as 'all' | 'product' | 'fleet',
     },
     {
       enabled: defaultTab === "pending",
@@ -63,6 +67,7 @@ const RequestTableWrapper = () => {
         status: "on_progress",
         start_date: startDate,
         end_date: endDate,
+        request_type: requestType as 'all' | 'product' | 'fleet',
       },
       { enabled: defaultTab === "on_progress" },
       "on_progress",
@@ -77,6 +82,7 @@ const RequestTableWrapper = () => {
         status: "done",
         start_date: startDate,
         end_date: endDate,
+        request_type: requestType as 'all' | 'product' | 'fleet',
       },
       { enabled: defaultTab === "done" },
       "done",
@@ -110,6 +116,10 @@ const RequestTableWrapper = () => {
     setDateRange({ from: undefined, to: undefined });
   };
 
+  const handleRequestTypeChange = (value: string) => {
+    setRequestTypeFilter(value);
+  };
+
   const lists = [
     {
       name: "Pending",
@@ -132,6 +142,7 @@ const RequestTableWrapper = () => {
           status: defaultTab,
           start_date: dayjs(dateRange?.from).locale("id").format("YYYY-MM-DDT00:00:00Z"),
           end_date: dayjs(dateRange?.to).locale("id").format("YYYY-MM-DDT23:00:00Z"),
+          request_type: requestTypeFilter,
         })}`,
       );
     } else {
@@ -140,10 +151,11 @@ const RequestTableWrapper = () => {
           status: defaultTab,
           start_date: null,
           end_date: null,
+          request_type: requestTypeFilter,
         })}`,
       );
     }
-  }, [dateRange]);
+  }, [dateRange, requestTypeFilter]);
 
   useEffect(() => {
     if (
@@ -159,6 +171,7 @@ const RequestTableWrapper = () => {
           end_date: null,
           page: null,
           limit: pageLimit,
+          request_type: requestTypeFilter,
         })}`,
       );
     } else {
@@ -168,10 +181,11 @@ const RequestTableWrapper = () => {
           q: null,
           page: null,
           limit: null,
+          request_type: requestTypeFilter,
         })}`,
       );
     }
-  }, [searchDebounce]);
+  }, [searchDebounce, requestTypeFilter]);
 
   useEffect(() => {
     handleClearDate()
@@ -183,15 +197,20 @@ const RequestTableWrapper = () => {
         end_date: null,
         page: null,
         limit: null,
+        request_type: requestTypeFilter,
       })}`,
     );
-  }, [defaultTab]);
+  }, [defaultTab, requestTypeFilter]);
 
   return (
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <TabLists lists={lists} />
         <div className="flex items-center justify-between gap-4 flex-wrap w-full lg:!w-auto">
+          <RequestTypeFilter
+            value={requestTypeFilter}
+            onValueChange={handleRequestTypeChange}
+          />
           <CalendarDateRangePicker
             onDateRangeChange={handleDateRangeChange}
             onClearDate={handleClearDate}

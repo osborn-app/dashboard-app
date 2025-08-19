@@ -10,6 +10,7 @@ interface GetRequestsParams {
   q?: string;
   start_date?: string | Date | undefined;
   end_date?: string | Date | undefined;
+  request_type?: 'all' | 'product' | 'fleet';
 }
 
 export const useGetRequests = (
@@ -48,13 +49,15 @@ export const useGetDetailRequest = (id: string | number) => {
 
 type PayloadBody = {
   customer_id: number;
-  fleet_id: number;
+  fleet_id?: number;
+  product_id?: number;
   driver_id: number;
   start_date: string;
   type: string;
   address?: string;
   description?: string;
   is_self_pickup: boolean;
+  distance: number;
 };
 
 export const usePostRequest = () => {
