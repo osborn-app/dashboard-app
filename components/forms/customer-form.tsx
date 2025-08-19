@@ -51,32 +51,24 @@ const fileSchema = z.custom<any>(
   (val: any) => {
     // if (!(val instanceof FileList)) return false;
     if (val.length == 0) return false;
-    for (let i = 0; i < val.length; i++) {
-      const file = val[i];
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
-      if (!allowedTypes.includes(file.type)) return false; // Limit file types
-    }
+    // Removed file type restrictions - now accepts any file type
     return true;
   },
   {
     message:
-      "Foto kosong. Pastikan file yang kamu pilih adalah tipe JPEG, JPG, PNG yaa!!.",
+      "Foto kosong. Silakan pilih file.",
   },
 );
 const editFileSchema = z.custom<any>(
   (val: any) => {
     // if (!(val instanceof FileList)) return false;
     if (val.length == 0) return false;
-    for (let i = 0; i < val.length; i++) {
-      const file = val[i];
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
-      if (!allowedTypes.includes(file.type)) return false; // Limit file types
-    }
+    // Removed file type restrictions - now accepts any file type
     return true;
   },
   {
     message:
-      "Foto kosong. Pastikan file yang kamu pilih adalah tipe JPEG, JPG, PNG.",
+      "Foto kosong. Silakan pilih file.",
   },
 );
 const formSchema = z.object({
