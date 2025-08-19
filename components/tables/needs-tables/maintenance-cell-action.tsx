@@ -1,5 +1,5 @@
 "use client";
-import { AlertForceModal } from "@/components/modal/alertforce-modal";
+import { AlertModal } from "@/components/modal/alert-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,7 +23,6 @@ interface MaintenanceCellActionProps {
 export const MaintenanceCellAction: React.FC<MaintenanceCellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [force, setForce] = useState(false);
   const { data: session } = useSession();
 
   const router = useRouter();
@@ -80,14 +79,11 @@ export const MaintenanceCellAction: React.FC<MaintenanceCellActionProps> = ({ da
 
   return (
     <>
-      <AlertForceModal
+      <AlertModal
         isOpen={open}
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
         loading={loading}
-        data={data}
-        checked={force}
-        setChecked={setForce}
       />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} asChild>

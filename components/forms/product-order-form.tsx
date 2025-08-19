@@ -845,6 +845,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   const approvalModalTitle =
     lastPath === "edit"
       ? "Apakah Anda Yakin Ingin Mengedit Pesanan ini?"
+      : lastPath === "create"
+      ? "Apakah Anda Yakin Ingin Membuat Pesanan ini?"
       : "Apakah Anda Yakin Ingin Mengonfirmasi Pesanan ini?";
 
   return (
@@ -857,36 +859,73 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           onConfirm={() => {
             const currentData = form.getValues();
             const payload = createPayload(currentData);
-            acceptProductOrder(payload, {
-              onSuccess: () => {
-                // Invalidate all relevant queries for real-time updates
-                queryClient.invalidateQueries({ queryKey: ["orders"] });
-                queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
-                if (finalOrderId) {
-                  queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
-                  queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
-                }
-                toast({
-                  variant: "success",
-                  title: "Pesanan berhasil dikonfirmasi!",
-                });
-                router.push(`/dashboard/product-orders`);
-              },
-              onSettled: () => setLoading(false),
-              onError: (error: any) => {
-                setOpenApprovalModal(false);
-                toast({
-                  variant: "destructive",
-                  title: `Uh oh! ${
-                    //@ts-ignore
-                    error?.response?.data?.message == "Customer must be verified."
-                      ? "Customer belum diverifikasi"
-                      : //@ts-ignore
-                        error?.response?.data?.message
-                  }`,
-                });
-              },
-            });
+            
+            // Determine which action to take based on the context
+            if (lastPath === "create") {
+              // For create flow, use createProductOrder
+              createProductOrder(payload, {
+                onSuccess: () => {
+                  // Invalidate all relevant queries for real-time updates
+                  queryClient.invalidateQueries({ queryKey: ["orders"] });
+                  queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+                  if (finalOrderId) {
+                    queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
+                    queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
+                  }
+                  toast({
+                    variant: "success",
+                    title: "Pesanan berhasil dibuat!",
+                  });
+                  router.push(`/dashboard/product-orders`);
+                },
+                onSettled: () => setLoading(false),
+                onError: (error: any) => {
+                  setOpenApprovalModal(false);
+                  toast({
+                    variant: "destructive",
+                    title: `Uh oh! ${
+                      //@ts-ignore
+                      error?.response?.data?.message == "Customer must be verified."
+                        ? "Customer belum diverifikasi"
+                        : //@ts-ignore
+                          error?.response?.data?.message
+                    }`,
+                  });
+                },
+              });
+            } else {
+              // For edit/preview flow, use acceptProductOrder
+              acceptProductOrder(payload, {
+                onSuccess: () => {
+                  // Invalidate all relevant queries for real-time updates
+                  queryClient.invalidateQueries({ queryKey: ["orders"] });
+                  queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+                  if (finalOrderId) {
+                    queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
+                    queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
+                  }
+                  toast({
+                    variant: "success",
+                    title: "Pesanan berhasil dikonfirmasi!",
+                  });
+                  router.push(`/dashboard/product-orders`);
+                },
+                onSettled: () => setLoading(false),
+                onError: (error: any) => {
+                  setOpenApprovalModal(false);
+                  toast({
+                    variant: "destructive",
+                    title: `Uh oh! ${
+                      //@ts-ignore
+                      error?.response?.data?.message == "Customer must be verified."
+                        ? "Customer belum diverifikasi"
+                        : //@ts-ignore
+                          error?.response?.data?.message
+                    }`,
+                  });
+                },
+              });
+            }
           }}
           loading={loading}
           title={approvalModalTitle}
