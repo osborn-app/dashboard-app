@@ -171,6 +171,10 @@ export function BuserTable<TData, TValue>({
                   className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 ease-in-out"
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => {
+                    // Navigate to info page when row is clicked
+                    router.push(`/dashboard/buser/${row.original.id}/info`);
+                  }}
                 >
                   {row.getVisibleCells().map((cell: any) => (
                     <TableCell

@@ -30,6 +30,7 @@ import {
   useCreateInspection,
   useGetAvailableFleets,
 } from "@/hooks/api/useInspections";
+
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 
@@ -121,8 +122,11 @@ export default function InspectionsForm({
   const [loading, setLoading] = useState(false);
   const [hasIssue, setHasIssue] = useState(false);
   const createInspection = useCreateInspection();
-  const { data: availableFleets, isLoading: loadingFleets } =
-    useGetAvailableFleets(fleetType);
+  const { data: availableFleetsResponse, isLoading: loadingFleets } =
+    useGetAvailableFleets();
+
+  // Extract fleets data from response
+  const availableFleets = availableFleetsResponse?.data?.data || [];
 
   const form = useForm<InspectionsFormValues>({
     resolver: zodResolver(formSchema),
@@ -157,29 +161,17 @@ export default function InspectionsForm({
   useEffect(() => {
     if (fleetId) {
       form.setValue("fleet_id", fleetId);
-      // Set fleet type based on the selected fleet
-      if (availableFleets && Array.isArray(availableFleets)) {
-        const fleet = availableFleets.find(
-          (f: any) => f.id.toString() === fleetId,
-        );
-        if (fleet) {
-          setFleetType(fleet.type || "car");
-        }
-      }
     }
-  }, [fleetId, form, availableFleets]);
+  }, [fleetId, form]);
 
   // Auto-set fleet type if fleet_id is provided
   useEffect(() => {
-    if (fleetId && !isEdit) {
-      // Try to determine fleet type from available fleets
-      if (availableFleets && Array.isArray(availableFleets)) {
-        const fleet = availableFleets.find(
-          (f: any) => f.id.toString() === fleetId,
-        );
-        if (fleet) {
-          setFleetType(fleet.type || "car");
-        }
+    if (fleetId && !isEdit && availableFleets && availableFleets.length > 0) {
+      const fleet = availableFleets.find(
+        (f: { id: number | string }) => f.id.toString() === fleetId,
+      );
+      if (fleet) {
+        setFleetType(fleet.type || "car");
       }
     }
   }, [fleetId, availableFleets, isEdit]);
@@ -311,10 +303,20 @@ export default function InspectionsForm({
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2 p-3 border rounded-md bg-green-50">
                       <div className="flex-1">
-                        {availableFleets && Array.isArray(availableFleets) ? (
+                        {loadingFleets ? (
+                          <div>
+                            <p className="text-green-800">
+                              Loading fleet data...
+                            </p>
+                            <p className="text-sm text-green-600">
+                              Memuat informasi fleet
+                            </p>
+                          </div>
+                        ) : availableFleets && availableFleets.length > 0 ? (
                           (() => {
                             const fleet = availableFleets.find(
-                              (f: any) => f.id.toString() === fleetId,
+                              (f: { id: number | string }) =>
+                                f.id.toString() === fleetId,
                             );
                             return fleet ? (
                               <div>
@@ -337,15 +339,6 @@ export default function InspectionsForm({
                               </div>
                             );
                           })()
-                        ) : loadingFleets ? (
-                          <div>
-                            <p className="text-green-800">
-                              Loading fleet data...
-                            </p>
-                            <p className="text-sm text-green-600">
-                              Memuat informasi fleet
-                            </p>
-                          </div>
                         ) : (
                           <div>
                             <p className="font-medium text-green-800">
@@ -387,17 +380,21 @@ export default function InspectionsForm({
                         <SelectItem value="" disabled>
                           Loading fleets...
                         </SelectItem>
-                      ) : availableFleets &&
-                        Array.isArray(availableFleets) &&
-                        availableFleets.length > 0 ? (
-                        availableFleets.map((fleet: any) => (
-                          <SelectItem
-                            key={fleet.id}
-                            value={fleet.id.toString()}
-                          >
-                            {fleet.name} - {fleet.plate_number}
-                          </SelectItem>
-                        ))
+                      ) : availableFleets && availableFleets.length > 0 ? (
+                        availableFleets.map(
+                          (fleet: {
+                            id: number | string;
+                            name: string;
+                            plate_number: string;
+                          }) => (
+                            <SelectItem
+                              key={fleet.id}
+                              value={fleet.id.toString()}
+                            >
+                              {fleet.name} - {fleet.plate_number}
+                            </SelectItem>
+                          ),
+                        )
                       ) : (
                         <SelectItem value="" disabled>
                           Tidak ada fleet tersedia
