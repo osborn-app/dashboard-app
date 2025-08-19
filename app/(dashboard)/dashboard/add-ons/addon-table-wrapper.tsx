@@ -11,7 +11,7 @@ import { useDebounce } from "use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
-// Addon categories enum's
+// Addon categories enum
 const AddonCategories = {
   // Product Categories
   IPHONE: 'iphone',
