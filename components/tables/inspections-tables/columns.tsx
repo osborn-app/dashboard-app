@@ -18,12 +18,14 @@ export type Inspection = {
   repair_photo_url: string | null;
   repair_completion_date: string | null;
   repair_duration_days?: number;
+  inspection_progress?: string;
   fleet?: {
     id: number;
     name: string;
     type: string;
     color: string;
     plate_number: string;
+    inspection_progress?: string;
   };
 };
 
@@ -38,6 +40,7 @@ export type Fleet = {
   slug: string;
   created_at: string;
   updated_at: string;
+  inspection_progress?: string;
 };
 
 // Type guard to check if data is Fleet
@@ -118,6 +121,14 @@ export const SimpleInspectionsColumns: ColumnDef<Fleet | Inspection>[] = [
       }
 
       return <span className="capitalize">{color}</span>;
+    },
+  },
+  {
+    accessorKey: "inspection_progress",
+    header: "Progress",
+    cell: ({ row }) => {
+      const data = row.original;
+      return <span className="capitalize">{data.inspection_progress}</span>;
     },
   },
   {
