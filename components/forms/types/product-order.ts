@@ -25,6 +25,12 @@ export const productOrderSchema = z.object({
   is_with_driver: z.boolean().optional(),
   is_out_of_town: z.boolean().optional(),
   service_price: z.string().optional(),
+  rental_type: z.object({
+    is_daily: z.boolean().default(true),
+    is_weekly: z.boolean().default(false),
+    is_monthly: z.boolean().default(false),
+  }).optional(),
+  selected_price_type: z.enum(["daily", "weekly", "monthly"]).default("daily"),
   start_request: z.object({
     is_self_pickup: z.boolean(),
     driver_id: z.string().optional(),
