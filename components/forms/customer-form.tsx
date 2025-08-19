@@ -211,9 +211,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         gender: initialData?.gender,
         id_cards: initialData?.id_cards || [],
         supporting_documents_url: initialData?.supporting_documents_url 
-          ? (typeof initialData.supporting_documents_url === 'string' 
-              ? initialData.supporting_documents_url.split(',').map((url: string) => ({ photo: url.trim() }))
-              : initialData.supporting_documents_url)
+          ? initialData.supporting_documents_url.split(',').map((url: string) => ({ photo: url.trim() }))
           : [],
         phone_number: initialData?.phone_number,
         emergency_phone_number: initialData?.emergency_phone_number,
@@ -315,7 +313,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       const newPayload = convertEmptyStringsToNull({
         ...newData,
         id_cards: filteredIdCardsURL,
-        supporting_documents_url: filteredSupportingDocsURL,
+        supporting_documents_url: filteredSupportingDocsURL.length > 0 ? filteredSupportingDocsURL.join(',') : null,
       });
 
       updateCustomer(
@@ -364,7 +362,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           ? dayjs(data?.date_of_birth).format("YYYY-MM-DD")
           : "",
         id_cards: filteredIdCardsURL,
-        supporting_documents_url: filteredSupportingDocsURL,
+        supporting_documents_url: filteredSupportingDocsURL.length > 0 ? filteredSupportingDocsURL.join(',') : null,
       };
 
       const newPayload = omitBy(
