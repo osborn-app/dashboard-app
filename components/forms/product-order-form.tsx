@@ -857,6 +857,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           isOpen={openApprovalModal}
           onClose={() => setOpenApprovalModal(false)}
           onConfirm={() => {
+            setLoading(true);
             const currentData = form.getValues();
             const payload = createPayload(currentData);
             
@@ -880,6 +881,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                 },
                 onSettled: () => setLoading(false),
                 onError: (error: any) => {
+                  setLoading(false);
                   setOpenApprovalModal(false);
                   toast({
                     variant: "destructive",
@@ -912,6 +914,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                 },
                 onSettled: () => setLoading(false),
                 onError: (error: any) => {
+                  setLoading(false);
                   setOpenApprovalModal(false);
                   toast({
                     variant: "destructive",
