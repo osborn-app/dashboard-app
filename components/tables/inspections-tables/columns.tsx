@@ -18,6 +18,7 @@ export type Inspection = {
   repair_photo_url: string | null;
   repair_completion_date: string | null;
   repair_duration_days?: number;
+  repair_duration_minutes?: number;
   inspection_progress?: string;
   fleet?: {
     id: number;
@@ -225,25 +226,42 @@ export const OngoingInspectionsColumns: ColumnDef<Inspection>[] = [
     header: "Estimasi",
     cell: ({ row }) => {
       const data = row.original;
-      const duration = data.repair_duration_days;
+      const days = data.repair_duration_days || 0;
+      const minutes = data.repair_duration_minutes || 0;
+      const totalMinutes = days * 24 * 60 + minutes;
 
-      if (!duration) {
-        return (
-          <span className="text-muted-foreground">
-            estimasi belum ditentukan
-          </span>
-        );
+      if (totalMinutes === 0) {
+        return <span className="text-muted-foreground">Langsung selesai</span>;
+      }
+
+      // Format duration display
+      const displayDays = Math.floor(totalMinutes / (24 * 60));
+      const remainingMinutes = totalMinutes % (24 * 60);
+      const displayHours = Math.floor(remainingMinutes / 60);
+      const displayMinutes = remainingMinutes % 60;
+
+      let durationText = "";
+      if (displayDays > 0) {
+        durationText += `${displayDays} hari`;
+      }
+      if (displayHours > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayHours} jam`;
+      }
+      if (displayMinutes > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayMinutes} menit`;
       }
 
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{duration} hari</span>
+          <span className="font-medium">{durationText}</span>
           {data.inspection_date && (
             <span className="text-xs text-muted-foreground">
               Estimasi selesai:{" "}
               {new Date(
                 new Date(data.inspection_date).getTime() +
-                  duration * 24 * 60 * 60 * 1000,
+                  totalMinutes * 60 * 1000,
               ).toLocaleDateString("id-ID")}
             </span>
           )}
@@ -314,15 +332,36 @@ export const CompletedInspectionsColumns: ColumnDef<Inspection>[] = [
     header: "Estimasi",
     cell: ({ row }) => {
       const data = row.original;
-      const estimation = data.repair_duration_days;
+      const days = data.repair_duration_days || 0;
+      const minutes = data.repair_duration_minutes || 0;
+      const totalMinutes = days * 24 * 60 + minutes;
 
-      if (!estimation) {
-        return <span className="text-muted-foreground">Belum ditentukan</span>;
+      if (totalMinutes === 0) {
+        return <span className="text-muted-foreground">Langsung selesai</span>;
+      }
+
+      // Format duration display
+      const displayDays = Math.floor(totalMinutes / (24 * 60));
+      const remainingMinutes = totalMinutes % (24 * 60);
+      const displayHours = Math.floor(remainingMinutes / 60);
+      const displayMinutes = remainingMinutes % 60;
+
+      let durationText = "";
+      if (displayDays > 0) {
+        durationText += `${displayDays} hari`;
+      }
+      if (displayHours > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayHours} jam`;
+      }
+      if (displayMinutes > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayMinutes} menit`;
       }
 
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{estimation} hari</span>
+          <span className="font-medium">{durationText}</span>
           {data.repair_completion_date ? (
             <span className="text-xs text-muted-foreground">
               Selesai:{" "}
@@ -335,7 +374,7 @@ export const CompletedInspectionsColumns: ColumnDef<Inspection>[] = [
               Estimasi selesai:{" "}
               {new Date(
                 new Date(data.inspection_date).getTime() +
-                  estimation * 24 * 60 * 60 * 1000,
+                  totalMinutes * 60 * 1000,
               ).toLocaleDateString("id-ID")}
             </span>
           ) : null}

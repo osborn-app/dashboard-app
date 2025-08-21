@@ -12,6 +12,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -33,6 +34,15 @@ import {
 
 import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
+
+// Helper function to convert minutes to time string
+const getTimeStringFromMinutes = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours.toString().padStart(2, "0")}:${mins
+    .toString()
+    .padStart(2, "0")}`;
+};
 
 // File schema for photo upload
 const fileSchema = z.custom<any>(
@@ -67,8 +77,12 @@ const formSchema = z
     description: z.string().optional(),
     repair_duration_days: z
       .number()
-      .min(1, "Durasi perbaikan harus diisi")
-      .max(7, "Durasi perbaikan maksimal 7 hari")
+      .min(0, "Durasi hari minimal 0")
+      .max(7, "Durasi hari maksimal 7")
+      .optional(),
+    repair_duration_minutes: z
+      .number()
+      .min(0, "Durasi menit minimal 0")
       .optional(),
 
     repair_completion_date: z.string().optional(),
@@ -121,6 +135,8 @@ export default function InspectionsForm({
   const [fleetType, setFleetType] = useState<string>("car");
   const [loading, setLoading] = useState(false);
   const [hasIssue, setHasIssue] = useState(false);
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationMinutes, setDurationMinutes] = useState(0);
   const createInspection = useCreateInspection();
   const { data: availableFleetsResponse, isLoading: loadingFleets } =
     useGetAvailableFleets();
@@ -144,7 +160,8 @@ export default function InspectionsForm({
       battery_status: initialData?.battery_status || "aman",
       description: initialData?.description || "",
       repair_completion_date: initialData?.repair_completion_date || "",
-      repair_duration_days: initialData?.repair_duration_days || undefined,
+      repair_duration_days: initialData?.repair_duration_days || 0,
+      repair_duration_minutes: initialData?.repair_duration_minutes || 0,
     },
   });
 
@@ -157,6 +174,17 @@ export default function InspectionsForm({
       values.battery_status === "tidak_aman";
     setHasIssue(hasIssueValue);
   }, [form]);
+
+  // Initialize duration state from initialData
+  useEffect(() => {
+    if (initialData) {
+      const totalMinutes =
+        initialData.repair_duration_days * 24 * 60 +
+        (initialData.repair_duration_minutes || 0);
+      setDurationHours(Math.floor(totalMinutes / 60));
+      setDurationMinutes(totalMinutes % 60);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (fleetId) {
@@ -211,9 +239,12 @@ export default function InspectionsForm({
         payload.battery_status = values.battery_status;
         payload.description = values.description;
 
-        // Only add repair duration if it has value
-        if (values.repair_duration_days) {
+        // Add repair duration if it has value
+        if (values.repair_duration_days !== undefined) {
           payload.repair_duration_days = values.repair_duration_days;
+        }
+        if (values.repair_duration_minutes !== undefined) {
+          payload.repair_duration_minutes = values.repair_duration_minutes;
         }
       }
 
@@ -587,39 +618,85 @@ export default function InspectionsForm({
 
           {/* Repair Duration - Only show if hasIssue is true */}
           {hasIssue && (
-            <FormField
-              control={form.control}
-              name="repair_duration_days"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estimasi Durasi Perbaikan</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(parseInt(value))}
-                    defaultValue={field.value?.toString()}
-                    disabled={isEdit || loading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih durasi perbaikan" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="1">1 Hari</SelectItem>
-                      <SelectItem value="2">2 Hari</SelectItem>
-                      <SelectItem value="3">3 Hari</SelectItem>
-                      <SelectItem value="4">4 Hari</SelectItem>
-                      <SelectItem value="5">5 Hari</SelectItem>
-                      <SelectItem value="6">6 Hari</SelectItem>
-                      <SelectItem value="7">7 Hari</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Pilih estimasi durasi perbaikan untuk masalah yang ditemukan
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="repair_duration_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estimasi Durasi Perbaikan</FormLabel>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium">Hari:</Label>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="7"
+                            value={field.value || 0}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value) || 0)
+                            }
+                            className="w-20"
+                            disabled={isEdit || loading}
+                          />
+                        </FormControl>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium">Jam:</Label>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="23"
+                            value={durationHours}
+                            onChange={(e) => {
+                              const hours = parseInt(e.target.value) || 0;
+                              setDurationHours(hours);
+                              const totalMinutes = hours * 60 + durationMinutes;
+                              form.setValue(
+                                "repair_duration_minutes",
+                                totalMinutes,
+                              );
+                            }}
+                            className="w-16"
+                            disabled={isEdit || loading}
+                          />
+                        </FormControl>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium">Menit:</Label>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="59"
+                            value={durationMinutes}
+                            onChange={(e) => {
+                              const minutes = parseInt(e.target.value) || 0;
+                              setDurationMinutes(minutes);
+                              const totalMinutes = durationHours * 60 + minutes;
+                              form.setValue(
+                                "repair_duration_minutes",
+                                totalMinutes,
+                              );
+                            }}
+                            className="w-16"
+                            disabled={isEdit || loading}
+                          />
+                        </FormControl>
+                      </div>
+                    </div>
+                    <FormDescription>
+                      Maksimal 7 hari, minimal 0 hari. Jam: 0-23, Menit: 0-59
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           )}
 
           {!isEdit && (

@@ -30,21 +30,6 @@ export const columns: ColumnDef<any>[] = [
     header: "Nama",
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <span
-        className={`text-sm font-medium me-2 px-2.5 py-0.5 rounded-xl p-2 ${
-          row.original.status == "available"
-            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-            : "bg-gray-200 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-        }`}
-      >
-        {row.original.status}
-      </span>
-    ),
-  },
-  {
     accessorKey: "type",
     header: "Tipe",
     cell: ({ row }) => (
