@@ -12,7 +12,7 @@ import { useMonthYearState } from "@/hooks/useMonthYearState";
 import { Skeleton } from "../ui/skeleton";
 
 const Calendar = () => {
-  const { month, year, typeQuery } = useMonthYearState();
+  const { month, year, typeQuery, endpoint } = useMonthYearState();
   const [pageParam, setPageParam] = useState("1");
 
   const {
@@ -30,7 +30,7 @@ const Calendar = () => {
 
   useEffect(() => {
     setPageParam("1");
-  }, [month, year, typeQuery]);
+  }, [month, year, typeQuery, endpoint]);
 
   const observer = useRef<IntersectionObserver | null>(null);
   const lastItemRef = useCallback(

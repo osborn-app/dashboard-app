@@ -5,13 +5,24 @@ import { useMonthYearState } from "@/hooks/useMonthYearState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const InputType = () => {
-  const { typeQuery, setTypeQuery } = useMonthYearState();
+  const { typeQuery, setTypeQuery, endpoint } = useMonthYearState();
 
-  const type = [
+  const fleetTypes = [
     { id: "", name: "Semua Kendaraan" },
     { id: "motorcycle", name: "Motor" },
     { id: "car", name: "Mobil" },
-  ]
+  ];
+
+  const productCategories = [
+    { id: "", name: "Semua Produk" },
+    { id: "iphone", name: "iPhone" },
+    { id: "camera", name: "Kamera" },
+    { id: "outdoor", name: "Outdoor" },
+    { id: "starlink", name: "Starlink" },
+  ];
+
+  const options = endpoint === "fleets" ? fleetTypes : productCategories;
+  const placeholder = endpoint === "fleets" ? "Pilih tipe kendaraan" : "Pilih kategori produk";
 
   const handleTypeInputChange = (
     value: string,
@@ -28,14 +39,13 @@ const InputType = () => {
       <SelectTrigger>
         <SelectValue
           defaultValue={typeQuery}
-          placeholder="Pilih tipe"
+          placeholder={placeholder}
         />
       </SelectTrigger>
       <SelectContent>
-        {/* @ts-ignore  */}
-        {type.map((category) => (
-          <SelectItem key={category.id} value={category.id}>
-            {category.name}
+        {options.map((option) => (
+          <SelectItem key={option.id} value={option.id}>
+            {option.name}
           </SelectItem>
         ))}
       </SelectContent>

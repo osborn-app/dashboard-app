@@ -5,11 +5,24 @@ import utc from "dayjs/plugin/utc";
 import { useGetCalendar } from "@/hooks/api/useCalendar";
 import { formatRupiah } from "@/lib/utils";
 import { ICalendarData } from "@/components/calendar/types";
+import { useMonthYearState } from "@/hooks/useMonthYearState";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Map backend order status to frontend order status
+const mapOrderStatus = (backendStatus: string) => {
+  const statusMap: Record<string, string> = {
+    'accepted': 'on_going',
+    'pending': 'pending',
+    'rejected': 'cancelled',
+  };
+  return statusMap[backendStatus] || backendStatus;
+};
+
 const useCalendarViewStore = (filter?: any) => {
+  const { endpoint } = useMonthYearState();
+  
   const {
     data: calendar,
     isFetching,
@@ -18,6 +31,7 @@ const useCalendarViewStore = (filter?: any) => {
     isFetchingNextPage,
   } = useGetCalendar({
     limit: 5,
+    endpoint,
     ...filter,
   });
 

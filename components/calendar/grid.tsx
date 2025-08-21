@@ -5,6 +5,7 @@ import Tooltip from "./tooltip";
 import { ORDER_STATUS } from "./utils";
 import { ICalendarData } from "./types";
 import { useUser } from "@/context/UserContext";
+import { useMonthYearState } from "@/hooks/useMonthYearState";
 
 const DAY_WIDTH = 64;
 const BOX_HEIGHT = 40;
@@ -17,6 +18,7 @@ const Grid = ({
   data: ICalendarData[];
 }) => {
   const { user } = useUser();
+  const { endpoint } = useMonthYearState();
 
   const today = dayjs().format("YYYY-MM-DD");
 
@@ -32,10 +34,17 @@ const Grid = ({
   };
 
   const handleOrderClick = (orderStatus: string, orderId: string | number) => {
-    const url =
-      user?.role !== "owner" && ["pending", "waiting"].includes(orderStatus)
+    let url: string;
+    
+    if (endpoint === "products") {
+      // For products, always redirect to products-orders preview
+      url = `/dashboard/product-orders/${orderId}/preview`;
+    } else {
+      // For fleets, use existing logic
+      url = user?.role !== "owner" && ["pending", "waiting"].includes(orderStatus)
         ? `/dashboard/orders/${orderId}/preview`
         : `/dashboard/orders/${orderId}/detail`;
+    }
 
     window.open(url);
   };
