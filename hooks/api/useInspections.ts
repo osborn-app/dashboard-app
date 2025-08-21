@@ -148,13 +148,8 @@ export const useTriggerReportUpdate = () => {
 //inspection muncul di owner tanpa table tersedia
 export const useGetInspectionsByOwner = (params?: any) => {
   const axiosAuth = useAxiosAuth();
-
-  const getInspectionsByOwnerFn = () => {
-    return axiosAuth.get(`/inspections/report/owner/me`, { params });
-  };
-
   return useQuery({
     queryKey: ["inspections", "owner", params],
-    queryFn: getInspectionsByOwnerFn,
+    queryFn: () => axiosAuth.get(`/inspections/report/owner/me`, { params }),
   });
 };
