@@ -278,8 +278,7 @@ export function FleetTable<TData, TValue>({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua Status</SelectItem>
-            <SelectItem value="available">Tersedia</SelectItem>
-            <SelectItem value="preparation">Persiapan</SelectItem>
+            <SelectItem value="available">Tidak Disewa</SelectItem>
             <SelectItem value="ordered">Sedang Disewa</SelectItem>
           </SelectContent>
         </Select>

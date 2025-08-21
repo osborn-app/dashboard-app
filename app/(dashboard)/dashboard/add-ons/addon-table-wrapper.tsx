@@ -173,20 +173,6 @@ const AddonTableWrapper = () => {
              onSearchChange={handleSearchChange}
              placeholder="Cari add-on berdasarkan nama atau deskripsi"
            />
-
-           <div className="flex items-center space-x-2">
-             <Switch
-               id="show-unavailable"
-               checked={showUnavailable}
-               onCheckedChange={setShowUnavailable}
-             />
-             <label
-               htmlFor="show-unavailable"
-               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-             >
-               Tampilkan yang tidak tersedia
-             </label>
-           </div>
         </div>
       </div>
 

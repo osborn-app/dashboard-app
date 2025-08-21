@@ -143,54 +143,6 @@ export const useDeleteFleet = (id: number) => {
   });
 };
 
-export const useUpdateFleetStatusToPreparation = () => {
-  const axiosAuth = useAxiosAuth();
-  const queryClient = useQueryClient();
-
-  const updateFleetStatusToPreparation = (id: string | number) => {
-    return axiosAuth.put(`${baseEndpoint}/${id}/status`, {
-      status: "preparation",
-    });
-  };
-
-  return useMutation({
-    mutationFn: updateFleetStatusToPreparation,
-    onSuccess: () => {
-      // Invalidate fleets queries
-      queryClient.invalidateQueries({ queryKey: ["fleets"] });
-      // Invalidate available fleets queries for inspections
-      queryClient.invalidateQueries({ queryKey: ["available-fleets"] });
-    },
-    onError: (error) => {
-      console.error("Error updating fleet status to preparation:", error);
-    },
-  });
-};
-
-export const useUpdateFleetStatusToAvailable = () => {
-  const axiosAuth = useAxiosAuth();
-  const queryClient = useQueryClient();
-
-  const updateFleetStatusToAvailable = (id: string | number) => {
-    return axiosAuth.put(`${baseEndpoint}/${id}/status`, {
-      status: "available",
-    });
-  };
-
-  return useMutation({
-    mutationFn: updateFleetStatusToAvailable,
-    onSuccess: () => {
-      // Invalidate fleets queries
-      queryClient.invalidateQueries({ queryKey: ["fleets"] });
-      // Invalidate available fleets queries for inspections
-      queryClient.invalidateQueries({ queryKey: ["available-fleets"] });
-    },
-    onError: (error) => {
-      console.error("Error updating fleet status to available:", error);
-    },
-  });
-};
-
 // New hook specifically for fleet table with network visibility
 export const useFleetTableData = (params: any) => {
   const axiosAuth = useAxiosAuth();

@@ -201,14 +201,14 @@ export const navItems: NavItem[] = [
         href: "/dashboard/products",
         icon: "package",
         label: "products",
-        roles: ["admin", "owner"],
+        roles: ["admin"],
       },
       {
         title: "Add-ons",
         href: "/dashboard/add-ons",
         icon: "package",
         label: "add-ons",
-        roles: ["admin", "owner"],
+        roles: ["admin"],
       },
       {
         title: "Fleets Mitra Ojol",
@@ -292,14 +292,14 @@ export const navItems: NavItem[] = [
   {
     title: "INSPEKSI & PERBAIKAN",
     label: "Inspections",
-    roles: ["admin"],
+    roles: ["admin", "owner"],
     items: [
       {
         title: "Inspections",
         href: "/dashboard/inspections",
         icon: "listchecks",
         label: "Inspections",
-        roles: ["admin"],
+        roles: ["admin", "owner"],
       },
       {
         title: "Keperluan Perbaikan",
