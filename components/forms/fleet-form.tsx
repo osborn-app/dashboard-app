@@ -493,40 +493,6 @@ export const FleetForm: React.FC<FleetFormProps> = ({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="relative label-required">
-                    Status
-                  </FormLabel>
-                  <Select
-                    disabled={!isEdit || loading}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}
-                  >
-                    <FormControl className="disabled:opacity-100">
-                      <SelectTrigger>
-                        <SelectValue
-                          defaultValue={field.value}
-                          placeholder="Pilih status"
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {statusOptions.map((status) => (
-                        <SelectItem key={status.id} value={status.id}>
-                          {status.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             {!isEdit ? (
               <FormItem>
                 <FormLabel>Warna</FormLabel>
