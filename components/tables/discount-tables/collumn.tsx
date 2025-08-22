@@ -8,6 +8,36 @@ import { convertTime } from "@/lib/utils";
 const duration = require("dayjs/plugin/duration");
 dayjs.extend(duration);
 
+// Helper function to get display name for type
+const getTypeDisplayName = (fleetType: string | null, productCategory: string | null) => {
+  if (fleetType) {
+    const fleetTypeMap: { [key: string]: string } = {
+      'car': 'Mobil',
+      'motorcycle': 'Motor',
+      'all': 'Semua Kendaraan'
+    };
+    return fleetTypeMap[fleetType] || fleetType;
+  }
+  
+  if (productCategory) {
+    const productCategoryMap: { [key: string]: string } = {
+      'iphone': 'iPhone',
+      'camera': 'Camera',
+      'outdoor': 'Outdoor',
+      'starlink': 'Starlink',
+      'all': 'Semua Produk'
+    };
+    return productCategoryMap[productCategory] || productCategory;
+  }
+  
+  // Handle null product_category (which means "all products" in backend)
+  if (productCategory === null) {
+    return 'Semua Produk';
+  }
+  
+  return '-';
+};
+
 export const pendingColumns: ColumnDef<any>[] = [
     {
         accessorKey: "discount",
@@ -38,10 +68,10 @@ export const pendingColumns: ColumnDef<any>[] = [
         ),
     },
     {
-        accessorKey: "fleet_type",
-        header: "Jenis Kendaraan",
+        accessorKey: "type",
+        header: "Tipe",
         cell: ({ row }) => (
-            <span>{row.original.fleet_type}</span>
+            <span>{getTypeDisplayName(row.original.fleet_type, row.original.product_category)}</span>
         ),
     },
     {
@@ -80,10 +110,10 @@ export const completedColumns: ColumnDef<any>[] = [
         ),
     },
     {
-        accessorKey: "fleet_type",
-        header: "Jenis Kendaraan",
+        accessorKey: "type",
+        header: "Tipe",
         cell: ({ row }) => (
-            <span>{row.original.fleet_type}</span>
+            <span>{getTypeDisplayName(row.original.fleet_type, row.original.product_category)}</span>
         ),
     },
     {

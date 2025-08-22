@@ -69,7 +69,8 @@ export function NeedsTable<TData, TValue>({
   const page = searchParams?.get("page") ?? "1";
   const status = searchParams?.get("status");
   const pageAsNumber = Number(page);
-  const fallbackPage = isNaN(pageAsNumber) || pageAsNumber < 1 ? 1 : pageAsNumber;
+  const fallbackPage =
+    isNaN(pageAsNumber) || pageAsNumber < 1 ? 1 : pageAsNumber;
   const per_page = searchParams?.get("limit") ?? "10";
   const perPageAsNumber = Number(per_page);
   const fallbackPerPage = isNaN(perPageAsNumber) ? 10 : perPageAsNumber;
@@ -127,7 +128,7 @@ export function NeedsTable<TData, TValue>({
 
   return (
     <div className="w-full">
-      <ScrollArea className="h-[calc(100vh-200px)] w-full rounded-md border">
+      <ScrollArea className="h-[calc(80vh-220px)] w-full rounded-md border">
         <div className="relative w-full overflow-auto">
           <Table>
             <TableHeader>
@@ -194,7 +195,9 @@ export function NeedsTable<TData, TValue>({
               }}
             >
               <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={table.getState().pagination.pageSize} />
+                <SelectValue
+                  placeholder={table.getState().pagination.pageSize}
+                />
               </SelectTrigger>
               <SelectContent side="top">
                 {pageSizeOptions.map((pageSize) => (

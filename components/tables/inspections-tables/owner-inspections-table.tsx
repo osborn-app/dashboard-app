@@ -216,7 +216,7 @@ export default function OwnerInspectionsTable({
 
   return (
     <>
-      <ScrollArea className="rounded-md border h-[calc(110vh-220px)]">
+      <ScrollArea className="rounded-md border h-[calc(75vh-220px)]">
         <Table className="relative">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
