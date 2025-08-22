@@ -306,7 +306,7 @@ export const navItems: NavItem[] = [
         href: "/dashboard/needs",
         icon: "wrench",
         label: "Keperluan Perbaikan",
-        roles: ["admin"],
+        roles: ["admin", "owner"],
       },
     ],
   },

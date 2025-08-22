@@ -55,11 +55,11 @@ export const useGetInfinityFleetsForNeeds = (query?: string) => {
     pageParam?: number;
     query?: string;
   }) => {
-    return axiosAuth.get(`${baseEndpoint}?status=preparation`, {
+    return axiosAuth.get(baseEndpoint, {
       params: {
         limit: 10,
         page: pageParam,
-        // q: query,
+        q: query,
       },
     });
   };
