@@ -177,28 +177,9 @@ export const AddonForm = () => {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="reserved_quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reserved Quantity</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="Reserved (default: 0)"
-                        min="0"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
             
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            {/* <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
               <div className="text-sm text-blue-800">
                 <h4 className="font-medium mb-2">📦 Informasi Stock Management:</h4>
                 <ul className="space-y-1 text-xs">
@@ -208,7 +189,7 @@ export const AddonForm = () => {
                   <li>• Add-on hanya muncul jika Available &gt; 0</li>
                 </ul>
               </div>
-            </div>
+            </div> */}
           </div>
 
           <FormField

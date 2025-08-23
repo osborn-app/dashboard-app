@@ -233,7 +233,7 @@ export const AddonEditForm = ({ addonId }: AddonEditFormProps) => {
                 Kelola stock addon untuk memastikan ketersediaan yang akurat
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="stock_quantity"
@@ -255,7 +255,7 @@ export const AddonEditForm = ({ addonId }: AddonEditFormProps) => {
                     </FormItem>
                   )}
                 />
-
+{/* 
                 <FormField
                   control={form.control}
                   name="reserved_quantity"
@@ -276,19 +276,7 @@ export const AddonEditForm = ({ addonId }: AddonEditFormProps) => {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-              </div>
-
-              <div className="mt-4 p-3 bg-white border border-blue-200 rounded-lg">
-                <div className="text-sm text-blue-800">
-                  <div className="font-medium mb-2">Informasi Stock:</div>
-                  <ul className="space-y-1 text-xs">
-                    <li>• <strong>Stock Quantity:</strong> Total stok fisik yang tersedia</li>
-                    <li>• <strong>Reserved Quantity:</strong> Stok yang sudah dipesan tapi belum dikonfirmasi</li>
-                    <li>• <strong>Available:</strong> Stock Quantity - Reserved Quantity</li>
-                    <li>• Addon dengan Available = 0 tidak akan muncul di frontend</li>
-                  </ul>
-                </div>
+                /> */}
               </div>
             </div>
           </div>
