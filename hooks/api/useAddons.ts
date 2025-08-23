@@ -9,7 +9,7 @@ interface GetAddonsParams {
   q?: string;
   category?: string;
 }
-
+// triger
 export const useGetAddons = (params: GetAddonsParams = {}) => {
   const axiosAuth = useAxiosAuth();
 
