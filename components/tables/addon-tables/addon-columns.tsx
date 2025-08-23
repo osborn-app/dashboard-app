@@ -82,6 +82,16 @@ export const addonColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "stock_quantity",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">Stock</span>
+    ),
+    cell: ({ row }) => (
+      <span className="font-medium">{row.original?.stock_quantity}</span>
+    ),
+    enableSorting: false,
+  },
+  {
     accessorKey: "description",
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Deskripsi</span>

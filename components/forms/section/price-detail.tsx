@@ -218,6 +218,29 @@ const ProductPriceDetail: React.FC<PriceDetailProps> = ({
               {(showAdditional || showServicePrice) && (
                 <Separator className="mb-1" />
               )}
+              
+              {/* Display addons as separate section */}
+              {(detail?.addons?.length > 0 || initialData?.addons?.length > 0) && (
+                <>
+                  <p className="font-medium text-sm text-neutral-700 mb-1">
+                    Aksesoris Tambahan
+                  </p>
+                  {(detail?.addons || initialData?.addons)?.map((addon: any, index: any) => {
+                    return (
+                      <div className="flex justify-between mb-1" key={index}>
+                        <p className="font-medium text-sm text-neutral-700">
+                          {addon.name} (x{addon.quantity})
+                        </p>
+                        <p className="font-semibold text-base">
+                          {formatRupiah(addon.price * addon.quantity)}
+                        </p>
+                      </div>
+                    );
+                  })}
+                  <Separator className="mb-1" />
+                </>
+              )}
+              
               {detail?.insurance && (
                 <>
                   <p className="font-medium text-sm text-neutral-700 mb-1">

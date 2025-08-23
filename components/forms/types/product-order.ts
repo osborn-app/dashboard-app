@@ -66,6 +66,7 @@ export const productOrderSchema = z.object({
         return num;
       }),
   })).optional(),
+
 }).refine((data) => {
   // Additional validation for required fields when creating
   if (!data.customer || !data.product || !data.date || !data.duration) {

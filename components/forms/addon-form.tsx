@@ -33,6 +33,15 @@ const formSchema = z.object({
   price: z.string().min(1, "Harga wajib diisi"),
   description: z.string().optional(),
   is_available: z.boolean().default(true),
+  stock_quantity: z.string().min(1, "Stock quantity wajib diisi"),
+  reserved_quantity: z.string().optional().default("0"),
+}).refine((data) => {
+  const stockQty = parseInt(data.stock_quantity);
+  const reservedQty = parseInt(data.reserved_quantity || "0");
+  return reservedQty <= stockQty;
+}, {
+  message: "Reserved quantity tidak boleh lebih dari stock quantity",
+  path: ["reserved_quantity"],
 });
 
 const categoryOptions = [
@@ -57,6 +66,8 @@ export const AddonForm = () => {
       price: "",
       description: "",
       is_available: true,
+      stock_quantity: "",
+      reserved_quantity: "0",
     },
   });
 
@@ -66,6 +77,8 @@ export const AddonForm = () => {
       await createAddon({
         ...values,
         price: parseFloat(values.price),
+        stock_quantity: parseInt(values.stock_quantity),
+        reserved_quantity: parseInt(values.reserved_quantity || "0"),
       });
       toast({
         variant: "success",
@@ -143,6 +156,60 @@ export const AddonForm = () => {
               </FormItem>
             )}
           />
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="stock_quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stock Quantity</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="Masukkan jumlah stock"
+                        min="0"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="reserved_quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reserved Quantity</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="Reserved (default: 0)"
+                        min="0"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="text-sm text-blue-800">
+                <h4 className="font-medium mb-2">📦 Informasi Stock Management:</h4>
+                <ul className="space-y-1 text-xs">
+                  <li>• <strong>Stock Quantity:</strong> Total stock yang tersedia</li>
+                  <li>• <strong>Reserved Quantity:</strong> Stock yang sudah dipesan (default: 0)</li>
+                  <li>• <strong>Available:</strong> Stock Quantity - Reserved Quantity</li>
+                  <li>• Add-on hanya muncul jika Available &gt; 0</li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
           <FormField
             control={form.control}

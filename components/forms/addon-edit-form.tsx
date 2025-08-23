@@ -34,6 +34,15 @@ const formSchema = z.object({
   price: z.string().min(1, "Harga wajib diisi"),
   description: z.string().optional(),
   is_available: z.boolean().default(true),
+  stock_quantity: z.string().min(1, "Stock quantity wajib diisi"),
+  reserved_quantity: z.string().min(0, "Reserved quantity tidak boleh negatif"),
+}).refine((data) => {
+  const stockQty = parseInt(data.stock_quantity) || 0;
+  const reservedQty = parseInt(data.reserved_quantity) || 0;
+  return reservedQty <= stockQty;
+}, {
+  message: "Reserved quantity tidak boleh melebihi stock quantity",
+  path: ["reserved_quantity"],
 });
 
 const categoryOptions = [
@@ -63,6 +72,8 @@ export const AddonEditForm = ({ addonId }: AddonEditFormProps) => {
       price: "",
       description: "",
       is_available: true,
+      stock_quantity: "",
+      reserved_quantity: "0",
     },
   });
 
@@ -76,6 +87,8 @@ export const AddonEditForm = ({ addonId }: AddonEditFormProps) => {
         price: addon.price?.toString() || "",
         description: addon.description || "",
         is_available: addon.is_available ?? true,
+        stock_quantity: addon.stock_quantity?.toString() || "0",
+        reserved_quantity: addon.reserved_quantity?.toString() || "0",
       });
     }
   }, [addonData, form]);
@@ -86,6 +99,8 @@ export const AddonEditForm = ({ addonId }: AddonEditFormProps) => {
       await editAddon({
         ...values,
         price: parseFloat(values.price),
+        stock_quantity: parseInt(values.stock_quantity),
+        reserved_quantity: parseInt(values.reserved_quantity),
       });
       toast({
         variant: "success",
@@ -209,6 +224,74 @@ export const AddonEditForm = ({ addonId }: AddonEditFormProps) => {
               </FormItem>
             )}
           />
+
+          {/* Stock Management Section */}
+          <div className="space-y-4">
+            <div className="border rounded-lg p-4 bg-blue-50">
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Manajemen Stock</h3>
+              <p className="text-sm text-blue-700 mb-4">
+                Kelola stock addon untuk memastikan ketersediaan yang akurat
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="stock_quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Stock Quantity</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          placeholder="Jumlah stock tersedia" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <div className="text-xs text-gray-500">
+                        Total stok fisik yang tersedia
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="reserved_quantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reserved Quantity</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          placeholder="Jumlah stock terpesan" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <div className="text-xs text-gray-500">
+                        Stok yang sudah dipesan (status PENDING)
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="mt-4 p-3 bg-white border border-blue-200 rounded-lg">
+                <div className="text-sm text-blue-800">
+                  <div className="font-medium mb-2">Informasi Stock:</div>
+                  <ul className="space-y-1 text-xs">
+                    <li>• <strong>Stock Quantity:</strong> Total stok fisik yang tersedia</li>
+                    <li>• <strong>Reserved Quantity:</strong> Stok yang sudah dipesan tapi belum dikonfirmasi</li>
+                    <li>• <strong>Available:</strong> Stock Quantity - Reserved Quantity</li>
+                    <li>• Addon dengan Available = 0 tidak akan muncul di frontend</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="flex gap-4">
             <Button type="submit" disabled={loading}>

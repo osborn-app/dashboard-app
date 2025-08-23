@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "../ui/use-toast";
-import { cn, convertTime, makeUrlsClickable } from "@/lib/utils";
+import { cn, convertTime, makeUrlsClickable, formatRupiah } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetDetailFleet, useGetInfinityFleets } from "@/hooks/api/useFleet";
 import { isEmpty, isNull, isString } from "lodash";
@@ -45,6 +45,7 @@ import locale from "antd/locale/id_ID";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "../ui/label";
 import { useGetInsurances } from "@/hooks/api/useInsurance";
+import { useGetAddons } from "@/hooks/api/useAddons";
 import {
   useAcceptOrder,
   useEditOrder,
@@ -161,6 +162,31 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   } = useGetInfinityFleets(searchFleetDebounce);
 
   const { data: insurances } = useGetInsurances();
+  
+  // Addons state and API
+  const [selectedAddOns, setSelectedAddOns] = useState<Array<{addonId: number, quantity: number}>>([]);
+  const { data: addOnsData } = useGetAddons();
+  
+  // Use API data or fallback to empty array, filter only available addons
+  const addOns = useMemo(() => {
+    const data = addOnsData?.items || [];
+    const filteredAddons = Array.isArray(data) ? data.filter((addon: any) => {
+      const availableQuantity = (addon.stock_quantity || 0) - (addon.reserved_quantity || 0);
+      return availableQuantity > 0; // Only show addons with stock > 0
+    }) : [];
+    return filteredAddons;
+  }, [addOnsData?.items]);
+  
+  // Initialize selectedAddOns from initialData
+  useEffect(() => {
+    if (initialData?.addons && addOns.length > 0) {
+      const initialAddons = initialData.addons.map((addon: any) => ({
+        addonId: addon.addon_id,
+        quantity: addon.quantity,
+      }));
+      setSelectedAddOns(initialAddons);
+    }
+  }, [initialData?.addons, addOns]);
 
   const manipulateInsurance = insurances?.data?.items?.map((item: any) => {
     let newName;
@@ -369,6 +395,17 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           };
         }),
       }),
+      ...(selectedAddOns && selectedAddOns.length !== 0 && {
+        addons: selectedAddOns.map((selection: any) => {
+          const addon = addOns.find((a: any) => a.id === selection.addonId);
+          return {
+            addon_id: addon.id,
+            name: addon.name,
+            price: addon.price,
+            quantity: selection.quantity,
+          };
+        }),
+      }),
     });
 
     const handleSuccess = () => {
@@ -503,6 +540,17 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           };
         }),
       }),
+      ...(selectedAddOns && selectedAddOns.length !== 0 && {
+        addons: selectedAddOns.map((selection: any) => {
+          const addon = addOns.find((a: any) => a.id === selection.addonId);
+          return {
+            addon_id: addon.id,
+            name: addon.name,
+            price: addon.price,
+            quantity: selection.quantity,
+          };
+        }),
+      }),
     };
 
     if (fleetField) {
@@ -514,6 +562,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }
   }, [
     additionalField,
+    selectedAddOns,
+    addOns,
     customerField,
     fleetField,
     dateField,
@@ -1637,6 +1687,103 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   )}
                 </div>
 
+                 {/* Addon Selection */}
+                 {addOns && addOns.length > 0 && (
+                  <section className="pt-5">
+                    <div className="mx-auto w-full">
+                      <div className='mb-4 font-gabarito'>
+                        <p className="text-xl font-semibold">Aksesoris Tambahan</p>
+                      </div>
+
+                      <div className="rounded-md p-4 shadow-md border border-[#1B18181A]">
+                        <div className="space-y-3">
+                          {addOns.map((addon: any) => {
+                            const currentSelection = selectedAddOns.find(s => s.addonId === addon.id);
+                            const selectedQuantity = currentSelection?.quantity || 0;
+                            const availableQuantity = (addon.stock_quantity || 0) - (addon.reserved_quantity || 0);
+                            
+                            return (
+                              <div key={addon.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h5 className="font-medium text-gray-900">{addon.name}</h5>
+                                      <p className="text-sm text-blue-600 font-medium">{formatRupiah(addon.price)}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs text-gray-500">Stock: <span className="font-medium text-green-600">{availableQuantity}</span></p>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center space-x-2 ml-4">
+                                  <button
+                                    type="button"
+                                    className="w-7 h-7 rounded bg-gray-200 flex items-center justify-center disabled:opacity-50 text-sm font-medium hover:bg-gray-300"
+                                    disabled={selectedQuantity <= 0}
+                                    onClick={() => {
+                                      if (selectedQuantity > 0) {
+                                        if (selectedQuantity === 1) {
+                                          setSelectedAddOns(prev => {
+                                            const newState = prev.filter(s => s.addonId !== addon.id);
+                                            return newState;
+                                          });
+                                        } else {
+                                          setSelectedAddOns(prev => {
+                                            const newState = prev.map(s => 
+                                              s.addonId === addon.id 
+                                                ? { ...s, quantity: s.quantity - 1 }
+                                                : s
+                                            );
+                                            return newState;
+                                          });
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  
+                                  <span className="w-8 text-center font-medium text-sm">
+                                    {selectedQuantity}
+                                  </span>
+                                  
+                                  <button
+                                    type="button"
+                                    className="w-7 h-7 rounded bg-blue-500 text-white flex items-center justify-center disabled:opacity-50 disabled:bg-gray-300 text-sm font-medium hover:bg-blue-600"
+                                    disabled={selectedQuantity >= availableQuantity}
+                                    onClick={() => {
+                                      if (selectedQuantity < availableQuantity) {
+                                        if (selectedQuantity === 0) {
+                                          setSelectedAddOns(prev => {
+                                            const newState = [...prev, { addonId: addon.id, quantity: 1 }];
+                                            return newState;
+                                          });
+                                        } else {
+                                          setSelectedAddOns(prev => {
+                                            const newState = prev.map(s => 
+                                              s.addonId === addon.id 
+                                                ? { ...s, quantity: s.quantity + 1 }
+                                                : s
+                                            );
+                                            return newState;
+                                          });
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
                 {!isEdit ? (
                   <FormItem>
                     <FormLabel>Permintaan Khusus</FormLabel>
@@ -1736,7 +1883,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               initialData={initialData}
               isEdit={isEdit ?? false}
               showServicePrice={showServicePrice}
-              showAdditional={additionalField?.length !== 0}
+                             showAdditional={additionalField?.length !== 0 || selectedAddOns?.length !== 0}
               form={form}
               detail={detail}
               handleOpenApprovalModal={debouncedOpenModal}
