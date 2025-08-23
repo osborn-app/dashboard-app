@@ -225,7 +225,7 @@ export const AddonEditForm = ({ addonId }: AddonEditFormProps) => {
             )}
           />
 
-          {/* Stock Management Section */}
+          {/* Stock Management Section's */}
           <div className="space-y-4">
             <div className="border rounded-lg p-4 bg-blue-50">
               <h3 className="text-lg font-semibold text-blue-900 mb-2">Manajemen Stock</h3>
