@@ -9,34 +9,40 @@ const duration = require("dayjs/plugin/duration");
 dayjs.extend(duration);
 
 // Helper function to get display name for type
-const getTypeDisplayName = (fleetType: string | null, productCategory: string | null) => {
-  if (fleetType) {
-    const fleetTypeMap: { [key: string]: string } = {
-      'car': 'Mobil',
-      'motorcycle': 'Motor',
-      'all': 'Semua Kendaraan'
-    };
-    return fleetTypeMap[fleetType] || fleetType;
-  }
+const normalize = (v?: string | null) => {
+    if (v === null || v === undefined) return null;
+    const trimmed = String(v).trim().toLowerCase();
+    return trimmed === "" || trimmed === "null" || trimmed === "undefined" ? null : trimmed;
+  };
   
-  if (productCategory) {
-    const productCategoryMap: { [key: string]: string } = {
-      'iphone': 'iPhone',
-      'camera': 'Camera',
-      'outdoor': 'Outdoor',
-      'starlink': 'Starlink',
-      'all': 'Semua Produk'
-    };
-    return productCategoryMap[productCategory] || productCategory;
-  }
+  const getTypeDisplayName = (fleetType: string | null, productCategory: string | null) => {
+    const fleet = normalize(fleetType);
+    const category = normalize(productCategory);
   
-  // Handle null product_category (which means "all products" in backend)
-  if (productCategory === null) {
-    return 'Semua Produk';
-  }
+    if (fleet) {
+      const fleetTypeMap: Record<string, string> = {
+        car: "Mobil",
+        motorcycle: "Motor",
+        all: "Semua Kendaraan",
+      };
+      return fleetTypeMap[fleet] ?? fleet; // fallback ke nilai asli kalau tak ada di map
+    }
   
-  return '-';
-};
+    if (category) {
+      const productCategoryMap: Record<string, string> = {
+        iphone: "iPhone",
+        camera: "Camera",
+        outdoor: "Outdoor",
+        starlink: "Starlink",
+        all: "Semua Produk",
+      };
+      return productCategoryMap[category] ?? category;
+    }
+  
+    // Keduanya kosong → anggap semua produk
+    return "Semua Produk";
+  };
+  
 
 export const pendingColumns: ColumnDef<any>[] = [
     {
