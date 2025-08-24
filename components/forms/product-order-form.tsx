@@ -466,7 +466,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           price = Number(service.price);
         }
         
-        if (isNaN(price) || price <= 0) {
+        if (isNaN(price)) {
           throw new Error("Harga harus berupa angka yang valid");
         }
         
@@ -676,7 +676,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
             name: field.name,
             price: (() => {
               const price = typeof field.price === 'string' ? Number(field.price.replace(/,/g, "")) : Number(field.price);
-              if (isNaN(price) || price <= 0) {
+              if (isNaN(price)) {
                 return 0; // fallback value
               }
               return price;
@@ -1762,9 +1762,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                                     allowLeadingZeros
                                     thousandSeparator=","
                                     value={field.value}
-                                    onValueChange={(values) => {
-                                      field.onChange(values.value);
-                                    }}
+                                    onChange={field.onChange}
                                     onBlur={field.onBlur}
                                   />
                                 </div>
