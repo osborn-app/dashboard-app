@@ -15,7 +15,7 @@ export const useGetCalendar = (params?: Record<string, any> & { endpoint?: Calen
     } else if (endpoint === "maintenance") {
       url = "/maintenance";
     } else {
-      url = `/${endpoint}/calendar`;
+      url = `/${endpoint}/calendar`; //redeplot
     }
     
     return axiosAuth.get(url, {
