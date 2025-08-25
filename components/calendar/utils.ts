@@ -64,6 +64,29 @@ export const ORDER_STATUS = {
     bgColorDarker: "bg-blue-500",
     border: "hover:border hover:border-blue-500",
   },
+  // Inspection statuses
+  completed: {
+    text: "Completed",
+    color: "text-green-900",
+    bgColor: "bg-green-100",
+    bgColorDarker: "bg-green-500",
+    border: "hover:border hover:border-green-500",
+  },
+  pending_repair: {
+    text: "Pending Repair",
+    color: "text-yellow-900",
+    bgColor: "bg-yellow-100",
+    bgColorDarker: "bg-yellow-500",
+    border: "hover:border hover:border-yellow-500",
+  },
+  // Maintenance statuses
+  ongoing: {
+    text: "Ongoing",
+    color: "text-blue-900",
+    bgColor: "bg-blue-100",
+    bgColorDarker: "bg-blue-500",
+    border: "hover:border hover:border-blue-500",
+  },
 };
 
 export const MONTHS = [

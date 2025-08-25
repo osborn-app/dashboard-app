@@ -12,8 +12,8 @@ interface MonthYearStore {
   setSearchQuery: (searchQuery: string) => void;
   typeQuery: string;
   setTypeQuery: (typeQuery: string) => void;
-  endpoint: "fleets" | "products";
-  setEndpoint: (endpoint: "fleets" | "products") => void;
+  endpoint: "fleets" | "products" | "inspections" | "maintenance";
+  setEndpoint: (endpoint: "fleets" | "products" | "inspections" | "maintenance") => void;
   handlePrevMonth: () => void;
   handleNextMonth: () => void;
   handlePrevYear: () => void;
