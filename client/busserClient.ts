@@ -18,3 +18,7 @@ export const assignBusserTask = (
 ) => {
   return client.patch(`/busser/${id}/assign`, { investigatorId });
 };
+
+export const getBusserStatistics = () => {
+  return client.get('/busser/statistics');
+};

@@ -142,3 +142,14 @@ export const useGetBuserTotals = (
     ...options,
   });
 };
+
+export const useGetBusserStatistics = () => {
+  const axiosAuth = useAxiosAuth();
+  const getBusserStatistics = () => {
+    return axiosAuth.get('/busser/statistics');
+  };
+  return useQuery({
+    queryKey: ['busser-statistics'],
+    queryFn: getBusserStatistics,
+  });
+};

@@ -5,6 +5,7 @@ import OrderOwnerStatusCard from "@/components/order-owner-card";
 import OrderStatusCard from "@/components/order-status-card";
 import ReimburseStatusCard from "@/components/reimburse-status-card";
 import RequestStatusCard from "@/components/request-status-card";
+import BusserStatusCard from "@/components/busser-status-card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Welcome from "@/components/welcome-text";
 import { useUser } from "@/context/UserContext";
@@ -43,6 +44,12 @@ export default function Page() {
                 </h3>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <ReimburseStatusCard />
+                </div>
+                <h3 className="text-2xl font-bold tracking-tight">
+                  Busser Management
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+                  <BusserStatusCard />
                 </div>
               </>
             )}
