@@ -302,7 +302,7 @@ export const navItems: NavItem[] = [
         roles: ["admin", "owner"],
       },
       {
-        title: "Keperluan Perbaikan",
+        title: "Keperluan & Perbaikan",
         href: "/dashboard/needs",
         icon: "wrench",
         label: "Keperluan Perbaikan",
