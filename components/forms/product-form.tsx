@@ -179,7 +179,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
          const response = await axiosAuth.post("/storages/presign/list", {
        file_names: file_names,
-       folder: "product",
+       folder: "fleet",
      });
 
     for (let i = 0; i < file_names.length; i++) {
