@@ -478,11 +478,11 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     }),
     ...(selectedAddOns && selectedAddOns.length > 0 && {
       addons: selectedAddOns.map((selection: any) => {
-        const addon = addOns.find((a: any) => a.id === selection.addonId);
+        const addon = addOns.find((a: any) => a?.id === selection?.addonId);
         return {
-          addon_id: addon.id,
-          name: addon.name,
-          price: addon.price,
+          addon_id: addon?.id,
+          name: addon?.name,
+          price: addon?.price,
           quantity: selection.quantity,
         };
       }),
@@ -686,11 +686,11 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
       }),
       ...(selectedAddOns && selectedAddOns.length !== 0 && {
         addons: selectedAddOns.map((selection: any) => {
-          const addon = addOns.find((a: any) => a.id === selection.addonId);
+          const addon = addOns.find((a: any) => a?.id === selection?.addonId);
           return {
-            addon_id: addon.id,
-            name: addon.name,
-            price: addon.price,
+            addon_id: addon?.id,
+            name: addon?.name,
+            price: addon?.price,
             quantity: selection.quantity,
           };
         }),
