@@ -9,10 +9,8 @@ const EndpointSelector = () => {
   const { endpoint, setEndpoint } = useMonthYearState();
   const { user } = useUser();
 
-  // Hide endpoint selector for owner role
-  if (user?.role === "owner") {
-    return null;
-  }
+  // Show endpoint selector for all roles
+  // Owner can now access their own data through the backend filters
 
   const endpoints = [
     { id: "fleets", name: "Kendaraan" },

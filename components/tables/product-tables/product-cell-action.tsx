@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Edit, MoreHorizontal, Trash, Eye, ToggleLeft, ToggleRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUser } from "@/context/UserContext";
 
 interface ProductCellActionProps {
   data: User;
@@ -23,6 +24,7 @@ interface ProductCellActionProps {
 export const ProductCellAction: React.FC<ProductCellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const { user } = useUser();
 
   const router = useRouter();
   const id = data?.id;
@@ -110,41 +112,45 @@ export const ProductCellAction: React.FC<ProductCellActionProps> = ({ data }) =>
             <Eye className="mr-2 h-4 w-4" /> View Details
           </DropdownMenuItem>
 
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/dashboard/products/${data?.id}/edit`);
-            }}
-          >
-            <Edit className="mr-2 h-4 w-4" /> Edit
-          </DropdownMenuItem>
+          {user?.role !== "owner" && (
+            <>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/dashboard/products/${data?.id}/edit`);
+                }}
+              >
+                <Edit className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
 
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              handleStatusToggle();
-            }}
-          >
-            {data?.status === "available" ? (
-              <>
-                <ToggleLeft className="mr-2 h-4 w-4" /> Deactivate
-              </>
-            ) : (
-              <>
-                <ToggleRight className="mr-2 h-4 w-4" /> Activate
-              </>
-            )}
-          </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusToggle();
+                }}
+              >
+                {data?.status === "available" ? (
+                  <>
+                    <ToggleLeft className="mr-2 h-4 w-4" /> Deactivate
+                  </>
+                ) : (
+                  <>
+                    <ToggleRight className="mr-2 h-4 w-4" /> Activate
+                  </>
+                )}
+              </DropdownMenuItem>
 
-          <DropdownMenuItem
-            className="text-red-500"
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen(true);
-            }}
-          >
-            <Trash className="mr-2 h-4 w-4" /> Delete
-          </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(true);
+                }}
+              >
+                <Trash className="mr-2 h-4 w-4" /> Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

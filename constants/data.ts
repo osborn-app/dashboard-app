@@ -201,7 +201,7 @@ export const navItems: NavItem[] = [
         href: "/dashboard/products",
         icon: "package",
         label: "products",
-        roles: ["admin"],
+        roles: ["admin", "owner"],
       },
       {
         title: "Add-ons",
@@ -287,6 +287,13 @@ export const navItems: NavItem[] = [
     href: "/dashboard/recap",
     icon: "notebookText",
     label: "recap",
+    roles: ["owner"],
+  },
+  {
+    title: "Pencatatan Produk",
+    href: "/dashboard/product-ledgers",
+    icon: "ledger",
+    label: "product-ledgers",
     roles: ["owner"],
   },
   {

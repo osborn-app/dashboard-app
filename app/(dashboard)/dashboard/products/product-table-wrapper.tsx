@@ -234,11 +234,11 @@ const ProductTableWrapper = () => {
             </SelectContent>
           </Select>
 
-          <CalendarDateRangePicker
+          {/* <CalendarDateRangePicker
             onDateRangeChange={handleDateRangeChange}
             onClearDate={handleClearDate}
             dateRange={dateRange}
-          />
+          /> */}
           <SearchInput
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}

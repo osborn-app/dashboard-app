@@ -166,6 +166,7 @@ export const Icons = {
   notebookText: NotebookText,
   discount: Percent,
   package: Package,
+  ledger: NotebookText,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
