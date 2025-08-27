@@ -229,7 +229,7 @@ export const productLedgerRecapColumns: ColumnDef<IItems>[] = [
     cell: ({ row }) => {
       const commission =
         row.original?.owner_commission ||
-        row.original?.credit_amount ||
+        // row.original?.credit_amount ||
         row.original?.debit_amount;
       return (
         <span className="text-sm font-medium">
