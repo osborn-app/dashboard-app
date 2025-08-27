@@ -33,15 +33,18 @@ const Grid = ({
     return totalHours;
   };
 
-  const handleOrderClick = (orderStatus: string, orderId: string | number, fleetId?: string | number) => {
+  const handleOrderClick = (orderStatus: string, orderId: string | number, inspectionsId?: string | number, needsId?: string | number) => {
     let url: string;
     
     if (endpoint === "products") {
       // For products, always redirect to products-orders preview
       url = `/dashboard/product-orders/${orderId}/preview`;
-    } else if (endpoint === "inspections" || endpoint === "maintenance") {
+    } else if (endpoint === "inspections") {
       // For inspections and maintenance, redirect to fleet detail
-      url = `/dashboard/fleets/${fleetId}/detail`;
+      url = `/dashboard/inspections/${inspectionsId}/detail`;
+    } else if (endpoint === "maintenance") {
+      // For maintenance, redirect to maintenance/needs detail
+      url = `/dashboard/needs/${needsId}/detail`;
     } else {
       // For fleets, use existing logic
       url = user?.role !== "owner" && ["pending", "waiting"].includes(orderStatus)
@@ -141,7 +144,7 @@ const Grid = ({
                       width <= 20 ? "" : "px-[10px]"
                     } items-center justify-center h-full w-full`}
                     onClick={() =>
-                      handleOrderClick(usage.orderStatus, usage.id, vehicle.id)
+                      handleOrderClick(usage.orderStatus, usage.id, vehicle.id, vehicle.id)
                     }
                   >
                     <span

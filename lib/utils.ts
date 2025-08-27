@@ -158,3 +158,10 @@ export const formatDateTime = (
   };
   return new Intl.DateTimeFormat(locale, options).format(date) + " WIB";
 };
+
+export const formatDate = (date?: string | Date, withTime = true) => {
+  if (!date) return "-";
+  return withTime
+    ? dayjs(date).format("dddd, DD MMMM YYYY HH:mm")
+    : dayjs(date).format("dddd, DD MMMM YYYY");
+};

@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, User, Car, FileText, Image } from "lucide-react";
+import {User, Car, FileText, Image, BookText } from "lucide-react";
 
 interface DetailPageProps {
   params: {
@@ -35,26 +35,32 @@ export default function InspectionDetailPage({ params }: DetailPageProps) {
     },
   ];
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (rawStatus?: string) => {
+    const status = (rawStatus || "").toLowerCase();
+  
     switch (status) {
       case "completed":
         return (
-          <Badge className="bg-green-500 text-base px-5 py-1">Selesai</Badge>
+          <Badge className="bg-green-500 text-white text-base px-5 py-1 cursor-default pointer-events-none hover:bg-green-500">
+            Selesai
+          </Badge>
         );
+  
       case "pending_repair":
         return (
-          <Badge className="bg-yellow-500 text-base px-4 py-2">
+          <Badge className="bg-yellow-500 text-black text-base px-4 py-2 cursor-default pointer-events-none hover:bg-yellow-500">
             Sedang Diperbaiki
           </Badge>
         );
+  
       default:
         return (
-          <Badge variant="secondary" className="text-base px-4 py-2">
-            {status}
+          <Badge variant="secondary" className="text-base px-4 py-2 cursor-default pointer-events-none hover:bg-secondary">
+            {rawStatus || "N/A"}
           </Badge>
         );
     }
-  };
+  };  
 
   const getComponentStatusBadge = (status: string) => {
     return status === "aman" ? (
@@ -91,6 +97,8 @@ export default function InspectionDetailPage({ params }: DetailPageProps) {
               </div>
               {getStatusBadge(inspection.data.status)}
             </div>
+
+            <Separator />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Fleet Information */}
@@ -212,7 +220,10 @@ export default function InspectionDetailPage({ params }: DetailPageProps) {
               {/* Description */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Deskripsi</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookText className="h-5 w-5" />
+                    Deskripsi
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm leading-relaxed">
