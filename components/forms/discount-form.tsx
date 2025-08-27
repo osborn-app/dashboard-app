@@ -27,7 +27,7 @@ const formSchema = z.object({
     discount: z.coerce.number().min(1, { message: "Discount minimal is from 1" }).max(100, { message: "Discount must be between 0 and 100" }),
     range_date: z.tuple([z.any(), z.any()]),
     location_id: z.coerce.number().min(0),
-    fleet_type: z.string().optional()
+    type: z.string().optional()
 })
 
 type DiscountFormValues = z.infer<typeof formSchema>;
@@ -72,10 +72,18 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
     const { mutate: createDiscount } = usePostDiscount();
     const { mutate: updateDiscount } = useEditDiscount(discountId as string)
 
-    const fleet_type = [
-        { id: "all", name: "All" },
-        { id: "car", name: "Car" },
-        { id: "motorcycle", name: "Motorcycle" },
+    const typeOptions = [
+        // Fleet Types
+        { id: "car", name: "Mobil", category: "fleet" },
+        { id: "motorcycle", name: "Motor", category: "fleet" },
+        // Product Categories
+        { id: "iphone", name: "iPhone", category: "product" },
+        { id: "camera", name: "Camera", category: "product" },
+        { id: "outdoor", name: "Outdoor", category: "product" },
+        { id: "starlink", name: "Starlink", category: "product" },
+        // All options
+        { id: "all_fleets", name: "Semua Kendaraan", category: "fleet" },
+        { id: "all_products", name: "Semua Produk", category: "product" },
     ];
 
     const defaultValues = initialData
@@ -84,15 +92,14 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
             start_date: new Date(initialData?.start_date),
             end_date: new Date(initialData?.end_date),
             location_id: initialData?.location?.id,
-            fleet_type: initialData?.fleet?.id?.toString(),
-
+            type: initialData?.fleet_type || initialData?.product_category || "all_fleets",
         }
         : {
             discount: 0,
             start_date: "",
             end_date: "",
             location_id: undefined,
-            fleet_type: "all",
+            type: "all_fleets",
         }
 
 
@@ -116,12 +123,19 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
 
     const onSubmit = async (data: DiscountFormValues) => {
         setLoading(true);
+        
+        // Determine if selected type is fleet or product category
+        const selectedType = typeOptions.find(option => option.id === data.type);
+        const isFleetType = selectedType?.category === "fleet";
+        const isProductCategory = selectedType?.category === "product";
+        
         const payload = {
             discount: data?.discount,
             start_date: new Date(data?.range_date[0]).toISOString(),
             end_date: new Date(data?.range_date[1]).toISOString(),
             location_id: data?.location_id,
-            fleet_type: data?.fleet_type as string
+            fleet_type: isFleetType ? (data?.type === "all_fleets" ? "all" : data?.type as string) : undefined,
+            product_category: isProductCategory ? (data?.type === "all_products" ? "all" : data?.type as string) : undefined
         }
 
         if (initialData) {
@@ -270,7 +284,7 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
 
                         <FormField
                             control={form.control}
-                            name="fleet_type"
+                            name="type"
                             render={({ field }) => (
                                 <FormItem className="basis-1/6">
                                     <FormLabel className="relative">
@@ -292,9 +306,9 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
                                         </FormControl>
                                         <SelectContent>
                                             {/* @ts-ignore  */}
-                                            {fleet_type.map((category) => (
-                                                <SelectItem key={category.id} value={category.id}>
-                                                    {category.name}
+                                            {typeOptions.map((option) => (
+                                                <SelectItem key={option.id} value={option.id}>
+                                                    {option.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>

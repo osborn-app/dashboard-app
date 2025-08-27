@@ -12,6 +12,7 @@ import { useGetDetailProduct } from "@/hooks/api/useProduct";
 import Spinner from "@/components/spinner";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
+import { useUser } from "@/context/UserContext";
 
 interface ProductDetailsProps {
   productId: string;
@@ -21,7 +22,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   productId,
 }) => {
   const { data: productResponse, isLoading, error } = useGetDetailProduct(productId);
-  
+  const { user } = useUser();
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -59,6 +60,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
           <h1 className="text-3xl font-bold text-gray-900">Detail Produk</h1>
           <p className="text-gray-600 mt-2">ID: {data.id}</p>
         </div>
+        {user?.role !== "owner" && (
         <div className="flex gap-2">
           <Link
             href={`/dashboard/products/${productId}/edit`}
@@ -74,6 +76,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
             </Button>
           </Link>
         </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

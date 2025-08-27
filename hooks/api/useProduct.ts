@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import useAxiosAuth from "../axios/use-axios-auth";
 
 const baseEndpoint = "/products";
@@ -65,6 +65,34 @@ export const useGetAvailableProducts = (params: GetProductsParams = {}, options 
   return useQuery({
     queryKey: ["products", "available", params],
     queryFn: getAvailableProducts,
+    ...options,
+  });
+};
+
+export const useGetInfinityProducts = (searchTerm: string = "", options = {}) => {
+  const axiosAuth = useAxiosAuth();
+
+  const getProducts = async ({ pageParam = 1 }) => {
+    return axiosAuth.get(baseEndpoint, {
+      params: {
+        limit: 10,
+        page: pageParam,
+        q: searchTerm,
+        status: 'available',
+      },
+    });
+  };
+
+  return useInfiniteQuery({
+    queryKey: ["products", "infinity", searchTerm],
+    queryFn: getProducts,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage: any) => {
+      if (lastPage.data.meta?.current_page < lastPage.data.meta?.total_pages) {
+        return lastPage.data.meta.current_page + 1;
+      }
+      return undefined;
+    },
     ...options,
   });
 };

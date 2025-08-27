@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { CellAction } from "./cell-action";
+import { formatDateTime } from "@/lib/utils";
 
 export type Inspection = {
   id: number;
@@ -17,12 +18,15 @@ export type Inspection = {
   repair_photo_url: string | null;
   repair_completion_date: string | null;
   repair_duration_days?: number;
+  repair_duration_minutes?: number;
+  inspection_progress?: string;
   fleet?: {
     id: number;
     name: string;
     type: string;
     color: string;
     plate_number: string;
+    inspection_progress?: string;
   };
 };
 
@@ -37,6 +41,7 @@ export type Fleet = {
   slug: string;
   created_at: string;
   updated_at: string;
+  inspection_progress?: string;
 };
 
 // Type guard to check if data is Fleet
@@ -117,6 +122,14 @@ export const SimpleInspectionsColumns: ColumnDef<Fleet | Inspection>[] = [
       }
 
       return <span className="capitalize">{color}</span>;
+    },
+  },
+  {
+    accessorKey: "inspection_progress",
+    header: "Progress",
+    cell: ({ row }) => {
+      const data = row.original;
+      return <span className="capitalize">{data.inspection_progress}</span>;
     },
   },
   {
@@ -201,23 +214,55 @@ export const OngoingInspectionsColumns: ColumnDef<Inspection>[] = [
     },
   },
   {
+    accessorKey: "inspection_date",
+    header: "Tanggal Inspeksi",
+    cell: ({ row }) => {
+      const data = row.original;
+      return <span>{formatDateTime(new Date(data.inspection_date))}</span>;
+    },
+  },
+  {
     accessorKey: "repair_duration_days",
     header: "Estimasi",
     cell: ({ row }) => {
       const data = row.original;
-      const duration = data.repair_duration_days;
+      const days = data.repair_duration_days || 0;
+      const minutes = data.repair_duration_minutes || 0;
+      const totalMinutes = days * 24 * 60 + minutes;
 
-      if (!duration) {
-        return <span className="text-muted-foreground">muncul pls</span>;
+      if (totalMinutes === 0) {
+        return <span className="text-muted-foreground">Langsung selesai</span>;
+      }
+
+      // Format duration display
+      const displayDays = Math.floor(totalMinutes / (24 * 60));
+      const remainingMinutes = totalMinutes % (24 * 60);
+      const displayHours = Math.floor(remainingMinutes / 60);
+      const displayMinutes = remainingMinutes % 60;
+
+      let durationText = "";
+      if (displayDays > 0) {
+        durationText += `${displayDays} hari`;
+      }
+      if (displayHours > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayHours} jam`;
+      }
+      if (displayMinutes > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayMinutes} menit`;
       }
 
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{duration} hari</span>
-          {data.repair_duration_days && (
+          <span className="font-medium">{durationText}</span>
+          {data.inspection_date && (
             <span className="text-xs text-muted-foreground">
-              Selesai:{" "}
-              {new Date(data.repair_duration_days).toLocaleDateString("id-ID")}
+              Estimasi selesai:{" "}
+              {new Date(
+                new Date(data.inspection_date).getTime() +
+                  totalMinutes * 60 * 1000,
+              ).toLocaleDateString("id-ID")}
             </span>
           )}
         </div>
@@ -275,27 +320,64 @@ export const CompletedInspectionsColumns: ColumnDef<Inspection>[] = [
     },
   },
   {
-    accessorKey: "repair_duration_days",
-    header: "Durasi",
+    accessorKey: "inspection_date",
+    header: "Tanggal Inspeksi",
     cell: ({ row }) => {
       const data = row.original;
-      const estimation = data.repair_duration_days;
+      return <span>{formatDateTime(new Date(data.inspection_date))}</span>;
+    },
+  },
+  {
+    accessorKey: "repair_duration_days",
+    header: "Estimasi",
+    cell: ({ row }) => {
+      const data = row.original;
+      const days = data.repair_duration_days || 0;
+      const minutes = data.repair_duration_minutes || 0;
+      const totalMinutes = days * 24 * 60 + minutes;
 
-      if (!estimation) {
-        return <span className="text-muted-foreground">Belum ditentukan</span>;
+      if (totalMinutes === 0) {
+        return <span className="text-muted-foreground">Langsung selesai</span>;
+      }
+
+      // Format duration display
+      const displayDays = Math.floor(totalMinutes / (24 * 60));
+      const remainingMinutes = totalMinutes % (24 * 60);
+      const displayHours = Math.floor(remainingMinutes / 60);
+      const displayMinutes = remainingMinutes % 60;
+
+      let durationText = "";
+      if (displayDays > 0) {
+        durationText += `${displayDays} hari`;
+      }
+      if (displayHours > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayHours} jam`;
+      }
+      if (displayMinutes > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayMinutes} menit`;
       }
 
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{estimation} hari</span>
-          {data.repair_completion_date && (
+          <span className="font-medium">{durationText}</span>
+          {data.repair_completion_date ? (
             <span className="text-xs text-muted-foreground">
               Selesai:{" "}
               {new Date(data.repair_completion_date).toLocaleDateString(
                 "id-ID",
               )}
             </span>
-          )}
+          ) : data.inspection_date ? (
+            <span className="text-xs text-muted-foreground">
+              Estimasi selesai:{" "}
+              {new Date(
+                new Date(data.inspection_date).getTime() +
+                  totalMinutes * 60 * 1000,
+              ).toLocaleDateString("id-ID")}
+            </span>
+          ) : null}
         </div>
       );
     },

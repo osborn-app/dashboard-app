@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePostProduct, useEditProduct, useGetDetailProduct } from "@/hooks/api/useProduct";
-import { useGetLocation } from "@/hooks/api/useLocation";
+import { useGetInfinityLocation } from "@/hooks/api/useLocation";
 import { useGetInfinityOwners } from "@/hooks/api/useOwner";
 import { NumericFormat } from "react-number-format";
 import MulitpleImageUpload, {
@@ -36,6 +36,8 @@ import MulitpleImageUpload, {
 import useAxiosAuth from "@/hooks/axios/use-axios-auth";
 import axios from "axios";
 import { omitBy } from "lodash";
+import { useDebounce } from "use-debounce";
+import { Select as AntdSelect, Space } from "antd";
 
 // Product Category Enums
 enum ProductCategory {
@@ -48,12 +50,12 @@ enum ProductCategory {
 // File schema for photo upload
 const fileSchema = z.custom<any>(
   (val: any) => {
-    if (val.length == 0) return false;
-    for (let i = 0; i < val.length; i++) {
-      const file = val[i];
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
-      if (!allowedTypes.includes(file.type)) return false;
-    }
+    // if (val.length == 0) return false;
+    // for (let i = 0; i < val.length; i++) {
+    //   const file = val[i];
+    //   const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    //   if (!allowedTypes.includes(file.type)) return false;
+    // }
     return true;
   },
   {
@@ -64,13 +66,13 @@ const fileSchema = z.custom<any>(
 
 // Product Form Schema trigger
 const productSchema = z.object({
-  name: z.string().min(1, "Product name is required"),
-  category: z.string().min(1, "Category is required"),
-  model: z.string().min(1, "Model is required"),
-  price: z.string().min(1, "Price is required"),
-  location_id: z.string().min(1, "Location is required"),
-  owner_id: z.string().min(1, "Owner is required"),
-  status: z.string().min(1, "Status is required"),
+  name: z.string().min(1, "Nama produk wajib diisi"),
+  category: z.string().min(1, "Kategori wajib dipilih"),
+  model: z.string().min(1, "Model wajib diisi"),
+  price: z.string().min(1, "Harga wajib diisi"),
+  location_id: z.string().min(1, "Lokasi wajib dipilih"),
+  owner_id: z.string().min(1, "Pemilik wajib dipilih"),
+  status: z.string().min(1, "Status wajib dipilih"),
   photos: fileSchema,
   specifications: z.object({
     brand: z.string().optional(),
@@ -81,6 +83,17 @@ const productSchema = z.object({
     warranty: z.string().optional(),
   }).optional(),
   description: z.string().optional(),
+  commission: z
+    .object({
+      transgo: z.number(),
+      owner: z.number(),
+      partner: z.number(),
+    })
+    .refine((data) => data.owner + data.partner <= 100, {
+      message:
+        "Total persentase dari Owner dan Partner tidak boleh melebihi 100%",
+      path: ["owner", "partner"],
+    }),
 });
 
 type ProductFormValues = z.infer<typeof productSchema> & {
@@ -109,20 +122,29 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [searchLocation, setSearchLocation] = useState("");
   const [searchOwner, setSearchOwner] = useState("");
+  const [searchLocationDebounce] = useDebounce(searchLocation, 500);
+  const [searchOwnerDebounce] = useDebounce(searchOwner, 500);
   const queryClient = useQueryClient();
   const axiosAuth = useAxiosAuth();
 
-  const title = productId ? "Edit Product" : "Create Product";
-  const description = productId ? "Edit product details" : "Create a new product";
+  const title = productId ? "Edit Produk" : "Buat Produk";
+  const description = productId ? "Edit detail produk" : "Buat produk baru";
 
   // Fetch data
-  const { data: locationsData, isLoading: isLoadingLocations } = useGetLocation({}, {}, "location");
+  const {
+    data: locations,
+    fetchNextPage: fetchNextLocations,
+    isFetchingNextPage: isFetchingNextLocations,
+  } = useGetInfinityLocation(searchLocationDebounce);
+  
   const {
     data: owners,
     fetchNextPage: fetchNextOwners,
     isFetchingNextPage: isFetchingNextOwners,
-  } = useGetInfinityOwners(searchOwner);
+  } = useGetInfinityOwners(searchOwnerDebounce);
+  
   const { data: productData, isLoading: isLoadingProduct } = useGetDetailProduct(productId || "", {
     enabled: !!productId,
   });
@@ -131,10 +153,23 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const { mutate: createProduct } = usePostProduct();
   const { mutate: editProduct } = useEditProduct(productId || "");
 
-  const locations = locationsData?.data?.items || locationsData?.data || [];
-
   // Use product data for edit mode
   const productDataForForm = productData?.data;
+
+  const handleScroll = (event: any, type: string) => {
+    const target = event.target;
+    if (
+      target.scrollTop + target.offsetHeight === target.scrollHeight &&
+      !isFetchingNextLocations &&
+      !isFetchingNextOwners
+    ) {
+      if (type === "location") {
+        fetchNextLocations();
+      } else if (type === "owner") {
+        fetchNextOwners();
+      }
+    }
+  };
 
   const uploadImage = async (file: any) => {
     const file_names = [];
@@ -142,10 +177,10 @@ const ProductForm: React.FC<ProductFormProps> = ({
       file_names.push(file?.[i].name);
     }
 
-    const response = await axiosAuth.post("/storages/presign/list", {
-      file_names: file_names,
-      folder: "fleet",
-    });
+         const response = await axiosAuth.post("/storages/presign/list", {
+       file_names: file_names,
+       folder: "fleet",
+     });
 
     for (let i = 0; i < file_names.length; i++) {
       const file_data = file;
@@ -165,11 +200,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
         category: productDataForForm.category || "",
         model: productDataForForm.model || "",
         price: productDataForForm.price?.toString() || "",
-        location_id: productDataForForm.location_id?.toString() || "",
-        owner_id: productDataForForm.owner_id?.toString() || "",
+        location_id: productDataForForm.location?.id?.toString() || "",
+        owner_id: productDataForForm.owner?.id?.toString() || "",
         status: productDataForForm.status || "available",
         photos: productDataForForm.photos || [],
-        specifications: productDataForForm.specifications || {
+        specifications: productDataForForm.specifications ? {
+          brand: productDataForForm.specifications.brand || "",
+          color: productDataForForm.specifications.color || "",
+          size: productDataForForm.specifications.size || "",
+          weight: productDataForForm.specifications.weight || "",
+          material: productDataForForm.specifications.material || "",
+          warranty: productDataForForm.specifications.warranty || "",
+        } : {
           brand: "",
           color: "",
           size: "",
@@ -178,6 +220,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
           warranty: "",
         },
         description: productDataForForm.description || "",
+        commission: productDataForForm.commission ? {
+          transgo: productDataForForm.commission.transgo || 0,
+          owner: productDataForForm.commission.owner || 0,
+          partner: productDataForForm.commission.partner || 0,
+        } : { transgo: 0, owner: 0, partner: 0 },
       }
     : {
         name: "",
@@ -197,6 +244,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           warranty: "",
         },
         description: "",
+        commission: { transgo: 0, owner: 0, partner: 0 },
       };
 
   const form = useForm<ProductFormValues>({
@@ -212,11 +260,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
         category: productDataForForm.category || "",
         model: productDataForForm.model || "",
         price: productDataForForm.price?.toString() || "",
-        location_id: productDataForForm.location_id?.toString() || "",
-        owner_id: productDataForForm.owner_id?.toString() || "",
+        location_id: productDataForForm.location?.id?.toString() || "",
+        owner_id: productDataForForm.owner?.id?.toString() || "",
         status: productDataForForm.status || "available",
         photos: productDataForForm.photos || [],
-        specifications: productDataForForm.specifications || {
+        specifications: productDataForForm.specifications ? {
+          brand: productDataForForm.specifications.brand || "",
+          color: productDataForForm.specifications.color || "",
+          size: productDataForForm.specifications.size || "",
+          weight: productDataForForm.specifications.weight || "",
+          material: productDataForForm.specifications.material || "",
+          warranty: productDataForForm.specifications.warranty || "",
+        } : {
           brand: "",
           color: "",
           size: "",
@@ -225,9 +280,29 @@ const ProductForm: React.FC<ProductFormProps> = ({
           warranty: "",
         },
         description: productDataForForm.description || "",
+        commission: productDataForForm.commission ? {
+          transgo: productDataForForm.commission.transgo || 0,
+          owner: productDataForForm.commission.owner || 0,
+          partner: productDataForForm.commission.partner || 0,
+        } : { transgo: 0, owner: 0, partner: 0 },
       });
     }
   }, [isEdit, productDataForForm, form]);
+
+  // Commission calculation logic
+  const watchOwner = form.watch("commission.owner") || 0;
+  const watchPartner = form.watch("commission.partner") || 0;
+
+  useEffect(() => {
+    const ownerValue = parseFloat(watchOwner?.toString()) || 0;
+    const partnerValue = parseFloat(watchPartner?.toString()) || 0;
+
+    const remaining = 100 - ownerValue - partnerValue;
+    const transgoValue = remaining >= 0 ? remaining : 0;
+
+    form.setValue("commission.transgo", transgoValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchOwner, watchPartner]);
 
   const onSubmit = async (data: ProductFormValues) => {
     let isPresign: boolean = false;
@@ -265,30 +340,31 @@ const ProductForm: React.FC<ProductFormProps> = ({
           photos: filteredURL,
           specifications: data.specifications || {},
           description: data.description || "",
+          commission: data.commission,
         };
 
-        editProduct(payload, {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["products"] });
-            toast({
-              variant: "success",
-              title: "Product updated successfully!",
-            });
-            router.push("/dashboard/products");
-          },
-          onSettled: () => {
-            setLoading(false);
-          },
-          onError: (error: any) => {
-            toast({
-              variant: "destructive",
-              title: "Uh oh! ada sesuatu yang error",
-              description: `error: ${
-                error?.response?.data?.message || error?.message
-              }`,
-            });
-          },
-        });
+                 editProduct(payload, {
+           onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ["products"] });
+                          toast({
+                variant: "success",
+                title: "Produk berhasil diperbarui!",
+              });
+             router.push("/dashboard/products");
+           },
+           onSettled: () => {
+             setLoading(false);
+           },
+           onError: (error: any) => {
+             toast({
+               variant: "destructive",
+               title: "Oops! Terjadi kesalahan",
+               description: `Error: ${
+                 error?.response?.data?.message || error?.message
+               }`,
+             });
+           },
+         });
       } else {
         const uploadImageRes = await uploadImage(data?.photos);
         const filteredURL = uploadImageRes.map(
@@ -308,41 +384,42 @@ const ProductForm: React.FC<ProductFormProps> = ({
             photos: filteredURL,
             specifications: data.specifications || {},
             description: data.description || "",
+            commission: data.commission,
           },
           (value) => value == "" || value == null,
         );
 
-        createProduct(payload, {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["products"] });
-            toast({
-              variant: "success",
-              title: "Product created successfully!",
-            });
-            router.push("/dashboard/products");
-          },
-          onSettled: () => {
-            setLoading(false);
-          },
-          onError: (error: any) => {
-            toast({
-              variant: "destructive",
-              title: "Uh oh! ada sesuatu yang error",
-              description: `error: ${
-                error?.response?.data?.message || error?.message
-              }`,
-            });
-          },
-        });
+                 createProduct(payload, {
+           onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ["products"] });
+                          toast({
+                variant: "success",
+                title: "Produk berhasil dibuat!",
+              });
+             router.push("/dashboard/products");
+           },
+           onSettled: () => {
+             setLoading(false);
+           },
+           onError: (error: any) => {
+             toast({
+               variant: "destructive",
+               title: "Oops! Terjadi kesalahan",
+               description: `Error: ${
+                 error?.response?.data?.message || error?.message
+               }`,
+             });
+           },
+         });
       }
-    } catch (error: any) {
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error?.response?.data?.message || "Something went wrong",
-      });
-    }
+         } catch (error: any) {
+       setLoading(false);
+       toast({
+         variant: "destructive",
+         title: "Error",
+         description: error?.response?.data?.message || "Terjadi kesalahan",
+       });
+     }
   };
 
   const categoryOptions = [
@@ -353,8 +430,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
   ];
 
   const statusOptions = [
-    { label: "Available", value: "available" },
-    { label: "Unavailable", value: "unavailable" },
+    { label: "Tersedia", value: "available" },
+    { label: "Tidak Tersedia", value: "unavailable" },
   ];
 
   return (
@@ -368,167 +445,215 @@ const ProductForm: React.FC<ProductFormProps> = ({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter product name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+               control={form.control}
+               name="name"
+               render={({ field }) => (
+                 <FormItem>
+                   <FormLabel>Nama Produk</FormLabel>
+                   <FormControl>
+                     <Input placeholder="Masukkan nama produk" {...field} />
+                   </FormControl>
+                   <FormMessage />
+                 </FormItem>
+               )}
+             />
 
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categoryOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Model</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter product model" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price</FormLabel>
-                  <FormControl>
-                    <NumericFormat
-                      customInput={Input}
-                      thousandSeparator=","
-                      placeholder="Enter price"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="location_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                    </FormControl>
-                                         <SelectContent>
-                       {isLoadingLocations ? (
-                         <div className="p-2 text-center">Loading locations...</div>
-                       ) : !Array.isArray(locations) ? (
-                         <div className="p-2 text-center text-red-500">Error: Invalid data format</div>
-                       ) : locations.length === 0 ? (
-                         <div className="p-2 text-center">No locations found</div>
-                       ) : (
-                         locations.map((location: any) => (
-                           <SelectItem key={location.id} value={location.id.toString()}>
-                             {location.name}
-                           </SelectItem>
-                         ))
-                       )}
+             <FormField
+               control={form.control}
+               name="category"
+               render={({ field }) => (
+                 <FormItem>
+                   <FormLabel>Kategori</FormLabel>
+                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <FormControl>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Pilih kategori" />
+                       </SelectTrigger>
+                     </FormControl>
+                     <SelectContent>
+                       {categoryOptions.map((option) => (
+                         <SelectItem key={option.value} value={option.value}>
+                           {option.label}
+                         </SelectItem>
+                       ))}
                      </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                   </Select>
+                   <FormMessage />
+                 </FormItem>
+               )}
+             />
 
             <FormField
-              control={form.control}
-              name="owner_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Owner</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select owner" />
-                      </SelectTrigger>
-                    </FormControl>
-                                         <SelectContent>
-                       {!owners?.pages ? (
-                         <div className="p-2 text-center">Loading owners...</div>
-                       ) : owners.pages.length === 0 ? (
-                         <div className="p-2 text-center">No owners found</div>
-                       ) : (
-                         owners.pages.map((page: any) =>
-                           page?.data?.items?.map((owner: any) => (
-                             <SelectItem key={owner.id} value={owner.id.toString()}>
-                               {owner.name}
-                             </SelectItem>
-                           ))
-                         )
+               control={form.control}
+               name="model"
+               render={({ field }) => (
+                 <FormItem>
+                   <FormLabel>Model</FormLabel>
+                   <FormControl>
+                     <Input placeholder="Masukkan model produk" {...field} />
+                   </FormControl>
+                   <FormMessage />
+                 </FormItem>
+               )}
+             />
+
+            <FormField
+               control={form.control}
+               name="price"
+               render={({ field }) => (
+                 <FormItem>
+                   <FormLabel>Harga</FormLabel>
+                   <FormControl>
+                     <NumericFormat
+                       customInput={Input}
+                       thousandSeparator=","
+                       placeholder="Masukkan harga"
+                       {...field}
+                     />
+                   </FormControl>
+                   <FormMessage />
+                 </FormItem>
+               )}
+             />
+
+              <FormField
+               control={form.control}
+               name="location_id"
+               render={({ field }) => (
+                 <Space size={12} direction="vertical">
+                   <FormLabel className="relative label-required">
+                     Lokasi
+                   </FormLabel>
+                   <FormControl>
+                     <AntdSelect
+                       showSearch
+                       value={field.value}
+                       placeholder="Pilih Lokasi"
+                       style={{ width: "100%" }}
+                       onSearch={setSearchLocation}
+                       onChange={field.onChange}
+                       onPopupScroll={(event) =>
+                         handleScroll(event, "location")
+                       }
+                       filterOption={false}
+                       notFoundContent={
+                         isFetchingNextLocations ? (
+                           <p className="px-3 text-sm">loading</p>
+                         ) : null
+                       }
+                     >
+                       {isEdit && productDataForForm?.location && (
+                         <AntdSelect.Option
+                           value={productDataForForm.location.id.toString()}
+                         >
+                           {productDataForForm.location.name}
+                         </AntdSelect.Option>
                        )}
-                     </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                       {locations?.pages.map((page: any, pageIndex: any) =>
+                         page.data.items.map((item: any, itemIndex: any) => {
+                           return (
+                             <AntdSelect.Option
+                               key={item.id}
+                               value={item.id.toString()}
+                             >
+                               {item.name}
+                             </AntdSelect.Option>
+                           );
+                         }),
+                       )}
 
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {statusOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                       {isFetchingNextLocations && (
+                         <AntdSelect.Option disabled>
+                           <p className="px-3 text-sm">loading</p>
+                         </AntdSelect.Option>
+                       )}
+                     </AntdSelect>
+                   </FormControl>
+                   <FormMessage />
+                 </Space>
+               )}
+             />
+
+              <FormField
+               control={form.control}
+               name="owner_id"
+               render={({ field }) => (
+                 <Space size={12} direction="vertical" className="w-full">
+                   <FormLabel>Pemilik</FormLabel>
+                   <FormControl>
+                     <AntdSelect
+                       showSearch
+                       value={field.value}
+                       placeholder="Pilih Owner"
+                       style={{ width: "100%" }}
+                       onSearch={setSearchOwner}
+                       onChange={field.onChange}
+                       onPopupScroll={(event) =>
+                         handleScroll(event, "owner")
+                       }
+                       filterOption={false}
+                       notFoundContent={
+                         isFetchingNextOwners ? (
+                           <p className="px-3 text-sm">loading</p>
+                         ) : null
+                       }
+                     >
+                       {isEdit && productDataForForm?.owner && (
+                         <AntdSelect.Option
+                           value={productDataForForm.owner.id.toString()}
+                         >
+                           {productDataForForm.owner.name}
+                         </AntdSelect.Option>
+                       )}
+                       {owners?.pages.map((page: any) =>
+                         page.data.items.map((item: any) => {
+                           return (
+                             <AntdSelect.Option
+                               key={item.id}
+                               value={item.id.toString()}
+                             >
+                               {item.name}
+                             </AntdSelect.Option>
+                           );
+                         }),
+                       )}
+
+                       {isFetchingNextOwners && (
+                         <AntdSelect.Option disabled>
+                           <p className="px-3 text-sm">loading</p>
+                         </AntdSelect.Option>
+                       )}
+                     </AntdSelect>
+                   </FormControl>
+                   <FormMessage />
+                 </Space>
+               )}
+             />
+
+              <FormField
+               control={form.control}
+               name="status"
+               render={({ field }) => (
+                 <FormItem>
+                   <FormLabel>Status</FormLabel>
+                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <FormControl>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Pilih status" />
+                       </SelectTrigger>
+                     </FormControl>
+                     <SelectContent>
+                       {statusOptions.map((option) => (
+                         <SelectItem key={option.value} value={option.value}>
+                           {option.label}
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                   <FormMessage />
+                 </FormItem>
+               )}
+             />
           </div>
 
           {/* Photo Upload */}
@@ -553,127 +678,229 @@ const ProductForm: React.FC<ProductFormProps> = ({
             )}
           />
 
-                     <div className="space-y-4">
-             <div className="flex items-center gap-2">
-               <Heading title="Specifications" description="Product specifications" />
-             </div>
+             <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Heading title="Spesifikasi" description="Spesifikasi produk" />
+              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <FormField
-                 control={form.control}
-                 name="specifications.brand"
-                 render={({ field }) => (
-                   <FormItem>
-                     <FormLabel>Brand</FormLabel>
-                     <FormControl>
-                       <Input placeholder="Enter brand" {...field} />
-                     </FormControl>
-                     <FormMessage />
-                   </FormItem>
-                 )}
-               />
+                <FormField
+                  control={form.control}
+                  name="specifications.brand"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Merek</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Masukkan merek" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="specifications.color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Warna</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Masukkan warna" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="specifications.size"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ukuran</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Masukkan ukuran" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="specifications.weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Berat</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Masukkan berat" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                <FormField
-                 control={form.control}
-                 name="specifications.color"
-                 render={({ field }) => (
-                   <FormItem>
-                     <FormLabel>Color</FormLabel>
-                     <FormControl>
-                       <Input placeholder="Enter color" {...field} />
-                     </FormControl>
-                     <FormMessage />
-                   </FormItem>
-                 )}
-               />
+                  control={form.control}
+                  name="specifications.material"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Material</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Masukkan material" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-               <FormField
-                 control={form.control}
-                 name="specifications.size"
-                 render={({ field }) => (
-                   <FormItem>
-                     <FormLabel>Size</FormLabel>
-                     <FormControl>
-                       <Input placeholder="Enter size" {...field} />
-                     </FormControl>
-                     <FormMessage />
-                   </FormItem>
-                 )}
-               />
-
-               <FormField
-                 control={form.control}
-                 name="specifications.weight"
-                 render={({ field }) => (
-                   <FormItem>
-                     <FormLabel>Weight</FormLabel>
-                     <FormControl>
-                       <Input placeholder="Enter weight" {...field} />
-                     </FormControl>
-                     <FormMessage />
-                   </FormItem>
-                 )}
-               />
-
-               <FormField
-                 control={form.control}
-                 name="specifications.material"
-                 render={({ field }) => (
-                   <FormItem>
-                     <FormLabel>Material</FormLabel>
-                     <FormControl>
-                       <Input placeholder="Enter material" {...field} />
-                     </FormControl>
-                     <FormMessage />
-                   </FormItem>
-                 )}
-               />
-
-               <FormField
-                 control={form.control}
-                 name="specifications.warranty"
-                 render={({ field }) => (
-                   <FormItem>
-                     <FormLabel>Warranty</FormLabel>
-                     <FormControl>
-                       <Input placeholder="Enter warranty" {...field} />
-                     </FormControl>
-                     <FormMessage />
-                   </FormItem>
-                 )}
-               />
+                <FormField
+                  control={form.control}
+                  name="specifications.warranty"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Garansi</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Masukkan garansi" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
              </div>
            </div>
 
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Enter product description"
-                    className="resize-none"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Commission Section */}
+           <div className="space-y-4">
+             <div className="flex items-center gap-2">
+               <Heading title="Komisi" description="Pengaturan komisi produk" />
+             </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FormField
+                control={form.control}
+                name="commission.owner"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="relative label-required">
+                      Komisi Owner %
+                    </FormLabel>
+                    <FormControl>
+                      <NumericFormat
+                        customInput={Input}
+                        type="text"
+                        isAllowed={({ floatValue }) =>
+                          floatValue === undefined || floatValue <= 100
+                        }
+                        thousandSeparator
+                        allowNegative={false}
+                        placeholder="Masukkan Komisi (contoh: 70 %)"
+                        className="disabled:opacity-90"
+                        value={field.value}
+                        onValueChange={({ floatValue }) =>
+                          floatValue !== undefined &&
+                          field.onChange(floatValue || 0)
+                        }
+                        onBlur={field.onBlur}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <div className="flex gap-4">
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : productId ? "Update Product" : "Create Product"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/dashboard/products")}
-            >
-              Cancel
-            </Button>
+              <FormField
+                control={form.control}
+                name="commission.partner"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Komisi Partner %</FormLabel>
+                    <FormControl>
+                      <NumericFormat
+                        customInput={Input}
+                        type="text"
+                        isAllowed={({ floatValue }) =>
+                          floatValue === undefined || floatValue <= 100
+                        }
+                        thousandSeparator
+                        allowNegative={false}
+                        placeholder="Masukkan Komisi (contoh: 10 %)"
+                        className="disabled:opacity-90"
+                        value={field.value}
+                        onValueChange={({ floatValue }) =>
+                          floatValue !== undefined &&
+                          field.onChange(floatValue || 0)
+                        }
+                        onBlur={field.onBlur}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="commission.transgo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="relative label-required">
+                      Komisi Transgo % (Otomatis)
+                    </FormLabel>
+                    <FormControl>
+                      <NumericFormat
+                        disabled
+                        customInput={Input}
+                        type="text"
+                        isAllowed={({ floatValue }) =>
+                          floatValue === undefined || floatValue <= 100
+                        }
+                        thousandSeparator
+                        allowNegative={false}
+                        className="disabled:opacity-90"
+                        value={field.value}
+                        onBlur={field.onBlur}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormMessage className="col-span-3">
+              {/* @ts-ignore */}
+              {form.formState.errors.commission?.owner?.partner?.message}
+            </FormMessage>
           </div>
+
+           <FormField
+             control={form.control}
+             name="description"
+             render={({ field }) => (
+               <FormItem>
+                 <FormLabel>Deskripsi</FormLabel>
+                 <FormControl>
+                   <Textarea
+                     placeholder="Masukkan deskripsi produk"
+                     className="resize-none"
+                     {...field}
+                   />
+                 </FormControl>
+                 <FormMessage />
+               </FormItem>
+             )}
+           />
+
+           <div className="flex gap-4">
+             <Button type="submit" disabled={loading}>
+               {loading ? "Menyimpan..." : productId ? "Perbarui Produk" : "Buat Produk"}
+             </Button>
+             <Button
+               type="button"
+               variant="outline"
+               onClick={() => router.push("/dashboard/products")}
+             >
+               Batal
+             </Button>
+           </div>
         </form>
       </Form>
     </>

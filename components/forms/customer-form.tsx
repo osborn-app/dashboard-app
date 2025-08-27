@@ -51,7 +51,7 @@ const fileSchema = z.custom<any>(
   (val: any) => {
     // if (!(val instanceof FileList)) return false;
     if (val.length == 0) return false;
-    // Removed file type restrictions - now accepts any file type
+    // Removed file type restrictions - now accepts any file types
     return true;
   },
   {
@@ -101,11 +101,25 @@ const formSchema = z.object({
     })
     .min(10, { message: "Nomor Emergency minimal harus 10 digit" }),
   id_cards: fileSchema,
+  supporting_documents_url: fileSchema.optional(),
   phone_number: z
     .string({ required_error: "Nomor telepon diperlukan" })
     .min(10, { message: "Nomor Telepon minimal harus 10 digit" }),
     // additional_data: z.any().optional(),
-});
+}).refine(
+  (data) => {
+    // If role is product_customer, supporting_documents_url is required
+    if (data.role === "product_customer") {
+      return data.supporting_documents_url !== undefined && data.supporting_documents_url !== null;
+    }
+    // For customer role or no role, supporting_documents_url is optional
+    return true;
+  },
+  {
+    message: "Dokumen pendukung wajib diisi untuk akun Product Customer",
+    path: ["supporting_documents_url"],
+  }
+);
 
 const formEditSchema = z.object({
   name: z
@@ -130,6 +144,7 @@ const formEditSchema = z.object({
 
 type CustomerFormValues = z.infer<typeof formSchema> & {
   id_cards: MulitpleImageUploadResponse;
+  supporting_documents_url: MulitpleImageUploadResponse;
   additional_data_status: string;
   additional_data: any[];
 };
@@ -194,7 +209,10 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         email: initialData?.email,
         date_of_birth: initialData?.date_of_birth,
         gender: initialData?.gender,
-        id_cards: initialData?.id_cards,
+        id_cards: initialData?.id_cards || [],
+        supporting_documents_url: initialData?.supporting_documents_url 
+          ? initialData.supporting_documents_url.split(',').map((url: string) => ({ photo: url.trim() }))
+          : [],
         phone_number: initialData?.phone_number,
         emergency_phone_number: initialData?.emergency_phone_number,
         additional_data_status: initialData?.additional_data_status,
@@ -207,6 +225,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         gender: "",
         role: 'customer' as const,
         id_cards: [],
+        supporting_documents_url: [],
         phone_number: "",
         emergency_phone_number: "",
         additional_data_status: '',
@@ -242,28 +261,50 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   };
 
   const onSubmit = async (data: CustomerFormValues) => {
-    let isPresign: boolean = false;
+    let isPresignIdCards: boolean = false;
     for (let i = 0; i < data?.id_cards?.length; i++) {
       if (data?.id_cards[i]?.photo) {
-        isPresign = false;
+        isPresignIdCards = false;
         break;
       } else {
-        isPresign = true;
+        isPresignIdCards = true;
       }
     }
+
+    let isPresignSupportingDocs: boolean = false;
+    for (let i = 0; i < data?.supporting_documents_url?.length; i++) {
+      if (data?.supporting_documents_url[i]?.photo) {
+        isPresignSupportingDocs = false;
+        break;
+      } else {
+        isPresignSupportingDocs = true;
+      }
+    }
+
     setLoading(true);
     if (initialData) {
-      let filteredURL: string[] = [];
-      if (isPresign) {
+      let filteredIdCardsURL: string[] = [];
+      if (isPresignIdCards) {
         const uploadImageRes = await uploadImage(data?.id_cards);
-
-        filteredURL = uploadImageRes?.map(
+        filteredIdCardsURL = uploadImageRes?.map(
           (item: { download_url: string; upload_url: string }) =>
             item.download_url,
         );
       } else {
-        filteredURL = data?.id_cards?.map((item: any) => item.photo);
+        filteredIdCardsURL = data?.id_cards?.map((item: any) => item.photo);
       }
+
+      let filteredSupportingDocsURL: string[] = [];
+      if (isPresignSupportingDocs && data?.supporting_documents_url?.length > 0) {
+        const uploadSupportingDocsRes = await uploadImage(data?.supporting_documents_url);
+        filteredSupportingDocsURL = uploadSupportingDocsRes?.map(
+          (item: { download_url: string; upload_url: string }) =>
+            item.download_url,
+        );
+      } else {
+        filteredSupportingDocsURL = data?.supporting_documents_url?.map((item: any) => item.photo) || [];
+      }
+
       const newData: any = { ...data };
       newData.date_of_birth = data?.date_of_birth
         ? dayjs(data?.date_of_birth).format("YYYY-MM-DD")
@@ -271,7 +312,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
       const newPayload = convertEmptyStringsToNull({
         ...newData,
-        id_cards: filteredURL,
+        id_cards: filteredIdCardsURL,
+        supporting_documents_url: filteredSupportingDocsURL.length > 0 ? filteredSupportingDocsURL.join(',') : null,
       });
 
       updateCustomer(
@@ -300,16 +342,27 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       );
     } else {
       const uploadImageRes = await uploadImage(data?.id_cards);
-      const filteredURL = uploadImageRes.map(
+      const filteredIdCardsURL = uploadImageRes.map(
         (item: { download_url: string; upload_url: string }) =>
           item.download_url,
       );
+
+      let filteredSupportingDocsURL: string[] = [];
+      if (data?.supporting_documents_url?.length > 0) {
+        const uploadSupportingDocsRes = await uploadImage(data?.supporting_documents_url);
+        filteredSupportingDocsURL = uploadSupportingDocsRes.map(
+          (item: { download_url: string; upload_url: string }) =>
+            item.download_url,
+        );
+      }
+
       const payload = {
         ...data,
         date_of_birth: data?.date_of_birth
           ? dayjs(data?.date_of_birth).format("YYYY-MM-DD")
           : "",
-        id_cards: filteredURL,
+        id_cards: filteredIdCardsURL,
+        supporting_documents_url: filteredSupportingDocsURL.length > 0 ? filteredSupportingDocsURL.join(',') : null,
       };
 
       const newPayload = omitBy(
@@ -522,7 +575,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                 </FormItem>
               )}
             />
-            {/* {!initialData && (
+            {!initialData && (
               <FormField
                 control={form.control}
                 name="role"
@@ -551,7 +604,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                   </FormItem>
                 )}
               />
-            )} */}
+            )}
             {!initialData && (
               <FormField
                 control={form.control}
@@ -705,62 +758,26 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
               />
             )}
           </div>
-          <div className="space-y-2">
-            <FormLabel>Dokumen Pendukung</FormLabel>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {(() => {
-                // Normalize to array in case API later returns an array; currently it's a single string
-                const raw = initialData?.supporting_documents_url;
-                const docs: string[] = Array.isArray(raw)
-                  ? raw
-                  : raw
-                  ? [raw]
-                  : [];
-
-                if (docs.length === 0) {
-                  return (
-                    <div className="col-span-full">
-                      <Input disabled value="-" />
-                    </div>
-                  );
-                }
-
-                return docs.map((url: string, idx: number) => (
-                  <div
-                    key={`${url}-${idx}`}
-                    className="relative group border rounded-md overflow-hidden cursor-pointer"
-                    onClick={() => {
-                      Swal.fire({
-                        imageUrl: url,
-                        imageAlt: `Supporting Document ${idx + 1}`,
-                        width: '80%',
-                        confirmButtonText: 'Tutup',
-                        confirmButtonColor: '#3085d6',
-                        showCloseButton: true,
-                        customClass: {
-                          image: 'max-h-[70vh] object-contain'
-                        }
-                      });
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt={`Supporting Document ${idx + 1}`}
-                      className="w-full h-40 object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                      <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">Klik untuk memperbesar</span>
-                    </div>
-                  </div>
-                ));
-              })()}
-            </div>
-          </div>
+          <FormField
+            control={form.control}
+            name="supporting_documents_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="relative">
+                  Dokumen Pendukung
+                </FormLabel>
+                <FormControl className="disabled:opacity-100">
+                  <MulitpleImageUpload
+                    disabled={!isEdit || loading}
+                    onChange={field.onChange}
+                    value={field.value}
+                    onRemove={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="id_cards"

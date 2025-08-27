@@ -35,3 +35,18 @@ export const getCompletedInspections = (params?: any) => {
 export const completeInspection = (fleetId: string | number) => {
   return client.patch(`/inspections/fleets/${fleetId}/complete`);
 };
+
+// Get daily report
+export const getDailyReport = (params?: any) => {
+  return client.get("/inspections/report/daily", { params });
+};
+
+// Trigger report update
+export const triggerReportUpdate = () => {
+  return client.get("/inspections/report/trigger");
+};
+
+// owners
+export const getInspectionsByOwner = (params?: any) => {
+  return client.get("/inspections/report/owner/me", { params });
+};

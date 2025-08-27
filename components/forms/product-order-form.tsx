@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "../ui/use-toast";
-import { cn, convertTime, makeUrlsClickable } from "@/lib/utils";
+import { cn, convertTime, makeUrlsClickable, formatRupiah } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetDetailProduct, useGetAvailableProducts } from "@/hooks/api/useProduct";
 import { isEmpty, isNull, isString } from "lodash";
@@ -45,6 +45,7 @@ import locale from "antd/locale/id_ID";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "../ui/label";
 import { useGetInsurances } from "@/hooks/api/useInsurance";
+import { useGetAddons } from "@/hooks/api/useAddons";
 import {
   useEditProductOrder,
   usePostProductOrder,
@@ -160,6 +161,31 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
 
   const { data: insurances } = useGetInsurances();
   const { mutate: calculatePrice } = useProductOrderCalculate();
+  
+  // Addons state and API
+  const [selectedAddOns, setSelectedAddOns] = useState<Array<{addonId: number, quantity: number}>>([]);
+  const { data: addOnsData } = useGetAddons();
+  
+  // Use API data or fallback to empty array, filter only available addons
+  const addOns = useMemo(() => {
+    const data = addOnsData?.items || [];
+    const filteredAddons = Array.isArray(data) ? data.filter((addon: any) => {
+      const availableQuantity = (addon.stock_quantity || 0) - (addon.reserved_quantity || 0);
+      return availableQuantity > 0; // Only show addons with stock > 0
+    }) : [];
+    return filteredAddons;
+  }, [addOnsData?.items]);
+  
+  // Initialize selectedAddOns from initialData
+  useEffect(() => {
+    if (initialData?.addons && addOns.length > 0) {
+      const initialAddons = initialData.addons.map((addon: any) => ({
+        addonId: addon.addon_id,
+        quantity: addon.quantity,
+      }));
+      setSelectedAddOns(initialAddons);
+    }
+  }, [initialData?.addons, addOns]);
 
   // Calculate price on component mount with initialData (like in detailorder-form.tsx)
   useEffect(() => {
@@ -203,6 +229,18 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
             },
           ),
         }),
+        ...(initialData?.addons && {
+          addons: initialData?.addons.map(
+            (addon: any) => {
+              return {
+                addon_id: Number(addon.addon_id),
+                name: String(addon.name),
+                price: Number(addon.price),
+                quantity: Number(addon.quantity),
+              };
+            },
+          ),
+        }),
       };
 
       calculatePrice(payload, {
@@ -224,6 +262,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     initialData?.end_request?.address,
     initialData?.start_date,
     initialData?.duration,
+    initialData?.addons,
   ]);
 
   const manipulateInsurance = insurances?.data?.items?.map((item: any) => {
@@ -277,6 +316,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           ? initialData?.insurance?.id.toString()
           : "0",
         service_price: initialData?.service_price?.toString() || "0",
+        rental_type: initialData?.rental_type || {
+          is_daily: true,
+          is_weekly: false,
+          is_monthly: false,
+        },
+        selected_price_type: initialData?.selected_price_type || "daily",
         additionals: initialData?.additional_services?.map((service: any) => ({
           name: service.name,
           price: service.price?.toString() || "",
@@ -305,6 +350,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
         discount: "0",
         insurance_id: "0",
         service_price: "0",
+        rental_type: {
+          is_daily: true,
+          is_weekly: false,
+          is_monthly: false,
+        },
+        selected_price_type: "daily",
         additionals: [],
       };
 
@@ -317,6 +368,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     control: form.control,
     name: "additionals",
   });
+
+
 
   const customerField = form.watch("customer");
   const productField = form.watch("product");
@@ -337,6 +390,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   const descriptionField = form.watch("description");
   const serviceField = form.watch("service_price");
   const additionalField = form.watch("additionals");
+  const rentalTypeField = form.watch("rental_type");
+  const selectedPriceTypeField = form.watch("selected_price_type");
 
 
 
@@ -395,6 +450,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     service_price: data.service_price ? (isString(data.service_price) 
       ? Number(data.service_price.replace(/,/g, "")) 
       : Number(data.service_price)) : undefined,
+    rental_type: data.rental_type || {
+      is_daily: true,
+      is_weekly: false,
+      is_monthly: false,
+    },
+    selected_price_type: data.selected_price_type || "daily",
     ...(data.additionals && data.additionals.length > 0 && {
       additional_services: data.additionals.map((service: any) => {
         let price: number;
@@ -405,7 +466,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           price = Number(service.price);
         }
         
-        if (isNaN(price) || price <= 0) {
+        if (isNaN(price)) {
           throw new Error("Harga harus berupa angka yang valid");
         }
         
@@ -414,6 +475,27 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           price: price,
         };
       }),
+    }),
+    ...(selectedAddOns && selectedAddOns.length > 0 && addOns && addOns.length > 0 && {
+      addons: (() => {
+        const validAddons = selectedAddOns
+          .map((selection: any) => {
+            const addon = addOns.find((a: any) => a.id === selection.addonId);
+            // Only include addon if it exists and has valid data
+            if (addon && addon.id && addon.name && addon.price !== undefined && addon.price !== null) {
+              return {
+                addon_id: Number(addon.id),
+                name: String(addon.name),
+                price: Number(addon.price),
+                quantity: Number(selection.quantity),
+              };
+            }
+            return null;
+          })
+          .filter(Boolean); // Remove null values
+        
+        return validAddons.length > 0 ? validAddons : undefined;
+      })(),
     }),
   });
 
@@ -592,19 +674,46 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           ? +serviceField.replace(/,/g, "")
           : serviceField,
       }),
+      rental_type: rentalTypeField || {
+        is_daily: true,
+        is_weekly: false,
+        is_monthly: false,
+      },
+      selected_price_type: selectedPriceTypeField || "daily",
       ...(additionalField && additionalField.length !== 0 && {
         additional_services: (additionalField ?? []).map((field: any) => {
           return {
             name: field.name,
             price: (() => {
               const price = typeof field.price === 'string' ? Number(field.price.replace(/,/g, "")) : Number(field.price);
-              if (isNaN(price) || price <= 0) {
+              if (isNaN(price)) {
                 return 0; // fallback value
               }
               return price;
             })(),
           };
         }),
+      }),
+      ...(selectedAddOns && selectedAddOns.length !== 0 && addOns && addOns.length > 0 && {
+        addons: (() => {
+          const validAddons = selectedAddOns
+            .map((selection: any) => {
+              const addon = addOns.find((a: any) => a.id === selection.addonId);
+              // Only include addon if it exists and has valid data
+              if (addon && addon.id && addon.name && addon.price !== undefined && addon.price !== null) {
+                return {
+                  addon_id: Number(addon.id),
+                  name: String(addon.name),
+                  price: Number(addon.price),
+                  quantity: Number(selection.quantity),
+                };
+              }
+              return null;
+            })
+            .filter(Boolean); // Remove null values
+          
+          return validAddons.length > 0 ? validAddons : undefined;
+        })(),
       }),
     };
 
@@ -621,6 +730,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     }
   }, [
     additionalField,
+    selectedAddOns,
+    addOns,
     customerField,
     productField,
     dateField,
@@ -640,7 +751,10 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     descriptionField,
     showServicePrice,
     servicePrice,
+    rentalTypeField,
+    selectedPriceTypeField,
     JSON.stringify(additionalField),
+    JSON.stringify(selectedAddOns),
   ]);
 
   // disable date for past dates
@@ -817,6 +931,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   const approvalModalTitle =
     lastPath === "edit"
       ? "Apakah Anda Yakin Ingin Mengedit Pesanan ini?"
+      : lastPath === "create"
+      ? "Apakah Anda Yakin Ingin Membuat Pesanan ini?"
       : "Apakah Anda Yakin Ingin Mengonfirmasi Pesanan ini?";
 
   return (
@@ -827,38 +943,78 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           isOpen={openApprovalModal}
           onClose={() => setOpenApprovalModal(false)}
           onConfirm={() => {
+            setLoading(true);
             const currentData = form.getValues();
             const payload = createPayload(currentData);
-            acceptProductOrder(payload, {
-              onSuccess: () => {
-                // Invalidate all relevant queries for real-time updates
-                queryClient.invalidateQueries({ queryKey: ["orders"] });
-                queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
-                if (finalOrderId) {
-                  queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
-                  queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
-                }
-                toast({
-                  variant: "success",
-                  title: "Pesanan berhasil dikonfirmasi!",
-                });
-                router.push(`/dashboard/product-orders`);
-              },
-              onSettled: () => setLoading(false),
-              onError: (error: any) => {
-                setOpenApprovalModal(false);
-                toast({
-                  variant: "destructive",
-                  title: `Uh oh! ${
-                    //@ts-ignore
-                    error?.response?.data?.message == "Customer must be verified."
-                      ? "Customer belum diverifikasi"
-                      : //@ts-ignore
-                        error?.response?.data?.message
-                  }`,
-                });
-              },
-            });
+            
+            // Determine which action to take based on the context
+            if (lastPath === "create") {
+              // For create flow, use createProductOrder
+              createProductOrder(payload, {
+                onSuccess: () => {
+                  // Invalidate all relevant queries for real-time updates
+                  queryClient.invalidateQueries({ queryKey: ["orders"] });
+                  queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+                  if (finalOrderId) {
+                    queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
+                    queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
+                  }
+                  toast({
+                    variant: "success",
+                    title: "Pesanan berhasil dibuat!",
+                  });
+                  router.push(`/dashboard/product-orders`);
+                },
+                onSettled: () => setLoading(false),
+                onError: (error: any) => {
+                  setLoading(false);
+                  setOpenApprovalModal(false);
+                  toast({
+                    variant: "destructive",
+                    title: `Uh oh! ${
+                      //@ts-ignore
+                      error?.response?.data?.message == "Customer must be verified."
+                        ? "Customer belum diverifikasi"
+                        : //@ts-ignore
+                          error?.response?.data?.message
+                    }`,
+                  });
+                },
+              });
+            } else {
+              // For edit/preview flow, use acceptProductOrder
+              acceptProductOrder(payload, {
+                onSuccess: () => {
+                  // Invalidate all relevant queries for real-time updates
+                  queryClient.invalidateQueries({ queryKey: ["orders"] });
+                  queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+                  if (finalOrderId) {
+                    queryClient.invalidateQueries({ queryKey: ["orders", "product", finalOrderId] });
+                    queryClient.invalidateQueries({ queryKey: ["orders", finalOrderId] });
+                  }
+                  toast({
+                    variant: "success",
+                    title: "Pesanan berhasil dikonfirmasi!",
+                  });
+                  router.push(`/dashboard/product-orders`);
+                },
+                onSettled: () => setLoading(false),
+                onError: (error: any) => {
+                  setLoading(false);
+                  setOpenApprovalModal(false);
+                  toast({
+                    variant: "destructive",
+                    title: `Uh oh! ${
+                      //@ts-ignore
+                      error?.response?.data?.message == "Customer must be verified."
+                        ? "Customer belum diverifikasi"
+                        : //@ts-ignore
+                          error?.response?.data?.message
+                    }`,
+                  });
+                },
+              });
+            }
           }}
           loading={loading}
           title={approvalModalTitle}
@@ -1430,6 +1586,58 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                   )}
                 />
 
+                {/* Rental Type Selection */}
+                <FormField
+                  control={form.control}
+                  name="selected_price_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="relative label-required">
+                        Jenis Sewa
+                      </FormLabel>
+                      <Select
+                        disabled={(!isEdit && !isPreview) || loading}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Update rental_type based on selection
+                          const rentalType = {
+                            is_daily: value === "daily",
+                            is_weekly: value === "weekly", 
+                            is_monthly: value === "monthly",
+                          };
+                          form.setValue("rental_type", rentalType);
+                        }}
+                        defaultValue={defaultValues.selected_price_type || "daily"}
+                        value={field.value}
+                      >
+                        <FormControl
+                          className={cn(
+                            "disabled:opacity-100",
+                            "w-full",
+                            "h-[40px]",
+                          )}
+                        >
+                          <SelectTrigger className="">
+                            <SelectValue placeholder="Pilih jenis sewa" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="daily">
+                            Harian
+                          </SelectItem>
+                          <SelectItem value="weekly">
+                            Mingguan (Hemat 25%)
+                          </SelectItem>
+                          <SelectItem value="monthly">
+                            Bulanan (Hemat 50%)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormItem className="flex flex-col pt-[5px]">
                   <FormLabel>Selesai sewa (otomatis)</FormLabel>
                   <FormControl>
@@ -1574,9 +1782,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                                     allowLeadingZeros
                                     thousandSeparator=","
                                     value={field.value}
-                                    onValueChange={(values) => {
-                                      field.onChange(values.value);
-                                    }}
+                                    onChange={field.onChange}
                                     onBlur={field.onBlur}
                                   />
                                 </div>
@@ -1617,6 +1823,103 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                     </div>
                   )}
                 </div>
+
+                {/* Addon Selection */}
+                {addOns && addOns.length > 0 && (
+                  <section className="pt-5">
+                    <div className="mx-auto w-full">
+                      <div className='mb-4 font-gabarito'>
+                        <p className="text-xl font-semibold">Aksesoris Tambahan</p>
+                      </div>
+
+                      <div className="rounded-md p-4 shadow-md border border-[#1B18181A]">
+                        <div className="space-y-3">
+                          {addOns.map((addon: any) => {
+                            const currentSelection = selectedAddOns.find(s => s.addonId === addon.id);
+                            const selectedQuantity = currentSelection?.quantity || 0;
+                            const availableQuantity = (addon.stock_quantity || 0) - (addon.reserved_quantity || 0);
+                            
+                            return (
+                              <div key={addon.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h5 className="font-medium text-gray-900">{addon.name}</h5>
+                                      <p className="text-sm text-blue-600 font-medium">{formatRupiah(addon.price)}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs text-gray-500">Stock: <span className="font-medium text-green-600">{availableQuantity}</span></p>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center space-x-2 ml-4">
+                                  <button
+                                    type="button"
+                                    className="w-7 h-7 rounded bg-gray-200 flex items-center justify-center disabled:opacity-50 text-sm font-medium hover:bg-gray-300"
+                                    disabled={selectedQuantity <= 0}
+                                    onClick={() => {
+                                      if (selectedQuantity > 0) {
+                                        if (selectedQuantity === 1) {
+                                          setSelectedAddOns(prev => {
+                                            const newState = prev.filter(s => s.addonId !== addon.id);
+                                            return newState;
+                                          });
+                                        } else {
+                                          setSelectedAddOns(prev => {
+                                            const newState = prev.map(s => 
+                                              s.addonId === addon.id 
+                                                ? { ...s, quantity: s.quantity - 1 }
+                                                : s
+                                            );
+                                            return newState;
+                                          });
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  
+                                  <span className="w-8 text-center font-medium text-sm">
+                                    {selectedQuantity}
+                                  </span>
+                                  
+                                  <button
+                                    type="button"
+                                    className="w-7 h-7 rounded bg-blue-500 text-white flex items-center justify-center disabled:opacity-50 disabled:bg-gray-300 text-sm font-medium hover:bg-blue-600"
+                                    disabled={selectedQuantity >= availableQuantity}
+                                    onClick={() => {
+                                      if (selectedQuantity < availableQuantity) {
+                                        if (selectedQuantity === 0) {
+                                          setSelectedAddOns(prev => {
+                                            const newState = [...prev, { addonId: addon.id, quantity: 1 }];
+                                            return newState;
+                                          });
+                                        } else {
+                                          setSelectedAddOns(prev => {
+                                            const newState = prev.map(s => 
+                                              s.addonId === addon.id 
+                                                ? { ...s, quantity: s.quantity + 1 }
+                                                : s
+                                            );
+                                            return newState;
+                                          });
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                )}
 
                 {!isEdit ? (
                   <FormItem>
@@ -1717,7 +2020,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
               initialData={initialData}
               isEdit={isEdit ?? false}
               showServicePrice={showServicePrice}
-              showAdditional={additionalField?.length !== 0}
+              showAdditional={additionalField?.length !== 0 || selectedAddOns?.length !== 0}
               form={form}
               detail={detail}
               handleOpenApprovalModal={() => setOpenApprovalModal(true)}

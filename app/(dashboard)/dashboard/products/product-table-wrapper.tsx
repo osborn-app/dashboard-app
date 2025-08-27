@@ -110,8 +110,8 @@ const ProductTableWrapper = () => {
 
   const statusOptions = [
     { label: "All Status", value: "" },
-    { label: "Available", value: "available" },
-    { label: "Unavailable", value: "unavailable" },
+    { label: "Tidak Disewa", value: "available" },
+    { label: "Sedang Disewa", value: "unavailable" },
   ];
 
   useEffect(() => {
@@ -234,11 +234,11 @@ const ProductTableWrapper = () => {
             </SelectContent>
           </Select>
 
-          <CalendarDateRangePicker
+          {/* <CalendarDateRangePicker
             onDateRangeChange={handleDateRangeChange}
             onClearDate={handleClearDate}
             dateRange={dateRange}
-          />
+          /> */}
           <SearchInput
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}

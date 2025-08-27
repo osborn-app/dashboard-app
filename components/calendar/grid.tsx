@@ -5,6 +5,7 @@ import Tooltip from "./tooltip";
 import { ORDER_STATUS } from "./utils";
 import { ICalendarData } from "./types";
 import { useUser } from "@/context/UserContext";
+import { useMonthYearState } from "@/hooks/useMonthYearState";
 
 const DAY_WIDTH = 64;
 const BOX_HEIGHT = 40;
@@ -17,6 +18,7 @@ const Grid = ({
   data: ICalendarData[];
 }) => {
   const { user } = useUser();
+  const { endpoint } = useMonthYearState();
 
   const today = dayjs().format("YYYY-MM-DD");
 
@@ -31,11 +33,24 @@ const Grid = ({
     return totalHours;
   };
 
-  const handleOrderClick = (orderStatus: string, orderId: string | number) => {
-    const url =
-      user?.role !== "owner" && ["pending", "waiting"].includes(orderStatus)
+  const handleOrderClick = (orderStatus: string, orderId: string | number, inspectionsId?: string | number, needsId?: string | number) => {
+    let url: string;
+    
+    if (endpoint === "products") {
+      // For products, always redirect to products-orders preview
+      url = `/dashboard/product-orders/${orderId}/preview`;
+    } else if (endpoint === "inspections") {
+      // For inspections and maintenance, redirect to fleet detail
+      url = `/dashboard/inspections/${inspectionsId}/detail`;
+    } else if (endpoint === "maintenance") {
+      // For maintenance, redirect to maintenance/needs detail
+      url = `/dashboard/needs/${needsId}/detail`;
+    } else {
+      // For fleets, use existing logic
+      url = user?.role !== "owner" && ["pending", "waiting"].includes(orderStatus)
         ? `/dashboard/orders/${orderId}/preview`
         : `/dashboard/orders/${orderId}/detail`;
+    }
 
     window.open(url);
   };
@@ -129,7 +144,7 @@ const Grid = ({
                       width <= 20 ? "" : "px-[10px]"
                     } items-center justify-center h-full w-full`}
                     onClick={() =>
-                      handleOrderClick(usage.orderStatus, usage.id)
+                      handleOrderClick(usage.orderStatus, usage.id, vehicle.id, vehicle.id)
                     }
                   >
                     <span

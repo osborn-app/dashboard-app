@@ -6,20 +6,7 @@ export const useGetAvailableFleets = (type?: string, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getAvailableFleetsFn = () => {
-    const queryParams = new URLSearchParams();
-
-    if (type) {
-      queryParams.append("type", type);
-    }
-
-    if (params?.q) {
-      queryParams.append("q", params.q);
-    }
-
-    const queryString = queryParams.toString();
-    const url = `/inspections/available${queryString ? `?${queryString}` : ""}`;
-
-    return axiosAuth.get(url);
+    return axiosAuth.get("/inspections/available", { params });
   };
 
   return useQuery({
@@ -122,5 +109,47 @@ export const useCompleteInspection = () => {
       // Invalidate all available fleets queries
       queryClient.invalidateQueries({ queryKey: ["available-fleets"] });
     },
+  });
+};
+
+export const useGetDailyReport = (params?: any) => {
+  const axiosAuth = useAxiosAuth();
+
+  const getDailyReportFn = () => {
+    return axiosAuth.get("/inspections/report/daily", { params });
+  };
+
+  return useQuery({
+    queryKey: ["inspections", "daily", params],
+    queryFn: getDailyReportFn,
+  });
+};
+
+// Trigger report update
+export const useTriggerReportUpdate = () => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const triggerReportUpdateFn = () => {
+    return axiosAuth.get("/inspections/report/trigger");
+  };
+
+  return useMutation({
+    mutationFn: triggerReportUpdateFn,
+    onSuccess: () => {
+      // Invalidate daily report query to refresh data
+      queryClient.invalidateQueries({ queryKey: ["inspections", "daily"] });
+      // Also invalidate other inspection queries if needed
+      queryClient.invalidateQueries({ queryKey: ["inspections"] });
+    },
+  });
+};
+
+//inspection muncul di owner tanpa table tersedia
+export const useGetInspectionsByOwner = (params?: any) => {
+  const axiosAuth = useAxiosAuth();
+  return useQuery({
+    queryKey: ["inspections", "owner", params],
+    queryFn: () => axiosAuth.get(`/inspections/report/owner/me`, { params }),
   });
 };

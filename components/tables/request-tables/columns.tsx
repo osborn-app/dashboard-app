@@ -8,6 +8,38 @@ import { convertTime } from "@/lib/utils";
 const duration = require("dayjs/plugin/duration");
 dayjs.extend(duration);
 
+// Helper function untuk menampilkan nama kendaraan/produk
+const getVehicleOrProductName = (row: any) => {
+  if (row.original.fleet) {
+    return (
+      <span>
+        {row.original.fleet?.name} (
+        {row.original.fleet?.type == "car" ? "Mobil" : "Motor"})
+      </span>
+    );
+  } else if (row.original.product) {
+    return (
+      <span>
+        {row.original.product?.name} ({row.original.product?.category_label || 'Produk'})
+      </span>
+    );
+  } else if (row.original.order?.fleet) {
+    return (
+      <span>
+        {row.original.order.fleet?.name} (
+        {row.original.order.fleet?.type == "car" ? "Mobil" : "Motor"})
+      </span>
+    );
+  } else if (row.original.order?.product) {
+    return (
+      <span>
+        {row.original.order.product?.name} ({row.original.order.product?.category_label || 'Produk'})
+      </span>
+    );
+  }
+  return <span>-</span>;
+};
+
 export const pendingColumns: ColumnDef<any>[] = [
   {
     accessorKey: "name",
@@ -48,13 +80,8 @@ export const pendingColumns: ColumnDef<any>[] = [
   },
   {
     accessorKey: "fleet.name",
-    header: "Nama Kendaraan",
-    cell: ({ row }) => (
-      <span>
-        {row.original.fleet.name} (
-        {row.original.fleet.type == "car" ? "Mobil" : "Motor"})
-      </span>
-    ),
+    header: "Nama Kendaraan/Produk",
+    cell: ({ row }) => getVehicleOrProductName(row),
   },
   {
     accessorKey: "time",
@@ -120,13 +147,8 @@ export const completedColumns: ColumnDef<any>[] = [
   },
   {
     accessorKey: "fleet.name",
-    header: "Nama Kendaraan",
-    cell: ({ row }) => (
-      <span>
-        {row.original.fleet.name} (
-        {row.original.fleet.type == "car" ? "Mobil" : "Motor"})
-      </span>
-    ),
+    header: "Nama Kendaraan/Produk",
+    cell: ({ row }) => getVehicleOrProductName(row),
   },
   {
     accessorKey: "time",

@@ -17,19 +17,6 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDebounce } from "use-debounce";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import {
-  DoubleArrowLeftIcon,
-  DoubleArrowRightIcon,
-} from "@radix-ui/react-icons";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 interface InspectionsTableWrapperProps {
   pageNo?: number;
@@ -104,32 +91,9 @@ const InspectionsTableWrapper = ({
     router.push(
       `${pathname}?${createQueryString({
         status: defaultTab,
-        fleet_type: type,
-        q: searchDebounce,
-      })}`,
-    );
-  };
-
-  // Pagination handlers
-  const handlePageChange = (newPage: number) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        status: defaultTab,
-        page: newPage,
-        q: searchDebounce,
-        fleet_type: currentFleetType,
-      })}`,
-    );
-  };
-
-  const handlePageSizeChange = (newPageSize: number) => {
-    router.push(
-      `${pathname}?${createQueryString({
-        status: defaultTab,
-        page: 1,
-        limit: newPageSize,
-        q: searchDebounce,
-        fleet_type: currentFleetType,
+        fleet_type: type === "all" ? null : type,
+        q: searchDebounce || null,
+        page: 1, // Reset to first page when changing filter
       })}`,
     );
   };
@@ -139,49 +103,75 @@ const InspectionsTableWrapper = ({
     switch (defaultTab) {
       case "tersedia":
         return {
-          data: tersediaData?.data?.data || tersediaData?.data || [],
-          meta: tersediaData?.data?.meta,
+          data: tersediaData?.data?.data || [],
+          total: tersediaData?.data?.total || 0,
+          page: tersediaData?.data?.page || 1,
+          limit: tersediaData?.data?.limit || 10,
+          totalPages: tersediaData?.data?.totalPages || 1,
           isLoading: isFetchingTersedia,
         };
       case "ongoing":
         return {
-          data: ongoingData?.data?.data || ongoingData?.data || [],
-          meta: ongoingData?.data?.meta,
+          data: ongoingData?.data?.data || [],
+          total: ongoingData?.data?.total || 0,
+          page: ongoingData?.data?.page || 1,
+          limit: ongoingData?.data?.limit || 10,
+          totalPages: ongoingData?.data?.totalPages || 1,
           isLoading: isFetchingOngoing,
         };
       case "selesai":
         return {
-          data: selesaiData?.data?.data || selesaiData?.data || [],
-          meta: selesaiData?.data?.meta,
+          data: selesaiData?.data?.data || [],
+          total: selesaiData?.data?.total || 0,
+          page: selesaiData?.data?.page || 1,
+          limit: selesaiData?.data?.limit || 10,
+          totalPages: selesaiData?.data?.totalPages || 1,
           isLoading: isFetchingSelesai,
         };
       default:
         return {
-          data: tersediaData?.data?.data || tersediaData?.data || [],
-          meta: tersediaData?.data?.meta,
+          data: tersediaData?.data?.data || [],
+          total: tersediaData?.data?.total || 0,
+          page: tersediaData?.data?.page || 1,
+          limit: tersediaData?.data?.limit || 10,
+          totalPages: tersediaData?.data?.totalPages || 1,
           isLoading: isFetchingTersedia,
         };
     }
   };
 
   const currentData = getCurrentData();
-  const totalItems = currentData.meta?.total_items || 0;
-  const pageCount = Math.ceil(totalItems / limit);
+  const totalItems = currentData.total;
+  const pageCount = currentData.totalPages;
+
+  // Handle tab change
+  useEffect(() => {
+    router.push(
+      `${pathname}?${createQueryString({
+        status: defaultTab,
+        q: searchDebounce || null,
+        fleet_type: currentFleetType === "all" ? null : currentFleetType,
+        page: 1, // Reset to first page when tab changes
+      })}`,
+    );
+  }, [
+    defaultTab,
+    searchDebounce,
+    currentFleetType,
+    pathname,
+    createQueryString,
+    router,
+  ]);
 
   useEffect(() => {
-    if (
-      searchDebounce !== undefined ||
-      searchDebounce !== "" ||
-      searchDebounce
-    ) {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          q: searchDebounce,
-          fleet_type: currentFleetType,
-        })}`,
-      );
-    }
+    router.push(
+      `${pathname}?${createQueryString({
+        status: defaultTab,
+        q: searchDebounce || null,
+        fleet_type: currentFleetType === "all" ? null : currentFleetType,
+        page: 1, // Reset to first page when search changes
+      })}`,
+    );
   }, [
     searchDebounce,
     defaultTab,
@@ -195,19 +185,6 @@ const InspectionsTableWrapper = ({
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center justify-between gap-4 flex-wrap w-full lg:!w-auto">
-          <Select
-            value={currentFleetType}
-            onValueChange={handleFleetTypeChange}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Pilih tipe fleet" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua</SelectItem>
-              <SelectItem value="car">Mobil</SelectItem>
-              <SelectItem value="motorcycle">Motor</SelectItem>
-            </SelectContent>
-          </Select>
           <SearchInput
             searchQuery={searchQueryState}
             onSearchChange={handleSearchChange}
@@ -221,16 +198,21 @@ const InspectionsTableWrapper = ({
         <>
           {isFetchingTersedia && <Spinner />}
           {!isFetchingTersedia &&
-            tersediaData?.data &&
-            tersediaData.data.length > 0 && (
+            tersediaData?.data?.data &&
+            tersediaData.data.data.length > 0 && (
               <InspectionsTable
                 columns={SimpleInspectionsColumns}
-                data={tersediaData.data}
+                data={tersediaData.data.data}
                 status="active"
+                searchKey="name"
+                pageNo={page}
+                totalUsers={tersediaData?.data?.total || 0}
+                pageCount={tersediaData?.data?.totalPages || 1}
               />
             )}
           {!isFetchingTersedia &&
-            (!tersediaData?.data || tersediaData.data.length === 0) && (
+            (!tersediaData?.data?.data ||
+              tersediaData.data.data.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">
                 Tidak ada fleet tersedia untuk inspeksi
               </div>
@@ -243,16 +225,21 @@ const InspectionsTableWrapper = ({
         <>
           {isFetchingOngoing && <Spinner />}
           {!isFetchingOngoing &&
-            ongoingData?.data &&
-            ongoingData.data.length > 0 && (
+            ongoingData?.data?.data &&
+            ongoingData.data.data.length > 0 && (
               <InspectionsTable
                 columns={OngoingInspectionsColumns}
-                data={ongoingData.data}
+                data={ongoingData.data.data}
                 status="pending_repair"
+                searchKey="name"
+                pageNo={page}
+                totalUsers={ongoingData.data.total || 0}
+                pageCount={ongoingData.data.totalPages || 1}
               />
             )}
           {!isFetchingOngoing &&
-            (!ongoingData?.data || ongoingData.data.length === 0) && (
+            (!ongoingData?.data?.data ||
+              ongoingData.data.data.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">
                 Tidak ada inspeksi yang sedang berlangsung
               </div>
@@ -265,95 +252,27 @@ const InspectionsTableWrapper = ({
         <>
           {isFetchingSelesai && <Spinner />}
           {!isFetchingSelesai &&
-            selesaiData?.data &&
-            selesaiData.data.length > 0 && (
+            selesaiData?.data?.data &&
+            selesaiData.data.data.length > 0 && (
               <InspectionsTable
                 columns={CompletedInspectionsColumns}
-                data={selesaiData.data}
+                data={selesaiData.data.data}
                 status="completed"
+                searchKey="name"
+                pageNo={page}
+                totalUsers={selesaiData.data.total || 0}
+                pageCount={selesaiData.data.totalPages || 1}
               />
             )}
           {!isFetchingSelesai &&
-            (!selesaiData?.data || selesaiData.data.length === 0) && (
+            (!selesaiData?.data?.data ||
+              selesaiData.data.data.length === 0) && (
               <div className="text-center py-8 text-muted-foreground">
                 Tidak ada inspeksi yang selesai
               </div>
             )}
         </>
       </TabsContent>
-
-      {/* Pagination */}
-      {!currentData.isLoading && totalItems > 0 && (
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            Menampilkan {(page - 1) * limit + 1} sampai{" "}
-            {Math.min(page * limit, totalItems)} dari {totalItems} data
-          </div>
-          <div className="flex items-center space-x-6 lg:space-x-8">
-            <div className="flex items-center space-x-2">
-              <p className="text-sm font-medium">Baris per halaman</p>
-              <Select
-                value={`${limit}`}
-                onValueChange={(value) => {
-                  handlePageSizeChange(Number(value));
-                }}
-              >
-                <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue placeholder={limit} />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Halaman {page} dari {pageCount}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => handlePageChange(1)}
-                disabled={page <= 1}
-              >
-                <span className="sr-only">Go to first page</span>
-                <DoubleArrowLeftIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page <= 1}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <ChevronLeftIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page >= pageCount}
-              >
-                <span className="sr-only">Go to next page</span>
-                <ChevronRightIcon className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => handlePageChange(pageCount)}
-                disabled={page >= pageCount}
-              >
-                <span className="sr-only">Go to last page</span>
-                <DoubleArrowRightIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

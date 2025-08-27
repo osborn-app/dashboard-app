@@ -7,6 +7,8 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import type { Metadata } from "next"; //redeploy
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 import {
   dehydrate,
   HydrationBoundary,
@@ -23,6 +25,9 @@ export const metadata: Metadata = {
 };
 
 const page = async () => {
+  const session = await getServerSession(authOptions);
+  const userRole = session?.user?.role || "admin";
+  
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
@@ -38,12 +43,14 @@ const page = async () => {
         <div className="flex items-start justify-between">
           <Heading title="Products" description="Manage your products inventory" />
 
-          <Link
-            href={"/dashboard/products/create"}
-            className={cn(buttonVariants({ variant: "main" }))}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Product
-          </Link>
+          {userRole !== "owner" && (
+            <Link
+              href={"/dashboard/products/create"}
+              className={cn(buttonVariants({ variant: "main" }))}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add Product
+            </Link>
+          )}
         </div>
         <Separator />
         

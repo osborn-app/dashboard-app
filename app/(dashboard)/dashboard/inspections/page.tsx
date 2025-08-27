@@ -8,6 +8,8 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InspectionsTableWrapper from "./inspections-table-wrapper";
+import OwnerInspectionsWrapper from "@/components/owner-inspections-wrapper";
+import InspectionsDailyReport from "@/components/inspections-daily-report";
 import {
   dehydrate,
   HydrationBoundary,
@@ -37,6 +39,7 @@ const breadcrumbItems = [
 
 export default async function InspectionsPage({ searchParams }: paramsProps) {
   const session = await getServerSession(authOptions);
+  const userRole = session?.user?.role || "admin";
   const page = Number(searchParams.page) || 1;
   const pageLimit = Number(searchParams.limit) || 10;
   const q = searchParams.q || null;
@@ -45,72 +48,76 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
     : searchParams.fleet_type || "all";
   const status = searchParams.status || "tersedia";
 
+  // Only prefetch data for admin users
   const queryClient = new QueryClient();
 
-  // Build query string for available fleets
-  let availableFleetsQueryString = `page=${page}&limit=${pageLimit}`;
-  if (q) availableFleetsQueryString += `&q=${q}`;
-  if (fleetType !== "all") availableFleetsQueryString += `&type=${fleetType}`;
+  if (userRole !== "owner") {
+    // Build query string for available fleets
+    let availableFleetsQueryString = `page=${page}&limit=${pageLimit}`;
+    if (q) availableFleetsQueryString += `&q=${q}`;
+    if (fleetType !== "all") availableFleetsQueryString += `&type=${fleetType}`;
 
-  // Build query string for inspections
-  let inspectionsQueryString = `page=${page}&limit=${pageLimit}`;
-  if (q) inspectionsQueryString += `&q=${q}`;
-  if (fleetType !== "all") inspectionsQueryString += `&fleet_type=${fleetType}`;
+    // Build query string for inspections
+    let inspectionsQueryString = `page=${page}&limit=${pageLimit}`;
+    if (q) inspectionsQueryString += `&q=${q}`;
+    if (fleetType !== "all")
+      inspectionsQueryString += `&fleet_type=${fleetType}`;
 
-  // Prefetch data for all statuses
-  await Promise.all([
-    queryClient.prefetchQuery({
-      queryKey: [
-        "available-fleets",
-        fleetType === "all" ? undefined : fleetType,
-        { q, page, limit: pageLimit },
-      ],
-      queryFn: () =>
-        getAvailableFleets(fleetType === "all" ? undefined : fleetType, {
-          q,
-          page,
-          limit: pageLimit,
-        }),
-    }),
-    queryClient.prefetchQuery({
-      queryKey: [
-        "inspections",
-        "pending_repair",
-        {
-          q,
-          fleet_type: fleetType === "all" ? undefined : fleetType,
-          page,
-          limit: pageLimit,
-        },
-      ],
-      queryFn: () =>
-        getInspectionsByStatus("pending_repair", {
-          q,
-          fleet_type: fleetType === "all" ? undefined : fleetType,
-          page,
-          limit: pageLimit,
-        }),
-    }),
-    queryClient.prefetchQuery({
-      queryKey: [
-        "inspections",
-        "completed",
-        {
-          q,
-          fleet_type: fleetType === "all" ? undefined : fleetType,
-          page,
-          limit: pageLimit,
-        },
-      ],
-      queryFn: () =>
-        getInspectionsByStatus("completed", {
-          q,
-          fleet_type: fleetType === "all" ? undefined : fleetType,
-          page,
-          limit: pageLimit,
-        }),
-    }),
-  ]);
+    // Prefetch data for all statuses
+    await Promise.all([
+      queryClient.prefetchQuery({
+        queryKey: [
+          "available-fleets",
+          fleetType === "all" ? undefined : fleetType,
+          { q, page, limit: pageLimit },
+        ],
+        queryFn: () =>
+          getAvailableFleets(fleetType === "all" ? undefined : fleetType, {
+            q,
+            page,
+            limit: pageLimit,
+          }),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: [
+          "inspections",
+          "pending_repair",
+          {
+            q,
+            fleet_type: fleetType === "all" ? undefined : fleetType,
+            page,
+            limit: pageLimit,
+          },
+        ],
+        queryFn: () =>
+          getInspectionsByStatus("pending_repair", {
+            q,
+            fleet_type: fleetType === "all" ? undefined : fleetType,
+            page,
+            limit: pageLimit,
+          }),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: [
+          "inspections",
+          "completed",
+          {
+            q,
+            fleet_type: fleetType === "all" ? undefined : fleetType,
+            page,
+            limit: pageLimit,
+          },
+        ],
+        queryFn: () =>
+          getInspectionsByStatus("completed", {
+            q,
+            fleet_type: fleetType === "all" ? undefined : fleetType,
+            page,
+            limit: pageLimit,
+          }),
+      }),
+    ]);
+  }
 
   const defaultTab = Array.isArray(searchParams.status)
     ? searchParams.status[0] || "tersedia"
@@ -122,23 +129,46 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
         <BreadCrumb items={breadcrumbItems} />
         <div className="flex items-start justify-between">
           <Heading title="Inspections" />
+          {userRole !== "owner" && (
+            <Link
+              href="/dashboard/inspections/create"
+              className={cn(buttonVariants({ variant: "main" }))}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Add New
+            </Link>
+          )}
         </div>
         <Separator />
-        <Tabs defaultValue={defaultTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="tersedia">Tersedia</TabsTrigger>
-            <TabsTrigger value="ongoing">Sedang Berjalan</TabsTrigger>
-            <TabsTrigger value="selesai">Selesai</TabsTrigger>
-          </TabsList>
-          <HydrationBoundary state={dehydrate(queryClient)}>
-            <InspectionsTableWrapper
-              pageNo={page}
-              pageLimit={pageLimit}
-              searchQuery={q as string}
-              fleetType={fleetType as string}
-            />
-          </HydrationBoundary>
-        </Tabs>
+
+        {userRole === "owner" ? (
+          <OwnerInspectionsWrapper />
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            {/* Left Column - Tabs Content */}
+            <div className="xl:col-span-3">
+              <Tabs defaultValue={defaultTab} className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="tersedia">Tersedia</TabsTrigger>
+                  <TabsTrigger value="ongoing">Sedang Berjalan</TabsTrigger>
+                  <TabsTrigger value="selesai">Selesai</TabsTrigger>
+                </TabsList>
+                <HydrationBoundary state={dehydrate(queryClient)}>
+                  <InspectionsTableWrapper
+                    pageNo={page}
+                    pageLimit={pageLimit}
+                    searchQuery={q as string}
+                    fleetType={fleetType as string}
+                  />
+                </HydrationBoundary>
+              </Tabs>
+            </div>
+
+            {/* Right Column - Daily Report */}
+            <div className="xl:col-span-1">
+              <InspectionsDailyReport />
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

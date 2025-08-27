@@ -12,14 +12,14 @@ export const metadata: Metadata = {
   title: "Calendar | Transgo",
   description: "Calendar page",
 };
-
+// triger
 const page = () => {
   return (
     <div className="flex-1 space-y-4  p-4 md:p-8 pt-6">
       <BreadCrumb items={BREAD_CRUMB_ITEMS} />
       <div className="flex flex-row items-center justify-between">
         <Heading title="Calendar" />
-        <YearAndMonthSelector withType/>
+        <YearAndMonthSelector withType withEndpointSelector/>
       </div>
       <Calendar />
     </div>

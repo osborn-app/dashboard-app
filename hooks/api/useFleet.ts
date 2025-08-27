@@ -55,11 +55,11 @@ export const useGetInfinityFleetsForNeeds = (query?: string) => {
     pageParam?: number;
     query?: string;
   }) => {
-    return axiosAuth.get(`${baseEndpoint}?status=preparation`, {
+    return axiosAuth.get(baseEndpoint, {
       params: {
         limit: 10,
         page: pageParam,
-        // q: query,
+        q: query,
       },
     });
   };
@@ -139,54 +139,6 @@ export const useDeleteFleet = (id: number) => {
     mutationFn: deleteFleet,
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["fleets"] });
-    },
-  });
-};
-
-export const useUpdateFleetStatusToPreparation = () => {
-  const axiosAuth = useAxiosAuth();
-  const queryClient = useQueryClient();
-
-  const updateFleetStatusToPreparation = (id: string | number) => {
-    return axiosAuth.put(`${baseEndpoint}/${id}/status`, {
-      status: "preparation",
-    });
-  };
-
-  return useMutation({
-    mutationFn: updateFleetStatusToPreparation,
-    onSuccess: () => {
-      // Invalidate fleets queries
-      queryClient.invalidateQueries({ queryKey: ["fleets"] });
-      // Invalidate available fleets queries for inspections
-      queryClient.invalidateQueries({ queryKey: ["available-fleets"] });
-    },
-    onError: (error) => {
-      console.error("Error updating fleet status to preparation:", error);
-    },
-  });
-};
-
-export const useUpdateFleetStatusToAvailable = () => {
-  const axiosAuth = useAxiosAuth();
-  const queryClient = useQueryClient();
-
-  const updateFleetStatusToAvailable = (id: string | number) => {
-    return axiosAuth.put(`${baseEndpoint}/${id}/status`, {
-      status: "available",
-    });
-  };
-
-  return useMutation({
-    mutationFn: updateFleetStatusToAvailable,
-    onSuccess: () => {
-      // Invalidate fleets queries
-      queryClient.invalidateQueries({ queryKey: ["fleets"] });
-      // Invalidate available fleets queries for inspections
-      queryClient.invalidateQueries({ queryKey: ["available-fleets"] });
-    },
-    onError: (error) => {
-      console.error("Error updating fleet status to available:", error);
     },
   });
 };

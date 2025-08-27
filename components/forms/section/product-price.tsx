@@ -1,10 +1,46 @@
 import { Icons } from "@/components/icons";
 import Spinner from "@/components/spinner";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { formatRupiah } from "@/lib/utils";
-import { EyeIcon, Info, Link2 } from "lucide-react";
+import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
+import dayjs from "dayjs";
+import "dayjs/locale/id";
+import { ChevronDown, EyeIcon, Info, Link2 } from "lucide-react";
+
+interface DropdownWeekendProps {
+  days: string[];
+  weekendPrice?: number;
+}
+
+const DropdownWeekend: React.FC<DropdownWeekendProps> = ({
+  days,
+  weekendPrice,
+}) => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger>
+        <ChevronDown />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        {days?.map((day, index) => (
+          <DropdownMenuItem key={index} className="justify-between w-[224px]">
+            <p>{dayjs(day).locale("id").format("D MMMM YYYY")}</p>
+            <span className="text-slate-500">
+              {formatRupiah(weekendPrice as number)}
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 interface PriceDetailProps {
   form: any;
@@ -54,33 +90,69 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
             <div className="border border-neutral-200 rounded-md p-[10px] mb-4 ">
               <p className="font-medium text-sm text-neutral-700 mb-1">
                 Nama Product
+                {/* ✅ Tambahkan informasi jenis sewa */}
+                {initialData?.rental_type && (
+                  <span className="ml-2 text-xs text-blue-600">
+                    ({initialData?.rental_type?.is_daily && 'Harian'}
+                    {initialData?.rental_type?.is_weekly && 'Mingguan'}
+                    {initialData?.rental_type?.is_monthly && 'Bulanan'})
+                  </span>
+                )}
               </p>
               <div className="flex justify-between mb-1">
                 <p className="font-medium text-sm text-neutral-700">
                   {initialData?.product?.name || detail?.product?.name || detail?.product_name
-                    ? `${initialData?.product?.name || detail?.product?.name || detail?.product_name} (per hari)`
+                    ? `${initialData?.product?.name || detail?.product?.name || detail?.product_name} / Hari`
                     : "Product"}
+                  {/* ✅ Tambahkan informasi jenis sewa untuk produk */}
+                  {initialData?.rental_type && (
+                    <span className="block text-xs text-blue-600 mt-1">
+                      Sewa {initialData?.rental_type?.is_daily && 'Harian'}
+                      {initialData?.rental_type?.is_weekly && 'Mingguan'}
+                      {initialData?.rental_type?.is_monthly && 'Bulanan'}
+                    </span>
+                  )}
                 </p>
                 <p className="font-semibold text-base">
                   {formatRupiah(detail?.rent_price || detail?.product?.price || detail?.product_price || initialData?.product?.price || 0)}
                 </p>
               </div>
 
-              {detail?.product && form.getValues("duration") && detail?.total_rent_price && (
+              {detail?.product && (form.getValues("duration") || initialData?.duration) && detail?.total_rent_price && (
                 <div className="flex justify-between mb-1">
                   <p className="font-medium text-sm text-neutral-700">
-                    {form.getValues("duration")} Hari
+                    {form.getValues("duration") || initialData?.duration} Hari
                   </p>
                   <p className="font-semibold text-base">
                     {formatRupiah(detail?.total_rent_price)}
                   </p>
                 </div>
               )}
-              <Separator className="mb-1" />
-              {(showServicePrice || showAdditional) && (
-                <p className="font-medium text-sm text-neutral-700 mb-1">
-                  Biaya Layanan
-                </p>
+              
+              {/* ✅ Tambahkan informasi harga asli dan diskon untuk sewa mingguan/bulanan */}
+              {initialData?.rental_type && (initialData?.rental_type?.is_weekly || initialData?.rental_type?.is_monthly) && (initialData?.product || detail?.product) && (
+                <>
+                  {/* Harga asli harian */}
+                  <div className="flex justify-between mb-1">
+                    <p className="font-medium text-sm text-neutral-500">
+                      Harga asli harian
+                    </p>
+                    <p className="font-medium text-sm text-neutral-500 line-through">
+                      {formatRupiah(initialData?.product?.price || detail?.product?.price || 0)}
+                    </p>
+                  </div>
+                  
+                  {/* Harga sewa mingguan/bulanan */}
+                  <div className="flex justify-between mb-1">
+                    <p className="font-medium text-sm text-neutral-700">
+                      {initialData?.rental_type?.is_weekly && `Harga mingguan (${initialData?.product?.weekly_price ? formatRupiah(initialData?.product?.weekly_price) : 'N/A'})`}
+                      {initialData?.rental_type?.is_monthly && `Harga bulanan (${initialData?.product?.monthly_price ? formatRupiah(initialData?.product?.monthly_price) : 'N/A'})`}
+                    </p>
+                    <p className="font-medium text-sm text-green-600">
+                      Hemat {initialData?.rental_type?.is_weekly ? 25 : initialData?.rental_type?.is_monthly ? 50 : 0}%
+                    </p>
+                  </div>
+                </>
               )}
               {showServicePrice &&
                 (!form.getValues("start_request.is_self_pickup") ||
@@ -99,37 +171,99 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                     </p>
                   </div>
                 )}
-              {showAdditional && isEdit
-                ? detail?.additional_services?.length !== 0 &&
-                  detail?.additional_services?.map((item: any, index: any) => {
+                <Separator className="mb-1" />
+              {/* Display additional services */}
+              {showAdditional && (
+                <>
+                  <p className="font-medium text-sm text-neutral-700 mb-1">
+                    Biaya Layanan
+                  </p>
+                  {isEdit
+                    ? detail?.additional_services?.length > 0 &&
+                      detail?.additional_services?.map((item: any, index: any) => {
+                        return (
+                          <div className="flex justify-between mb-1" key={index}>
+                            <p className="font-medium text-sm text-neutral-700">
+                              {item.name}
+                            </p>
+                            <p className="font-semibold text-base">
+                              {formatRupiah(item.price)}
+                            </p>
+                          </div>
+                        );
+                      })
+                    : initialData?.additional_services?.length > 0 &&
+                      initialData?.additional_services?.map(
+                        (item: any, index: any) => {
+                          return (
+                            <div className="flex justify-between mb-1" key={index}>
+                              <p className="font-medium text-sm text-neutral-700">
+                                {item.name}
+                              </p>
+                              <p className="font-semibold text-base">
+                                {formatRupiah(item.price)}
+                              </p>
+                            </div>
+                          );
+                        },
+                      )}
+                  <Separator className="mb-1" />
+                </>
+              )}
+              
+              {/* Display addons as separate section */}
+              {(detail?.addons?.length > 0 || initialData?.addons?.length > 0) && (
+                <>
+                  <p className="font-medium text-sm text-neutral-700 mb-1">
+                    Aksesoris Tambahan
+                  </p>
+                  {(detail?.addons || initialData?.addons)?.map((addon: any, index: any) => {
                     return (
                       <div className="flex justify-between mb-1" key={index}>
                         <p className="font-medium text-sm text-neutral-700">
-                          {item.name}
+                          {addon.name} (x{addon.quantity})
                         </p>
                         <p className="font-semibold text-base">
-                          {formatRupiah(item.price)}
+                          {formatRupiah(addon.price * addon.quantity)}
                         </p>
                       </div>
                     );
-                  })
-                : initialData?.additional_services?.length !== 0 &&
-                  initialData?.additional_services?.map(
-                    (item: any, index: any) => {
-                      return (
-                        <div className="flex justify-between mb-1" key={index}>
-                          <p className="font-medium text-sm text-neutral-700">
-                            {item.name}
-                          </p>
-                          <p className="font-semibold text-base">
-                            {formatRupiah(item.price)}
-                          </p>
-                        </div>
-                      );
-                    },
-                  )}
-              {(showAdditional || showServicePrice) && (
-                <Separator className="mb-1" />
+                  })}
+                  <Separator className="mb-1" />
+                </>
+              )}
+              
+              {/* Display weekend price if available */}
+              {detail?.weekend_days?.length >= 1 && (
+                <>
+                  <p className="font-medium text-sm text-neutral-700 mb-1">
+                    Harga Akhir Pekan
+                  </p>
+                  <div className="flex justify-between mb-1">
+                    {detail?.weekend_days.length == 1 ? (
+                      <p className="font-medium text-sm text-neutral-700">
+                        {dayjs(detail?.weekend_days)
+                          .locale("id")
+                          .format("dddd, D MMMM YYYY")}
+                      </p>
+                    ) : (
+                      <div className="flex">
+                        <p className="font-medium text-sm text-neutral-700 mr-4">
+                          {detail?.weekend_days.length} Hari
+                        </p>
+                        <DropdownWeekend
+                          days={detail?.weekend_days}
+                          weekendPrice={detail?.weekend_price}
+                        />
+                      </div>
+                    )}
+                    <p className="font-semibold text-base">
+                      {formatRupiah(
+                        (detail?.weekend_days?.length || 0) * (detail?.weekend_price || 0),
+                      )}
+                    </p>
+                  </div>
+                </>
               )}
               {detail?.insurance && (
                 <>

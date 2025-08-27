@@ -12,6 +12,8 @@ interface MonthYearStore {
   setSearchQuery: (searchQuery: string) => void;
   typeQuery: string;
   setTypeQuery: (typeQuery: string) => void;
+  endpoint: "fleets" | "products" | "inspections" | "maintenance";
+  setEndpoint: (endpoint: "fleets" | "products" | "inspections" | "maintenance") => void;
   handlePrevMonth: () => void;
   handleNextMonth: () => void;
   handlePrevYear: () => void;
@@ -31,6 +33,8 @@ export const useMonthYearState = create<MonthYearStore>((set) => ({
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   typeQuery: "",
   setTypeQuery: (typeQuery) => set({ typeQuery }),
+  endpoint: "fleets",
+  setEndpoint: (endpoint) => set({ endpoint, typeQuery: "" }), // Reset typeQuery when changing endpoint
 
   // function
   handleClearDate: () => set({ dateRange: { from: undefined, to: undefined } }),

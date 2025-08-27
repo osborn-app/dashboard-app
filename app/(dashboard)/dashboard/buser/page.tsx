@@ -6,7 +6,7 @@ import { Tabs } from "@/components/ui/tabs";
 import BuserTableWrapper from "./buser-table-wrapper";
 import { useSearchParams } from "next/navigation";
 
-const breadcrumbItems = [{ title: "Buser", link: "/dashboard/buser" }];
+const breadcrumbItems = [{ title: "Buser", link: "/dashboard/buser" }]; //trigger deploy
 
 export default function BuserPage() {
   const searchParams = useSearchParams();
@@ -25,4 +25,5 @@ export default function BuserPage() {
     </div>
   );
 }
+
 // trigger deploy dev.dashboard.transgo.id

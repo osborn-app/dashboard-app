@@ -204,6 +204,13 @@ export const navItems: NavItem[] = [
         roles: ["admin", "owner"],
       },
       {
+        title: "Add-ons",
+        href: "/dashboard/add-ons",
+        icon: "package",
+        label: "add-ons",
+        roles: ["admin"],
+      },
+      {
         title: "Fleets Mitra Ojol",
         href: "/dashboard/partner-fleets",
         icon: "carpartner",
@@ -283,23 +290,30 @@ export const navItems: NavItem[] = [
     roles: ["owner"],
   },
   {
+    title: "Pencatatan Produk",
+    href: "/dashboard/product-ledgers",
+    icon: "ledger",
+    label: "product-ledgers",
+    roles: ["owner"],
+  },
+  {
     title: "INSPEKSI & PERBAIKAN",
     label: "Inspections",
-    roles: ["admin"],
+    roles: ["admin", "owner"],
     items: [
       {
         title: "Inspections",
         href: "/dashboard/inspections",
         icon: "listchecks",
         label: "Inspections",
-        roles: ["admin"],
+        roles: ["admin", "owner"],
       },
       {
-        title: "Keperluan Perbaikan",
+        title: "Keperluan & Perbaikan",
         href: "/dashboard/needs",
         icon: "wrench",
         label: "Keperluan Perbaikan",
-        roles: ["admin"],
+        roles: ["admin", "owner"],
       },
     ],
   },

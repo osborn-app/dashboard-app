@@ -8,6 +8,42 @@ import { convertTime } from "@/lib/utils";
 const duration = require("dayjs/plugin/duration");
 dayjs.extend(duration);
 
+// Helper function to get display name for type
+const normalize = (v?: string | null) => {
+    if (v === null || v === undefined) return null;
+    const trimmed = String(v).trim().toLowerCase();
+    return trimmed === "" || trimmed === "null" || trimmed === "undefined" ? null : trimmed;
+  };
+  
+  const getTypeDisplayName = (fleetType: string | null, productCategory: string | null) => {
+    const fleet = normalize(fleetType);
+    const category = normalize(productCategory);
+  
+    if (fleet) {
+      const fleetTypeMap: Record<string, string> = {
+        car: "Mobil",
+        motorcycle: "Motor",
+        all: "Semua Kendaraan",
+      };
+      return fleetTypeMap[fleet] ?? fleet; // fallback ke nilai asli kalau tak ada di map
+    }
+  
+    if (category) {
+      const productCategoryMap: Record<string, string> = {
+        iphone: "iPhone",
+        camera: "Camera",
+        outdoor: "Outdoor",
+        starlink: "Starlink",
+        all: "Semua Produk",
+      };
+      return productCategoryMap[category] ?? category;
+    }
+  
+    // Keduanya kosong → anggap semua produk
+    return "Semua Produk";
+  };
+  
+
 export const pendingColumns: ColumnDef<any>[] = [
     {
         accessorKey: "discount",
@@ -38,10 +74,10 @@ export const pendingColumns: ColumnDef<any>[] = [
         ),
     },
     {
-        accessorKey: "fleet_type",
-        header: "Jenis Kendaraan",
+        accessorKey: "type",
+        header: "Tipe",
         cell: ({ row }) => (
-            <span>{row.original.fleet_type}</span>
+            <span>{getTypeDisplayName(row.original.fleet_type, row.original.product_category)}</span>
         ),
     },
     {
@@ -80,10 +116,10 @@ export const completedColumns: ColumnDef<any>[] = [
         ),
     },
     {
-        accessorKey: "fleet_type",
-        header: "Jenis Kendaraan",
+        accessorKey: "type",
+        header: "Tipe",
         cell: ({ row }) => (
-            <span>{row.original.fleet_type}</span>
+            <span>{getTypeDisplayName(row.original.fleet_type, row.original.product_category)}</span>
         ),
     },
     {
