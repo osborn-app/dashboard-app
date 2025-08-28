@@ -21,7 +21,7 @@ const mapOrderStatus = (backendStatus: string) => {
 };
 
 const useCalendarViewStore = (filter?: any) => {
-  const { endpoint } = useMonthYearState();
+  const { endpoint, locationId } = useMonthYearState();
   
   const {
     data: calendar,
@@ -35,6 +35,7 @@ const useCalendarViewStore = (filter?: any) => {
     ...(endpoint === "inspections" && filter?.type ? { status: filter.type } : {}),
     ...(endpoint === "maintenance" && filter?.type ? { status: filter.type } : {}),
     ...(endpoint !== "inspections" && endpoint !== "maintenance" ? filter : {}),
+    ...(endpoint === "fleets" && locationId !== null && { location_id: locationId }),
   });
 
   // Handle different data structures for different endpoints

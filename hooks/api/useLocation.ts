@@ -21,6 +21,24 @@ export const useGetLocation = (params: any, options = {}, type: string) => {
   });
 };
 
+export const useGetLocations = () => {
+  const axiosAuth = useAxiosAuth();
+
+  const getLocations = () => {
+    return axiosAuth.get(baseEndpoint, { 
+      params: { 
+        limit: 100, // Get all locations
+        page: 1 
+      } 
+    });
+  };
+
+  return useQuery({
+    queryKey: ["locations", "all"],
+    queryFn: getLocations,
+  });
+};
+
 export const useGetDetailLocation = (id: string | number) => {
   const axiosAuth = useAxiosAuth();
 
