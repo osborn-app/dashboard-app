@@ -38,14 +38,49 @@ export const needsColumns: ColumnDef<any>[] = [
   {
     accessorKey: "estimasi",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Estimasi (hari)</span>
+      <span className="text-sm font-semibold text-neutral-700">Estimasi</span>
     ),
-    cell: ({ row }) => (
-      <div className="flex items-center space-x-2">
-        <Clock className="h-4 w-4 text-muted-foreground" />
-        <span>{row.original?.estimasi} hari</span>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const days = row.original?.estimate_days || 0;
+      const hours = row.original?.estimate_hours || 0;
+      const minutes = row.original?.estimate_minutes || 0;
+      const totalMinutes = days * 24 * 60 + hours * 60 + minutes;
+
+      if (totalMinutes === 0) {
+        return (
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Langsung selesai</span>
+          </div>
+        );
+      }
+
+      // Format duration display
+      const displayDays = Math.floor(totalMinutes / (24 * 60));
+      const remainingMinutes = totalMinutes % (24 * 60);
+      const displayHours = Math.floor(remainingMinutes / 60);
+      const displayMinutes = remainingMinutes % 60;
+
+      let durationText = "";
+      if (displayDays > 0) {
+        durationText += `${displayDays} hari`;
+      }
+      if (displayHours > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayHours} jam`;
+      }
+      if (displayMinutes > 0) {
+        if (durationText) durationText += " ";
+        durationText += `${displayMinutes} menit`;
+      }
+
+      return (
+        <div className="flex items-center space-x-2">
+          <Clock className="h-4 w-4 text-muted-foreground" />
+          <span>{durationText}</span>
+        </div>
+      );
+    },
     enableSorting: false,
   },
   {
