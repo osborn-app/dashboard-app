@@ -28,7 +28,6 @@ const LocationSelector = () => {
         <SelectValue placeholder="Select Location" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="0">All Locations</SelectItem>
         {locations?.data?.items?.map((location: any) => (
           <SelectItem key={location.id} value={location.id.toString()}>
             {location.location}
