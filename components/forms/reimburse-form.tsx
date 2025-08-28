@@ -150,6 +150,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         description: initialData?.description || "", // Keterangan tambahan
         transaction_proof_url: initialData?.transactionProofUrl || null,
         transfer_proof_url: initialData?.transferProofUrl || null,
+        quantity: initialData?.quantity || 1, // Quantity
+        category: initialData?.category || "", // Category
       }
     : {
         driver: "", // Nama driver kosong
@@ -162,6 +164,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         description: "", // Keterangan kosong
         transaction_proof_url: null,
         transfer_proof_url: null,
+        quantity: 1, // Quantity
+        category: "", // Category
       };
 
   const form = useForm<ReimburseFormValues>({
@@ -179,7 +183,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const accountNumberField = form.watch("noRekening"); // Nomor rekening
   const dateField = form.watch("date"); // Tanggal reimburse
   const descriptionField = form.watch("description"); // Keterangan tambahan (opsional)
-
+  const quantityField = form.watch("quantity"); // Quantity
+  const categoryField = form.watch("category"); // Category
   const { data: driverData, isFetching: isFetchingDriver } = useGetDetailDriver(
     form.getValues("driver"),
   );
@@ -208,6 +213,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         location_id: data.location, // Lokasi reimburse
         noRekening: data.noRekening, // Nomor rekening
         date: data.date, // Format tanggal (YYYY-MM-DD)
+        quantity: data.quantity, // Quantity
+        category: data.category, // Category
         description: data.description || "", // Keterangan opsional
       };
 
@@ -333,6 +340,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       noRekening: accountNumberField, // Nomor rekening
       date: dateField, // Tanggal reimburse (format: YYYY-MM-DD)
       description: descriptionField || "",
+      quantity: quantityField, // Quantity
+      category: categoryField, // Category
     };
   }, [
     fleetField,
@@ -345,6 +354,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     accountNumberField,
     dateField,
     descriptionField,
+    quantityField,
+    categoryField,
   ]);
 
   //   // disable date for past dates
@@ -430,6 +441,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         descriptionField,
         defaultValues?.description,
       ), // Keterangan Tambahan
+      quantity: generateMessage(quantityField, defaultValues?.quantity), // Quantity
+      category: generateMessage(categoryField, defaultValues?.category), // Category
     };
     if (lastPath !== "create") {
       setMessages(newMessages);
@@ -445,6 +458,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     accountNumberField,
     dateField,
     descriptionField,
+    quantityField,
+    categoryField,
   ]);
 
   const approvalModalTitle =
@@ -1188,6 +1203,109 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             }}
                             disabled
                             value={initialData?.location?.name ?? "-"}
+                          />
+                        </FormControl>
+                      </div>
+                    </FormItem>
+                  )}
+                </div>
+              </div>
+              <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
+                <div className="flex items-end">
+                  {isEdit ? (
+                    <FormField
+                      control={form.control}
+                      name="quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="relative label-required">
+                            Quantity
+                          </FormLabel>
+                          <FormControl>
+                            <NumericFormat
+                              disabled={lastPath === "preview"}
+                              customInput={Input}
+                              type="text"
+                              allowLeadingZeros
+                              thousandSeparator
+                              allowNegative={false}
+                              placeholder="Masukkan quantity..."
+                              value={field.value?.toString() || ""}
+                              onValueChange={({ floatValue }) => 
+                                field.onChange(floatValue || 0)
+                              }
+                              onBlur={field.onBlur}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <FormItem>
+                      <FormLabel>Quantity</FormLabel>
+                      <FormControl className="disabled:opacity-100">
+                        <Input
+                          disabled
+                          value={initialData?.quantity?.toString() || "-"}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                </div>
+                <div className="flex items-end">
+                  {isEdit ? (
+                    <FormField
+                      name="category"
+                      control={form.control}
+                      render={({ field }) => {
+                        return (
+                          <div className="space-y-2 w-full">
+                            <FormLabel className="relative label-required">
+                              Kategori
+                            </FormLabel>
+                            <div className="flex">
+                              <FormControl>
+                                <AntdSelect
+                                  className={cn("mr-2 w-full")}
+                                  showSearch
+                                  placeholder="Pilih kategori..."
+                                  style={{
+                                    height: "40px",
+                                  }}
+                                  disabled={lastPath === "preview"}
+                                  value={field.value || initialData?.category}
+                                  onChange={field.onChange}
+                                >
+                                  {[
+                                    { value: "driver", label: "Driver" },
+                                    { value: "asset", label: "Asset" },
+                                  ].map((category) => (
+                                    <Option key={category.value} value={category.value}>
+                                      {category.label}
+                                    </Option>
+                                  ))}
+                                </AntdSelect>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </div>
+                        );
+                      }}
+                    />
+                  ) : (
+                    <FormItem>
+                      <FormLabel>Kategori</FormLabel>
+                      <div className="flex">
+                        <FormControl className="disabled:opacity-100">
+                          <Input
+                            className={cn("mr-2")}
+                            style={{
+                              height: "40px",
+                            }}
+                            disabled
+                            value={initialData?.category ?? "-"}
                           />
                         </FormControl>
                       </div>

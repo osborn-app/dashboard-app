@@ -13,7 +13,9 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Select as AntdSelect, DatePicker, ConfigProvider } from "antd";
 import idID from 'antd/es/locale/id_ID';
 import { useGetInfinityFleetsForNeeds } from "@/hooks/api/useFleet";
@@ -24,7 +26,7 @@ import dayjs from "dayjs";
 import 'dayjs/locale/id';
 
 type NeedsFormProps = {
-  onSubmit: (form: { fleet_id: number; name: string; description: string; start_date: string; estimate_days: number }) => void;
+  onSubmit: (form: { fleet_id: number; name: string; description: string; start_date: string; estimate_days: number; estimate_hours: number; estimate_minutes: number }) => void;
 };
 
 const formSchema = z.object({
@@ -35,7 +37,9 @@ const formSchema = z.object({
     if (!val) return false;
     return new Date(val).getTime() >= new Date().setHours(0,0,0,0);
   }, { message: "Tanggal mulai tidak boleh di masa lalu" }),
-  estimate_days: z.coerce.number().min(1, { message: "Estimasi hari minimal 1" }),
+  estimate_days: z.coerce.number().min(0, { message: "Estimasi hari minimal 0" }),
+  estimate_hours: z.coerce.number().min(0, { message: "Estimasi jam minimal 0" }),
+  estimate_minutes: z.coerce.number().min(0, { message: "Estimasi menit minimal 0" }),
 });
 
 type NeedsFormValues = z.infer<typeof formSchema>;
@@ -51,8 +55,6 @@ export default function NeedsForm({ onSubmit }: NeedsFormProps) {
     isFetchingNextPage: isFetchingNextFleets,
   } = useGetInfinityFleetsForNeeds(searchFleetDebounce);
 
-
-
   const form = useForm<NeedsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,7 +62,9 @@ export default function NeedsForm({ onSubmit }: NeedsFormProps) {
       fleet_id: "",
       description: "",
       start_date: "",
-      estimate_days: 1,
+      estimate_days: 0,
+      estimate_hours: 0,
+      estimate_minutes: 0,
     },
   });
 
@@ -140,8 +144,6 @@ export default function NeedsForm({ onSubmit }: NeedsFormProps) {
                 </FormItem>
               )}
             />
-
-
           </div>
           <FormField
             control={form.control}
@@ -182,28 +184,81 @@ export default function NeedsForm({ onSubmit }: NeedsFormProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="estimate_days"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estimasi Hari</FormLabel>
-                  <FormControl>
-                    <AntdSelect
-                      placeholder="Pilih estimasi hari"
-                      value={field.value || undefined}
-                      onChange={field.onChange}
-                      style={{ width: "100%" }}
-                    >
-                      {Array.from({ length: 30 }, (_, i) => (
-                        <AntdSelect.Option key={i + 1} value={i + 1}>{`${i + 1} Hari`}</AntdSelect.Option>
-                      ))}
-                    </AntdSelect>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="estimate_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estimasi Durasi</FormLabel>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium">Hari:</Label>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={field.value || 0}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value) || 0)
+                            }
+                            className="w-20"
+                          />
+                        </FormControl>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="estimate_hours"
+                        render={({ field: hoursField }) => (
+                          <div className="flex items-center gap-2">
+                            <Label className="text-sm font-medium">Jam:</Label>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                max="23"
+                                value={hoursField.value || 0}
+                                onChange={(e) => {
+                                  hoursField.onChange(parseInt(e.target.value) || 0);
+                                }}
+                                className="w-16"
+                              />
+                            </FormControl>
+                          </div>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="estimate_minutes"
+                        render={({ field: minutesField }) => (
+                          <div className="flex items-center gap-2">
+                            <Label className="text-sm font-medium">Menit:</Label>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="0"
+                                max="59"
+                                value={minutesField.value || 0}
+                                onChange={(e) => {
+                                  minutesField.onChange(parseInt(e.target.value) || 0);
+                                }}
+                                className="w-16"
+                              />
+                            </FormControl>
+                          </div>
+                        )}
+                      />
+                    </div>
+                    <FormDescription>
+                      Jam: 0-23, Menit: 0-59
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
             <div className="flex justify-end gap-4">
               <Button type="submit" variant="main">Konfirmasi</Button>
