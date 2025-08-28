@@ -283,18 +283,25 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    title: "Rekap Pencatatan",
-    href: "/dashboard/recap",
-    icon: "notebookText",
-    label: "recap",
+    title: "PEMASUKAN",
+    label: "Pemasukan",
     roles: ["owner"],
-  },
-  {
-    title: "Pencatatan Produk",
-    href: "/dashboard/product-ledgers",
-    icon: "ledger",
-    label: "product-ledgers",
-    roles: ["owner"],
+    items: [
+      {
+        title: "Rekap Pencatatan",
+        href: "/dashboard/recap",
+        icon: "notebookText",
+        label: "recap",
+        roles: ["owner"],
+      },
+      {
+        title: "Pencatatan Produk",
+        href: "/dashboard/product-ledgers",
+        icon: "ledger",
+        label: "product-ledgers",
+        roles: ["owner"],
+      },
+    ],
   },
   {
     title: "INSPEKSI & PERBAIKAN",
