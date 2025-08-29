@@ -19,7 +19,7 @@ export type ReimburseFormValues = z.infer<
   description: string;
   transaction_proof_url?: string | null;
   transfer_proof_url?: string | null;
-  quantity: number;
+  quantity?: number;
   category: string;
 };
 
@@ -40,6 +40,6 @@ export type Messages = {
   location: number;
   date: Date;
   description: string;
-  quantity: number;
+  quantity?: number;
   category: string;
 };

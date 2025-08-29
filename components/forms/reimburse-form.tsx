@@ -150,8 +150,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         description: initialData?.description || "", // Keterangan tambahan
         transaction_proof_url: initialData?.transactionProofUrl || null,
         transfer_proof_url: initialData?.transferProofUrl || null,
-        quantity: initialData?.quantity || 1, // Quantity
-        category: initialData?.category || "", // Category
+        quantity: initialData?.quantity || 1, // Quantity default 1
+        category: initialData?.category || "", // Category required
       }
     : {
         driver: "", // Nama driver kosong
@@ -164,8 +164,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         description: "", // Keterangan kosong
         transaction_proof_url: null,
         transfer_proof_url: null,
-        quantity: 1, // Quantity
-        category: "", // Category
+        quantity: 1, // Quantity default 1
+        category: "", // Category required
       };
 
   const form = useForm<ReimburseFormValues>({
@@ -199,6 +199,13 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     setEnd(end);
   }, [now]);
 
+  // Auto-set quantity to 1 when category is "driver"
+  useEffect(() => {
+    if (categoryField === "driver") {
+      form.setValue("quantity", 1);
+    }
+  }, [categoryField, form]);
+
   // , form.getValues("duration")
 
   const onSubmit = async (data: ReimburseFormValues) => {
@@ -213,8 +220,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         location_id: data.location, // Lokasi reimburse
         noRekening: data.noRekening, // Nomor rekening
         date: data.date, // Format tanggal (YYYY-MM-DD)
-        quantity: data.quantity, // Quantity
-        category: data.category, // Category
+        quantity: data.quantity || 1, // Quantity with default 1
+        category: data.category || "", // Category with default empty
         description: data.description || "", // Keterangan opsional
       };
 
@@ -340,8 +347,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       noRekening: accountNumberField, // Nomor rekening
       date: dateField, // Tanggal reimburse (format: YYYY-MM-DD)
       description: descriptionField || "",
-      quantity: quantityField, // Quantity
-      category: categoryField, // Category
+      quantity: quantityField || 1, // Quantity with default 1
+      category: categoryField || "", // Category with default empty
     };
   }, [
     fleetField,
@@ -441,8 +448,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         descriptionField,
         defaultValues?.description,
       ), // Keterangan Tambahan
-      quantity: generateMessage(quantityField, defaultValues?.quantity), // Quantity
-      category: generateMessage(categoryField, defaultValues?.category), // Category
+      quantity: generateMessage(quantityField || 1, defaultValues?.quantity), // Quantity with default 1
+      category: generateMessage(categoryField || "", defaultValues?.category), // Category with default empty
     };
     if (lastPath !== "create") {
       setMessages(newMessages);
@@ -1209,51 +1216,6 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                     </FormItem>
                   )}
                 </div>
-              </div>
-              <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
-                <div className="flex items-end">
-                  {isEdit ? (
-                    <FormField
-                      control={form.control}
-                      name="quantity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="relative label-required">
-                            Quantity
-                          </FormLabel>
-                          <FormControl>
-                            <NumericFormat
-                              disabled={lastPath === "preview"}
-                              customInput={Input}
-                              type="text"
-                              allowLeadingZeros
-                              thousandSeparator
-                              allowNegative={false}
-                              placeholder="Masukkan quantity..."
-                              value={field.value?.toString() || ""}
-                              onValueChange={({ floatValue }) => 
-                                field.onChange(floatValue || 0)
-                              }
-                              onBlur={field.onBlur}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ) : (
-                    <FormItem>
-                      <FormLabel>Quantity</FormLabel>
-                      <FormControl className="disabled:opacity-100">
-                        <Input
-                          disabled
-                          value={initialData?.quantity?.toString() || "-"}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                </div>
                 <div className="flex items-end">
                   {isEdit ? (
                     <FormField
@@ -1279,8 +1241,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   onChange={field.onChange}
                                 >
                                   {[
-                                    { value: "driver", label: "Driver" },
-                                    { value: "asset", label: "Asset" },
+                                    { value: "driver", label: "Keperluan Driver" },
+                                    { value: "asset", label: "Keperluan Asset" },
                                   ].map((category) => (
                                     <Option key={category.value} value={category.value}>
                                       {category.label}
@@ -1309,6 +1271,51 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                           />
                         </FormControl>
                       </div>
+                    </FormItem>
+                  )}
+                </div>
+              </div>
+              <div className={cn("lg:grid grid-cols-1 gap-[10px] items-start")}>
+                <div className="flex items-end">
+                  {isEdit ? (
+                    <FormField
+                      control={form.control}
+                      name="quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Quantity
+                          </FormLabel>
+                          <FormControl>
+                            <NumericFormat
+                              disabled={lastPath === "preview" || categoryField === "driver"}
+                              customInput={Input}
+                              type="text"
+                              allowLeadingZeros
+                              thousandSeparator
+                              allowNegative={false}
+                              placeholder="Masukkan quantity..."
+                              value={field.value?.toString() || ""}
+                              onValueChange={({ floatValue }) => 
+                                field.onChange(floatValue || 1)
+                              }
+                              onBlur={field.onBlur}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <FormItem>
+                      <FormLabel>Quantity</FormLabel>
+                      <FormControl className="disabled:opacity-100">
+                        <Input
+                          disabled
+                          value={initialData?.quantity?.toString() || "-"}
+                        />
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 </div>
