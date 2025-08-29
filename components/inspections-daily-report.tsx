@@ -144,60 +144,60 @@ export default function InspectionsDailyReport() {
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 gap-3">
         {/* Total Active Fleets */}
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-gray-200 bg-white shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-blue-800 text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-black text-sm font-medium">
               <TrendingUp className="h-4 w-4" />
               Total Fleet
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900">
+            <div className="text-2xl font-bold text-black">
               {(data.total_fleets || 0).toLocaleString()}
             </div>
-            <p className="text-xs text-blue-700 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Total fleet yang tersedia untuk inspeksi
             </p>
           </CardContent>
         </Card>
 
         {/* Monthly Target */}
-        <Card className="border-purple-200 bg-purple-50">
+        <Card className="border-gray-200 bg-white shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-purple-800 text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-black text-sm font-medium">
               <Target className="h-4 w-4" />
               Target Bulanan
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-900">
+            <div className="text-2xl font-bold text-black">
               {(data.monthly_target || 0).toLocaleString()}
             </div>
-            <p className="text-xs text-purple-700 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Target inspeksi bulan ini
             </p>
           </CardContent>
         </Card>
 
         {/* Completed This Month */}
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-gray-200 bg-white shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-green-800 text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-black text-sm font-medium">
               <CheckCircle className="h-4 w-4" />
               Selesai Bulan Ini
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-900">
+            <div className="text-2xl font-bold text-black">
               {(data.inspections_completed_this_month || 0).toLocaleString()}
             </div>
-            <div className="w-full bg-green-200 rounded-full h-2 mt-2">
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div
-                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                className="bg-black h-2 rounded-full transition-all duration-300"
                 style={{ width: `${Math.min(progress, 100)}%` }}
               ></div>
             </div>
-            <p className="text-xs text-green-700 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               {progress}% dari target (
               {data.inspections_completed_this_month || 0}/
               {data.monthly_target || 0})
@@ -206,60 +206,36 @@ export default function InspectionsDailyReport() {
         </Card>
 
         {/* Remaining to Meet Target */}
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-gray-200 bg-white shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-orange-800 text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-black text-sm font-medium">
               <Clock className="h-4 w-4" />
               Sisa Target
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-900">
+            <div className="text-2xl font-bold text-black">
               {(data.remaining_to_meet_target || 0).toLocaleString()}
             </div>
-            <p className="text-xs text-orange-700 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Inspeksi yang masih perlu diselesaikan
             </p>
           </CardContent>
         </Card>
 
         {/* Deficit from Last Month */}
-        <Card
-          className={`${
-            (data.deficit_from_last_month || 0) > 0
-              ? "border-red-200 bg-red-50"
-              : "border-gray-200 bg-gray-50"
-          }`}
-        >
+        <Card className="border-gray-200 bg-white shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle
-              className={`flex items-center gap-2 text-sm font-medium ${
-                (data.deficit_from_last_month || 0) > 0
-                  ? "text-red-800"
-                  : "text-gray-800"
-              }`}
-            >
+            <CardTitle className="flex items-center gap-2 text-black text-sm font-medium">
               <AlertTriangle className="h-4 w-4" />
               Defisit Bulan Lalu
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div
-              className={`text-2xl font-bold ${
-                (data.deficit_from_last_month || 0) > 0
-                  ? "text-red-900"
-                  : "text-gray-900"
-              }`}
-            >
+            <div className="text-2xl font-bold text-black">
               {(data.deficit_from_last_month || 0).toLocaleString()}
             </div>
-            <p
-              className={`text-xs mt-1 ${
-                (data.deficit_from_last_month || 0) > 0
-                  ? "text-red-700"
-                  : "text-gray-700"
-              }`}
-            >
+            <p className="text-xs text-gray-600 mt-1">
               {(data.deficit_from_last_month || 0) > 0
                 ? "Target bulan lalu tidak tercapai"
                 : "Target bulan lalu tercapai"}

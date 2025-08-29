@@ -28,7 +28,7 @@ export const formSchema = z.object({
   location: z.coerce.number().min(1, { message: "Lokasi wajib diisi" }),
   date: z.coerce.date({ required_error: "Tolong masukkan Waktu" }),
   description: z.string().min(10, { message: "Keterangan wajib di isi!" }),
-  quantity: z.coerce.number().min(1, { message: "Quantity wajib diisi" }),
+  quantity: z.coerce.number().default(1).optional(),
   category: z.string().min(1, { message: "Kategori wajib dipilih" }),
 });
 
@@ -50,6 +50,6 @@ export const editSchema = z.object({
   location: z.coerce.number().min(1, { message: "Lokasi wajib diisi" }),
   date: z.coerce.date({ required_error: "Tolong masukkan Waktu" }),
   description: z.string().min(10, { message: "Keterangan wajib di isi!" }),
-  quantity: z.coerce.number().min(1, { message: "Quantity wajib diisi" }),
+  quantity: z.coerce.number().default(1).optional(),
   category: z.string().min(1, { message: "Kategori wajib dipilih" }),
 });

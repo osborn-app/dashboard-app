@@ -262,9 +262,12 @@ export function OrderTable<TData, TValue>({
                             console.log(cell.id);
                             console.log(!cell.id.includes("actions"));
                             
-                            router.push(
-                              `/dashboard/orders/${row.original.id}/detail`,
-                            );
+                            const isProductOrders = pathname.includes('/product-orders');
+                            const detailPath = isProductOrders 
+                              ? `/dashboard/product-orders/${row.original.id}/detail`
+                              : `/dashboard/orders/${row.original.id}/detail`;
+                            
+                            router.push(detailPath);
                           }
                         }}
                       >
