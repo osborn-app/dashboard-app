@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import Spinner from "./spinner";
-import { AlertTriangle, Clock, CheckCircle, AlertCircle, Zap } from "lucide-react";
+import { AlertTriangle, Clock, CheckCircle, AlertCircle} from "lucide-react";
 import Link from "next/link";
 import { useGetBusserStatistics } from "@/hooks/api/useBuser";
 
@@ -15,47 +15,47 @@ const BusserStatusCard = () => {
     {
       key: "urgent",
       title: "Urgent",
-      icon: Zap,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-      borderColor: "border-red-200",
-      href: "/dashboard/busser?status=urgent",
+      icon: AlertCircle,
+      color: "text-black",
+      bgColor: "bg-gray-50",
+      borderColor: "border-gray-200",
+      href: "/dashboard/buser?status=urgent",
     },
     {
       key: "butuh_tindakan",
       title: "Butuh Tindakan",
-      icon: AlertTriangle,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      borderColor: "border-orange-200",
-      href: "/dashboard/busser?status=butuh_tindakan",
+      icon: AlertCircle,
+      color: "text-black",
+      bgColor: "bg-gray-50",
+      borderColor: "border-gray-200",
+      href: "/dashboard/buser?status=butuh_tindakan",
     },
     {
       key: "peringatan",
       title: "Peringatan",
-      icon: AlertCircle,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50",
-      borderColor: "border-yellow-200",
-      href: "/dashboard/busser?status=peringatan",
+      icon: AlertTriangle,
+      color: "text-black",
+      bgColor: "bg-gray-50",
+      borderColor: "border-gray-200",
+      href: "/dashboard/buser?status=peringatan",
     },
     {
       key: "tindak_lanjut",
       title: "Tindak Lanjut",
       icon: Clock,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
-      href: "/dashboard/busser?status=tindak_lanjut",
+      color: "text-black",
+      bgColor: "bg-gray-50",
+      borderColor: "border-gray-200",
+      href: "/dashboard/buser?status=tindak_lanjut",
     },
     {
       key: "selesai",
       title: "Selesai",
       icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      borderColor: "border-green-200",
-      href: "/dashboard/busser?status=selesai",
+      color: "text-black",
+      bgColor: "bg-gray-50",
+      borderColor: "border-gray-200",
+      href: "/dashboard/buser?status=selesai",
     },
   ];
 
