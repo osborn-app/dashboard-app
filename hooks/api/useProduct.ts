@@ -18,7 +18,7 @@ interface GetAddonsParams {
   category?: string;
 }
 
-// Products hooks
+// Products hook
 export const useGetProducts = (params: GetProductsParams = {}, options = {}) => {
   const axiosAuth = useAxiosAuth();
 
