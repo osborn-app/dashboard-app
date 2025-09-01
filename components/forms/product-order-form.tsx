@@ -80,6 +80,8 @@ import {
   OrderStatus,
 } from "@/app/(dashboard)/dashboard/orders/[orderId]/types/order";
 import { useUser } from "@/context/UserContext";
+import { HistoryModal } from "@/components/modal/history-modal";
+import { Clock } from "lucide-react";
 import { ProductDetail } from "@/components/product-detail";
 
 export const IMG_MAX_LIMIT = 3;
@@ -89,6 +91,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   isEdit,
   isPreview,
   productOrderId,
+  showHistoryButton = false,
+  onHistoryClick,
 }) => {
   const { user } = useUser();
   const { orderId } = useParams();
@@ -423,7 +427,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     setEnd(end);
   }, [now, form.getValues("duration")]);
 
-  const createPayload = (data: ProductOrderFormValues) => ({
+  const createPayload = (data: ProductOrderFormValues) => {
+    console.log('🔍 createPayload data:', data);
+    console.log('🔍 createPayload rental_type:', data.rental_type);
+    console.log('🔍 createPayload selected_price_type:', data.selected_price_type);
+    
+    return {
     start_request: {
       is_self_pickup: data.start_request.is_self_pickup,
       driver_id: data.start_request.driver_id && data.start_request.driver_id !== "" ? +data.start_request.driver_id : undefined,
@@ -450,12 +459,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     service_price: data.service_price ? (isString(data.service_price) 
       ? Number(data.service_price.replace(/,/g, "")) 
       : Number(data.service_price)) : undefined,
-    rental_type: data.rental_type || {
-      is_daily: true,
-      is_weekly: false,
-      is_monthly: false,
-    },
-    selected_price_type: data.selected_price_type || "daily",
+    rental_type: data.rental_type,
+    selected_price_type: data.selected_price_type,
     ...(data.additionals && data.additionals.length > 0 && {
       additional_services: data.additionals.map((service: any) => {
         let price: number;
@@ -497,7 +502,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
         return validAddons.length > 0 ? validAddons : undefined;
       })(),
     }),
-  });
+   }
+  };
 
   const onSubmit = async (data: ProductOrderFormValues) => {
     setLoading(true);
@@ -674,12 +680,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           ? +serviceField.replace(/,/g, "")
           : serviceField,
       }),
-      rental_type: rentalTypeField || {
-        is_daily: true,
-        is_weekly: false,
-        is_monthly: false,
-      },
-      selected_price_type: selectedPriceTypeField || "daily",
+      rental_type: rentalTypeField,
+      selected_price_type: selectedPriceTypeField,
       ...(additionalField && additionalField.length !== 0 && {
         additional_services: (additionalField ?? []).map((field: any) => {
           return {
@@ -1069,22 +1071,34 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           </Button>
         )}
               {lastPath !== "edit" && (
-                <Link
-                  href={`/dashboard/product-orders/${finalOrderId}/edit`}
-                  onClick={(e) => {
-                    if (user?.role !== "admin") {
-                      e.preventDefault();
-                    }
-                  }}
-                  className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "text-black",
-                    user?.role !== "admin" &&
-                      "cursor-not-allowed pointer-events-none opacity-50",
+                <div className="flex gap-2">
+                  <Link
+                    href={`/dashboard/product-orders/${finalOrderId}/edit`}
+                    onClick={(e) => {
+                      if (user?.role !== "admin") {
+                        e.preventDefault();
+                      }
+                    }}
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "text-black",
+                      user?.role !== "admin" &&
+                        "cursor-not-allowed pointer-events-none opacity-50",
+                    )}
+                  >
+                    Edit Pesanan
+                  </Link>
+                  {showHistoryButton && (
+                    <Button
+                      onClick={onHistoryClick}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <Clock className="h-4 w-4" />
+                      History
+                    </Button>
                   )}
-                >
-                  Edit Pesanan
-                </Link>
+                </div>
               )}
               <div className="flex justify-between gap-3.5">
                 {initialData?.order_status != OrderStatus.PENDING &&
@@ -1130,15 +1144,27 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
             )}
 
             {lastPath !== "edit" && (
-              <Link
-                href={`/dashboard/orders/${finalOrderId}/edit`}
-                className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "text-black",
+              <div className="flex gap-2">
+                <Link
+                  href={`/dashboard/orders/${finalOrderId}/edit`}
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "text-black",
+                  )}
+                >
+                  Edit Pesanan
+                </Link>
+                {showHistoryButton && (
+                  <Button
+                    onClick={onHistoryClick}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Clock className="h-4 w-4" />
+                    History
+                  </Button>
                 )}
-              >
-                Edit Pesanan
-              </Link>
+              </div>
             )}
             <div className="flex justify-between gap-3.5">
               {initialData?.order_status != OrderStatus.PENDING &&

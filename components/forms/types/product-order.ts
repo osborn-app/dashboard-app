@@ -5,6 +5,8 @@ export interface ProductOrderFormProps {
   isEdit?: boolean | null;
   isPreview?: boolean;
   productOrderId?: string;
+  showHistoryButton?: boolean;
+  onHistoryClick?: () => void;
 }
 
 export interface DetailPrice {
@@ -13,7 +15,7 @@ export interface DetailPrice {
   total_price: number;
   discount_amount: number;
 }
-
+// redeploy
 export const productOrderSchema = z.object({
   customer: z.string().min(1, "Customer is required").or(z.undefined()),
   product: z.string().min(1, "Product is required").or(z.undefined()),
