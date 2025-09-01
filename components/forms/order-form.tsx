@@ -540,16 +540,26 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           };
         }),
       }),
-      ...(selectedAddOns && selectedAddOns.length !== 0 && {
-        addons: selectedAddOns.map((selection: any) => {
-          const addon = addOns.find((a: any) => a.id === selection.addonId);
-          return {
-            addon_id: addon.id,
-            name: addon.name,
-            price: addon.price,
-            quantity: selection.quantity,
-          };
-        }),
+      ...(selectedAddOns && selectedAddOns.length !== 0 && addOns && addOns.length > 0 && {
+        addons: (() => {
+          const validAddons = selectedAddOns
+            .map((selection: any) => {
+              const addon = addOns.find((a: any) => a.id === selection.addonId);
+              // Only include addon if it exists and has valid data
+              if (addon && addon.id && addon.name && addon.price !== undefined && addon.price !== null) {
+                return {
+                  addon_id: addon.id,
+                  name: addon.name,
+                  price: addon.price,
+                  quantity: selection.quantity,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean); // Remove null values
+          
+          return validAddons.length > 0 ? validAddons : undefined;
+        })(),
       }),
     };
 
