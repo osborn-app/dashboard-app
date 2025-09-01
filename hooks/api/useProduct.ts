@@ -18,7 +18,7 @@ interface GetAddonsParams {
   category?: string;
 }
 
-// Products hooks
+// Products hook
 export const useGetProducts = (params: GetProductsParams = {}, options = {}) => {
   const axiosAuth = useAxiosAuth();
 
@@ -44,7 +44,6 @@ export const useGetAvailableProducts = (params: GetProductsParams = {}, options 
       params: {
         limit: 10,
         page: 1,
-        status: 'available',
         ...params,
       },
     });
@@ -63,7 +62,7 @@ export const useGetAvailableProducts = (params: GetProductsParams = {}, options 
   };
 
   return useQuery({
-    queryKey: ["products", "available", params],
+    queryKey: ["products", params],
     queryFn: getAvailableProducts,
     ...options,
   });
