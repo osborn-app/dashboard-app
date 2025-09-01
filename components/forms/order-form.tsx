@@ -323,7 +323,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }
   }, [currentSchema, schema]);
 
-  // Perbaikan: Update showServicePrice dengan memoization
+  // Perbaikan: Update showServicePrice dengan memoizations
   const shouldShowServicePrice = useMemo(() => {
     return !(startSelfPickUpField && endSelfPickUpField);
   }, [startSelfPickUpField, endSelfPickUpField]);
