@@ -427,7 +427,12 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     setEnd(end);
   }, [now, form.getValues("duration")]);
 
-  const createPayload = (data: ProductOrderFormValues) => ({
+  const createPayload = (data: ProductOrderFormValues) => {
+    console.log('🔍 createPayload data:', data);
+    console.log('🔍 createPayload rental_type:', data.rental_type);
+    console.log('🔍 createPayload selected_price_type:', data.selected_price_type);
+    
+    return {
     start_request: {
       is_self_pickup: data.start_request.is_self_pickup,
       driver_id: data.start_request.driver_id && data.start_request.driver_id !== "" ? +data.start_request.driver_id : undefined,
@@ -454,12 +459,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     service_price: data.service_price ? (isString(data.service_price) 
       ? Number(data.service_price.replace(/,/g, "")) 
       : Number(data.service_price)) : undefined,
-    rental_type: data.rental_type || {
-      is_daily: true,
-      is_weekly: false,
-      is_monthly: false,
-    },
-    selected_price_type: data.selected_price_type || "daily",
+    rental_type: data.rental_type,
+    selected_price_type: data.selected_price_type,
     ...(data.additionals && data.additionals.length > 0 && {
       additional_services: data.additionals.map((service: any) => {
         let price: number;
@@ -501,7 +502,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
         return validAddons.length > 0 ? validAddons : undefined;
       })(),
     }),
-  });
+   }
+  };
 
   const onSubmit = async (data: ProductOrderFormValues) => {
     setLoading(true);
@@ -678,12 +680,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           ? +serviceField.replace(/,/g, "")
           : serviceField,
       }),
-      rental_type: rentalTypeField || {
-        is_daily: true,
-        is_weekly: false,
-        is_monthly: false,
-      },
-      selected_price_type: selectedPriceTypeField || "daily",
+      rental_type: rentalTypeField,
+      selected_price_type: selectedPriceTypeField,
       ...(additionalField && additionalField.length !== 0 && {
         additional_services: (additionalField ?? []).map((field: any) => {
           return {

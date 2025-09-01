@@ -151,20 +151,84 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
               } else if (typeof change === 'object' && change !== null && 'from' in change && 'to' in change) {
                 // Object change format: {"from": old, "to": new}
                 const changeObj = change as { from: any; to: any };
-                return (
-                  <div key={index} className="text-xs bg-blue-50 p-3 rounded border-l-4 border-blue-200">
-                    <div className="font-medium text-gray-800 mb-1">{fieldLabel}</div>
+                
+                // Special handling for arrays (like addons, additional_services)
+                const renderArrayValue = (value: any) => {
+                  if (Array.isArray(value)) {
+                    if (value.length === 0) return 'Tidak ada';
+                    return `${value.length} item(s)`;
+                  }
+                  return value === null ? 'Tidak ada' : String(value);
+                };
+
+                // Special rendering for array changes
+                const renderArrayChange = (fromValue: any, toValue: any) => {
+                  if (Array.isArray(fromValue) || Array.isArray(toValue)) {
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">
+                            {Array.isArray(fromValue) ? `${fromValue.length} item(s)` : 'Tidak ada'}
+                          </span>
+                          <ArrowRight className="h-3 w-3 text-gray-400" />
+                          <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
+                            {Array.isArray(toValue) ? `${toValue.length} item(s)` : 'Tidak ada'}
+                          </span>
+                        </div>
+                        
+                        {/* Show detailed changes for arrays */}
+                        {Array.isArray(fromValue) && fromValue.length > 0 && (
+                          <div className="text-xs text-gray-500">
+                            <div className="font-medium mb-1">Sebelum:</div>
+                            <div className="space-y-1">
+                              {fromValue.map((item: any, idx: number) => (
+                                <div key={idx} className="bg-red-50 p-2 rounded text-xs">
+                                  {item.name || item.addon_id || `Item ${idx + 1}`}
+                                  {item.price && ` - Rp ${item.price.toLocaleString('id-ID')}`}
+                                  {item.quantity && ` (${item.quantity}x)`}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {Array.isArray(toValue) && toValue.length > 0 && (
+                          <div className="text-xs text-gray-500">
+                            <div className="font-medium mb-1">Sesudah:</div>
+                            <div className="space-y-1">
+                              {toValue.map((item: any, idx: number) => (
+                                <div key={idx} className="bg-green-50 p-2 rounded text-xs">
+                                  {item.name || item.addon_id || `Item ${idx + 1}`}
+                                  {item.price && ` - Rp ${item.price.toLocaleString('id-ID')}`}
+                                  {item.quantity && ` (${item.quantity}x)`}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  
+                  return (
                     <div className="flex items-center gap-2 text-gray-600">
                       <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">
-                        {changeObj.from === null ? 'Tidak ada' : String(changeObj.from)}
+                        {renderArrayValue(changeObj.from)}
                       </span>
                       <ArrowRight className="h-3 w-3 text-gray-400" />
                       <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
-                        {changeObj.to === null ? 'Tidak ada' : String(changeObj.to)}
+                        {renderArrayValue(changeObj.to)}
                       </span>
                     </div>
-                  </div>
-                );
+                  );
+                };
+                
+                                  return (
+                    <div key={index} className="text-xs bg-blue-50 p-3 rounded border-l-4 border-blue-200">
+                      <div className="font-medium text-gray-800 mb-1">{fieldLabel}</div>
+                      {renderArrayChange(changeObj.from, changeObj.to)}
+                    </div>
+                  );
               } else {
                 // Fallback for other formats
                 return (
