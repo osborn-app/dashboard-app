@@ -127,7 +127,7 @@ export function RekapPencatatanTable<TData, TValue>({
   const handleRowClick = (rowData: any) => {
     // Hanya handle row click untuk orderan-sewa
     if (type === "orderan-sewa") {
-      router.push(`/dashboard/rekap/${type}/${rowData.id}/detail`);
+      router.push(`/dashboard/rekap-pencatatan/${type}/${rowData.id}/detail`);
     }
   };
 

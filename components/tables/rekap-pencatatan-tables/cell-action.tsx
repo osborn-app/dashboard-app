@@ -22,11 +22,11 @@ export const CellAction: React.FC<CellActionProps> = ({ data, type }) => {
   const { mutate: deleteLainnya } = useDeleteLainnya();
 
   const handleView = () => {
-    router.push(`/dashboard/rekap/${type}/${data.id}/detail`);
+    router.push(`/dashboard/rekap-pencatatan/${type}/${data.id}/detail`);
   };
 
   const handleEdit = () => {
-    router.push(`/dashboard/rekap/${type}/${data.id}/edit`);
+    router.push(`/dashboard/rekap-pencatatan/${type}/${data.id}/edit`);
   };
 
   const handleDelete = () => {
