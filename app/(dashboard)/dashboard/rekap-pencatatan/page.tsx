@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs } from "@/components/ui/tabs";
 import RekapPencatatanTableWrapper from "./rekap-pencatatan-table-wrapper";
 import {
   dehydrate,
@@ -16,75 +16,54 @@ import {
 import { getOrderanSewa } from "@/client/rekapClient";
 
 export const metadata: Metadata = {
-    title: "Rekap Pencatatan | Transgo",
-    description: "Rekap Pencatatan page",
+  title: "Rekap Pencatatan | Transgo",
+  description: "Rekap Pencatatan page",
 };
 
 type paramsProps = {
-    searchParams: {
-        [key: string]: string | undefined;
-    };
+  searchParams: {
+    [key: string]: string | undefined;
+  };
 };
 
-const breadcrumbItems = [{ title: "Rekap Pencatatan", link: "/dashboard/rekap-pencatatan" }];
+const breadcrumbItems = [
+  { title: "Rekap Pencatatan", link: "/dashboard/rekap-pencatatan" },
+];
 
 export default async function page({ searchParams }: paramsProps) {
-    const queryClient = new QueryClient();
+  const queryClient = new QueryClient();
 
-    await queryClient.prefetchQuery({
-        queryKey: ["rekap-pencatatan"],
-        queryFn: getOrderanSewa,
-    });
+  await queryClient.prefetchQuery({
+    queryKey: ["rekap-pencatatan"],
+    queryFn: getOrderanSewa,
+  });
 
-    const defaultTab = searchParams.type ?? "orderan-sewa";
+  const defaultTab = searchParams.type ?? "orderan-sewa";
 
-    return (
-        <HydrationBoundary state={dehydrate(queryClient)}>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <BreadCrumb items={breadcrumbItems} />
-                <Heading
-                  title="Rekap Pencatatan"
-                  description="Kelola dan lihat data rekap pencatatan untuk berbagai jenis transaksi."
-                />
-              </div>
-              <Link
-                href="/dashboard/rekap-pencatatan/lainnya/create"
-                className={cn(buttonVariants())}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Tambah Data
-              </Link>
-            </div>
-            <Separator />
-      
-            <Tabs defaultValue={defaultTab} className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="orderan-sewa">Orderan Sewa</TabsTrigger>
-                <TabsTrigger value="reimburse">Reimburse</TabsTrigger>
-                <TabsTrigger value="inventaris">Inventaris</TabsTrigger>
-                <TabsTrigger value="lainnya">Lainnya</TabsTrigger>
-              </TabsList>
-      
-              <TabsContent value="orderan-sewa" className="space-y-4">
-                <RekapPencatatanTableWrapper />
-              </TabsContent>
-      
-              <TabsContent value="reimburse" className="space-y-4">
-                <RekapPencatatanTableWrapper />
-              </TabsContent>
-      
-              <TabsContent value="inventaris" className="space-y-4">
-                <RekapPencatatanTableWrapper />
-              </TabsContent>
-      
-              <TabsContent value="lainnya" className="space-y-4">
-                <RekapPencatatanTableWrapper />
-              </TabsContent>
-            </Tabs>
-          </div>
-        </HydrationBoundary>
-      );
+  return (
+    <>
+      <div className="flex-1 space-y-4  p-4 md:p-8 pt-6">
+        <BreadCrumb items={breadcrumbItems} />
+        <div className="flex items-center justify-between">
+          <Heading
+            title="Rekap Pencatatan"
+            description="Kelola dan lihat data rekap pencatatan untuk berbagai jenis transaksi."
+          />
+          <Link
+            href="/dashboard/rekap-pencatatan/lainnya/create"
+            className={cn(buttonVariants())}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Tambah Data
+          </Link>
+        </div>
+        <Separator />
+        <Tabs defaultValue={defaultTab} className="space-y-4">
+          <HydrationBoundary state={dehydrate(queryClient)}>
+            <RekapPencatatanTableWrapper />
+          </HydrationBoundary>
+        </Tabs>
+      </div>
+    </>
+  );
 }
-

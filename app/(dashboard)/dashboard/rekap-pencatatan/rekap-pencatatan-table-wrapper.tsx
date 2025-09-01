@@ -1,5 +1,5 @@
 "use client";
-import TabLists from "@/components/TabLists";
+import RekapPencatatanTabLists from "./rekap-pencatatan-tab-lists";
 import SearchInput from "@/components/search-input";
 import Spinner from "@/components/spinner";
 import {
@@ -41,7 +41,7 @@ const RekapPencatatanTableWrapper = () => {
       },
       {
         enabled: defaultTab === "orderan-sewa",
-      }
+      },
     );
 
   const { data: reimburseData, isFetching: isFetchingReimburse } =
@@ -53,7 +53,7 @@ const RekapPencatatanTableWrapper = () => {
       },
       {
         enabled: defaultTab === "reimburse",
-      }
+      },
     );
 
   const { data: inventarisData, isFetching: isFetchingInventaris } =
@@ -65,7 +65,7 @@ const RekapPencatatanTableWrapper = () => {
       },
       {
         enabled: defaultTab === "inventaris",
-      }
+      },
     );
 
   const { data: lainnyaData, isFetching: isFetchingLainnya } = useGetLainnya(
@@ -76,7 +76,7 @@ const RekapPencatatanTableWrapper = () => {
     },
     {
       enabled: defaultTab === "lainnya",
-    }
+    },
   );
 
   const createQueryString = React.useCallback(
@@ -131,7 +131,7 @@ const RekapPencatatanTableWrapper = () => {
   return (
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <TabLists lists={lists} />
+        <RekapPencatatanTabLists lists={lists} />
         <div className="flex items-center justify-between gap-4 flex-wrap w-full lg:!w-auto">
           <SearchInput
             searchQuery={searchQuery}
