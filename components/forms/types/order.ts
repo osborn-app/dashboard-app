@@ -21,6 +21,8 @@ export type OrderFormValues = z.infer<typeof formSchema> & {
 export interface OrderFormProps {
   initialData: any | null;
   isEdit?: boolean | null;
+  showHistoryButton?: boolean;
+  onHistoryClick?: () => void;
 }
 
 interface DetailFleet {

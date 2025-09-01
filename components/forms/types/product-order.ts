@@ -5,6 +5,8 @@ export interface ProductOrderFormProps {
   isEdit?: boolean | null;
   isPreview?: boolean;
   productOrderId?: string;
+  showHistoryButton?: boolean;
+  onHistoryClick?: () => void;
 }
 
 export interface DetailPrice {

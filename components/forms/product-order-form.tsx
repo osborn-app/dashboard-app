@@ -80,6 +80,8 @@ import {
   OrderStatus,
 } from "@/app/(dashboard)/dashboard/orders/[orderId]/types/order";
 import { useUser } from "@/context/UserContext";
+import { HistoryModal } from "@/components/modal/history-modal";
+import { Clock } from "lucide-react";
 import { ProductDetail } from "@/components/product-detail";
 
 export const IMG_MAX_LIMIT = 3;
@@ -89,6 +91,8 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   isEdit,
   isPreview,
   productOrderId,
+  showHistoryButton = false,
+  onHistoryClick,
 }) => {
   const { user } = useUser();
   const { orderId } = useParams();
@@ -1069,22 +1073,34 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           </Button>
         )}
               {lastPath !== "edit" && (
-                <Link
-                  href={`/dashboard/product-orders/${finalOrderId}/edit`}
-                  onClick={(e) => {
-                    if (user?.role !== "admin") {
-                      e.preventDefault();
-                    }
-                  }}
-                  className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "text-black",
-                    user?.role !== "admin" &&
-                      "cursor-not-allowed pointer-events-none opacity-50",
+                <div className="flex gap-2">
+                  <Link
+                    href={`/dashboard/product-orders/${finalOrderId}/edit`}
+                    onClick={(e) => {
+                      if (user?.role !== "admin") {
+                        e.preventDefault();
+                      }
+                    }}
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "text-black",
+                      user?.role !== "admin" &&
+                        "cursor-not-allowed pointer-events-none opacity-50",
+                    )}
+                  >
+                    Edit Pesanan
+                  </Link>
+                  {showHistoryButton && (
+                    <Button
+                      onClick={onHistoryClick}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <Clock className="h-4 w-4" />
+                      History
+                    </Button>
                   )}
-                >
-                  Edit Pesanan
-                </Link>
+                </div>
               )}
               <div className="flex justify-between gap-3.5">
                 {initialData?.order_status != OrderStatus.PENDING &&
@@ -1130,15 +1146,27 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
             )}
 
             {lastPath !== "edit" && (
-              <Link
-                href={`/dashboard/orders/${finalOrderId}/edit`}
-                className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "text-black",
+              <div className="flex gap-2">
+                <Link
+                  href={`/dashboard/orders/${finalOrderId}/edit`}
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "text-black",
+                  )}
+                >
+                  Edit Pesanan
+                </Link>
+                {showHistoryButton && (
+                  <Button
+                    onClick={onHistoryClick}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Clock className="h-4 w-4" />
+                    History
+                  </Button>
                 )}
-              >
-                Edit Pesanan
-              </Link>
+              </div>
             )}
             <div className="flex justify-between gap-3.5">
               {initialData?.order_status != OrderStatus.PENDING &&
