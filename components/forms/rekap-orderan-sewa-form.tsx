@@ -80,7 +80,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Total Potongan Diskon Unit</Label>
             <Input
               disabled
-              value={formatRupiah(data.total_price || "-")}
+              value={formatRupiah(data.discount || "-")}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -99,7 +99,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Layanan Antar Jemput</Label>
             <Input
               disabled
-              value={formatRupiah(data.pickup_price || "-")}
+              value={formatRupiah(data.price_calculation?.total_driver_price || "-")}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -115,7 +115,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Charge Weekend</Label>
             <Input
               disabled
-              value={formatRupiah(data.weekend_price || "-")}
+              value={formatRupiah(data.price_calculation?.weekend_price || "-")}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -143,7 +143,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Total Harga Keseluruhan</Label>
             <Input
               disabled
-              value={formatRupiah(data.total_price || "-")}
+              value={formatRupiah(data.grand_total || "-")}
               className="disabled:opacity-90 mt-2"
             />
           </div>
