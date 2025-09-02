@@ -7,6 +7,7 @@ export const columnsOrderanSewa: ColumnDef<any>[] = [
   {
     accessorKey: "no",
     header: "No",
+    cell: ({ row }) => <span>{row.index + 1}</span>,
   },
   {
     accessorKey: "nama_customer",
@@ -39,6 +40,7 @@ export const columnsReimburse: ColumnDef<any>[] = [
   {
     accessorKey: "no",
     header: "No",
+    cell: ({ row }) => <span>{row.index + 1}</span>,
   },
   {
     accessorKey: "nama_driver",
@@ -81,6 +83,7 @@ export const columnsInventaris: ColumnDef<any>[] = [
   {
     accessorKey: "no",
     header: "No",
+    cell: ({ row }) => <span>{row.index + 1}</span>,
   },
   {
     accessorKey: "nama_aset",
@@ -113,6 +116,7 @@ export const columnsLainnya: ColumnDef<any>[] = [
   {
     accessorKey: "no",
     header: "No",
+    cell: ({ row }) => <span>{row.index + 1}</span>,
   },
   {
     accessorKey: "nama_transaksi",

@@ -19,6 +19,8 @@ import {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDebounce } from "use-debounce";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const RekapPencatatanTableWrapper = () => {
   const router = useRouter();
@@ -30,6 +32,7 @@ const RekapPencatatanTableWrapper = () => {
   const q = searchParams.get("q");
   const [searchQuery, setSearchQuery] = React.useState<string>(q ?? "");
   const [searchDebounce] = useDebounce(searchQuery, 500);
+  const [isDownloading, setIsDownloading] = React.useState(false);
 
   // API calls dengan enabled condition
   const { data: orderanSewaData, isFetching: isFetchingOrderanSewa } =
@@ -98,6 +101,107 @@ const RekapPencatatanTableWrapper = () => {
     setSearchQuery(query);
   };
 
+  const handleDownload = () => {
+    setIsDownloading(true);
+
+    try {
+      // Get current data based on active tab
+      let currentData: any[] = [];
+      let tabName = "";
+
+      switch (defaultTab) {
+        case "orderan-sewa":
+          currentData = orderanSewaData?.items || [];
+          tabName = "Orderan Sewa";
+          break;
+        case "reimburse":
+          currentData = reimburseData?.items || [];
+          tabName = "Reimburse";
+          break;
+        case "inventaris":
+          currentData = inventarisData?.items || [];
+          tabName = "Inventaris";
+          break;
+        case "lainnya":
+          currentData = lainnyaData?.items || [];
+          tabName = "Lainnya";
+          break;
+        default:
+          currentData = [];
+          tabName = "Rekap Pencatatan";
+      }
+
+      if (currentData.length === 0) {
+        alert("Tidak ada data untuk diunduh");
+        return;
+      }
+
+      // Convert data to CSV format
+      let csvContent = "";
+
+      // Add headers based on tab type
+      if (defaultTab === "orderan-sewa") {
+        csvContent =
+          "No,Nama Customer,Armada,Nomor Invoice,Total Harga,Pembayaran\n";
+        currentData.forEach((item, index) => {
+          csvContent += `${index + 1},"${item.customer?.name || "-"}","${
+            item.fleet?.name || "-"
+          }","${item.invoice_number || "-"}","${item.total_price || "-"}","${
+            item.payment_status || "-"
+          }"\n`;
+        });
+      } else if (defaultTab === "reimburse") {
+        csvContent =
+          "No,Nama Driver,Total,No Rekening,Tanggal,Nama Bank,Kebutuhan,Status\n";
+        currentData.forEach((item, index) => {
+          csvContent += `${index + 1},"${item.driver?.name || "-"}","${
+            item.nominal || "-"
+          }","${item.noRekening || "-"}","${item.date || "-"}","${
+            item.bank || "-"
+          }","${item.description || "-"}","${item.status || "-"}"\n`;
+        });
+      } else if (defaultTab === "inventaris") {
+        csvContent = "No,Nama Aset,Jumlah,Harga Satuan,Total Harga,Tanggal\n";
+        currentData.forEach((item, index) => {
+          csvContent += `${index + 1},"${item.name || "-"}","${
+            item.quantity || "-"
+          }","${item.unit_price || "-"}","${item.total || "-"}","${
+            item.date || "-"
+          }"\n`;
+        });
+      } else if (defaultTab === "lainnya") {
+        csvContent = "No,Nama Transaksi,Kategori,Total,Tanggal,Keterangan\n";
+        currentData.forEach((item, index) => {
+          csvContent += `${index + 1},"${item.name || "-"}","${
+            item.category || "-"
+          }","${item.nominal || "-"}","${item.date || "-"}","${
+            item.description || "-"
+          }"\n`;
+        });
+      }
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `${tabName}-${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download error:", error);
+      alert("Gagal mengunduh data. Silakan coba lagi.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const lists = [
     {
       name: "Orderan Sewa",
@@ -138,6 +242,15 @@ const RekapPencatatanTableWrapper = () => {
             onSearchChange={handleSearchChange}
             placeholder="Cari data rekap pencatatan"
           />
+          <Button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isDownloading ? "Mengunduh..." : "Unduh CSV"}
+          </Button>
         </div>
       </div>
 
