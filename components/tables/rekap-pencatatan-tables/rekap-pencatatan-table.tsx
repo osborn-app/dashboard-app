@@ -58,7 +58,7 @@ export function RekapPencatatanTable<TData, TValue>({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
+
   // Search params
   const page = searchParams?.get("page") ?? "1";
   const q = searchParams?.get("q");
@@ -125,9 +125,13 @@ export function RekapPencatatanTable<TData, TValue>({
   });
 
   const handleRowClick = (rowData: any) => {
-    // Hanya handle row click untuk orderan-sewa
+    // Handle row click untuk orderan-sewa, reimburse, dan inventaris
     if (type === "orderan-sewa") {
       router.push(`/dashboard/rekap-pencatatan/${type}/${rowData.id}/detail`);
+    } else if (type === "reimburse") {
+      router.push(`/dashboard/reimburse/${rowData.id}/detail`);
+    } else if (type === "inventaris") {
+      router.push(`/dashboard/inventaris/${rowData.id}/detail`);
     }
   };
 
@@ -158,7 +162,9 @@ export function RekapPencatatanTable<TData, TValue>({
               table.getRowModel().rows.map((row: any) => (
                 <TableRow
                   className={`${
-                    type === "orderan-sewa" 
+                    type === "orderan-sewa" ||
+                    type === "reimburse" ||
+                    type === "inventaris"
                       ? "cursor-pointer hover:bg-gray-100 transition-colors duration-200 ease-in-out"
                       : ""
                   }`}
@@ -168,10 +174,7 @@ export function RekapPencatatanTable<TData, TValue>({
                 >
                   {row.getVisibleCells().map((cell: any) => {
                     return (
-                      <TableCell
-                        key={cell.id}
-                        className="last:flex last:justify-end"
-                      >
+                      <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),

@@ -77,7 +77,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             />
           </div>
           <div>
-            <Label>Harga Total Unit</Label>
+            <Label>Total Potongan Diskon Unit</Label>
             <Input
               disabled
               value={formatRupiah(data.total_price || "-")}
