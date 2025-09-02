@@ -141,8 +141,11 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
                 title: "Berhasil!",
                 description: "Data transaksi berhasil diperbarui",
               });
+              // Invalidate semua query yang relevan
+              queryClient.invalidateQueries({ queryKey: ["lainnya"] });
               queryClient.invalidateQueries({ queryKey: ["rekap-pencatatan"] });
-              router.push("/dashboard/rekap-pencatatan");
+              queryClient.invalidateQueries({ queryKey: ["lainnya-by-id"] });
+              router.push("/dashboard/rekap-pencatatan?type=lainnya");
             },
             onError: (error: any) => {
               toast({
@@ -162,8 +165,11 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
               title: "Berhasil!",
               description: "Data transaksi berhasil ditambahkan",
             });
+            // Invalidate semua query yang relevan
+            queryClient.invalidateQueries({ queryKey: ["lainnya"] });
             queryClient.invalidateQueries({ queryKey: ["rekap-pencatatan"] });
-            router.push("/dashboard/rekap-pencatatan");
+            queryClient.invalidateQueries({ queryKey: ["lainnya-by-id"] });
+            router.push("/dashboard/rekap-pencatatan?type=lainnya");
           },
           onError: (error: any) => {
             toast({
@@ -272,7 +278,7 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
               control={form.control}
               name="date"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
+                <FormItem>
                   <FormLabel className="relative label-required">
                     Tanggal Transaksi
                   </FormLabel>
@@ -301,9 +307,6 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
                         initialFocus
                       />
                     </PopoverContent>

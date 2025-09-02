@@ -40,8 +40,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data, type }) => {
           title: "Berhasil!",
           description: "Data transaksi berhasil dihapus",
         });
-        // Refresh data table
+        // Invalidate semua query yang relevan
+        queryClient.invalidateQueries({ queryKey: ["lainnya"] });
         queryClient.invalidateQueries({ queryKey: ["rekap-pencatatan"] });
+        queryClient.invalidateQueries({ queryKey: ["lainnya-by-id"] });
       },
       onError: (error: any) => {
         toast({
