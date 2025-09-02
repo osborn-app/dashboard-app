@@ -175,6 +175,13 @@ export const navItems: NavItem[] = [
         label: "Rekap Pencatatan",
         roles: ["admin"],
       },
+      {
+        title: "Inventaris",
+        href: "/dashboard/inventaris",
+        icon: "archive",
+        label: "Inventaris",
+        roles: ["admin"],
+      },
     ],
   },
   {

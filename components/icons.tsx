@@ -47,7 +47,8 @@ import {
   Footprints,
   ListChecks,
   Wrench,
-  Album
+  Album,
+  Archive
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -167,6 +168,7 @@ export const Icons = {
   discount: Percent,
   package: Package,
   ledger: NotebookText,
+  archive: Archive,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
