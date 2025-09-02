@@ -85,27 +85,27 @@ export const columnsInventaris: ColumnDef<any>[] = [
   {
     accessorKey: "nama_aset",
     header: "Nama Aset",
-    cell: ({ row }) => <span>{row.original.nama_aset ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.name ?? "-"}</span>,
   },
   {
     accessorKey: "jumlah",
     header: "Jumlah",
-    cell: ({ row }) => <span>{row.original.jumlah ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.quantity ?? "-"}</span>,
   },
   {
     accessorKey: "harga_satuan",
     header: "Harga Satuan",
-    cell: ({ row }) => <span>{row.original.harga_satuan ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.unit_price ?? "-"}</span>,
   },
   {
     accessorKey: "total_harga",
     header: "Total Harga",
-    cell: ({ row }) => <span>{row.original.total_harga ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.total ?? "-"}</span>,
   },
   {
     accessorKey: "tanggal",
     header: "Tanggal",
-    cell: ({ row }) => <span>{row.original.tanggal ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatDate(row.original.date) ?? "-"}</span>,
   },
 ];
 
@@ -115,29 +115,29 @@ export const columnsLainnya: ColumnDef<any>[] = [
     header: "No",
   },
   {
-    accessorKey: "nomor_transaksi",
-    header: "Nomor Transaksi",
-    cell: ({ row }) => <span>{row.original.nomor_transaksi ?? "-"}</span>,
+    accessorKey: "nama_transaksi",
+    header: "Nama Transaksi",
+    cell: ({ row }) => <span>{row.original.name ?? "-"}</span>,
   },
   {
     accessorKey: "kategori",
     header: "Kategori",
-    cell: ({ row }) => <span>{row.original.kategori ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.category ?? "-"}</span>,
   },
   {
     accessorKey: "total",
     header: "Total",
-    cell: ({ row }) => <span>{row.original.total ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.nominal ?? "-"}</span>,
   },
   {
     accessorKey: "tanggal",
     header: "Tanggal",
-    cell: ({ row }) => <span>{row.original.tanggal ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatDate(row.original.date) ?? "-"}</span>,
   },
   {
     accessorKey: "keterangan",
     header: "Keterangan",
-    cell: ({ row }) => <span>{row.original.keterangan ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.description ?? "-"}</span>,
   },
   {
     id: "action",

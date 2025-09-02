@@ -11,6 +11,8 @@ import {
 import { MoreHorizontal, Eye, Trash, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDeleteLainnya } from "@/hooks/api/useRekap";
+import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CellActionProps {
   data: any;
@@ -19,6 +21,8 @@ interface CellActionProps {
 
 export const CellAction: React.FC<CellActionProps> = ({ data, type }) => {
   const router = useRouter();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { mutate: deleteLainnya } = useDeleteLainnya();
 
   const handleView = () => {
@@ -30,7 +34,25 @@ export const CellAction: React.FC<CellActionProps> = ({ data, type }) => {
   };
 
   const handleDelete = () => {
-    deleteLainnya(data.id);
+    deleteLainnya(data.id, {
+      onSuccess: () => {
+        toast({
+          title: "Berhasil!",
+          description: "Data transaksi berhasil dihapus",
+        });
+        // Refresh data table
+        queryClient.invalidateQueries({ queryKey: ["rekap-pencatatan"] });
+      },
+      onError: (error: any) => {
+        toast({
+          variant: "destructive",
+          title: "Gagal!",
+          description:
+            error?.response?.data?.message ||
+            "Terjadi kesalahan saat menghapus data",
+        });
+      },
+    });
   };
 
   // Hanya tampilkan dropdown untuk type "lainnya"

@@ -54,7 +54,7 @@ export default async function page({ searchParams }: paramsProps) {
             className={cn(buttonVariants())}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
+            Tambah Data Lainnya
           </Link>
         </div>
         <Separator />
