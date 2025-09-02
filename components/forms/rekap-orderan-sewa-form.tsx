@@ -128,7 +128,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             />
           </div>
           <div>
-            <Label>Total Harga Keseluruhan</Label>
+            <Label>Harga Layanan Tambahan</Label>
             <Input
               disabled
               value={formatRupiah(data.total_price || "-")}
@@ -138,7 +138,15 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
         </div>
 
         {/* Price Information */}
-        <div className="md:grid md:grid-cols-2 gap-8">
+        <div className="md:grid md:grid-cols-3 gap-8">
+        <div>
+            <Label>Total Harga Keseluruhan</Label>
+            <Input
+              disabled
+              value={formatRupiah(data.total_price || "-")}
+              className="disabled:opacity-90 mt-2"
+            />
+          </div>
           <div>
             <Label>No Invoice</Label>
             <Input

@@ -101,7 +101,7 @@ const RekapPencatatanTableWrapper = () => {
     setSearchQuery(query);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setIsDownloading(true);
 
     try {
@@ -142,13 +142,19 @@ const RekapPencatatanTableWrapper = () => {
       // Add headers based on tab type
       if (defaultTab === "orderan-sewa") {
         csvContent =
-          "No,Nama Customer,Armada,Nomor Invoice,Total Harga,Pembayaran\n";
+          "No,Nama Customer,Armada,Tanggal Sewa,Harga Unit,Durasi Penyewaan,Harga Total Unit,Layanan Driver,Layanan Antar Jemput,Layanan Luar Kota,Charge Weekend,Layanan Add-Ons,Harga Layanan Tambahan,Total Harga Keseluruhan,No Invoice,Status\n";
         currentData.forEach((item, index) => {
           csvContent += `${index + 1},"${item.customer?.name || "-"}","${
             item.fleet?.name || "-"
-          }","${item.invoice_number || "-"}","${item.total_price || "-"}","${
-            item.payment_status || "-"
-          }"\n`;
+          }","${item.start_date || "-"}","${item.fleet?.price || "-"}","${
+            item.duration || "-"
+          }","${item.total_price || "-"}","${item.driver_price || "-"}","${
+            item.pickup_price || "-"
+          }","${item.out_of_town_price || "-"}","${
+            item.weekend_price || "-"
+          }","${item.addons_price || "-"}","${item.total_price || "-"}","${
+            item.total_price || "-"
+          }","${item.invoice_number || "-"}","${item.payment_status || "-"}"\n`;
         });
       } else if (defaultTab === "reimburse") {
         csvContent =
