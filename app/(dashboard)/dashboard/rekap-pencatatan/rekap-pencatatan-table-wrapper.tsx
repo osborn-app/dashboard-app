@@ -34,7 +34,18 @@ const RekapPencatatanTableWrapper = () => {
   const [searchDebounce] = useDebounce(searchQuery, 500);
   const [isDownloading, setIsDownloading] = React.useState(false);
 
-  // API calls dengan enabled condition
+  // State terpisah untuk tab yang aktif
+  const [activeTab, setActiveTab] = React.useState<string>(defaultTab);
+
+  // Update activeTab ketika searchParams berubah
+  useEffect(() => {
+    const currentType = searchParams.get("type");
+    if (currentType && currentType !== activeTab) {
+      setActiveTab(currentType);
+    }
+  }, [searchParams, activeTab]);
+
+  // API calls dengan enabled condition menggunakan activeTab
   const { data: orderanSewaData, isFetching: isFetchingOrderanSewa } =
     useGetOrderanSewa(
       {
@@ -43,7 +54,7 @@ const RekapPencatatanTableWrapper = () => {
         q: searchDebounce,
       },
       {
-        enabled: defaultTab === "orderan-sewa",
+        enabled: activeTab === "orderan-sewa",
       },
     );
 
@@ -55,7 +66,7 @@ const RekapPencatatanTableWrapper = () => {
         q: searchDebounce,
       },
       {
-        enabled: defaultTab === "reimburse",
+        enabled: activeTab === "reimburse",
       },
     );
 
@@ -67,7 +78,7 @@ const RekapPencatatanTableWrapper = () => {
         q: searchDebounce,
       },
       {
-        enabled: defaultTab === "inventaris",
+        enabled: activeTab === "inventaris",
       },
     );
 
@@ -78,7 +89,7 @@ const RekapPencatatanTableWrapper = () => {
       q: searchDebounce,
     },
     {
-      enabled: defaultTab === "lainnya",
+      enabled: activeTab === "lainnya",
     },
   );
 
@@ -109,7 +120,7 @@ const RekapPencatatanTableWrapper = () => {
       let currentData: any[] = [];
       let tabName = "";
 
-      switch (defaultTab) {
+      switch (activeTab) {
         case "orderan-sewa":
           currentData = orderanSewaData?.items || [];
           tabName = "Orderan Sewa";
@@ -140,7 +151,7 @@ const RekapPencatatanTableWrapper = () => {
       let csvContent = "";
 
       // Add headers based on tab type
-      if (defaultTab === "orderan-sewa") {
+      if (activeTab === "orderan-sewa") {
         csvContent =
           "No,Nama Customer,Armada,Tanggal Sewa,Harga Unit,Durasi Penyewaan,Harga Total Unit,Layanan Driver,Layanan Antar Jemput,Layanan Luar Kota,Charge Weekend,Layanan Add-Ons,Harga Layanan Tambahan,Total Harga Keseluruhan,No Invoice,Status\n";
         currentData.forEach((item, index) => {
@@ -156,7 +167,7 @@ const RekapPencatatanTableWrapper = () => {
             item.total_price || "-"
           }","${item.invoice_number || "-"}","${item.payment_status || "-"}"\n`;
         });
-      } else if (defaultTab === "reimburse") {
+      } else if (activeTab === "reimburse") {
         csvContent =
           "No,Nama Driver,Total,No Rekening,Tanggal,Nama Bank,Kebutuhan,Status\n";
         currentData.forEach((item, index) => {
@@ -166,7 +177,7 @@ const RekapPencatatanTableWrapper = () => {
             item.bank || "-"
           }","${item.description || "-"}","${item.status || "-"}"\n`;
         });
-      } else if (defaultTab === "inventaris") {
+      } else if (activeTab === "inventaris") {
         csvContent = "No,Nama Aset,Jumlah,Harga Satuan,Total Harga,Tanggal\n";
         currentData.forEach((item, index) => {
           csvContent += `${index + 1},"${item.name || "-"}","${
@@ -175,7 +186,7 @@ const RekapPencatatanTableWrapper = () => {
             item.date || "-"
           }"\n`;
         });
-      } else if (defaultTab === "lainnya") {
+      } else if (activeTab === "lainnya") {
         csvContent = "No,Nama Transaksi,Kategori,Total,Tanggal,Keterangan\n";
         currentData.forEach((item, index) => {
           csvContent += `${index + 1},"${item.name || "-"}","${
@@ -227,16 +238,24 @@ const RekapPencatatanTableWrapper = () => {
     },
   ];
 
+  // useEffect hanya untuk search, tidak untuk tab type
   useEffect(() => {
     router.push(
       `${pathname}?${createQueryString({
-        type: defaultTab,
+        type: activeTab, // Gunakan activeTab, bukan defaultTab
         q: searchDebounce || null,
         page: null,
         limit: pageLimit,
       })}`,
     );
-  }, [searchDebounce, defaultTab, pageLimit]);
+  }, [
+    searchDebounce,
+    activeTab,
+    pageLimit,
+    pathname,
+    createQueryString,
+    router,
+  ]);
 
   return (
     <>
