@@ -5,10 +5,25 @@ const client = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_HOST,
 });
 
-// Function to get token from localStorage or sessionStorage
+// Function to get token from NextAuth session or localStorage/sessionStorage
 const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    // Try to get from localStorage first, then sessionStorage
+    // Try to get from NextAuth session first
+    const sessionData = sessionStorage.getItem('next-auth.session-token') || 
+                       sessionStorage.getItem('__Secure-next-auth.session-token') ||
+                       localStorage.getItem('next-auth.session-token');
+    
+    if (sessionData) {
+      try {
+        const session = JSON.parse(sessionData);
+        const token = session?.accessToken || session?.user?.accessToken;
+        if (token) return token;
+      } catch (e) {
+        // If parsing fails, continue to fallback
+      }
+    }
+    
+    // Fallback to localStorage/sessionStorage
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     return token;
   }
