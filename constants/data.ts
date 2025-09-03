@@ -176,6 +176,13 @@ export const navItems: NavItem[] = [
         roles: ["admin"],
       },
       {
+        title: "realisasi",
+        href: "/dashboard/realisasi",
+        icon: "notebookText",
+        label: "realisasi",
+        roles: ["admin"],
+      },
+      {
         title: "Inventaris",
         href: "/dashboard/inventaris",
         icon: "archive",
