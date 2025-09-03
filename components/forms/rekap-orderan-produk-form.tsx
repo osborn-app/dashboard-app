@@ -119,7 +119,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
             <Label>Layanan Antar Jemput</Label>
             <Input
               disabled
-              value={formatRupiah((data.price_calculation?.total_weekend_price) ?? 0)}
+              value={formatRupiah((data.price_calculation?.total_weekend_price) || 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -127,7 +127,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
             <Label>Layanan Lainnya</Label>
             <Input
               disabled
-              value={formatRupiah((data.price_calculation?.addons_price) ?? 0)}
+              value={formatRupiah((data.price_calculation?.total_weekend_price) ?? 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>

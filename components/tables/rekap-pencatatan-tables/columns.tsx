@@ -32,7 +32,7 @@ export const columnsOrderanSewa: ColumnDef<any>[] = [
   {
     accessorKey: "pembayaran",
     header: "Pembayaran",
-    cell: ({ row }) => <span>{row.original.payment_status ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.payment_status === "done" ? "Lunas" : (row.original.payment_status || "-")}</span>,
   },
 ];
 
@@ -74,7 +74,7 @@ export const columnsProduk: ColumnDef<any>[] = [
   {
     accessorKey: "pembayaran",
     header: "Pembayaran",
-    cell: ({ row }) => <span>{row.original.payment_status ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.payment_status === "done" ? "Lunas" : (row.original.payment_status || "-")}</span>,
   },
 ];
 
@@ -102,7 +102,7 @@ export const columnsReimburse: ColumnDef<any>[] = [
   {
     accessorKey: "tanggal",
     header: "Tanggal",
-    cell: ({ row }) => <span>{formatDate(row.original.date) ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatDate(row.original.date, false) ?? "-"}</span>,
   },
   {
     accessorKey: "nama_bank",
@@ -150,7 +150,7 @@ export const columnsInventaris: ColumnDef<any>[] = [
   {
     accessorKey: "tanggal",
     header: "Tanggal",
-    cell: ({ row }) => <span>{formatDate(row.original.purchaseDate) ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatDate(row.original.purchaseDate, false) ?? "-"}</span>,
   },
 ];
 
@@ -178,7 +178,7 @@ export const columnsLainnya: ColumnDef<any>[] = [
   {
     accessorKey: "tanggal",
     header: "Tanggal",
-    cell: ({ row }) => <span>{formatDate(row.original.date) ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatDate(row.original.date, false) ?? "-"}</span>,
   },
   {
     accessorKey: "keterangan",
