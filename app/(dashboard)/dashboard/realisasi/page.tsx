@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, ChevronDown, ChevronRight, Minus } from "lucide-react";
 
-// Import components
+// Import component
 import AccountList from "./components/account-list";
 import AccountTable from "./components/account-table";
 import TransactionList from "./components/transactions";
