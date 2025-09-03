@@ -32,10 +32,16 @@ export const useGetInventaris = (params?: any, options?: {}) => {
 
   return useQuery({
     queryKey: ["inventaris", params],
-    queryFn: () =>
-      axiosAuth
-        .get("/rekap-transaksi/inventaris", { params })
-        .then((res) => res.data),
+    queryFn: () => {
+      // Gunakan endpoint inventaris dengan status verified
+      const inventoryParams = {
+        ...params,
+        status: "verified"
+      };
+      return axiosAuth
+        .get("/inventory", { params: inventoryParams })
+        .then((res) => res.data);
+    },
     ...options,
   });
 };
@@ -99,6 +105,32 @@ export const useGetLainnyaById = (id: string, params?: any) => {
     queryFn: () =>
       axiosAuth
         .get(`/rekap-transaksi/lainnya/${id}`, { params })
+        .then((res) => res.data),
+  });
+};
+
+// Orderan Produk
+export const useGetOrderanProduk = (params?: any, options?: {}) => {
+  const axiosAuth = useAxiosAuth();
+
+  return useQuery({
+    queryKey: ["orderan-produk", params],
+    queryFn: () =>
+      axiosAuth
+        .get("/rekap-transaksi/produk", { params })
+        .then((res) => res.data),
+    ...options,
+  });
+};
+
+export const useGetOrderanProdukById = (id: string, params?: any) => {
+  const axiosAuth = useAxiosAuth();
+
+  return useQuery({
+    queryKey: ["orderan-produk-by-id", id, params],
+    queryFn: () =>
+      axiosAuth
+        .get(`/rekap-transaksi/produk/${id}`, { params })
         .then((res) => res.data),
   });
 };

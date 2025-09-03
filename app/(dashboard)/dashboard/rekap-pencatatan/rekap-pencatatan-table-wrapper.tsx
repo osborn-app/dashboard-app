@@ -4,6 +4,7 @@ import SearchInput from "@/components/search-input";
 import Spinner from "@/components/spinner";
 import {
   columnsOrderanSewa,
+  columnsProduk,
   columnsReimburse,
   columnsInventaris,
   columnsLainnya,
@@ -12,6 +13,7 @@ import { RekapPencatatanTable } from "@/components/tables/rekap-pencatatan-table
 import { TabsContent } from "@/components/ui/tabs";
 import {
   useGetOrderanSewa,
+  useGetOrderanProduk,
   useGetReimburse,
   useGetInventaris,
   useGetLainnya,
@@ -70,6 +72,18 @@ const RekapPencatatanTableWrapper = () => {
       },
     );
 
+  const { data: orderanProdukData, isFetching: isFetchingOrderanProduk } =
+    useGetOrderanProduk(
+      {
+        limit: pageLimit,
+        page: page,
+        q: searchDebounce,
+      },
+      {
+        enabled: activeTab === "orderan-produk",
+      },
+    );
+
   const { data: inventarisData, isFetching: isFetchingInventaris } =
     useGetInventaris(
       {
@@ -123,7 +137,11 @@ const RekapPencatatanTableWrapper = () => {
       switch (activeTab) {
         case "orderan-sewa":
           currentData = orderanSewaData?.items || [];
-          tabName = "Orderan Sewa";
+          tabName = "Orderan Fleets";
+          break;
+        case "orderan-produk":
+          currentData = orderanProdukData?.items || [];
+          tabName = "Orderan Produk";
           break;
         case "reimburse":
           currentData = reimburseData?.items || [];
@@ -195,6 +213,41 @@ const RekapPencatatanTableWrapper = () => {
             item.description || "-"
           }"\n`;
         });
+      } else if (activeTab === "orderan-produk") {
+        csvContent =
+          "No,Nama Customer,Produk,Kategori,Tanggal Sewa,Harga Produk,Durasi Penyewaan,Total Harga Unit,Diskon (%),Total Potongan Diskon,Layanan Antar Jemput,Layanan Lainnya,Layanan Add-Ons,Total Harga Keseluruhan,No Invoice,Status\n";
+        currentData.forEach((item, index) => {
+          const statusLabel = item.status === "accepted" ? "Lunas" : (item.status || "-");
+          csvContent += `${index + 1},"${item.customer?.name || "-"}","${
+            item.product?.name || item.fleet?.name || "-"
+          }","${
+            item.product?.category_label || item.product?.category || item.category?.name || item.category || "-"
+          }","${
+            item.start_date || "-"
+          }","${
+            item.product?.price ?? "-"
+          }","${
+            item.duration ?? "-"
+          }","${
+            (item.price_calculation?.total_rent_price ?? item.sub_total_price ?? "-")
+          }","${
+            (item.price_calculation?.discount_percentage ?? item.discount ?? 0)
+          }","${
+            (item.price_calculation?.discount ?? item.discount_amount ?? 0)
+          }","${
+            (item.price_calculation?.total_weekend_price ?? item.weekend_price ?? 0)
+          }","${
+            (item.price_calculation?.addons_price ?? item.addons_price ?? 0)
+          }","${
+            (item.price_calculation?.addons_price ?? item.addons_price ?? 0)
+          }","${
+            (item.price_calculation?.grand_total ?? item.total_price ?? "-")
+          }","${
+            item.invoice_number || "-"
+          }","${
+            statusLabel
+          }"\n`;
+        });
       }
 
       // Create and download CSV file
@@ -221,8 +274,12 @@ const RekapPencatatanTableWrapper = () => {
 
   const lists = [
     {
-      name: "Orderan Sewa",
+      name: "Orderan Fleets",
       value: "orderan-sewa",
+    },
+    {
+      name: "Orderan Produk",
+      value: "orderan-produk",
     },
     {
       name: "Reimburse",
@@ -294,6 +351,21 @@ const RekapPencatatanTableWrapper = () => {
         )}
       </TabsContent>
 
+      <TabsContent value="orderan-produk" className="space-y-4">
+        {isFetchingOrderanProduk && <Spinner />}
+        {!isFetchingOrderanProduk && orderanProdukData && (
+          <RekapPencatatanTable
+            columns={columnsProduk}
+            data={orderanProdukData.items}
+            type="orderan-produk"
+            searchKey="customer.name"
+            totalUsers={orderanProdukData.meta?.total_items}
+            pageCount={Math.ceil(orderanProdukData.meta?.total_items / pageLimit)}
+            pageNo={page}
+          />
+        )}
+      </TabsContent>
+
       <TabsContent value="reimburse" className="space-y-4">
         {isFetchingReimburse && <Spinner />}
         {!isFetchingReimburse && reimburseData && (
@@ -314,11 +386,11 @@ const RekapPencatatanTableWrapper = () => {
         {!isFetchingInventaris && inventarisData && (
           <RekapPencatatanTable
             columns={columnsInventaris}
-            data={inventarisData.items}
+            data={inventarisData.data?.data || inventarisData.data?.items || inventarisData.data || []}
             type="inventaris"
-            searchKey="name"
-            totalUsers={inventarisData.meta?.total_items}
-            pageCount={Math.ceil(inventarisData.meta?.total_items / pageLimit)}
+            searchKey="assetName"
+            totalUsers={inventarisData.data?.total || inventarisData.meta?.total_items || 0}
+            pageCount={Math.ceil((inventarisData.data?.total || inventarisData.meta?.total_items || 0) / pageLimit)}
             pageNo={page}
           />
         )}

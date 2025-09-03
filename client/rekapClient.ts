@@ -9,7 +9,12 @@ export const getReimburse = (params?: any) => {
 };
 
 export const getInventaris = (params?: any) => {
-  return client.get("/rekap-transaksi/inventaris", { params });
+  // Gunakan endpoint inventaris dengan status verified
+  const inventoryParams = {
+    ...params,
+    status: "verified"
+  };
+  return client.get("/inventory", { params: inventoryParams });
 };
 
 export const getLainnya = (params?: any) => {

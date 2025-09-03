@@ -1,7 +1,7 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { CellAction } from "./cell-action";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatRupiah } from "@/lib/utils";
 
 export const columnsOrderanSewa: ColumnDef<any>[] = [
   {
@@ -27,7 +27,49 @@ export const columnsOrderanSewa: ColumnDef<any>[] = [
   {
     accessorKey: "total_harga",
     header: "Total Harga",
-    cell: ({ row }) => <span>{row.original.total_price ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original.total_price) ?? "-"}</span>,
+  },
+  {
+    accessorKey: "pembayaran",
+    header: "Pembayaran",
+    cell: ({ row }) => <span>{row.original.payment_status ?? "-"}</span>,
+  },
+];
+
+export const columnsProduk: ColumnDef<any>[] = [
+  {
+    accessorKey: "no",
+    header: "No",
+    cell: ({ row }) => <span>{row.index + 1}</span>,
+  },
+  {
+    accessorKey: "nama_customer",
+    header: "Nama Customer",
+    cell: ({ row }) => <span>{row.original.customer?.name ?? "-"}</span>,
+  },
+  {
+    accessorKey: "product",
+    header: "Produk",
+    cell: ({ row }) => <span>{row.original.product?.name ?? "-"}</span>,
+  },
+  {
+    accessorKey: "kategori",
+    header: "Kategori",
+    cell: ({ row }) => (
+      <span>
+        {row.original.product?.category_label ?? row.original.product?.category ?? "-"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "nomor_invoice",
+    header: "Nomor Invoice",
+    cell: ({ row }) => <span>{row.original.invoice_number ?? "-"}</span>,
+  },
+  {
+    accessorKey: "total_harga",
+    header: "Total Harga",
+    cell: ({ row }) => <span>{formatRupiah(row.original.total_price) ?? "-"}</span>,
   },
   {
     accessorKey: "pembayaran",
@@ -50,7 +92,7 @@ export const columnsReimburse: ColumnDef<any>[] = [
   {
     accessorKey: "total",
     header: "Total",
-    cell: ({ row }) => <span>{row.original.nominal ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original.nominal) ?? "-"}</span>,
   },
   {
     accessorKey: "no_rekening",
@@ -88,7 +130,7 @@ export const columnsInventaris: ColumnDef<any>[] = [
   {
     accessorKey: "nama_aset",
     header: "Nama Aset",
-    cell: ({ row }) => <span>{row.original.name ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.assetName ?? "-"}</span>,
   },
   {
     accessorKey: "jumlah",
@@ -98,17 +140,17 @@ export const columnsInventaris: ColumnDef<any>[] = [
   {
     accessorKey: "harga_satuan",
     header: "Harga Satuan",
-    cell: ({ row }) => <span>{row.original.unit_price ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.unitPrice ?? "-"}</span>,
   },
   {
     accessorKey: "total_harga",
     header: "Total Harga",
-    cell: ({ row }) => <span>{row.original.total ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original.totalPrice) ?? "-"}</span>,
   },
   {
     accessorKey: "tanggal",
     header: "Tanggal",
-    cell: ({ row }) => <span>{formatDate(row.original.date) ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatDate(row.original.purchaseDate) ?? "-"}</span>,
   },
 ];
 
@@ -131,7 +173,7 @@ export const columnsLainnya: ColumnDef<any>[] = [
   {
     accessorKey: "total",
     header: "Total",
-    cell: ({ row }) => <span>{row.original.nominal ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original.nominal) ?? "-"}</span>,
   },
   {
     accessorKey: "tanggal",
