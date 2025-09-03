@@ -25,6 +25,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
 
   const title = "Detail Orderan Sewa";
   const description = "Detail lengkap transaksi orderan sewa kendaraan";
+  const discount = (data.price_calculation?.discount_percentage ?? 0);
 
   return (
     <>
@@ -64,7 +65,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Harga Unit</Label>
             <Input
               disabled
-              value={formatRupiah(data.fleet?.price || "-")}
+              value={formatRupiah(data.price_calculation?.rent_price || "-")}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -77,10 +78,10 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             />
           </div>
           <div>
-            <Label>Total Potongan Diskon Unit</Label>
+            <Label>Total Harga Unit</Label>
             <Input
               disabled
-              value={formatRupiah(data.total_price || "-")}
+              value={formatRupiah(data.price_calculation?.total_rent_price || "-")}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -88,18 +89,34 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
 
         <div className="md:grid md:grid-cols-3 gap-8">
           <div>
-            <Label>Layanan Driver</Label>
+            <Label>Discount</Label>
             <Input
               disabled
-              value={formatRupiah(data.driver_price || "-")}
+              value={`${discount}%`}
+              className="disabled:opacity-90 mt-2"
+            />
+          </div>
+          <div>
+            <Label>Total Potongan Diskon Unit</Label>
+            <Input
+              disabled
+              value={formatRupiah(data.price_calculation?.discount || "-")}
               className="disabled:opacity-90 mt-2 font-mono"
+            />
+          </div>
+          <div>
+            <Label>Charge Weekend</Label>
+            <Input
+              disabled
+              value={formatRupiah((data.price_calculation?.total_weekend_price) ?? 0)}
+              className="disabled:opacity-90 mt-2"
             />
           </div>
           <div>
             <Label>Layanan Antar Jemput</Label>
             <Input
               disabled
-              value={formatRupiah(data.pickup_price || "-")}
+              value={formatRupiah(data.price_calculation?.service_price || "-")}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -107,15 +124,23 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Layanan Luar Kota</Label>
             <Input
               disabled
-              value={formatRupiah(data.out_of_town_price || "-")}
+              value={formatRupiah((data.price_calculation?.out_of_town_price) ?? 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
           <div>
-            <Label>Charge Weekend</Label>
+            <Label>Layanan Driver</Label>
             <Input
               disabled
-              value={formatRupiah(data.weekend_price || "-")}
+              value={formatRupiah((data.price_calculation?.total_driver_price) ?? 0)}
+              className="disabled:opacity-90 mt-2"
+            />
+          </div>
+          <div>
+            <Label>Layanan Asuransi</Label>
+            <Input
+              disabled
+              value={formatRupiah((data.price_calculation?.insurance_price) ?? 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -123,30 +148,22 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Layanan Add-Ons</Label>
             <Input
               disabled
-              value={formatRupiah(data.addons_price || "-")}
+              value={formatRupiah((data.addons_price) ?? 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
           <div>
-            <Label>Harga Layanan Tambahan</Label>
+            <Label>Total Harga Keseluruhan</Label>
             <Input
               disabled
-              value={formatRupiah(data.total_price || "-")}
+              value={formatRupiah((data.grand_total) ?? 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
         </div>
 
         {/* Price Information */}
-        <div className="md:grid md:grid-cols-3 gap-8">
-        <div>
-            <Label>Total Harga Keseluruhan</Label>
-            <Input
-              disabled
-              value={formatRupiah(data.total_price || "-")}
-              className="disabled:opacity-90 mt-2"
-            />
-          </div>
+        <div className="md:grid md:grid-cols-2 gap-8">
           <div>
             <Label>No Invoice</Label>
             <Input
@@ -159,7 +176,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Status</Label>
             <Input
               disabled
-              value={data.status || "-"}
+              value={data.status === "accepted" ? "Lunas": (data.status ?? 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
