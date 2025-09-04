@@ -74,7 +74,7 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
   messages,
   innerRef,
 }) => {
-  // Watch discount field for real-time updates
+  // Watch discount field for real-time update
   const discountValue = form.watch("discount");
   return (
     <div
