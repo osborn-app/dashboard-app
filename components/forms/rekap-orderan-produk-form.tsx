@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 interface OrderanProdukDetailProps {
   data: any;
@@ -29,6 +30,13 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
   const discountPercentage =
     (data.price_calculation?.discount_percentage ?? data.discount ?? 0) as number;
   const displayStatus = data.status === "accepted" ? "Lunas" : (data.status || "-");
+  const additionalServicesTotal =
+    Array.isArray(data.additional_services)
+      ? data.additional_services.reduce(
+          (sum: number, item: any) => sum + (Number(item?.price) || 0),
+          0,
+        )
+      : 0;
 
   return (
     <>
@@ -76,7 +84,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
             <Label>Durasi Penyewaan</Label>
             <Input
               disabled
-              value={data.duration || "-"}
+              value={data.duration ? `${data.duration} Hari` : "-"}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -127,7 +135,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
             <Label>Layanan Lainnya</Label>
             <Input
               disabled
-              value={formatRupiah((data.price_calculation?.total_weekend_price) ?? 0)}
+              value={formatRupiah(additionalServicesTotal)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -147,7 +155,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
             <Label>Total Harga Keseluruhan</Label>
             <Input
               disabled
-              value={formatRupiah((data.price_calculation?.grand_total) ?? data.total_price ?? 0)}
+              value={formatRupiah((data.price_calculation?.grand_total) ?? 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -161,11 +169,19 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
           </div>
           <div>
             <Label>Status</Label>
-            <Input
-              disabled
-              value={displayStatus}
-              className="disabled:opacity-90 mt-2"
-            />
+            <div className="mt-2">
+              {displayStatus === "Lunas" ? (
+                <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 w-full h-10 flex items-center justify-center text-lg font-semibold tracking-widest">
+                  {displayStatus}
+                </Badge>
+              ) : (
+                <Input
+                  disabled
+                  value={displayStatus}
+                  className="disabled:opacity-90"
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -93,7 +93,9 @@ export const createInventoryColumns = (props?: InventoryColumnsProps): ColumnDef
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      const colorClass = status === "verified" ? "bg-green-100 text-green-700 border-green-200" : "bg-yellow-100 text-yellow-700 border-yellow-200";
+      const colorClass = status === "verified" 
+        ? "bg-green-100 text-green-700 border-green-200 hover:!bg-green-100 hover:!text-green-700" 
+        : "bg-yellow-100 text-yellow-700 border-yellow-200 hover:!bg-yellow-100 hover:!text-yellow-700";
       return (
         <Badge
           className={`flex items-center gap-1 border ${colorClass}`}
@@ -138,11 +140,6 @@ export const createInventoryColumns = (props?: InventoryColumnsProps): ColumnDef
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(inventory.id.toString())}
-            >
-              Copy ID
-            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => props?.onEdit?.(inventory)}
               className="cursor-pointer"

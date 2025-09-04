@@ -1,7 +1,11 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
 import { CellAction } from "./cell-action";
-import { formatDate, formatRupiah } from "@/lib/utils";
+import { formatDate, formatRupiah, cn } from "@/lib/utils";
+import {
+  getPaymentStatusLabel,
+  getStatusVariant,
+} from "@/app/(dashboard)/dashboard/orders/[orderId]/types/order";
 
 export const columnsOrderanSewa: ColumnDef<any>[] = [
   {
@@ -32,7 +36,16 @@ export const columnsOrderanSewa: ColumnDef<any>[] = [
   {
     accessorKey: "pembayaran",
     header: "Pembayaran",
-    cell: ({ row }) => <span>{row.original.payment_status === "done" ? "Lunas" : (row.original.payment_status || "-")}</span>,
+    cell: ({ row }) => (
+      <span
+        className={cn(
+          getStatusVariant(row.original?.payment_status),
+          "text-xs font-medium flex items-center justify-center py-1 rounded-md text-center",
+        )}
+      >
+        {getPaymentStatusLabel(row.original?.payment_status)}
+      </span>
+    ),
   },
 ];
 
@@ -74,7 +87,16 @@ export const columnsProduk: ColumnDef<any>[] = [
   {
     accessorKey: "pembayaran",
     header: "Pembayaran",
-    cell: ({ row }) => <span>{row.original.payment_status === "done" ? "Lunas" : (row.original.payment_status || "-")}</span>,
+    cell: ({ row }) => (
+      <span
+        className={cn(
+          getStatusVariant(row.original?.payment_status),
+          "text-xs font-medium flex items-center justify-center py-1 rounded-md text-center",
+        )}
+      >
+        {getPaymentStatusLabel(row.original?.payment_status)}
+      </span>
+    ),
   },
 ];
 
@@ -140,12 +162,12 @@ export const columnsInventaris: ColumnDef<any>[] = [
   {
     accessorKey: "harga_satuan",
     header: "Harga Satuan",
-    cell: ({ row }) => <span>{row.original.unitPrice ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original.unitPrice ?? 0)}</span>,
   },
   {
     accessorKey: "total_harga",
     header: "Total Harga",
-    cell: ({ row }) => <span>{formatRupiah(row.original.totalPrice) ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original.totalPrice ?? 0)}</span>,
   },
   {
     accessorKey: "tanggal",
@@ -173,7 +195,7 @@ export const columnsLainnya: ColumnDef<any>[] = [
   {
     accessorKey: "total",
     header: "Total",
-    cell: ({ row }) => <span>{formatRupiah(row.original.nominal) ?? "-"}</span>,
+    cell: ({ row }) => <span>{formatRupiah(row.original.nominal ?? 0)}</span>,
   },
   {
     accessorKey: "tanggal",

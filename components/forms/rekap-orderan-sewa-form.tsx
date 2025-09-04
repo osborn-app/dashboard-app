@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Heading } from "@/components/ui/heading";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 interface OrderanSewaDetailProps {
   data: any;
@@ -26,6 +27,13 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
   const title = "Detail Orderan Fleets";
   const description = "Detail lengkap transaksi orderan sewa kendaraan";
   const discount = (data.price_calculation?.discount_percentage ?? 0);
+  const additionalServicesTotal =
+    Array.isArray(data.additional_services)
+      ? data.additional_services.reduce(
+          (sum: number, item: any) => sum + (Number(item?.price) || 0),
+          0,
+        )
+      : 0;
 
   return (
     <>
@@ -73,7 +81,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Durasi Penyewaan</Label>
             <Input
               disabled
-              value={data.duration || "-"}
+              value={data.duration ? `${data.duration} Hari` : "-"}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -156,7 +164,7 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
             <Label>Layanan Lainnya</Label>
             <Input
               disabled
-              value={formatRupiah((data.addons_price) ?? 0)}
+              value={formatRupiah(additionalServicesTotal)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -181,11 +189,19 @@ export const RekapOrderanSewaForm: React.FC<OrderanSewaDetailProps> = ({
           </div>
           <div>
             <Label>Status</Label>
-            <Input
-              disabled
-              value={data.status === "accepted" ? "Lunas": (data.status ?? 0)}
-              className="disabled:opacity-90 mt-2"
-            />
+            <div className="mt-2">
+              {data.status === "accepted" ? (
+                <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 w-full h-10 flex items-center justify-center text-lg font-semibold tracking-widest">
+                  Lunas
+                </Badge>
+              ) : (
+                <Input
+                  disabled
+                  value={data.status ?? 0}
+                  className="disabled:opacity-90"
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
