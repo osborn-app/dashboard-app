@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   PaintBucket,
   RectangleHorizontal,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isEmpty } from "lodash";
@@ -25,6 +26,17 @@ interface Photo {
   photo: string;
 }
 
+interface Location {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  location: string;
+  address: string;
+  map_url: string;
+  redirect_url: string;
+}
+
 interface Fleet {
   id: number;
   created_at: string;
@@ -35,7 +47,7 @@ interface Fleet {
   plate_number: string;
   price: number;
   photos: Photo[];
-  location: string | null; // Bisa disesuaikan jika Anda mengetahui tipe datanya.
+  location: Location | null;
   type_label: string;
 }
 
@@ -131,6 +143,26 @@ const FleetDetail: React.FC<FleetDetailProps> = ({ onClose, data, innerRef }) =>
                 </span>
               </div>
             </div>
+            {data?.location && (
+              <div className="p-1 flex items-center  rounded-full w-full bg-neutral-50">
+                <div className="rounded-full h-[40px] w-[40px] flex items-center justify-center bg-neutral-100 ">
+                  <MapPin />
+                </div>
+                <div className="flex flex-col ml-4">
+                  <span className="font-normal text-xs text-neutral-500">
+                    Lokasi
+                  </span>
+                  <span className="font-medium text-sm text-black">
+                    {data.location.name ?? "-"}
+                  </span>
+                  {data.location.address && (
+                    <span className="font-normal text-xs text-neutral-500 mt-1">
+                      {data.location.address}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           {isEmpty(data?.photos) ? (
             <p>Belum ada Foto</p>
