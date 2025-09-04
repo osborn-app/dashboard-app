@@ -1256,7 +1256,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                                     value: field.value,
                                   })}
                                 >
-                                  {(lastPath !== "create" && isEdit) || isPreview && (
+                                  {((lastPath !== "create" && isEdit) || isPreview) && (
                                     <Option
                                       value={initialData?.customer?.id?.toString()}
                                     >
@@ -1401,7 +1401,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                                     value: field.value,
                                   })}
                                 >
-                                  {(lastPath !== "create" && isEdit) || isPreview && (
+                                  {((lastPath !== "create" && isEdit) || isPreview) && (
                                     <Option
                                       value={initialData?.product?.id?.toString()}
                                     >
