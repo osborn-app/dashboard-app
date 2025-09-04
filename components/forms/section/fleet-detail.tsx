@@ -25,7 +25,7 @@ interface Photo {
   updated_at: string;
   photo: string;
 }
-
+// redeploy
 interface Location {
   id: number;
   created_at: string;
