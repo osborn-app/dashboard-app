@@ -343,6 +343,7 @@ const RekapPencatatanTableWrapper = () => {
             "Total Harga Unit": data.price_calculation?.total_rent_price ?? data.sub_total_price ?? 0,
             "Diskon (%)": discountPercentage,
             "Total Potongan Diskon": data.price_calculation?.discount ?? data.discount_amount ?? 0,
+            "Total Harga Setelah Diskon": ((data.price_calculation?.total_rent_price ?? data.sub_total_price ?? 0) - (data.price_calculation?.discount ?? data.discount_amount ?? 0)),
             "Layanan Antar Jemput": data.price_calculation?.total_weekend_price ?? data.weekend_price ?? 0,
             "Layanan Lainnya": additionalServicesTotal,
             "Layanan Add-Ons": data.price_calculation?.addons_price ?? data.addons_price ?? 0,

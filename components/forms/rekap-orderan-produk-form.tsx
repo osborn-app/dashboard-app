@@ -46,7 +46,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
       <Separator />
 
       <div className="space-y-8 w-full">
-        {/* Customer & Fleet Information */}
+        {/* Row 1: Pelanggan | Produk | Tanggal Sewa */}
         <div className="md:grid md:grid-cols-3 gap-8">
           <div>
             <Label>Pelanggan</Label>
@@ -72,6 +72,10 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
               className="disabled:opacity-90 mt-2"
             />
           </div>
+        </div>
+
+        {/* Row 2: Harga Produk | Durasi Penyewaan | Total Harga Unit */}
+        <div className="md:grid md:grid-cols-3 gap-8">
           <div>
             <Label>Harga Produk</Label>
             <Input
@@ -98,6 +102,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
           </div>
         </div>
 
+        {/* Row 3: Diskon | Total Potongan Diskon Unit | Total Harga Setelah Diskon */}
         <div className="md:grid md:grid-cols-3 gap-8">
           <div>
             <Label>Diskon</Label>
@@ -115,6 +120,18 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
               className="disabled:opacity-90 mt-2"
             />
           </div>
+          <div>
+            <Label>Total Harga Setelah Diskon</Label>
+            <Input
+              disabled
+              value={formatRupiah(((data.price_calculation?.total_rent_price) ?? data.sub_total_price ?? 0) - ((data.price_calculation?.discount) ?? 0))}
+              className="disabled:opacity-90 mt-2"
+            />
+          </div>
+        </div>
+
+        {/* Row 4: Kategori | Layanan Antar Jemput | Layanan Lainnya */}
+        <div className="md:grid md:grid-cols-3 gap-8">
           <div>
             <Label>Kategori</Label>
             <Input
@@ -139,6 +156,10 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
               className="disabled:opacity-90 mt-2"
             />
           </div>
+        </div>
+
+        {/* Row 5: Layanan Add-Ons | Total Harga Keseluruhan | No Invoice */}
+        <div className="md:grid md:grid-cols-3 gap-8">
           <div>
             <Label>Layanan Add-Ons</Label>
             <Input
@@ -147,11 +168,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
               className="disabled:opacity-90 mt-2"
             />
           </div>
-        </div>
-
-        {/* Price Information */}
-        <div className="md:grid md:grid-cols-3 gap-8">
-        <div>
+          <div>
             <Label>Total Harga Keseluruhan</Label>
             <Input
               disabled
@@ -167,7 +184,11 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
               className="disabled:opacity-90 mt-2"
             />
           </div>
-          <div>
+        </div>
+
+        {/* Row 6: Status (centered single column) */}
+        <div className="flex justify-center">
+          <div className="w-full max-w-sm">
             <Label>Status</Label>
             <div className="mt-2">
               {displayStatus === "Lunas" ? (
