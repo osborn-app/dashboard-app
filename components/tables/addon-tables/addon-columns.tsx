@@ -86,9 +86,17 @@ export const addonColumns: ColumnDef<any>[] = [
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Stock</span>
     ),
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original?.stock_quantity}</span>
-    ),
+    cell: ({ row }) => {
+      const availableStock = (row.original?.stock_quantity || 0) - (row.original?.reserved_quantity || 0);
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium">{availableStock}</span>
+          <span className="text-xs text-muted-foreground">
+            Total: {row.original?.stock_quantity || 0}
+          </span>
+        </div>
+      );
+    },
     enableSorting: false,
   },
   {
