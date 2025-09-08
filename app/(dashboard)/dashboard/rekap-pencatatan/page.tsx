@@ -44,17 +44,18 @@ export default async function page({ searchParams }: paramsProps) {
     <>
       <div className="flex-1 space-y-4  p-4 md:p-8 pt-6">
         <BreadCrumb items={breadcrumbItems} />
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <Heading
             title="Rekap Pencatatan"
             description="Kelola dan lihat data rekap pencatatan untuk berbagai jenis transaksi."
           />
           <Link
             href="/dashboard/rekap-pencatatan/lainnya/create"
-            className={cn(buttonVariants())}
+            className={cn(buttonVariants(), "w-full sm:w-auto")}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Tambah Data Lainnya
+            <span className="hidden sm:inline">Tambah Data Lainnya</span>
+            <span className="sm:hidden">Tambah Data Lainnya</span>
           </Link>
         </div>
         <Separator />
