@@ -40,17 +40,23 @@ interface AccountItem {
 interface AccountListProps {
   accounts: AccountItem[];
   onReorder?: (newOrder: AccountItem[]) => void;
+  onEditAccount?: (id: string) => void;
+  onDeleteAccount?: (id: string) => void;
 }
 
 // Sortable Account Item Component
 function SortableAccountItem({ 
   account, 
   level = 0, 
-  onToggleExpansion 
+  onToggleExpansion,
+  onEditAccount,
+  onDeleteAccount
 }: { 
   account: AccountItem; 
   level?: number;
   onToggleExpansion: (id: string) => void;
+  onEditAccount?: (id: string) => void;
+  onDeleteAccount?: (id: string) => void;
 }) {
   const {
     attributes,
@@ -126,8 +132,8 @@ function SortableAccountItem({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>Edit</DropdownMenuItem>
-            <DropdownMenuItem>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEditAccount?.(account.id)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem>
             <DropdownMenuItem>View Details</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -141,6 +147,8 @@ function SortableAccountItem({
               account={child}
               level={level + 1}
               onToggleExpansion={onToggleExpansion}
+              onEditAccount={onEditAccount}
+              onDeleteAccount={onDeleteAccount}
             />
           ))}
         </div>
@@ -149,7 +157,7 @@ function SortableAccountItem({
   );
 }
 
-export default function AccountList({ accounts, onReorder }: AccountListProps) {
+export default function AccountList({ accounts, onReorder, onEditAccount, onDeleteAccount }: AccountListProps) {
   const [localAccounts, setLocalAccounts] = useState<AccountItem[]>(accounts);
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(
     new Set(accounts.filter(acc => acc.expanded).map(acc => acc.id))
@@ -225,6 +233,8 @@ export default function AccountList({ accounts, onReorder }: AccountListProps) {
               key={account.id}
               account={account}
               onToggleExpansion={handleToggleExpansion}
+              onEditAccount={onEditAccount}
+              onDeleteAccount={onDeleteAccount}
             />
           ))}
         </div>
