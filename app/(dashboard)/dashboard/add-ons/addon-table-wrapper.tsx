@@ -11,6 +11,7 @@ import { useDebounce } from "use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarDateRangePicker } from "@/components/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 // Addon categories enum
 const AddonCategories = {
@@ -55,8 +56,8 @@ const AddonTableWrapper = () => {
     category: selectedCategory || undefined,
     ...(orderBy ? { order_by: orderBy } : {}),
     ...(orderColumn ? { order_column: orderColumn } : {}),
-    ...(dateRange.from ? { start_date: dateRange.from.toISOString().split('T')[0] } : {}),
-    ...(dateRange.to ? { end_date: dateRange.to.toISOString().split('T')[0] } : {}),
+    ...(dateRange.from ? { start_date: format(dateRange.from, 'yyyy-MM-dd') } : {}),
+    ...(dateRange.to ? { end_date: format(dateRange.to, 'yyyy-MM-dd') } : {}),
   });
 
   const { data: addonsData, isFetching: isFetchingAddons } = useGetAddons(
@@ -91,7 +92,15 @@ const AddonTableWrapper = () => {
   };
 
   const handleDateRangeChange = (range: DateRange) => {
-    setDateRange(range);
+    // If user clicks a single date, set both start and end date to the same date
+    if (range.from && !range.to) {
+      setDateRange({
+        from: range.from,
+        to: range.from  // Set end date same as start date
+      });
+    } else {
+      setDateRange(range);
+    }
   };
 
   const handleClearDate = () => {
@@ -154,8 +163,8 @@ const AddonTableWrapper = () => {
         q: searchQuery || null,
         page: null,
         limit: pageLimit,
-        start_date: dateRange.from ? dateRange.from.toISOString().split('T')[0] : null,
-        end_date: dateRange.to ? dateRange.to.toISOString().split('T')[0] : null,
+        start_date: dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
+        end_date: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : null,
       })}`,
     );
   }, [dateRange]);
