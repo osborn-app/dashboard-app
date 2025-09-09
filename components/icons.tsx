@@ -48,7 +48,8 @@ import {
   ListChecks,
   Wrench,
   Album,
-  Archive
+  Archive,
+  Files
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -169,6 +170,7 @@ export const Icons = {
   package: Package,
   ledger: NotebookText,
   archive: Archive,
+  files: Files,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

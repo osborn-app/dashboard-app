@@ -171,7 +171,7 @@ export const navItems: NavItem[] = [
       {
         title: "Rekap Pencatatan",
         href: "/dashboard/rekap-pencatatan",
-        icon: "dashboard",
+        icon: "files",
         label: "Rekap Pencatatan",
         roles: ["admin"],
       },

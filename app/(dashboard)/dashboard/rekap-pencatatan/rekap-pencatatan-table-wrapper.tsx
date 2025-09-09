@@ -31,7 +31,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CalendarDateRangePicker } from "@/components/date-range-picker";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { formatRupiah } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import * as XLSX from "xlsx";
 import useAxiosAuth from "@/hooks/axios/use-axios-auth";
@@ -147,122 +152,97 @@ const RekapPencatatanTableWrapper = () => {
     setIsDownloading(true);
 
     try {
-      // Build params with date filters
-      const dateParams: Record<string, any> = {};
-      if (dateRange?.from) dateParams.start_date = dateRange.from.toISOString().split("T")[0];
-      if (dateRange?.to) dateParams.end_date = dateRange.to.toISOString().split("T")[0];
+      // Validate date range (if both selected)
+      if (dateRange?.from && dateRange?.to && dateRange.to < dateRange.from) {
+        alert("Tanggal akhir harus setelah atau sama dengan tanggal mulai.");
+        return;
+      }
 
-      // Helper: fetch a single page for a tab (sequential-friendly)
-      const fetchPage = async (tab: string, pageNo: number) => {
-        const commonParams: any = {
-          limit: pageLimit,
-          page: pageNo,
+      // Build params with date filters (backend expects startDate/endDate, both required)
+      const dateParams: Record<string, any> = {};
+      const fromStr = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined;
+      const toStr = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined;
+      if (fromStr && toStr) {
+        dateParams.startDate = fromStr;
+        dateParams.endDate = toStr;
+      } else if (fromStr && !toStr) {
+        // Single-day filter
+        dateParams.startDate = fromStr;
+        dateParams.endDate = fromStr;
+      } else if (!fromStr && toStr) {
+        // Single-day filter
+        dateParams.startDate = toStr;
+        dateParams.endDate = toStr;
+      }
+
+      // Simplified: Single API call per tab leveraging backend calculations and filters
+      const getExportData = async (tab: string) => {
+        const params: any = {
+          limit: exportScope === "all" ? 999999 : pageLimit,
+          page: exportScope === "all" ? 1 : page,
           q: searchDebounce,
           ...dateParams,
         };
-        if (tab === "orderan-sewa") {
-          const res = await axiosAuth.get("/rekap-transaksi/orderan-sewa", { params: commonParams });
-          return res.data;
+
+        // Request backend to include price calculation for orders tabs
+        if (tab === "orderan-sewa" || tab === "orderan-produk") {
+          params.include_price_calculation = true;
         }
-        if (tab === "orderan-produk") {
-          const res = await axiosAuth.get("/rekap-transaksi/produk", { params: commonParams });
-          return res.data;
+
+        let endpoint = "";
+        switch (tab) {
+          case "orderan-sewa":
+            endpoint = "/rekap-transaksi/orderan-sewa";
+            break;
+          case "orderan-produk":
+            endpoint = "/rekap-transaksi/produk";
+            break;
+          case "reimburse":
+            endpoint = "/rekap-transaksi/reimburse";
+            break;
+          case "inventaris":
+            endpoint = "/inventory";
+            params.status = "verified";
+            break;
+          case "lainnya":
+            endpoint = "/rekap-transaksi/lainnya";
+            break;
         }
-        if (tab === "reimburse") {
-          const res = await axiosAuth.get("/rekap-transaksi/reimburse", { params: commonParams });
-          return res.data;
-        }
-        if (tab === "inventaris") {
-          const res = await axiosAuth.get("/inventory", { params: { ...commonParams, status: "verified" } });
-          return res.data;
-        }
-        if (tab === "lainnya") {
-          const res = await axiosAuth.get("/rekap-transaksi/lainnya", { params: commonParams });
-          return res.data;
-        }
-        return null;
+
+        const res = await axiosAuth.get(endpoint, { params });
+        return res.data;
       };
 
-      // Helper: iterate all pages sequentially
-      const fetchAllItemsSequential = async (tab: string) => {
-        const firstPage = await fetchPage(tab, 1);
-        if (!firstPage) return { items: [], meta: { total_items: 0 } };
-        // Inventaris response shape differs
-        const getItems = (res: any) =>
-          tab === "inventaris"
-            ? (res?.data?.data || res?.data?.items || res?.data || [])
-            : (res?.items || []);
-        const getTotal = (res: any) =>
-          tab === "inventaris" ? (res?.data?.total || 0) : (res?.meta?.total_items || 0);
-
-        let items = getItems(firstPage);
-        const total = getTotal(firstPage);
-        const totalPages = Math.max(1, Math.ceil(total / pageLimit));
-        for (let p = 2; p <= totalPages; p++) {
-          const res = await fetchPage(tab, p);
-          const more = getItems(res);
-          items = items.concat(more);
-        }
-        return { items, total };
-      };
-
-      // Get data based on scope
+      // Fetch once for the active tab
       let currentData: any[] = [];
       let tabName = "";
+      const response = await getExportData(activeTab);
 
+      // Extract items from response (handle different shapes)
+      if (activeTab === "inventaris") {
+        currentData = response?.data?.data || response?.data?.items || response?.data || [];
+      } else {
+        currentData = response?.items || [];
+      }
+
+      // Set export sheet name
       switch (activeTab) {
         case "orderan-sewa":
-          if (exportScope === "all") {
-            const all = await fetchAllItemsSequential("orderan-sewa");
-            currentData = all.items;
-          } else {
-            const pageRes = await fetchPage("orderan-sewa", page);
-            currentData = pageRes?.items || [];
-          }
           tabName = "Orderan Fleets";
           break;
         case "orderan-produk":
-          if (exportScope === "all") {
-            const all = await fetchAllItemsSequential("orderan-produk");
-            currentData = all.items;
-          } else {
-            const pageRes = await fetchPage("orderan-produk", page);
-            currentData = pageRes?.items || [];
-          }
           tabName = "Orderan Produk";
           break;
         case "reimburse":
-          if (exportScope === "all") {
-            const all = await fetchAllItemsSequential("reimburse");
-            currentData = all.items;
-          } else {
-            const pageRes = await fetchPage("reimburse", page);
-            currentData = pageRes?.items || [];
-          }
           tabName = "Reimburse";
           break;
         case "inventaris":
-          if (exportScope === "all") {
-            const all = await fetchAllItemsSequential("inventaris");
-            currentData = all.items;
-          } else {
-            const pageRes = await fetchPage("inventaris", page);
-            currentData = pageRes?.data?.data || pageRes?.data?.items || pageRes?.data || [];
-          }
           tabName = "Inventaris";
           break;
         case "lainnya":
-          if (exportScope === "all") {
-            const all = await fetchAllItemsSequential("lainnya");
-            currentData = all.items;
-          } else {
-            const pageRes = await fetchPage("lainnya", page);
-            currentData = pageRes?.items || [];
-          }
           tabName = "Lainnya";
           break;
         default:
-          currentData = [];
           tabName = "Rekap Pencatatan";
       }
 
@@ -271,116 +251,104 @@ const RekapPencatatanTableWrapper = () => {
         return;
       }
 
-      // Helper to fetch detail sequentially (no Promise.all)
-      const fetchDetailSequential = async (items: any[], tab: string) => {
-        const detailed: any[] = [];
-        for (const item of items) {
-          try {
-            if (tab === "orderan-sewa") {
-              const res = await axiosAuth.get(`/rekap-transaksi/orderan-sewa/${item.id}`);
-              detailed.push(res.data);
-            } else if (tab === "orderan-produk") {
-              const res = await axiosAuth.get(`/rekap-transaksi/produk/${item.id}`);
-              detailed.push(res.data);
-            } else {
-              detailed.push(item);
-            }
-          } catch (e) {
-            detailed.push(item);
-          }
-        }
-        return detailed;
-      };
-
-      // Build rows according to tab and format
+      // Build rows according to tab and format (no detail fetching needed)
       let rows: any[] = [];
       if (activeTab === "orderan-sewa") {
-        const detailed = await fetchDetailSequential(currentData, "orderan-sewa");
-        rows = detailed.map((data: any, index: number) => {
+        rows = currentData.map((data: any, index: number) => {
           const discount = data.price_calculation?.discount_percentage ?? 0;
           const additionalServicesTotal = Array.isArray(data.additional_services)
             ? data.additional_services.reduce((sum: number, item: any) => sum + (Number(item?.price) || 0), 0)
             : 0;
+          const startDate = data.start_date ? format(new Date(data.start_date), "EEEE, dd MMMM yyyy HH:mm", { locale: id }) : "-";
           return {
             No: index + 1,
             "Nama Customer": data.customer?.name || "-",
             Armada: data.fleet?.name || "-",
-            "Tanggal Sewa": data.start_date || "-",
-            "Harga Unit": data.price_calculation?.rent_price ?? 0,
+            "Tanggal Sewa": startDate,
+            "Harga Unit": formatRupiah(data.price_calculation?.rent_price ?? 0),
             "Durasi Penyewaan": data.duration ?? 0,
-            "Total Harga Unit": data.price_calculation?.total_rent_price ?? 0,
+            "Total Harga Unit": formatRupiah(data.price_calculation?.total_rent_price ?? 0),
             "Discount (%)": discount, //redeploy
-            "Total Potongan Diskon Unit": data.price_calculation?.discount ?? 0,
-            "Total Harga Setelah Diskon": (data.price_calculation?.total_rent_price ?? 0) - (data.price_calculation?.discount ?? 0),
-            "Charge Weekend": data.price_calculation?.total_weekend_price ?? 0,
-            "Layanan Antar Jemput": data.price_calculation?.service_price ?? 0,
-            "Layanan Luar Kota": data.price_calculation?.out_of_town_price ?? 0,
-            "Layanan Driver": data.price_calculation?.total_driver_price ?? 0,
-            "Layanan Asuransi": data.price_calculation?.insurance_price ?? 0,
-            "Layanan Add-Ons": data.addons_price ?? 0,
-            "Layanan Lainnya": additionalServicesTotal,
-            "Total Harga Keseluruhan": data.price_calculation?.grand_total ?? 0,
+            "Total Potongan Diskon Unit": formatRupiah(data.price_calculation?.discount ?? 0),
+            "Total Harga Setelah Diskon": formatRupiah((data.price_calculation?.total_rent_price ?? 0) - (data.price_calculation?.discount ?? 0)),
+            "Charge Weekend": formatRupiah(data.price_calculation?.total_weekend_price ?? 0),
+            "Layanan Antar Jemput": formatRupiah(data.price_calculation?.service_price ?? 0),
+            "Layanan Luar Kota": formatRupiah(data.price_calculation?.out_of_town_price ?? 0),
+            "Layanan Driver": formatRupiah(data.price_calculation?.total_driver_price ?? 0),
+            "Layanan Asuransi": formatRupiah(data.price_calculation?.insurance_price ?? 0),
+            "Layanan Add-Ons": formatRupiah(data.addons_price ?? 0),
+            "Layanan Lainnya": formatRupiah(additionalServicesTotal),
+            "Total Harga Keseluruhan": formatRupiah(data.price_calculation?.grand_total ?? 0),
             "No Invoice": data.invoice_number || "-",
             Status: data.status === "accepted" ? "Lunas" : (data.status ?? "-"),
           };
         });
       } else if (activeTab === "orderan-produk") {
-        const detailed = await fetchDetailSequential(currentData, "orderan-produk");
-        rows = detailed.map((data: any, index: number) => {
+        rows = currentData.map((data: any, index: number) => {
           const discountPercentage = (data.price_calculation?.discount_percentage ?? data.discount ?? 0) as number;
           const additionalServicesTotal = Array.isArray(data.additional_services)
             ? data.additional_services.reduce((sum: number, item: any) => sum + (Number(item?.price) || 0), 0)
             : 0;
           const displayStatus = data.status === "accepted" ? "Lunas" : (data.status || "-");
+          const startDate = data.start_date ? format(new Date(data.start_date), "EEEE, dd MMMM yyyy HH:mm", { locale: id }) : "-";
           return {
             No: index + 1,
             Pelanggan: data.customer?.name || "-",
             Produk: data.product?.name || data.fleet?.name || "-",
             Kategori: data.product?.category_label || data.product?.category || "-",
-            "Tanggal Sewa": data.start_date || "-",
-            "Harga Produk": data.product?.price ?? 0,
+            "Tanggal Sewa": startDate,
+            "Harga Produk": formatRupiah(data.product?.price ?? 0),
             "Durasi Penyewaan": data.duration ?? 0,
-            "Total Harga Unit": data.price_calculation?.total_rent_price ?? data.sub_total_price ?? 0,
+            "Total Harga Unit": formatRupiah(data.price_calculation?.total_rent_price ?? data.sub_total_price ?? 0),
             "Diskon (%)": discountPercentage,
-            "Total Potongan Diskon": data.price_calculation?.discount ?? data.discount_amount ?? 0,
-            "Total Harga Setelah Diskon": ((data.price_calculation?.total_rent_price ?? data.sub_total_price ?? 0) - (data.price_calculation?.discount ?? data.discount_amount ?? 0)),
-            "Layanan Antar Jemput": data.price_calculation?.total_weekend_price ?? data.weekend_price ?? 0,
-            "Layanan Lainnya": additionalServicesTotal,
-            "Layanan Add-Ons": data.price_calculation?.addons_price ?? data.addons_price ?? 0,
-            "Total Harga Keseluruhan": data.price_calculation?.grand_total ?? 0,
+            "Total Potongan Diskon": formatRupiah(data.price_calculation?.discount ?? data.discount_amount ?? 0),
+            "Total Harga Setelah Diskon": formatRupiah(((data.price_calculation?.total_rent_price ?? data.sub_total_price ?? 0) - (data.price_calculation?.discount ?? data.discount_amount ?? 0))),
+            "Layanan Antar Jemput": formatRupiah(data.price_calculation?.total_weekend_price ?? data.weekend_price ?? 0),
+            "Layanan Lainnya": formatRupiah(additionalServicesTotal),
+            "Layanan Add-Ons": formatRupiah(data.price_calculation?.addons_price ?? data.addons_price ?? 0),
+            "Total Harga Keseluruhan": formatRupiah(data.price_calculation?.grand_total ?? 0),
             "No Invoice": data.invoice_number || "-",
             Status: displayStatus,
           };
         });
       } else if (activeTab === "reimburse") {
-        rows = currentData.map((item: any, index: number) => ({
-          No: index + 1,
-          "Nama Driver": item.driver?.name || "-",
-          Total: item.nominal || 0,
-          "No Rekening": item.noRekening || "-",
-          Tanggal: item.date || "-",
-          "Nama Bank": item.bank || "-",
-          Kebutuhan: item.description || "-",
-          Status: item.status || "-",
-        }));
+        rows = currentData.map((item: any, index: number) => {
+          const date = item.date ? format(new Date(item.date), "EEEE, dd MMMM yyyy HH:mm", { locale: id }) : "-";
+          return {
+            No: index + 1,
+            "Nama Driver": item.driver?.name || "-",
+            Total: formatRupiah(item.nominal || 0),
+            "No Rekening": item.noRekening || "-",
+            Tanggal: date,
+            "Nama Bank": item.bank || "-",
+            Kebutuhan: item.description || "-",
+            Status: item.status || "-",
+          };
+        });
       } else if (activeTab === "inventaris") {
-        rows = currentData.map((item: any, index: number) => ({
-          No: index + 1,
-          "Nama Aset": item.assetName || item.name || "-",
-          Jumlah: item.quantity || 0,
-          "Harga Satuan": item.unitPrice ?? item.unit_price ?? 0,
-          "Total Harga": item.totalPrice ?? item.total ?? 0,
-          Tanggal: item.purchaseDate || item.date || "-",
-        }));
+        rows = currentData.map((item: any, index: number) => {
+          const date = item.purchaseDate || item.date ? format(new Date(item.purchaseDate || item.date), "EEEE, dd MMMM yyyy HH:mm", { locale: id }) : "-";
+          return {
+            No: index + 1,
+            "Nama Aset": item.assetName || item.name || "-",
+            Jumlah: item.quantity || 0,
+            "Harga Satuan": formatRupiah(item.unitPrice ?? item.unit_price ?? 0),
+            "Total Harga": formatRupiah(item.totalPrice ?? item.total ?? 0),
+            Tanggal: date,
+          };
+        });
       } else if (activeTab === "lainnya") {
-        rows = currentData.map((item: any, index: number) => ({
-          No: index + 1,
-          "Nama Transaksi": item.name || "-",
-          Kategori: item.category || "-",
-          Total: item.nominal ?? 0,
-          Tanggal: item.date || "-",
-          Keterangan: item.description || "-",
-        }));
+        rows = currentData.map((item: any, index: number) => {
+          const date = item.date ? format(new Date(item.date), "EEEE, dd MMMM yyyy HH:mm", { locale: id }) : "-";
+          return {
+            No: index + 1,
+            "Nama Transaksi": item.name || "-",
+            Kategori: item.category || "-",
+            Total: formatRupiah(item.nominal ?? 0),
+            Tanggal: date,
+            Keterangan: item.description || "-",
+          };
+        });
       }
 
       if (exportFormat === "xlsx") {
@@ -516,11 +484,87 @@ const RekapPencatatanTableWrapper = () => {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Rentang Tanggal</label>
-              <CalendarDateRangePicker
-                dateRange={dateRange}
-                onDateRangeChange={(range: any) => setDateRange(range)}
-                onClearDate={() => setDateRange({})}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Dari tanggal</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal relative"
+                      >
+                        {dateRange?.from ? (
+                          format(dateRange.from, "PPP")
+                        ) : (
+                          <span>Pilih tanggal</span>
+                        )}
+                        <div className="absolute right-0 pr-2">
+                          {dateRange?.from ? (
+                            <X
+                              className="h-4 w-4"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDateRange({ ...dateRange, from: undefined });
+                              }}
+                            />
+                          ) : (
+                            <CalendarIcon className="h-4 w-4" />
+                          )}
+                        </div>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateRange?.from}
+                        onSelect={(d) => setDateRange({ ...dateRange, from: d || undefined })}
+                        initialFocus
+                        disabled={dateRange?.to ? { after: dateRange.to } : undefined}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground">Hingga tanggal</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal relative"
+                      >
+                        {dateRange?.to ? (
+                          format(dateRange.to, "PPP")
+                        ) : (
+                          <span>Pilih tanggal</span>
+                        )}
+                        <div className="absolute right-0 pr-2">
+                          {dateRange?.to ? (
+                            <X
+                              className="h-4 w-4"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDateRange({ ...dateRange, to: undefined });
+                              }}
+                            />
+                          ) : (
+                            <CalendarIcon className="h-4 w-4" />
+                          )}
+                        </div>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateRange?.to}
+                        onSelect={(d) => setDateRange({ ...dateRange, to: d || undefined })}
+                        initialFocus
+                        disabled={dateRange?.from ? { before: dateRange.from } : undefined}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
               <p className="text-xs text-muted-foreground">Untuk data sangat besar, gunakan filter tanggal agar proses lebih cepat dan stabil.</p>
             </div>
           </div>
