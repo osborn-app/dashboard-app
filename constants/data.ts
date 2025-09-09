@@ -316,14 +316,14 @@ export const navItems: NavItem[] = [
     roles: ["owner"],
     items: [
       {
-        title: "Rekap Pencatatan",
+        title: "Rekap Fleets",
         href: "/dashboard/recap",
         icon: "notebookText",
         label: "recap",
         roles: ["owner"],
       },
       {
-        title: "Pencatatan Produk",
+        title: "Rekap Produk",
         href: "/dashboard/product-ledgers",
         icon: "ledger",
         label: "product-ledgers",
