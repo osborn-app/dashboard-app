@@ -82,15 +82,40 @@ export const addonColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
-    accessorKey: "stock_quantity",
+    accessorKey: "available_quantity",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Stock</span>
+      <span className="text-sm font-semibold text-neutral-700">Stock Tersedia</span>
     ),
     cell: ({ row }) => {
-      const availableStock = (row.original?.stock_quantity || 0) - (row.original?.reserved_quantity || 0);
+      const availableQuantity = row.original?.available_quantity ?? 
+        ((row.original?.stock_quantity || 0) - (row.original?.reserved_quantity || 0));
+      const isDateSpecific = row.original?.date_specific;
+      
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{availableStock}</span>
+          <span className={`font-medium ${availableQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {availableQuantity}
+          </span>
+          {isDateSpecific && (
+            <span className="text-xs text-blue-600">
+              Berdasarkan tanggal
+            </span>
+          )}
+        </div>
+      );
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: "reserved_quantity",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">Stock Disewa</span>
+    ),
+    cell: ({ row }) => {
+      const reservedQuantity = row.original?.reserved_quantity || 0;
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium text-orange-600">{reservedQuantity}</span>
           <span className="text-xs text-muted-foreground">
             Total: {row.original?.stock_quantity || 0}
           </span>

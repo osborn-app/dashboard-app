@@ -353,16 +353,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     limit: 100
   });
   
-  // Use API data or fallback to empty array, filter only available addons
+  // Use API data or fallback to empty array, show all available addons
   const addOns = useMemo(() => {
     const data = addOnsData?.items || [];
     const filteredAddons = Array.isArray(data) ? data.filter((addon: any) => {
-      // Jika ada start_date dan end_date, gunakan available_quantity dari API
-      // Jika belum ada, hitung manual: stock_quantity - reserved_quantity
-      const availableQuantity = addonDateRange?.startDate && addonDateRange?.endDate 
-        ? (addon.available_quantity || 0)
-        : (addon.stock_quantity || 0) - (addon.reserved_quantity || 0);
-      return availableQuantity > 0; // Only show addons with stock > 0
+      // Only filter by is_available, show all addons regardless of available_quantity
+      return addon.is_available === true;
     }) : [];
     return filteredAddons;
   }, [addOnsData?.items, addonDateRange]);
@@ -1793,7 +1789,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                                       <p className="text-sm text-blue-600 font-medium">{formatRupiah(addon.price)}</p>
                                     </div>
                                     <div className="text-right">
-                                      <p className="text-xs text-gray-500">Stock: <span className="font-medium text-green-600">{availableQuantity}</span></p>
+                                      <p className="text-xs text-gray-500">
+                                        Stock: <span className={`font-medium ${availableQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                          {availableQuantity > 0 ? availableQuantity : 'Habis untuk tgl ini'}
+                                        </span>
+                                      </p>
                                     </div>
                                   </div>
                                 </div>

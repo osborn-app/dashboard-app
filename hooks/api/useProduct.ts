@@ -15,7 +15,15 @@ interface GetProductsParams {
 }
 
 interface GetAddonsParams {
+  page?: number;
+  limit?: number;
+  q?: string;
   category?: string;
+  date?: string;
+  start_date?: string;
+  end_date?: string;
+  order_by?: string;
+  order_column?: string;
 }
 
 // Products hook
