@@ -164,6 +164,34 @@ export const navItems: NavItem[] = [
     ],
   },
   {
+    title: "KEUANGAN",
+    label: "Keuangan",
+    roles: ["admin"],
+    items: [  
+      {
+        title: "Rekap Pencatatan",
+        href: "/dashboard/rekap-pencatatan",
+        icon: "dashboard",
+        label: "Rekap Pencatatan",
+        roles: ["admin"],
+      },
+      {
+        title: "realisasi",
+        href: "/dashboard/realisasi",
+        icon: "notebookText",
+        label: "realisasi",
+        roles: ["admin"],
+      },
+      {
+        title: "Inventaris",
+        href: "/dashboard/inventaris",
+        icon: "archive",
+        label: "Inventaris",
+        roles: ["admin"],
+      },
+    ],
+  },
+  {
     title: "PESANAN",
     label: "orders",
     roles: ["admin"],
