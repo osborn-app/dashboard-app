@@ -162,4 +162,26 @@ export const useRejectProductOrder = () => {
       await queryClient.cancelQueries({ queryKey: ["orders", "product"] });
     },
   });
+};
+
+export const useUpdatePaymentStatus = (id: string | number) => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const updatePaymentStatus = (body: { payment_status: string }) => {
+    return axiosAuth.patch(`${baseEndpoint}/${id}/payment-status`, body);
+  };
+
+  return useMutation({
+    mutationFn: updatePaymentStatus,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["orders", "product"] });
+      await queryClient.cancelQueries({ queryKey: ["orders", id, "product"] });
+    },
+    onSuccess: () => {
+      // Invalidate and refetch order details
+      queryClient.invalidateQueries({ queryKey: ["orders", id, "product"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", "product"] });
+    },
+  });
 }; 

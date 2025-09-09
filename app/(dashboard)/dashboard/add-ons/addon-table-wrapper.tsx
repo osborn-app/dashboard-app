@@ -9,7 +9,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { CalendarDateRangePicker } from "@/components/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 // Addon categories enum
 const AddonCategories = {
@@ -33,11 +35,18 @@ const AddonTableWrapper = () => {
   const category = searchParams.get("category") || "";
   const orderColumn = searchParams.get("order_column") || "";
   const orderBy = searchParams.get("order_by") || "";
+  const date = searchParams.get("date");
+  const startDate = searchParams.get("start_date");
+  const endDate = searchParams.get("end_date");
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const [searchQuery, setSearchQuery] = React.useState<string>(q ?? "");
   const [selectedCategory, setSelectedCategory] = React.useState<string>(category);
   const [showUnavailable, setShowUnavailable] = React.useState<boolean>(false);
+  const [dateRange, setDateRange] = React.useState<DateRange>({
+    from: startDate ? new Date(startDate) : new Date(), // Default to today
+    to: endDate ? new Date(endDate) : new Date(), // Default to today
+  });
   const [searchDebounce] = useDebounce(searchQuery, 500);
 
   const getAddonParams = () => ({
@@ -47,6 +56,8 @@ const AddonTableWrapper = () => {
     category: selectedCategory || undefined,
     ...(orderBy ? { order_by: orderBy } : {}),
     ...(orderColumn ? { order_column: orderColumn } : {}),
+    ...(dateRange.from ? { start_date: format(dateRange.from, 'yyyy-MM-dd') } : {}),
+    ...(dateRange.to ? { end_date: format(dateRange.to, 'yyyy-MM-dd') } : {}),
   });
 
   const { data: addonsData, isFetching: isFetchingAddons } = useGetAddons(
@@ -78,6 +89,22 @@ const AddonTableWrapper = () => {
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
+  };
+
+  const handleDateRangeChange = (range: DateRange) => {
+    // If user clicks a single date, set both start and end date to the same date
+    if (range.from && !range.to) {
+      setDateRange({
+        from: range.from,
+        to: range.from  // Set end date same as start date
+      });
+    } else {
+      setDateRange(range);
+    }
+  };
+
+  const handleClearDate = () => {
+    setDateRange({ from: undefined, to: undefined });
   };
 
   const categoryOptions = [
@@ -129,6 +156,19 @@ const AddonTableWrapper = () => {
     );
   }, [selectedCategory]);
 
+  useEffect(() => {
+    router.push(
+      `${pathname}?${createQueryString({
+        category: selectedCategory || null,
+        q: searchQuery || null,
+        page: null,
+        limit: pageLimit,
+        start_date: dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
+        end_date: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : null,
+      })}`,
+    );
+  }, [dateRange]);
+
   React.useEffect(() => {
     if (sorting.length > 0) {
       router.push(
@@ -168,11 +208,17 @@ const AddonTableWrapper = () => {
             </SelectContent>
           </Select>
 
-                     <SearchInput
-             searchQuery={searchQuery}
-             onSearchChange={handleSearchChange}
-             placeholder="Cari add-on berdasarkan nama atau deskripsi"
-           />
+          <CalendarDateRangePicker
+            onDateRangeChange={handleDateRangeChange}
+            onClearDate={handleClearDate}
+            dateRange={dateRange}
+          />
+
+          <SearchInput
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            placeholder="Cari add-on berdasarkan nama atau deskripsi"
+          />
         </div>
       </div>
 

@@ -12,6 +12,7 @@ import { formatRupiah } from "@/lib/utils";
 import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
 import dayjs from "dayjs";
 import "dayjs/locale/id";
+import PaymentStatusSection from "./payment-status-section";
 import { ChevronDown, EyeIcon, Info, Link2 } from "lucide-react";
 
 interface DropdownWeekendProps {
@@ -73,7 +74,7 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
   messages,
   innerRef,
 }) => {
-  // Watch discount field for real-time updates
+  // Watch discount field for real-time update
   const discountValue = form.watch("discount");
   return (
     <div
@@ -85,6 +86,17 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
         <h4 className="text-center font-semibold text-xl mb-4 mt-4">
           Rincian Harga Product Order
         </h4>
+        
+        {/* Payment Status Section */}
+        {type === "detail" && initialData?.id && (
+          <PaymentStatusSection
+            orderId={initialData.id}
+            currentStatus={initialData.payment_status || "pending"}
+            paymentDate={initialData.payment_date}
+            failureReason={initialData.payment_failure_reason}
+          />
+        )}
+        
         <div className="flex flex-col justify-between gap-8 h-full">
           <div className="overflow-auto">
             <div className="border border-neutral-200 rounded-md p-[10px] mb-4 ">

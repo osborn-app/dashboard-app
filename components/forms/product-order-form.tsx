@@ -45,7 +45,7 @@ import locale from "antd/locale/id_ID";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "../ui/label";
 import { useGetInsurances } from "@/hooks/api/useInsurance";
-import { useGetAddons } from "@/hooks/api/useAddons";
+import { useGetProductAddons } from "@/hooks/api/useAddons";
 import {
   useEditProductOrder,
   usePostProductOrder,
@@ -168,28 +168,6 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   
   // Addons state and API
   const [selectedAddOns, setSelectedAddOns] = useState<Array<{addonId: number, quantity: number}>>([]);
-  const { data: addOnsData } = useGetAddons();
-  
-  // Use API data or fallback to empty array, filter only available addons
-  const addOns = useMemo(() => {
-    const data = addOnsData?.items || [];
-    const filteredAddons = Array.isArray(data) ? data.filter((addon: any) => {
-      const availableQuantity = (addon.stock_quantity || 0) - (addon.reserved_quantity || 0);
-      return availableQuantity > 0; // Only show addons with stock > 0
-    }) : [];
-    return filteredAddons;
-  }, [addOnsData?.items]);
-  
-  // Initialize selectedAddOns from initialData
-  useEffect(() => {
-    if (initialData?.addons && addOns.length > 0) {
-      const initialAddons = initialData.addons.map((addon: any) => ({
-        addonId: addon.addon_id,
-        quantity: addon.quantity,
-      }));
-      setSelectedAddOns(initialAddons);
-    }
-  }, [initialData?.addons, addOns]);
 
   // Calculate price on component mount with initialData (like in detailorder-form.tsx)
   useEffect(() => {
@@ -416,6 +394,54 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   const { data: driver, isFetching: isFetchingDriver } = useGetDetailDriver(
     driverId || ""
   );
+
+  // Get product category for addons filtering
+  const productCategory = useMemo(() => {
+    if (productData?.data?.category) {
+      return productData.data.category.toLowerCase();
+    }
+    return null;
+  }, [productData?.data?.category]);
+  
+  // Calculate date range for addons availability
+  const addonDateRange = useMemo(() => {
+    if (dateField && durationField) {
+      const startDate = dayjs(dateField).format('YYYY-MM-DD');
+      const endDate = dayjs(dateField).add(Number(durationField) - 1, 'day').format('YYYY-MM-DD');
+      return { startDate, endDate };
+    }
+    return null;
+  }, [dateField, durationField]);
+  
+  // Get addons with category and date filtering
+  const { data: addOnsData } = useGetProductAddons({
+    category: productCategory,
+    start_date: addonDateRange?.startDate,
+    end_date: addonDateRange?.endDate,
+    page: 1,
+    limit: 100
+  });
+  
+  // Use API data or fallback to empty array, show all available addons
+  const addOns = useMemo(() => {
+    const data = addOnsData?.items || [];
+    const filteredAddons = Array.isArray(data) ? data.filter((addon: any) => {
+      // Only filter by is_available, show all addons regardless of available_quantity
+      return addon.is_available === true;
+    }) : [];
+    return filteredAddons;
+  }, [addOnsData?.items, addonDateRange]);
+  
+  // Initialize selectedAddOns from initialData
+  useEffect(() => {
+    if (initialData?.addons && addOns.length > 0) {
+      const initialAddons = initialData.addons.map((addon: any) => ({
+        addonId: addon.addon_id,
+        quantity: addon.quantity,
+      }));
+      setSelectedAddOns(initialAddons);
+    }
+  }, [initialData?.addons, addOns]);
 
   const [end, setEnd] = useState("");
   const now = dayjs(form.getValues("date"));
@@ -1863,7 +1889,11 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                           {addOns.map((addon: any) => {
                             const currentSelection = selectedAddOns.find(s => s.addonId === addon.id);
                             const selectedQuantity = currentSelection?.quantity || 0;
-                            const availableQuantity = (addon.stock_quantity || 0) - (addon.reserved_quantity || 0);
+                            // Jika ada start_date dan end_date, gunakan available_quantity dari API
+                            // Jika belum ada, hitung manual: stock_quantity - reserved_quantity
+                            const availableQuantity = addonDateRange?.startDate && addonDateRange?.endDate 
+                              ? (addon.available_quantity || 0)
+                              : (addon.stock_quantity || 0) - (addon.reserved_quantity || 0);
                             
                             return (
                               <div key={addon.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
@@ -1874,7 +1904,11 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
                                       <p className="text-sm text-blue-600 font-medium">{formatRupiah(addon.price)}</p>
                                     </div>
                                     <div className="text-right">
-                                      <p className="text-xs text-gray-500">Stock: <span className="font-medium text-green-600">{availableQuantity}</span></p>
+                                      <p className="text-xs text-gray-500">
+                                        Stock: <span className={`font-medium ${availableQuantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                          {availableQuantity > 0 ? availableQuantity : 'Habis untuk tgl ini'}
+                                        </span>
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
