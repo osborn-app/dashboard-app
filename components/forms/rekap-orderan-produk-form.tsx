@@ -141,7 +141,7 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
             />
           </div>
           <div>
-            <Label>Layanan Antar Jemput</Label>
+            <Label>Charge Weekend</Label>
             <Input
               disabled
               value={formatRupiah((data.price_calculation?.total_weekend_price) || 0)}
@@ -158,13 +158,21 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
           </div>
         </div>
 
-        {/* Row 5: Layanan Add-Ons | Total Harga Keseluruhan | No Invoice */}
+        {/* Row 5: Layanan Add-Ons | Layanan antar jemput | Total Harga Keseluruhan */}
         <div className="md:grid md:grid-cols-3 gap-8">
           <div>
             <Label>Layanan Add-Ons</Label>
             <Input
               disabled
               value={formatRupiah((data.price_calculation?.addons_price) ?? 0)}
+              className="disabled:opacity-90 mt-2"
+            />
+          </div>
+          <div>
+            <Label>Layanan antar jemput</Label>
+            <Input
+              disabled
+              value={formatRupiah((data.price_calculation?.delivery_price) ?? 0)}
               className="disabled:opacity-90 mt-2"
             />
           </div>
@@ -176,32 +184,34 @@ export const RekapOrderanProdukForm: React.FC<OrderanProdukDetailProps> = ({
               className="disabled:opacity-90 mt-2"
             />
           </div>
-          <div>
-            <Label>No Invoice</Label>
-            <Input
-              disabled
-              value={data.invoice_number || "-"}
-              className="disabled:opacity-90 mt-2"
-            />
-          </div>
         </div>
 
-        {/* Row 6: Status (centered single column) */}
+        {/* Row 6: No Invoice | Status (Lunas) - Two columns in the middle */}
         <div className="flex justify-center">
-          <div className="w-full max-w-sm">
-            <Label>Status</Label>
-            <div className="mt-2">
-              {displayStatus === "Lunas" ? (
-                <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 w-full h-10 flex items-center justify-center text-lg font-semibold tracking-widest">
-                  {displayStatus}
-                </Badge>
-              ) : (
-                <Input
-                  disabled
-                  value={displayStatus}
-                  className="disabled:opacity-90"
-                />
-              )}
+          <div className="md:grid md:grid-cols-2 gap-8 w-full max-w-2xl">
+            <div>
+              <Label>No Invoice</Label>
+              <Input
+                disabled
+                value={data.invoice_number || "-"}
+                className="disabled:opacity-90 mt-2"
+              />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <div className="mt-2">
+                {displayStatus === "Lunas" ? (
+                  <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 w-full h-10 flex items-center justify-center text-lg font-semibold tracking-widest">
+                    {displayStatus}
+                  </Badge>
+                ) : (
+                  <Input
+                    disabled
+                    value={displayStatus}
+                    className="disabled:opacity-90"
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
