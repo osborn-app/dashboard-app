@@ -353,11 +353,25 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-  title: "Content Management",
-  href: "/dashboard/cms",
-  icon: "contentImage",
-  label: "Content Management",
-  roles: ["admin"],
+    title: "Content Management System",
+    label: "extra",
+    roles: ["admin", "driver"],
+    items: [
+      {
+        title: "Content Management",
+        href: "/dashboard/cms",
+        icon: "contentImage",
+        label: "Content Management",
+        roles: ["admin"]
+      },
+      {
+        title: "Kategori CMS",
+        href: "/dashboard/category-cms",
+        icon: "contentImage",
+        label: "Kategori CMS",
+        roles: ["admin"]
+      },
+    ],
   },
 ];
 
