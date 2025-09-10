@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState, useEffect } from "react"
+import React, { useRef, useState, useEffect, useCallback } from "react"
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -56,7 +56,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategories, setSelectedCategories] = useState<number[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState<boolean>(false)
-  const [categorySearch, setCategorySearch] = useState<string>('')
+  const [categorySearch] = useState<string>('') 
   
   // Success Dialog States
   const [showSuccessDialog, setShowSuccessDialog] = useState<boolean>(false)
@@ -65,35 +65,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
   
   const axiosAuth = useAxiosAuth();
 
-  useEffect(() => {
-    if (isEditMode && articleId) {
-      fetchArticleData()
-    }
-  }, [articleId, isEditMode])
-
-  useEffect(() => {
-    if (showCategoryDialog) {
-      loadCategories()
-    }
-  }, [showCategoryDialog, categorySearch])
-
-  const loadCategories = async () => {
-    setIsLoadingCategories(true)
-    try {
-      const categoriesData = await fetchCategories({
-        page: 1,
-        limit: 100,
-        q: categorySearch
-      })
-      setCategories(categoriesData)
-    } catch (error) {
-      Swal.fire("Error", "Gagal mengambil data kategori", "error")
-    } finally {
-      setIsLoadingCategories(false)
-    }
-  }
-
-  const fetchArticleData = async () => {
+  const fetchArticleData = useCallback(async () => {
     if (!articleId) return
     
     setIsLoading(true)
@@ -118,7 +90,35 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [articleId, axiosAuth, router])
+
+  const loadCategories = useCallback(async () => {
+    setIsLoadingCategories(true)
+    try {
+      const categoriesData = await fetchCategories({
+        page: 1,
+        limit: 100,
+        q: categorySearch
+      })
+      setCategories(categoriesData)
+    } catch (error) {
+      Swal.fire("Error", "Gagal mengambil data kategori", "error")
+    } finally {
+      setIsLoadingCategories(false)
+    }
+  }, [fetchCategories, categorySearch])
+
+  useEffect(() => {
+    if (isEditMode && articleId) {
+      fetchArticleData()
+    }
+  }, [articleId, isEditMode, fetchArticleData])
+
+  useEffect(() => {
+    if (showCategoryDialog) {
+      loadCategories()
+    }
+  }, [showCategoryDialog, loadCategories])
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
@@ -229,13 +229,12 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
     setShowCategoryDialog(false)
     
     try {
-      let response;
       if (isEditMode) {
-        response = await axiosAuth.put(`/cms/${articleId}`, payload)
+        await axiosAuth.put(`/cms/${articleId}`, payload)
         setArticleUrl(`https://transgo.id/content/${slug}`)
         setShowSuccessDialog(true)
       } else {
-        response = await axiosAuth.post('/cms', payload)
+        await axiosAuth.post('/cms', payload)
         setArticleUrl(`https://transgo.id/content/${slug}`)
         setShowSuccessDialog(true)
       }
@@ -577,7 +576,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
               <div className="flex items-start gap-2">
                 <div className="text-amber-600 mt-0.5">ℹ️</div>
                 <div>
-                  <h3 className="font-semibold text-amber-800 mb-1">Informasi SEO & Pengindeksan</h3>
+                  <h3 className="font-semibold text-amber-800 mb-1">Informasi SEO &amp; Pengindeksan</h3>
                   <p className="text-sm text-amber-700">
                     Untuk keperluan SEO, proses pengindeksan biasanya memakan waktu <strong>1-7 hari</strong>. 
                     Anda dapat mempercepat proses ini dengan menggunakan Google Search Console. 
@@ -598,7 +597,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
                     1
                   </div>
                   <div className="text-sm">
-                    <strong>Salin Link Artikel</strong> - Klik tombol "Copy" di atas untuk menyalin URL artikel
+                    <strong>Salin Link Artikel</strong> - Klik tombol &quot;Copy&quot; di atas untuk menyalin URL artikel
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -614,7 +613,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
                     3
                   </div>
                   <div className="text-sm">
-                    <strong>Inspect URL</strong> - Paste URL artikel yang sudah disalin ke kolom "Inspect any URL"
+                    <strong>Inspect URL</strong> - Paste URL artikel yang sudah disalin ke kolom &quot;Inspect any URL&quot;
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -622,7 +621,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
                     4
                   </div>
                   <div className="text-sm">
-                    <strong>Request Indexing</strong> - Klik "Request Indexing" untuk mempercepat pengindeksan
+                    <strong>Request Indexing</strong> - Klik &quot;Request Indexing&quot; untuk mempercepat pengindeksan
                   </div>
                 </div>
               </div>
