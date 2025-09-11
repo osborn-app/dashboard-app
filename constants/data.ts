@@ -365,6 +365,13 @@ export const navItems: NavItem[] = [
         roles: ["admin"],
       },
       {
+        title: "Perencanaan",
+        href: "/dashboard/perencanaan",
+        icon: "files",
+        label: "Perencanaan",
+        roles: ["admin"],
+      },
+      {
         title: "realisasi",
         href: "/dashboard/realisasi",
         icon: "notebookText",
