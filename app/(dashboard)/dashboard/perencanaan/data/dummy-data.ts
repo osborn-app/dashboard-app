@@ -187,85 +187,41 @@ export const dummyAkunData = [
         id: "2",
         code: "11000",
         name: "AKTIVA LANCAR",
-        type: "child" as const,
-        children: [
-          {
-            id: "3",
-            code: "11100",
-            name: "KAS",
-            type: "account" as const
-          },
-          {
-            id: "4",
-            code: "11200",
-            name: "BANK",
-            type: "account" as const
-          }
-        ]
+        type: "child" as const
       },
       {
-        id: "5",
+        id: "3",
         code: "12000",
         name: "AKTIVA TETAP",
-        type: "child" as const,
-        children: [
-          {
-            id: "6",
-            code: "12100",
-            name: "KENDARAAN",
-            type: "account" as const
-          },
-          {
-            id: "7",
-            code: "12200",
-            name: "GEDUNG",
-            type: "account" as const
-          }
-        ]
+        type: "child" as const
       }
     ]
   },
   {
-    id: "8",
+    id: "4",
     code: "20000",
     name: "KEWAJIBAN",
     type: "parent" as const,
     children: [
       {
-        id: "9",
+        id: "5",
         code: "21000",
         name: "KEWAJIBAN LANCAR",
-        type: "child" as const,
-        children: [
-          {
-            id: "10",
-            code: "21100",
-            name: "HUTANG USAHA",
-            type: "account" as const
-          }
-        ]
+        type: "child" as const
       }
     ]
   },
   {
-    id: "11",
+    id: "6",
     code: "30000",
     name: "MODAL",
     type: "parent" as const,
     children: [
       {
-        id: "12",
+        id: "7",
         code: "31000",
         name: "MODAL SAHAM",
-        type: "child" as const,
-        children: [
-          {
-            id: "13",
-            code: "31100",
-            name: "MODAL DISETOR",
-            type: "account" as const
-          }
-        ]
+        type: "child" as const
       }
     ]
   }

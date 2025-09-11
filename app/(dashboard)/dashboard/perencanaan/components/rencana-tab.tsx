@@ -15,9 +15,25 @@ interface RencanaTabProps {
   planningId: string;
 }
 
+// Helper function to convert RencanaItem to CreateRencanaFormData
+const convertRencanaItemToFormData = (item: RencanaItem): any => {
+  return {
+    name: item.keterangan || '',
+    planningDate: item.tanggal || '',
+    accounts: [
+      {
+        id: item.id,
+        accountName: item.namaAkun,
+        debit: item.debit,
+        credit: item.kredit
+      }
+    ]
+  };
+};
+
 export function RencanaTab({ planningId }: RencanaTabProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [editingItem, setEditingItem] = useState<RencanaItem | null>(null);
+  const [editingItem, setEditingItem] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAccount, setSelectedAccount] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -31,7 +47,8 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
   };
 
   const handleEditRencana = (item: RencanaItem) => {
-    setEditingItem(item);
+    const formData = convertRencanaItemToFormData(item);
+    setEditingItem(formData);
     setShowCreateDialog(true);
   };
 

@@ -40,11 +40,11 @@ export const createRencanaColumns = ({
 }: RencanaColumnsProps): ColumnDef<RencanaItem>[] => [
   {
     accessorKey: "tanggal",
-    header: "Tanggal",
+    header: "TANGGAL",
     cell: ({ row }) => {
       const tanggal = row.getValue("tanggal") as string;
       return (
-        <div className="text-sm">
+        <div className="text-sm text-center">
           {tanggal ? formatDate(tanggal, false) : ""}
         </div>
       );
@@ -52,7 +52,7 @@ export const createRencanaColumns = ({
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: "STATUS",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       return (
@@ -64,7 +64,7 @@ export const createRencanaColumns = ({
   },
   {
     accessorKey: "keterangan",
-    header: "Keterangan Rencana Transaksi",
+    header: "KETERANGAN RENCANA TRANSAKSI",
     cell: ({ row }) => {
       const keterangan = row.getValue("keterangan") as string;
       return (
@@ -76,7 +76,7 @@ export const createRencanaColumns = ({
   },
   {
     accessorKey: "namaAkun",
-    header: "Nama Akun",
+    header: "NAMA AKUN",
     cell: ({ row }) => {
       const namaAkun = row.getValue("namaAkun") as string;
       return (
@@ -88,11 +88,11 @@ export const createRencanaColumns = ({
   },
   {
     accessorKey: "debit",
-    header: "Debit",
+    header: "DEBIT",
     cell: ({ row }) => {
       const debit = row.getValue("debit") as number;
       return (
-        <div className="text-sm">
+        <div className="text-sm text-right">
           {debit > 0 ? formatRupiah(debit) : ""}
         </div>
       );
@@ -100,11 +100,11 @@ export const createRencanaColumns = ({
   },
   {
     accessorKey: "kredit",
-    header: "Kredit",
+    header: "KREDIT",
     cell: ({ row }) => {
       const kredit = row.getValue("kredit") as number;
       return (
-        <div className="text-sm">
+        <div className="text-sm text-right">
           {kredit > 0 ? formatRupiah(kredit) : ""}
         </div>
       );
@@ -112,7 +112,7 @@ export const createRencanaColumns = ({
   },
   {
     id: "actions",
-    header: "Aksi",
+    header: "AKSI",
     enableHiding: false,
     cell: ({ row }) => {
       const rencana = row.original;
