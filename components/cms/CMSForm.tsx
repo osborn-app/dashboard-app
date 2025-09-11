@@ -23,7 +23,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
   const router = useRouter()
   const isEditMode = mode === 'edit' && Boolean(articleId)
   const { fetchCategories } = useCategoryApi()
-  
+
   const handleImageUploadToServer = async (file: File, axiosAuth: any): Promise<string> => {
     try {
       const formData = new FormData();
@@ -50,40 +50,41 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
   const [isUploading, setIsUploading] = useState<boolean>(false)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  
+
   // Category Dialog States
   const [showCategoryDialog, setShowCategoryDialog] = useState<boolean>(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategories, setSelectedCategories] = useState<number[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState<boolean>(false)
-  const [categorySearch] = useState<string>('') 
-  
+  const [categorySearch] = useState<string>('')
+  const [categoriesLoaded, setCategoriesLoaded] = useState<boolean>(false)
+
   // Success Dialog States
   const [showSuccessDialog, setShowSuccessDialog] = useState<boolean>(false)
   const [articleUrl, setArticleUrl] = useState<string>('')
   const [isCopied, setIsCopied] = useState<boolean>(false)
-  
+
   const axiosAuth = useAxiosAuth();
 
   const fetchArticleData = useCallback(async () => {
     if (!articleId) return
-    
+
     setIsLoading(true)
     try {
       const response = await axiosAuth.get(`/cms/${articleId}`)
       const article: CMSItem = response.data
-      
+
       setTitle(article.title)
       setDescription(article.description)
       setSlug(article.slug)
       setEditorContent(article.content)
       setUploadedImageUrl(article.thumbnail)
       setImagePreview(article.thumbnail)
-      
+
       if (article.categories && article.categories.length > 0) {
         setSelectedCategories(article.categories.map(cat => cat.id))
       }
-      
+
     } catch (error) {
       Swal.fire("Error", "Gagal mengambil data artikel", "error")
       router.push('/dashboard/cms')
@@ -93,6 +94,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
   }, [articleId, axiosAuth, router])
 
   const loadCategories = useCallback(async () => {
+    if (categoriesLoaded) return
     setIsLoadingCategories(true)
     try {
       const categoriesData = await fetchCategories({
@@ -101,6 +103,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
         q: categorySearch
       })
       setCategories(categoriesData)
+      setCategoriesLoaded(true)
     } catch (error) {
       Swal.fire("Error", "Gagal mengambil data kategori", "error")
     } finally {
@@ -115,7 +118,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
   }, [articleId, isEditMode, fetchArticleData])
 
   useEffect(() => {
-    if (showCategoryDialog) {
+    if (showCategoryDialog && !categoriesLoaded) {
       loadCategories()
     }
   }, [showCategoryDialog, loadCategories])
@@ -123,7 +126,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
   const handleTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value
     setTitle(value)
-    
+
     if (!isEditMode || !slug) {
       setSlug(
         value
@@ -222,12 +225,12 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
       description,
       content: editorContent,
       is_active: true,
-      category_ids: selectedCategories, 
+      category_ids: selectedCategories,
     }
 
     setIsSubmitting(true)
     setShowCategoryDialog(false)
-    
+
     try {
       if (isEditMode) {
         await axiosAuth.put(`/cms/${articleId}`, payload)
@@ -239,8 +242,8 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
         setShowSuccessDialog(true)
       }
     } catch (error) {
-      const errorMessage = isEditMode ? 
-        "Terjadi kesalahan saat mengupdate artikel." : 
+      const errorMessage = isEditMode ?
+        "Terjadi kesalahan saat mengupdate artikel." :
         "Terjadi kesalahan saat membuat artikel."
       Swal.fire("Gagal", errorMessage, "error")
     } finally {
@@ -318,8 +321,8 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
 
           <div className="flex w-full mt-5 mb-[100px] justify-between gap-4">
             <div className="border border-gray-500 w-[70%] rounded-sm p-2">
-              <SimpleEditor 
-                onChange={setEditorContent} 
+              <SimpleEditor
+                onChange={setEditorContent}
                 initialContent={editorContent}
               />
             </div>
@@ -636,7 +639,7 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
                 <ExternalLink className="h-4 w-4" />
                 👀 Lihat Artikel
               </Button>
-              
+
               <Button
                 onClick={handleOpenGoogleSearchConsole}
                 variant="outline"
