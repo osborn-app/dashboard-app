@@ -17,7 +17,7 @@ const breadcrumbItems = [
   { title: "Customer Ranking", link: "/dashboard/customer-ranking" }
 ];
 
-// Crown icon component with different colors for top 3
+// Crown icon component with different colors for top three
 const CrownIcon = ({ rank }: { rank: number }) => {
   const getCrownColor = (rank: number) => {
     switch (rank) {
