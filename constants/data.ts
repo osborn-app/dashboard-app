@@ -353,7 +353,7 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    title: "KEUANGAN",
+    title: "KEUANGAN", //redeploy
     label: "Keuangan",
     roles: ["admin"],
     items: [  
