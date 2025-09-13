@@ -21,7 +21,7 @@ export interface AccountFormData {
 const initialFormData: AccountFormData = {
   code: "",
   name: "",
-  type: "ASSETS",
+  type: AccountType.ASSETS,
   level: 2,
   is_header: false,
   sort_order: 0,

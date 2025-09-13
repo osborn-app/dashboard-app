@@ -34,10 +34,12 @@ export interface TransactionCategory {
   created_at: string;
   updated_at: string;
   name: string;
-  debit_account_id: string;
-  credit_account_id: string;
+  debit_account_id: number;
+  credit_account_id: number;
   description: string;
   is_active: boolean;
+  debit_account?: Account;
+  credit_account?: Account;
 }
 
 export interface FinancialTransaction {
@@ -69,4 +71,43 @@ export interface CreateFinancialTransactionData {
     amount: number;
     description: string;
   }[];
+}
+
+export interface ReorderAccountItem {
+  id: number;
+  sort_order: number;
+}
+
+export interface ReorderAccountsData {
+  accounts: ReorderAccountItem[];
+}
+
+export enum AccountType {
+  ASSETS = 'ASSETS',
+  LIABILITIES = 'LIABILITIES',
+  EQUITY = 'EQUITY',
+  REVENUE = 'REVENUE',
+  EXPENSE = 'EXPENSE',
+}
+
+export interface CreateAccountData {
+  code: string;
+  name: string;
+  type: AccountType;
+  level?: number;
+  is_header?: boolean;
+  sort_order?: number;
+  parent_id?: number;
+  is_connected_to_bank?: boolean;
+  bank_name?: string;
+  bank_account_number?: string;
+  initial_balance?: number;
+  description?: string;
+}
+
+export interface CreateTransactionCategoryData {
+  name: string;
+  debit_account_id: number;
+  credit_account_id: number;
+  description?: string;
 }

@@ -15,16 +15,22 @@ import { useFinancialTransactionsWithFilters } from "@/hooks/useFinancialTransac
 import { TransactionsSkeleton } from "./ui/skeleton-loading";
 
 interface TransactionListProps {
+  transactions?: FinancialTransaction[];
   accounts?: Account[];
   categories?: TransactionCategory[];
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
   onCreateTransaction: (transactionData: CreateFinancialTransactionData) => void;
   onDeleteTransaction: (id: number) => void;
   onSyncAll: () => void;
 }
 
 export default function TransactionList({ 
+  transactions: externalTransactions,
   accounts = [],
   categories = [],
+  searchQuery: externalSearchQuery,
+  onSearchChange: externalOnSearchChange,
   onCreateTransaction, 
   onDeleteTransaction,
   onSyncAll

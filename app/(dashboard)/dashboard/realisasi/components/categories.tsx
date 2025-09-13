@@ -55,8 +55,8 @@ export default function Categories({
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      debitAccountId: category.debit_account_id,
-      creditAccountId: category.credit_account_id
+      debitAccountId: parseInt(category.debit_account_id.toString()),
+      creditAccountId: parseInt(category.credit_account_id.toString())
     });
     setIsEditModalOpen(true);
   };
