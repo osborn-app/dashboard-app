@@ -1,0 +1,298 @@
+"use client";
+
+import BreadCrumb from "@/components/breadcrumb";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Crown, Trophy, Medal, Users, TrendingUp, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useCustomerRanking, type CustomerRanking } from "@/hooks/api/use-customer-ranking";
+import { Skeleton } from "@/components/ui/skeleton";
+
+
+const breadcrumbItems = [
+  { title: "Dashboard", link: "/dashboard" },
+  { title: "Customer Ranking", link: "/dashboard/customer-ranking" }
+];
+
+// Crown icon component with different colors for top 3
+const CrownIcon = ({ rank }: { rank: number }) => {
+  const getCrownColor = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return "text-yellow-500";
+      case 2:
+        return "text-gray-400";
+      case 3:
+        return "text-amber-600";
+      default:
+        return "text-gray-300";
+    }
+  };
+
+  return <Crown className={`h-6 w-6 ${getCrownColor(rank)}`} />;
+};
+
+// Format currency to Indonesian Rupiah
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+// Format number with thousand separators
+const formatNumber = (num: number) => {
+  return new Intl.NumberFormat("id-ID").format(num);
+};
+
+export default function CustomerRankingPage() {
+  const [limit, setLimit] = useState(20);
+  const { data: response, isLoading, error, refetch } = useCustomerRanking(limit);
+
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+  };
+
+  // Auto refresh every 30 seconds untuk data yang selalu fresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  const rankingData = response?.data || [];
+  const loading = isLoading;
+
+  const getRankBadge = (rank: number) => {
+    if (rank <= 3) {
+      const colors = {
+        1: "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white",
+        2: "bg-gradient-to-r from-gray-300 to-gray-500 text-white",
+        3: "bg-gradient-to-r from-amber-500 to-amber-700 text-white",
+      };
+      return (
+        <Badge className={colors[rank as keyof typeof colors]}>
+          #{rank}
+        </Badge>
+      );
+    }
+    return <Badge variant="secondary">#{rank}</Badge>;
+  };
+
+  const getCustomerDisplayName = (customer: CustomerRanking) => {
+    if (customer.customer_name) {
+      return customer.customer_name;
+    }
+    if (customer.customer_email) {
+      return customer.customer_email;
+    }
+    if (customer.customer_phone) {
+      return customer.customer_phone;
+    }
+    return "Unknown Customer";
+  };
+
+  return (
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <BreadCrumb items={breadcrumbItems} />
+      
+      <div className="flex items-start justify-between">
+        <Heading 
+          title="Ranking Pelanggan" 
+          description="Top pelanggan berdasarkan total transaksi"
+        />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleLimitChange(10)}
+              className={limit === 10 ? "bg-primary text-primary-foreground" : ""}
+            >
+              10
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleLimitChange(20)}
+              className={limit === 20 ? "bg-primary text-primary-foreground" : ""}
+            >
+              20
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleLimitChange(50)}
+              className={limit === 50 ? "bg-primary text-primary-foreground" : ""}
+            >
+              50
+            </Button>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loading}
+            title="Refresh data (Auto-refresh every 30s)"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+          <div className="text-xs text-muted-foreground hidden sm:block">
+            Auto-refresh: 30s
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Pelanggan</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? <Skeleton className="h-8 w-16" /> : rankingData.length}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Top Customer Pendapatan</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <Skeleton className="h-8 w-32" />
+              ) : rankingData.length > 0 ? (
+                formatCurrency(rankingData[0]?.total_transaction_amount || 0)
+              ) : (
+                "-"
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Rata-rata Pesanan</CardTitle>
+            <Trophy className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : rankingData.length > 0 ? (
+                formatNumber(
+                  Math.round(
+                    rankingData.reduce((sum: number, customer: CustomerRanking) => sum + customer.total_orders, 0) /
+                    rankingData.length
+                  )
+                )
+              ) : (
+                "-"
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Ranking List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Customer Ranking (Top {limit})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: limit }).map((_, index) => (
+                <div key={index} className="flex items-center space-x-4 p-4 border rounded-lg">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {rankingData.map((customer: CustomerRanking, index: number) => (
+                <div
+                  key={customer.customer_id || index}
+                  className={`flex items-center space-x-4 p-4 border rounded-lg transition-all hover:shadow-md ${
+                    customer.rank <= 3 ? "bg-gradient-to-r from-primary/5 to-primary/10" : ""
+                  }`}
+                >
+                  {/* Rank and Crown */}
+                  <div className="flex items-center space-x-2">
+                    {customer.rank <= 3 ? (
+                      <CrownIcon rank={customer.rank} />
+                    ) : (
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted">
+                        <span className="text-sm font-semibold">#{customer.rank}</span>
+                      </div>
+                    )}
+                    {getRankBadge(customer.rank)}
+                  </div>
+
+                  {/* Customer Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2">
+                      <h3 className="font-semibold text-lg truncate">
+                        {getCustomerDisplayName(customer)}
+                      </h3>
+                      {customer.customer_id && (
+                        <Badge variant="outline" className="text-xs">
+                          ID: {customer.customer_id}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
+                      {customer.customer_email && (
+                        <span className="truncate">{customer.customer_email}</span>
+                      )}
+                      {customer.customer_phone && (
+                        <span>{customer.customer_phone}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="text-right">
+                    <div className="font-bold text-lg">
+                      {formatCurrency(customer.total_transaction_amount)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatNumber(customer.total_orders)} orders
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

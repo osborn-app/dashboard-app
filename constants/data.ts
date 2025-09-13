@@ -197,6 +197,13 @@ export const navItems: NavItem[] = [
         roles: ["admin"],
       },
       {
+        title: "Customer Ranking",
+        href: "/dashboard/customer-ranking",
+        icon: "users",
+        label: "customer-ranking",
+        roles: ["admin"],
+      },
+      {
         title: "Owners",
         href: "/dashboard/owners",
         icon: "owners",
