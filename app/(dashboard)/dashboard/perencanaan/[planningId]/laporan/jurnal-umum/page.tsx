@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Cloud, Calendar } from "lucide-react";
+import { Search, Cloud, Calendar } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BreadCrumb from "@/components/breadcrumb";
 import { Heading } from "@/components/ui/heading";
@@ -136,70 +136,31 @@ export default function JurnalUmumPage() {
                 />
               </div>
               
-              <Button variant="outline" size="sm">
-                <Search className="h-4 w-4 mr-2" />
-                Cari
-              </Button>
-              
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              
               <Button size="sm">
                 <Cloud className="h-4 w-4 mr-2" />
                 Rekap Jurnal Umum Perencanaan
               </Button>
             </div>
             
-            {/* Bottom Row: Date Range and Filters */}
-            <div className="flex items-center gap-4">
-              {/* Date Range */}
-              <div className="flex items-center gap-2 flex-1">
-                <div className="relative flex-1">
-                  <Input
-                    type="date"
-                    placeholder="Tanggal Mulai"
-                    className="pr-10"
-                  />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                </div>
-                
-                <div className="relative flex-1">
-                  <Input
-                    type="date"
-                    placeholder="Tanggal Selesai"
-                    className="pr-10"
-                  />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                </div>
+            {/* Bottom Row: Date Range */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type="date"
+                  placeholder="Tanggal Mulai"
+                  className="pr-10"
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               </div>
               
-              {/* Account Filter */}
-              <Select>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Semua Akun" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Akun</SelectItem>
-                  <SelectItem value="kas">Kas & Bank</SelectItem>
-                  <SelectItem value="inventaris">Inventaris</SelectItem>
-                  <SelectItem value="kendaraan">Kendaraan</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              {/* Status Filter */}
-              <Select>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Semua Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="belum">Belum Terealisasi</SelectItem>
-                  <SelectItem value="sudah">Sudah Terealisasi</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative flex-1">
+                <Input
+                  type="date"
+                  placeholder="Tanggal Selesai"
+                  className="pr-10"
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              </div>
             </div>
           </div>
 
