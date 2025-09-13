@@ -1,18 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
 import { Plus, Trash2 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 
 interface RencanaAccount {
   id: string;
   accountName: string;
+  account_id: string;
   debit: number;
   credit: number;
 }
@@ -35,15 +38,28 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
     name: '',
     planningDate: '',
     accounts: [
-      { id: '1', accountName: '', debit: 0, credit: 0 }
+      { id: '1', accountName: '', account_id: '', debit: 0, credit: 0 }
     ]
   });
   const [errors, setErrors] = useState<Partial<Record<keyof CreateRencanaFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  // Fetch accounts data (level 2 only)
+  const { data: accountsResponse } = useGetPlanningAccounts({ page: 1, limit: 1000 });
+  
+  const level2Accounts = useMemo(() => {
+    if (!accountsResponse?.items) {
+      console.log('No accounts response data');
+      return [];
+    }
+    const filtered = accountsResponse.items.filter((account: any) => account.level === 2);
+    console.log('Level 2 accounts:', filtered);
+    return filtered;
+  }, [accountsResponse]);
+
   // Initialize form data when editing or reset when creating
-  useState(() => {
+  React.useEffect(() => {
     if (editingData) {
       setFormData(editingData);
     } else {
@@ -51,11 +67,11 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
       setFormData({
         name: '',
         planningDate: '',
-        accounts: [{ id: '1', accountName: '', debit: 0, credit: 0 }]
+        accounts: [{ id: '1', accountName: '', account_id: '', debit: 0, credit: 0 }]
       });
       setErrors({});
     }
-  });
+  }, [editingData]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof CreateRencanaFormData, string>> = {};
@@ -70,11 +86,11 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
 
     // Validate accounts
     const hasValidAccounts = formData.accounts.some(account => 
-      account.accountName.trim() && (account.debit > 0 || account.credit > 0)
+      account.account_id && (account.debit > 0 || account.credit > 0)
     );
 
     if (!hasValidAccounts) {
-      newErrors.accounts = 'Minimal satu akun harus diisi';
+      newErrors.accounts = 'Minimal satu akun harus diisi dengan jumlah debit atau kredit';
     }
 
     setErrors(newErrors);
@@ -96,13 +112,14 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
     setIsSubmitting(true);
     
     try {
+      console.log('Dialog submitting formData:', formData);
       onSubmit(formData);
       
       // Reset form
       setFormData({
         name: '',
         planningDate: '',
-        accounts: [{ id: '1', accountName: '', debit: 0, credit: 0 }]
+        accounts: [{ id: '1', accountName: '', account_id: '', debit: 0, credit: 0 }]
       });
       setErrors({});
       
@@ -130,6 +147,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
     const newAccount: RencanaAccount = {
       id: Date.now().toString(),
       accountName: '',
+      account_id: '',
       debit: 0,
       credit: 0
     };
@@ -156,6 +174,24 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
       )
     }));
   };
+
+  const handleAccountSelect = (accountId: string, selectedAccount: any) => {
+    console.log('Account selected:', { accountId, selectedAccount });
+    
+    setFormData(prev => ({
+      ...prev,
+      accounts: prev.accounts.map(account =>
+        account.id === accountId 
+          ? { 
+              ...account, 
+              account_id: selectedAccount.id.toString(),
+              accountName: `${selectedAccount.code} - ${selectedAccount.name}`
+            } 
+          : account
+      )
+    }));
+  };
+
 
   const totalDebit = formData.accounts.reduce((sum, account) => sum + (account.debit || 0), 0);
   const totalCredit = formData.accounts.reduce((sum, account) => sum + (account.credit || 0), 0);
@@ -221,13 +257,34 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
               {/* Account Rows */}
               {formData.accounts.map((account, index) => (
                 <div key={account.id} className="grid grid-cols-12 gap-4 items-center">
+                  {/* Account Dropdown */}
                   <div className="col-span-5">
-                    <Input
-                      placeholder="Nama akun"
-                      value={account.accountName}
-                      onChange={(e) => updateAccount(account.id, 'accountName', e.target.value)}
-                    />
+                    <Select
+                      value={account.account_id || ""}
+                      onValueChange={(value) => {
+                        console.log('Select value changed:', value);
+                        const selectedAccount = level2Accounts.find((acc: any) => acc.id.toString() === value);
+                        if (selectedAccount) {
+                          handleAccountSelect(account.id, selectedAccount);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Pilih akun" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {level2Accounts.map((acc: any) => (
+                          <SelectItem key={acc.id} value={acc.id.toString()}>
+                            <div className="flex flex-col">
+                              <span className="font-mono text-xs">{acc.code}</span>
+                              <span className="text-sm">{acc.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+
                   <div className="col-span-3">
                     <Input
                       type="number"
@@ -291,13 +348,13 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
 
           <DialogFooter className="flex gap-2">
             {editingData && (
-              <Button
-                type="button"
-                variant="outline"
-                className="bg-green-500 text-white hover:bg-green-600"
-              >
-                Telah Terealisasi
-              </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-green-500 text-white hover:bg-green-600"
+            >
+              Telah Terealisasi
+            </Button>
             )}
             <Button
               type="button"

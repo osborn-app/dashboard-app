@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatRupiah, formatDate } from "@/lib/utils";
+import { formatRupiah, formatDateIndonesian } from "@/lib/utils";
 import { Perencanaan } from "@/types/perencanaan";
 
 export type PerencanaanItem = Perencanaan;
@@ -40,34 +40,34 @@ export const createPerencanaanColumns = ({
     },
   },
   {
-    accessorKey: "endDate",
+    accessorKey: "end_date",
     header: "Tanggal Akhir",
     cell: ({ row }) => {
-      const date = row.getValue("endDate") as string;
+      const date = row.getValue("end_date") as string;
       return (
         <div className="text-sm">
-          {formatDate(date, false)}
+          {formatDateIndonesian(date, false)}
         </div>
       );
     },
   },
   {
-    accessorKey: "startDate",
+    accessorKey: "start_date",
     header: "Tanggal Awal",
     cell: ({ row }) => {
-      const date = row.getValue("startDate") as string;
+      const date = row.getValue("start_date") as string;
       return (
         <div className="text-sm">
-          {formatDate(date, false)}
+          {formatDateIndonesian(date, false)}
         </div>
       );
     },
   },
   {
-    accessorKey: "totalValue",
+    accessorKey: "total_amount",
     header: "Total Perencanaan",
     cell: ({ row }) => {
-      const value = row.getValue("totalValue") as number;
+      const value = row.getValue("total_amount") as number;
       return (
         <div className="font-medium text-sm">
           {value ? formatRupiah(value) : "-"}

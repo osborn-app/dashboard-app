@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { useDebounce } from 'use-debounce';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,85 +11,92 @@ import { EditPerencanaanDialog } from './components/edit-perencanaan-dialog';
 import { DeletePerencanaanDialog } from './components/delete-perencanaan-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  getPerencanaan, 
-  createPerencanaan, 
-  updatePerencanaan, 
-  deletePerencanaan
-} from '@/client/perencanaanClient';
-import { dummyPerencanaanData, dummyRencanaAnggaran } from './data/dummy-data';
+  useGetPerencanaan,
+  usePostPerencanaan,
+  useEditPerencanaan,
+  useDeletePerencanaan
+} from '@/hooks/api/usePerencanaan';
 import { PerencanaanTable } from '@/components/tables/perencanaan-tables/perencanaan-table';
 import { createPerencanaanColumns, PerencanaanItem } from '@/components/tables/perencanaan-tables/columns';
-import { Perencanaan } from '@/types/perencanaan';
+import { Perencanaan, CreatePerencanaanData } from '@/types/perencanaan';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface PerencanaanTableWrapperProps {
   userRole: string;
 }
 
 const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => {
-  // Calculate total value from rencana anggaran
-  const calculateTotalValue = (planningId: string) => {
-    const rencana = dummyRencanaAnggaran.find(r => r.planningId === planningId);
-    return rencana ? rencana.generalAmount : 0;
-  };
-
-  // Update perencanaan data with calculated total values
-  const perencanaanWithTotals = dummyPerencanaanData.map(item => ({
-    ...item,
-    totalValue: calculateTotalValue(item.id)
-  }));
-
-  const [perencanaan, setPerencanaan] = useState<Perencanaan[]>(perencanaanWithTotals);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<Perencanaan | null>(null);
   const [deletingItem, setDeletingItem] = useState<Perencanaan | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
 
   // Get URL parameters
   const page = Number(searchParams.get("page")) || 1;
   const pageLimit = Number(searchParams.get("limit")) || 10;
+  const q = searchParams.get("q");
+  const [searchQuery, setSearchQuery] = useState<string>(q ?? "");
+  const [searchDebounce] = useDebounce(searchQuery, 500);
 
   // Build query parameters for API
   const perencanaanParams = useMemo(() => ({
     limit: pageLimit,
     page: page,
-    ...(searchQuery ? { search: searchQuery } : {}),
-  }), [pageLimit, page, searchQuery]);
+    ...(searchDebounce ? { q: searchDebounce } : {}),
+  }), [pageLimit, page, searchDebounce]);
 
-  // Filter data based on search query
-  const filteredPerencanaan = useMemo(() => {
-    if (!searchQuery) return perencanaan;
-    return perencanaan.filter(item => 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [perencanaan, searchQuery]);
+  // Use API hooks
+  const { data: perencanaanResponse, isLoading, error } = useGetPerencanaan(perencanaanParams);
+  const createMutation = usePostPerencanaan();
+  const updateMutation = useEditPerencanaan(editingItem?.id || '');
+  const deleteMutation = useDeletePerencanaan(Number(deletingItem?.id) || 0);
 
-  const handleCreatePerencanaan = async (newItem: Omit<Perencanaan, 'id' | 'createdAt' | 'updatedAt'>) => {
+  // Extract data from API response - backend uses 'items' instead of 'data'
+  const perencanaan = perencanaanResponse?.items || perencanaanResponse?.data || [];
+  const totalItems = perencanaanResponse?.meta?.total_items || perencanaanResponse?.meta?.item_count || perencanaan.length;
+  const totalPages = perencanaanResponse?.pagination?.total_page || perencanaanResponse?.meta?.total_pages || 1;
+
+  // Handler untuk update URL search params
+  const updateSearchParams = useCallback((newParams: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === null || value === '' || value === 0) {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    });
+    
+    router.push(`${pathname}?${params.toString()}`);
+  }, [searchParams, router, pathname]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    updateSearchParams({ q: value, page: 1 }); // Reset to page 1 when searching
+  }, [updateSearchParams]);
+
+  const handleCreatePerencanaan = async (newItem: CreatePerencanaanData) => {
     try {
-      // Simulate API call with dummy data
-      const createdItem: Perencanaan = {
-        ...newItem,
-        id: (perencanaan.length + 1).toString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      setPerencanaan([createdItem, ...perencanaan]);
+      const response = await createMutation.mutateAsync(newItem);
       
       toast({
         title: 'Success',
         description: 'Perencanaan berhasil dibuat',
       });
+      
       setShowCreateDialog(false);
+      
+      // Navigate to detail page after successful creation
+      if (response?.data?.id) {
+        router.push("/dashboard/perencanaan");
+      }
     } catch (error) {
       console.error('Error creating perencanaan:', error);
       toast({
@@ -108,12 +116,7 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
     if (!editingItem) return;
     
     try {
-      // Update local state
-      setPerencanaan(prev => prev.map(item => 
-        item.id === editingItem.id 
-          ? { ...item, ...updatedData, updatedAt: new Date().toISOString() }
-          : item
-      ));
+      await updateMutation.mutateAsync(updatedData);
       
       toast({
         title: 'Success',
@@ -139,8 +142,7 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
 
   const handleConfirmDelete = async (item: Perencanaan) => {
     try {
-      // Remove from local state
-      setPerencanaan(prev => prev.filter(per => per.id !== item.id));
+      await deleteMutation.mutateAsync(Number(item.id));
       
       toast({
         title: 'Success',
@@ -168,14 +170,26 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
           <Input
             placeholder="Cari Perencanaan......"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
           />
         </div>
         {userRole !== "owner" && (
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Perencanaan
+          <Button 
+            onClick={() => setShowCreateDialog(true)}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Membuat...
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 h-4 w-4" />
+                Tambah Perencanaan
+              </>
+            )}
           </Button>
         )}
       </div>
@@ -183,20 +197,35 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
       {/* Perencanaan Table */}
       <Card>
         <CardContent className="p-0">
-          <PerencanaanTable
-            columns={createPerencanaanColumns({
-              onEdit: handleEditPerencanaan,
-              onDelete: handleDeletePerencanaan
-            })}
-            data={filteredPerencanaan}
-            searchKey="name"
-            totalUsers={filteredPerencanaan.length}
-            pageCount={Math.ceil(filteredPerencanaan.length / 10)}
-            pageNo={1}
-            searchQuery={searchQuery}
-            sorting={[]}
-            setSorting={() => {}}
-          />
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <p className="text-red-600">Belum ada data perencanaan</p>
+              </div>
+            </div>
+          ) : (
+            <PerencanaanTable
+              columns={createPerencanaanColumns({
+                onEdit: handleEditPerencanaan,
+                onDelete: handleDeletePerencanaan
+              })}
+              data={perencanaan}
+              searchKey="name"
+              totalUsers={totalItems}
+              pageCount={totalPages}
+              pageNo={page}
+              searchQuery={searchQuery}
+              sorting={[]}
+              setSorting={() => {}}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -205,6 +234,7 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSubmit={handleCreatePerencanaan}
+        isLoading={createMutation.isPending}
       />
 
       {editingItem && (

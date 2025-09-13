@@ -1,24 +1,24 @@
 export interface Perencanaan {
-  id: string;
+  id: number;
   name: string;
-  startDate: string;
-  endDate: string;
-  totalValue?: number;
-  status?: "active" | "completed" | "draft";
-  createdAt?: string;
-  updatedAt?: string;
+  start_date: string;
+  end_date: string;
+  total_amount: number;
+  note?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreatePerencanaanData {
   name: string;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
 }
 
 export interface UpdatePerencanaanData {
   name?: string;
-  startDate?: string;
-  endDate?: string;
+  start_date?: string;
+  end_date?: string;
   status?: "active" | "completed" | "draft";
 }
 
