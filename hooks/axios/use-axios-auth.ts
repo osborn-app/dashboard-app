@@ -8,14 +8,14 @@ const useAxiosAuth = () => {
   const { data: session } = useSession();
 
   useEffect(() => {
-    // if (!session?.user) return;
+    if (!session?.user) return;
 
     const requestIntercept = axios.interceptors.request.use(
       (config) => {
         // @ts-ignore
         const token = session?.user?.accessToken;
 
-        if (!config.headers["Authorization"]) {
+        if (!config.headers["Authorization"] && token) {
           config.headers["Authorization"] = `Bearer ${token}`;
         }
         return config;
