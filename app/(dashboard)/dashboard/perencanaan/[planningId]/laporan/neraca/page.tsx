@@ -196,24 +196,24 @@ export default function NeracaPage() {
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">11100</td>
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">Kas</td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 border-r border-gray-300">Rp. 50.000.000</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900">Rp. 50.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900"></td>
                 </tr>
                 <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">11200</td>
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">Bank</td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 border-r border-gray-300">Rp. 200.000.000</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900">Rp. 200.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900"></td>
                 </tr>
                 <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">11300</td>
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">Piutang Usaha</td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 border-r border-gray-300">Rp. 150.000.000</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900">Rp. 150.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900"></td>
                 </tr>
                 <tr className="border-b border-gray-300 bg-gray-100">
                   <td className="py-3 px-4 text-gray-900 font-semibold text-center"></td>
                   <td className="py-3 px-4 text-gray-900 font-semibold text-center">TOTAL AKTIVA LANCAR</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold">Rp. 400.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold"></td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold">Rp. 400.000.000</td>
                 </tr>
                 <tr className="border-b border-gray-300 bg-gray-100">
@@ -226,30 +226,30 @@ export default function NeracaPage() {
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">12100</td>
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">Kendaraan</td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 border-r border-gray-300">Rp. 500.000.000</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900">Rp. 500.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900"></td>
                 </tr>
                 <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">12200</td>
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">Gedung</td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 border-r border-gray-300">Rp. 1.000.000.000</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900">Rp. 1.000.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900"></td>
                 </tr>
                 <tr className="border-b border-gray-300 hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">12300</td>
                   <td className="py-3 px-4 text-gray-900 border-r border-gray-300">Inventaris</td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 border-r border-gray-300">Rp. 100.000.000</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900">Rp. 100.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900"></td>
                 </tr>
                 <tr className="border-b border-gray-300 bg-gray-100">
                   <td className="py-3 px-4 text-gray-900 font-semibold text-center"></td>
                   <td className="py-3 px-4 text-gray-900 font-semibold text-center">TOTAL AKTIVA TETAP</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold">Rp. 1.600.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold"></td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold">Rp. 1.600.000.000</td>
                 </tr>
                 <tr className="border-b border-gray-300 bg-gray-100">
                   <td className="py-3 px-4 text-gray-900 font-semibold text-center"></td>
                   <td className="py-3 px-4 text-gray-900 font-semibold text-center">TOTAL AKTIVA</td>
-                  <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold">Rp. 2.000.000.000</td>
+                  <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold"></td>
                   <td className="py-3 px-4 text-right font-mono text-gray-900 font-semibold">Rp. 2.000.000.000</td>
                 </tr>
               </tbody>

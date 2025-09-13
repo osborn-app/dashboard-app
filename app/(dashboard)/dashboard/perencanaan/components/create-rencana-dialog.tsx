@@ -42,10 +42,18 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Initialize form data when editing
+  // Initialize form data when editing or reset when creating
   useState(() => {
     if (editingData) {
       setFormData(editingData);
+    } else {
+      // Reset form when creating new
+      setFormData({
+        name: '',
+        planningDate: '',
+        accounts: [{ id: '1', accountName: '', debit: 0, credit: 0 }]
+      });
+      setErrors({});
     }
   });
 
@@ -157,10 +165,10 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="bg-blue-600 text-white p-4 -m-6 mb-4">
-            {editingData ? 'Edit Rencana Anggaran' : 'Tambah Rencana Anggaran'}
+            {editingData ? 'Edit Rencana' : 'Tambah Rencana'}
           </DialogTitle>
           <DialogDescription className="text-sm text-gray-600 -mt-2">
-            {editingData ? 'Isi informasi dibawah untuk mengubah rencana anggaran' : 'Isi informasi dibawah untuk menambahkan rencana anggaran'}
+            {editingData ? 'Isi informasi dibawah untuk mengubah rencana' : 'Isi informasi dibawah untuk menambahkan rencana'}
           </DialogDescription>
         </DialogHeader>
 
@@ -207,7 +215,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
                 <div className="col-span-5">Nama Akun</div>
                 <div className="col-span-3">Debit</div>
                 <div className="col-span-3">Kredit</div>
-                <div className="col-span-1">Aksi</div>
+                <div className="col-span-1"></div>
               </div>
 
               {/* Account Rows */}
@@ -282,13 +290,15 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
           </Card>
 
           <DialogFooter className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="bg-green-500 text-white hover:bg-green-600"
-            >
-              Telah Terealisasi
-            </Button>
+            {editingData && (
+              <Button
+                type="button"
+                variant="outline"
+                className="bg-green-500 text-white hover:bg-green-600"
+              >
+                Telah Terealisasi
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"

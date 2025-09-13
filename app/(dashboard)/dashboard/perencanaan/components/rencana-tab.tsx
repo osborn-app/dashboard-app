@@ -35,8 +35,8 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAccount, setSelectedAccount] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedAccount, setSelectedAccount] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
 
   // Filter rencana data by planning ID
   const rencanaData = dummyRencanaTransactions.filter(item => item.planningId === planningId);
@@ -44,6 +44,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
   const handleCreateRencana = (data: any) => {
     console.log('Creating rencana:', data);
     setShowCreateDialog(false);
+    setEditingItem(null); // Reset editing item
   };
 
   const handleEditRencana = (item: RencanaItem) => {
@@ -81,7 +82,10 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
             Rekap Rencana
           </Button>
           
-          <Button onClick={() => setShowCreateDialog(true)} size="sm">
+          <Button onClick={() => {
+            setEditingItem(null); // Reset editing item when creating new
+            setShowCreateDialog(true);
+          }} size="sm">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Rencana
           </Button>

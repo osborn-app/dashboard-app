@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Cloud, Calendar, Plus, Trash2 } from "lucide-react";
+import { Search, Cloud, Calendar, Plus, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import BreadCrumb from "@/components/breadcrumb";
@@ -88,31 +88,14 @@ export default function LabaRugiPage() {
           <CardContent className="p-6">
             {/* Search and Action Bar */}
             <div className="flex items-center gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Cari Akun"
-                className="pl-10"
-              />
-            </div>
-            
-            <Button variant="outline" size="sm">
-              <Search className="h-4 w-4 mr-2" />
-              Cari
-            </Button>
-            
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-            
-            <Button size="sm">
-              <Cloud className="h-4 w-4 mr-2" />
-              Rekap Laba Rugi Perencanaan
-            </Button>
-            
-            {/* Date Range */}
-            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Cari Akun"
+                  className="pl-10"
+                />
+              </div>
+              
               <div className="relative">
                 <Input
                   type="date"
@@ -130,34 +113,12 @@ export default function LabaRugiPage() {
                 />
                 <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               </div>
+              
+              <Button size="sm">
+                <Cloud className="h-4 w-4 mr-2" />
+                Rekap Laba Rugi Perencanaan
+              </Button>
             </div>
-            
-            {/* Account Filter */}
-            <Select>
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Semua Akun" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Akun</SelectItem>
-                <SelectItem value="kas">Kas & Bank</SelectItem>
-                <SelectItem value="inventaris">Inventaris</SelectItem>
-                <SelectItem value="kendaraan">Kendaraan</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {/* Status Filter */}
-            <Select>
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Semua Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="belum">Belum Terealisasi</SelectItem>
-                <SelectItem value="sudah">Sudah Terealisasi</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* Data Table Structure */}
           <div className="overflow-x-auto">
