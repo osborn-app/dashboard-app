@@ -6,36 +6,28 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crown, Trophy, Medal, Users, TrendingUp, RefreshCw } from "lucide-react";
+import { Crown, Trophy, Users, TrendingUp, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCustomerRanking, type CustomerRanking } from "@/hooks/api/use-customer-ranking";
 import { Skeleton } from "@/components/ui/skeleton";
-
 
 const breadcrumbItems = [
   { title: "Dashboard", link: "/dashboard" },
   { title: "Customer Ranking", link: "/dashboard/customer-ranking" }
 ];
 
-// Crown icon component with different colors for top three
 const CrownIcon = ({ rank }: { rank: number }) => {
   const getCrownColor = (rank: number) => {
     switch (rank) {
-      case 1:
-        return "text-yellow-500";
-      case 2:
-        return "text-gray-400";
-      case 3:
-        return "text-amber-600";
-      default:
-        return "text-gray-300";
+      case 1: return "text-yellow-500";
+      case 2: return "text-gray-400";
+      case 3: return "text-amber-600";
+      default: return "text-gray-300";
     }
   };
-
   return <Crown className={`h-6 w-6 ${getCrownColor(rank)}`} />;
 };
 
-// Format currency to Indonesian Rupiah
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -45,7 +37,6 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-// Format number with thousand separators
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat("id-ID").format(num);
 };
@@ -62,12 +53,10 @@ export default function CustomerRankingPage() {
     setLimit(newLimit);
   };
 
-  // Auto refresh every 30 seconds untuk data yang selalu fresh
   useEffect(() => {
     const interval = setInterval(() => {
       refetch();
-    }, 30000); // 30 seconds
-
+    }, 30000);
     return () => clearInterval(interval);
   }, [refetch]);
 
@@ -81,63 +70,40 @@ export default function CustomerRankingPage() {
         2: "bg-gradient-to-r from-gray-300 to-gray-500 text-white",
         3: "bg-gradient-to-r from-amber-500 to-amber-700 text-white",
       };
-      return (
-        <Badge className={colors[rank as keyof typeof colors]}>
-          #{rank}
-        </Badge>
-      );
+      return <Badge className={colors[rank as keyof typeof colors]}>#{rank}</Badge>;
     }
     return <Badge variant="secondary">#{rank}</Badge>;
   };
 
   const getCustomerDisplayName = (customer: CustomerRanking) => {
-    if (customer.customer_name) {
-      return customer.customer_name;
-    }
-    if (customer.customer_email) {
-      return customer.customer_email;
-    }
-    if (customer.customer_phone) {
-      return customer.customer_phone;
-    }
+    if (customer.customer_name) return customer.customer_name;
+    if (customer.customer_email) return customer.customer_email;
+    if (customer.customer_phone) return customer.customer_phone;
     return "Unknown Customer";
   };
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex-1 space-y-4 p-3 sm:p-4 md:p-8 pt-6">
       <BreadCrumb items={breadcrumbItems} />
       
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <Heading 
           title="Ranking Pelanggan" 
           description="Top pelanggan berdasarkan total transaksi"
         />
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleLimitChange(10)}
-              className={limit === 10 ? "bg-primary text-primary-foreground" : ""}
-            >
-              10
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleLimitChange(20)}
-              className={limit === 20 ? "bg-primary text-primary-foreground" : ""}
-            >
-              20
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleLimitChange(50)}
-              className={limit === 50 ? "bg-primary text-primary-foreground" : ""}
-            >
-              50
-            </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap gap-1">
+            {[10, 20, 50].map((val) => (
+              <Button
+                key={val}
+                variant="outline"
+                size="sm"
+                onClick={() => handleLimitChange(val)}
+                className={limit === val ? "bg-primary text-primary-foreground" : ""}
+              >
+                {val}
+              </Button>
+            ))}
           </div>
           <Button
             variant="outline"
@@ -181,9 +147,7 @@ export default function CustomerRankingPage() {
                 <Skeleton className="h-8 w-32" />
               ) : rankingData.length > 0 ? (
                 formatCurrency(rankingData[0]?.total_transaction_amount || 0)
-              ) : (
-                "-"
-              )}
+              ) : "-"}
             </div>
           </CardContent>
         </Card>
@@ -200,13 +164,11 @@ export default function CustomerRankingPage() {
               ) : rankingData.length > 0 ? (
                 formatNumber(
                   Math.round(
-                    rankingData.reduce((sum: number, customer: CustomerRanking) => sum + customer.total_orders, 0) /
+                    rankingData.reduce((sum: number, c: CustomerRanking) => sum + c.total_orders, 0) /
                     rankingData.length
                   )
                 )
-              ) : (
-                "-"
-              )}
+              ) : "-"}
             </div>
           </CardContent>
         </Card>
@@ -239,11 +201,11 @@ export default function CustomerRankingPage() {
               {rankingData.map((customer: CustomerRanking, index: number) => (
                 <div
                   key={customer.customer_id || index}
-                  className={`flex items-center space-x-4 p-4 border rounded-lg transition-all hover:shadow-md ${
+                  className={`flex flex-col sm:flex-row sm:items-center sm:space-x-4 p-4 border rounded-lg transition-all hover:shadow-md gap-2 ${
                     customer.rank <= 3 ? "bg-gradient-to-r from-primary/5 to-primary/10" : ""
                   }`}
                 >
-                  {/* Rank and Crown */}
+                  {/* Rank */}
                   <div className="flex items-center space-x-2">
                     {customer.rank <= 3 ? (
                       <CrownIcon rank={customer.rank} />
@@ -257,8 +219,8 @@ export default function CustomerRankingPage() {
 
                   {/* Customer Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold text-lg truncate">
+                    <div className="flex items-center flex-wrap gap-2">
+                      <h3 className="font-semibold text-lg truncate max-w-[200px] sm:max-w-none">
                         {getCustomerDisplayName(customer)}
                       </h3>
                       {customer.customer_id && (
@@ -267,19 +229,14 @@ export default function CustomerRankingPage() {
                         </Badge>
                       )}
                     </div>
-                    
-                    <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
-                      {customer.customer_email && (
-                        <span className="truncate">{customer.customer_email}</span>
-                      )}
-                      {customer.customer_phone && (
-                        <span>{customer.customer_phone}</span>
-                      )}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mt-1 text-sm text-muted-foreground">
+                      {customer.customer_email && <span className="truncate">{customer.customer_email}</span>}
+                      {customer.customer_phone && <span>{customer.customer_phone}</span>}
                     </div>
                   </div>
 
                   {/* Stats */}
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <div className="font-bold text-lg">
                       {formatCurrency(customer.total_transaction_amount)}
                     </div>
