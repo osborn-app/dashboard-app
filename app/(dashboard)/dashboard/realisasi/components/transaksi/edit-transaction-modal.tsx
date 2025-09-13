@@ -40,7 +40,7 @@ export default function EditTransactionModal({
     notes: ''
   });
 
-  // Fetch transaction data when modal open
+  // Fetch transaction data when modal opens
   useEffect(() => {
     if (isOpen && transactionId) {
       fetchTransactionData();
