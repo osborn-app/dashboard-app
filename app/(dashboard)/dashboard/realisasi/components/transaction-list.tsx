@@ -39,11 +39,9 @@ export default function TransactionList({
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         transaction.reference.includes(searchQuery);
     const matchesType = typeFilter === "all" || transaction.type === typeFilter;
     const matchesStatus = statusFilter === "all" || transaction.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesType && matchesStatus;
   });
 
   const getTypeIcon = (type: string) => {
@@ -266,9 +264,6 @@ export default function TransactionList({
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => onEditTransaction?.(transaction.id)}>
                               Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onDeleteTransaction?.(transaction.id)}>
-                              Delete
                             </DropdownMenuItem>
                             <DropdownMenuItem>View Details</DropdownMenuItem>
                           </DropdownMenuContent>

@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 import { Plus, X } from "lucide-react";
 
+import { CreateFinancialTransactionData, Account, TransactionCategory } from "../../types";
+
 interface CreateTransactionData {
   transactionName: string;
   date: string;
@@ -21,13 +23,17 @@ interface CreateTransactionData {
 interface CreateTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (data: CreateTransactionData) => void;
+  onCreate: (data: CreateFinancialTransactionData) => void;
+  accounts?: Account[];
+  categories?: TransactionCategory[];
 }
 
 export default function CreateTransactionModal({
   isOpen,
   onClose,
-  onCreate
+  onCreate,
+  accounts = [],
+  categories = []
 }: CreateTransactionModalProps) {
   const [formData, setFormData] = useState<CreateTransactionData>({
     transactionName: '',
@@ -41,7 +47,27 @@ export default function CreateTransactionModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate(formData);
+    
+    // Convert form data to CreateFinancialTransactionData format
+    const transactionData: CreateFinancialTransactionData = {
+      reference_number: `MAN-${Date.now()}`,
+      transaction_date: formData.date,
+      description: formData.transactionName,
+      total_amount: formData.totalAmount,
+      category_id: 1, // Default category, should be selected from dropdown
+      notes: '',
+      entries: [
+        {
+          account_id: parseInt(formData.accountCode),
+          entry_type: formData.type.toUpperCase() as 'DEBIT' | 'CREDIT',
+          amount: formData.totalAmount,
+          description: formData.transactionName
+        }
+      ],
+      source_type: 'manual'
+    };
+    
+    onCreate(transactionData);
     onClose();
     // Reset form
     setFormData({
@@ -56,17 +82,12 @@ export default function CreateTransactionModal({
   };
 
   const handleAccountChange = (accountCode: string) => {
-    const accountMap: Record<string, string> = {
-      '11100': 'KAS & BANK',
-      '41000': 'Pendapatan Sewa Kendaraan',
-      '51000': 'Beban Gaji',
-      '52000': 'Beban ATK'
-    };
+    const account = accounts.find(acc => acc.code === accountCode);
     
     setFormData({
       ...formData,
       accountCode,
-      accountName: accountMap[accountCode] || ''
+      accountName: account?.name || ''
     });
   };
 
@@ -169,15 +190,11 @@ export default function CreateTransactionModal({
                       <SelectValue placeholder="Pilih kategori" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Orderan Sewa - Pendapatan Sewa Fleets">
-                        Orderan Sewa - Pendapatan Sewa Fleets
-                      </SelectItem>
-                      <SelectItem value="Pembayaran Gaji - Beban Operasional">
-                        Pembayaran Gaji - Beban Operasional
-                      </SelectItem>
-                      <SelectItem value="Pembelian ATK - Beban Operasional">
-                        Pembelian ATK - Beban Operasional
-                      </SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -194,10 +211,11 @@ export default function CreateTransactionModal({
                       <SelectValue placeholder="Pilih akun" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="11100">11100 - KAS & BANK</SelectItem>
-                      <SelectItem value="41000">41000 - Pendapatan Sewa Kendaraan</SelectItem>
-                      <SelectItem value="51000">51000 - Beban Gaji</SelectItem>
-                      <SelectItem value="52000">52000 - Beban ATK</SelectItem>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.code}>
+                          {account.code} - {account.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

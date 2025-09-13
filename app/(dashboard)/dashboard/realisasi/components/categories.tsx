@@ -7,65 +7,72 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus, Edit, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { Label } from "@/components/ui/label";
-
-interface CategoryItem {
-  id: string;
-  name: string;
-  debitAccount: string;
-  creditAccount: string;
-}
+import { TransactionCategory, CreateTransactionCategoryData, Account } from "../types";
 
 interface CategoriesProps {
-  categories: CategoryItem[];
-  onAddCategory?: (category: Omit<CategoryItem, 'id'>) => void;
-  onEditCategory?: (id: string, category: Omit<CategoryItem, 'id'>) => void;
-  onDeleteCategory?: (id: string) => void;
+  categories: TransactionCategory[];
+  accounts?: Account[];
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  onCreateCategory?: (category: CreateTransactionCategoryData) => void;
+  onUpdateCategory?: (id: number, category: CreateTransactionCategoryData) => void;
+  onDeleteCategory?: (id: number) => void;
 }
 
 export default function Categories({ 
   categories, 
-  onAddCategory, 
-  onEditCategory, 
+  accounts = [],
+  searchQuery = "",
+  onSearchChange,
+  onCreateCategory, 
+  onUpdateCategory, 
   onDeleteCategory 
 }: CategoriesProps) {
-  const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+  const [editingCategory, setEditingCategory] = useState<TransactionCategory | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    debitAccount: "",
-    creditAccount: ""
+    debitAccountId: 0,
+    creditAccountId: 0
   });
+  const [debitPopoverOpen, setDebitPopoverOpen] = useState(false);
+  const [creditPopoverOpen, setCreditPopoverOpen] = useState(false);
 
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.debitAccount.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.creditAccount.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Use API search instead of local filtering
+  const filteredCategories = categories;
 
   const handleAddClick = () => {
-    setFormData({ name: "", debitAccount: "", creditAccount: "" });
+    setFormData({ name: "", debitAccountId: 0, creditAccountId: 0 });
     setIsAddModalOpen(true);
   };
 
-  const handleEditClick = (category: CategoryItem) => {
+  const handleEditClick = (category: TransactionCategory) => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      debitAccount: category.debitAccount,
-      creditAccount: category.creditAccount
+      debitAccountId: category.debit_account_id,
+      creditAccountId: category.credit_account_id
     });
     setIsEditModalOpen(true);
   };
 
   const handleSubmit = () => {
-    if (formData.name && formData.debitAccount && formData.creditAccount) {
+    if (formData.name && formData.debitAccountId && formData.creditAccountId) {
+      const categoryData = {
+        name: formData.name,
+        debit_account_id: formData.debitAccountId,
+        credit_account_id: formData.creditAccountId
+      };
+      
       if (isEditModalOpen && editingCategory) {
-        onEditCategory?.(editingCategory.id, formData);
+        onUpdateCategory?.(editingCategory.id, categoryData);
       } else {
-        onAddCategory?.(formData);
+        onCreateCategory?.(categoryData);
       }
       handleCloseModal();
     }
@@ -75,7 +82,7 @@ export default function Categories({
     setIsAddModalOpen(false);
     setIsEditModalOpen(false);
     setEditingCategory(null);
-    setFormData({ name: "", debitAccount: "", creditAccount: "" });
+    setFormData({ name: "", debitAccountId: 0, creditAccountId: 0 });
   };
 
   return (
@@ -87,7 +94,7 @@ export default function Categories({
           <Input
             placeholder="Cari Kategori........"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => onSearchChange?.(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -122,8 +129,8 @@ export default function Categories({
                   filteredCategories.map((category) => (
                     <tr key={category.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4 text-gray-900">{category.name}</td>
-                      <td className="py-3 px-4 text-gray-900">{category.debitAccount}</td>
-                      <td className="py-3 px-4 text-gray-900">{category.creditAccount}</td>
+                      <td className="py-3 px-4 text-gray-900">{category.debit_account?.name || "N/A"}</td>
+                      <td className="py-3 px-4 text-gray-900">{category.credit_account?.name || "N/A"}</td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center space-x-2">
                           <Button
@@ -189,32 +196,96 @@ export default function Categories({
             
             <div className="space-y-2">
               <Label htmlFor="debit">Pilih Debit</Label>
-              <Select value={formData.debitAccount} onValueChange={(value) => setFormData({ ...formData, debitAccount: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih akun debit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="KAS & BANK">KAS & BANK</SelectItem>
-                  <SelectItem value="PIUTANG">PIUTANG</SelectItem>
-                  <SelectItem value="PENDAPATAN">PENDAPATAN</SelectItem>
-                  <SelectItem value="BEBAN">BEBAN</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover open={debitPopoverOpen} onOpenChange={setDebitPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={debitPopoverOpen}
+                    className="w-full justify-between"
+                  >
+                    {formData.debitAccountId 
+                      ? accounts.find(account => account.id === formData.debitAccountId)?.code + " - " + accounts.find(account => account.id === formData.debitAccountId)?.name
+                      : "Pilih akun debit..."
+                    }
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Cari akun debit..." />
+                    <CommandList>
+                      <CommandEmpty>Akun tidak ditemukan.</CommandEmpty>
+                      <CommandGroup>
+                        {accounts.map((account) => (
+                          <CommandItem
+                            key={account.id}
+                            value={`${account.code} ${account.name}`}
+                            onSelect={() => {
+                              setFormData({ ...formData, debitAccountId: account.id });
+                              setDebitPopoverOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                formData.debitAccountId === account.id ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            {account.code} - {account.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="credit">Pilih Kredit</Label>
-              <Select value={formData.creditAccount} onValueChange={(value) => setFormData({ ...formData, creditAccount: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih akun kredit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pendapatan Sewa Kendaraan">Pendapatan Sewa Kendaraan</SelectItem>
-                  <SelectItem value="Beban Gaji">Beban Gaji</SelectItem>
-                  <SelectItem value="Beban Operasional">Beban Operasional</SelectItem>
-                  <SelectItem value="KAS & BANK">KAS & BANK</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover open={creditPopoverOpen} onOpenChange={setCreditPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={creditPopoverOpen}
+                    className="w-full justify-between"
+                  >
+                    {formData.creditAccountId 
+                      ? accounts.find(account => account.id === formData.creditAccountId)?.code + " - " + accounts.find(account => account.id === formData.creditAccountId)?.name
+                      : "Pilih akun kredit..."
+                    }
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Cari akun kredit..." />
+                    <CommandList>
+                      <CommandEmpty>Akun tidak ditemukan.</CommandEmpty>
+                      <CommandGroup>
+                        {accounts.map((account) => (
+                          <CommandItem
+                            key={account.id}
+                            value={`${account.code} ${account.name}`}
+                            onSelect={() => {
+                              setFormData({ ...formData, creditAccountId: account.id });
+                              setCreditPopoverOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 h-4 w-4 ${
+                                formData.creditAccountId === account.id ? "opacity-100" : "opacity-0"
+                              }`}
+                            />
+                            {account.code} - {account.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           
@@ -263,30 +334,32 @@ export default function Categories({
             
             <div className="space-y-2">
               <Label htmlFor="edit-debit">Pilih Debit</Label>
-              <Select value={formData.debitAccount} onValueChange={(value) => setFormData({ ...formData, debitAccount: value })}>
+              <Select value={formData.debitAccountId.toString()} onValueChange={(value) => setFormData({ ...formData, debitAccountId: parseInt(value) })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih akun debit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="KAS & BANK">KAS & BANK</SelectItem>
-                  <SelectItem value="PIUTANG">PIUTANG</SelectItem>
-                  <SelectItem value="PENDAPATAN">PENDAPATAN</SelectItem>
-                  <SelectItem value="BEBAN">BEBAN</SelectItem>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id.toString()}>
+                      {account.code} - {account.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="edit-credit">Pilih Kredit</Label>
-              <Select value={formData.creditAccount} onValueChange={(value) => setFormData({ ...formData, creditAccount: value })}>
+              <Select value={formData.creditAccountId.toString()} onValueChange={(value) => setFormData({ ...formData, creditAccountId: parseInt(value) })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih akun kredit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pendapatan Sewa Kendaraan">Pendapatan Sewa Kendaraan</SelectItem>
-                  <SelectItem value="Beban Gaji">Beban Gaji</SelectItem>
-                  <SelectItem value="Beban Operasional">Beban Operasional</SelectItem>
-                  <SelectItem value="KAS & BANK">KAS & BANK</SelectItem>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id.toString()}>
+                      {account.code} - {account.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
