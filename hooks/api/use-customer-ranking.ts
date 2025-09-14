@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCustomerRanking } from "@/client/customerClient";
+import useAxiosAuth from "../axios/use-axios-auth";
 
 interface CustomerRanking {
   rank: number;
@@ -21,11 +21,19 @@ interface RankingResponse {
   };
 }
 
-export const useCustomerRanking = (limit: number = 10) => {
+export const useCustomerRanking = (limit: number = 10, date?: string) => {
+  const axiosAuth = useAxiosAuth();
+
   return useQuery<RankingResponse>({
-    queryKey: ["customer-ranking", limit],
+    queryKey: ["customer-ranking", limit, date],
     queryFn: async () => {
-      const response = await getCustomerRanking(limit);
+      const params = new URLSearchParams();
+      params.append('limit', limit.toString());
+      if (date) {
+        params.append('this_week', date);
+      }
+      
+      const response = await axiosAuth.get(`/customers/ranking/transaction-amount?${params.toString()}`);
       return response.data;
     },
     staleTime: 0, // No caching - always fresh data

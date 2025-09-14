@@ -6,10 +6,12 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crown, Trophy, Users, TrendingUp, RefreshCw } from "lucide-react";
+import { Crown, Trophy, Users, TrendingUp, RefreshCw, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCustomerRanking, type CustomerRanking } from "@/hooks/api/use-customer-ranking";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const breadcrumbItems = [
   { title: "Dashboard", link: "/dashboard" },
@@ -43,7 +45,8 @@ const formatNumber = (num: number) => {
 
 export default function CustomerRankingPage() {
   const [limit, setLimit] = useState(20);
-  const { data: response, isLoading, error, refetch } = useCustomerRanking(limit);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const { data: response, isLoading, error, refetch } = useCustomerRanking(limit, selectedDate);
 
   const handleRefresh = () => {
     refetch();
@@ -52,6 +55,17 @@ export default function CustomerRankingPage() {
   const handleLimitChange = (newLimit: number) => {
     setLimit(newLimit);
   };
+
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date);
+  };
+
+  const clearDateFilter = () => {
+    setSelectedDate("");
+  };
+
+  // Get today's date in YYYY-MM-DD format for max date
+  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -89,9 +103,42 @@ export default function CustomerRankingPage() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <Heading 
           title="Ranking Pelanggan" 
-          description="Top pelanggan berdasarkan total transaksi"
+          description={`Top pelanggan berdasarkan total transaksi${selectedDate ? ` (${new Date(selectedDate).toLocaleDateString('id-ID')})` : ''}`}
         />
         <div className="flex flex-wrap items-center gap-2">
+          {/* Date Filter */}
+          <div className="flex items-center gap-2">
+            <Label htmlFor="date-filter" className="text-sm font-medium whitespace-nowrap">
+              <Calendar className="h-4 w-4 inline mr-1" />
+              Filter Tanggal:
+            </Label>
+            <div className="relative">
+              <Input
+                id="date-filter"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+                max={today}
+                className="w-40 cursor-pointer hover:bg-accent/50 transition-colors"
+                placeholder="Pilih tanggal"
+                onClick={(e) => {
+                  // Ensure the date picker opens when clicking anywhere on the input
+                  e.currentTarget.showPicker?.();
+                }}
+              />
+            </div>
+            {selectedDate && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearDateFilter}
+                title="Hapus filter tanggal"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+          
           <div className="flex flex-wrap gap-1">
             {[10, 20, 50].map((val) => (
               <Button
