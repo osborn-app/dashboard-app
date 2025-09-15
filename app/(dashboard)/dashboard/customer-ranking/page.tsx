@@ -169,6 +169,30 @@ export default function CustomerRankingPage() {
       
       <Separator />
 
+      {/* Info Box - Only show when date filter is active */}
+      {selectedDate && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <Calendar className="h-5 w-5 text-blue-600 mt-0.5" />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-medium text-blue-900 mb-1">
+                Informasi Filter Tanggal
+              </h4>
+              <p className="text-sm text-blue-700">
+                Data ranking diambil dari transaksi <strong>7 hari kebelakang</strong> dari tanggal {new Date(selectedDate).toLocaleDateString('id-ID', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
