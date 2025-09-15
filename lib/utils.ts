@@ -204,3 +204,14 @@ export const formatDateIndonesian = (date?: string | Date, withTime = true) => {
     return `${dayName}, ${dayjsDate.format("DD")} ${monthName} ${dayjsDate.format("YYYY")}`;
   }
 };
+
+/**
+ * Convert date string (YYYY-MM-DD) to ISO 8601 format
+ * @param dateString - Date string in YYYY-MM-DD format
+ * @returns ISO 8601 formatted date string
+ */
+export const convertDateToISO = (dateString: string): string => {
+  if (!dateString) return '';
+  // Convert YYYY-MM-DD to ISO 8601 format
+  return new Date(dateString + 'T00:00:00.000Z').toISOString();
+};

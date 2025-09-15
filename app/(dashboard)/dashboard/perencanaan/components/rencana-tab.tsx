@@ -1,23 +1,36 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Calendar, RefreshCw } from 'lucide-react';
 import { RencanaTable } from '@/components/tables/rencana-tables/rencana-table';
-import { createRencanaColumns, RencanaItem } from '@/components/tables/rencana-tables/columns';
+import { createRencanaColumns, createRencanaRowColumns, RencanaItem, RencanaRowItem } from '@/components/tables/rencana-tables/columns';
 import { CreateRencanaDialog } from './create-rencana-dialog';
-import { useGetPlanningEntries, useCreatePlanningEntry, useUpdatePlanningEntry, useDeletePlanningEntry } from '@/hooks/api/usePerencanaan';
+import { useGetPlanningEntries, useCreatePlanningEntry, useUpdatePlanningEntry, useDeletePlanningEntry, useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
+import { convertDateToISO } from '@/lib/utils';
 
 interface RencanaTabProps {
   planningId: string;
 }
 
+interface PlanningEntryResponse {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  planning_id: string;
+  date: string;
+  account_debit_id: string;
+  account_credit_id: string;
+  amount: number;
+  note: string;
+}
+
 // Helper function to convert API response to RencanaItem format
-const convertApiResponseToRencanaItem = (apiItem: any): RencanaItem => {
+const convertApiResponseToRencanaItem = (apiItem: any, accountMap: Map<string, {name: string, code: string}>): RencanaItem => {
   console.log('Converting API item:', apiItem);
   
   // Validate apiItem
@@ -30,7 +43,7 @@ const convertApiResponseToRencanaItem = (apiItem: any): RencanaItem => {
       debit: 0,
       kredit: 0,
       keterangan: '',
-      status: 'belum',
+      status: 'Belum Terealisasi',
       planningId: '0',
       rencanaId: '0',
       transactionGroup: 'group_0',
@@ -38,21 +51,88 @@ const convertApiResponseToRencanaItem = (apiItem: any): RencanaItem => {
     };
   }
   
-  const debitName = apiItem.account_debit?.name || 'Unknown Debit';
-  const creditName = apiItem.account_credit?.name || 'Unknown Credit';
+  // Get account details from mapping
+  const debitAccount = accountMap.get(apiItem.account_debit_id?.toString() || '');
+  const creditAccount = accountMap.get(apiItem.account_credit_id?.toString() || '');
+  
+  const debitName = debitAccount?.name || `ID: ${apiItem.account_debit_id}`;
+  const creditName = creditAccount?.name || `ID: ${apiItem.account_credit_id}`;
+  const debitCode = debitAccount?.code || '';
+  const creditCode = creditAccount?.code || '';
+  
+  // Format nama akun
+  const namaAkun = debitAccount && creditAccount 
+    ? `${debitCode} - ${debitName} dan ${creditCode} - ${creditName}`
+    : `Debit: ${debitName} | Credit: ${creditName}`;
   
   return {
     id: apiItem.id?.toString() || '0',
     tanggal: apiItem.date || '',
-    namaAkun: `${debitName} → ${creditName}`,
+    namaAkun,
     debit: apiItem.amount || 0,
     kredit: apiItem.amount || 0,
     keterangan: apiItem.note || '',
-    status: 'belum', // Default status, bisa diupdate sesuai kebutuhan
+    status: 'Belum Terealisasi', // Default status sesuai gambar
     planningId: apiItem.planning_id?.toString() || '0',
-    rencanaId: apiItem.id?.toString() || '0', // Add missing property
-    transactionGroup: `group_${apiItem.id || 0}`, // Add missing property
-    isFirstInGroup: true // Add missing property
+    rencanaId: apiItem.id?.toString() || '0',
+    transactionGroup: `group_${apiItem.id || 0}`,
+    isFirstInGroup: true
+  };
+};
+
+// Helper function to convert API response to RencanaRowItem format for merged cells
+const convertApiResponseToRencanaRowItem = (apiItem: any, accountMap: Map<string, {name: string, code: string}>): RencanaRowItem => {
+  console.log('Converting API item to row format:', apiItem);
+  
+  // Validate apiItem
+  if (!apiItem) {
+    console.error('API item is undefined or null');
+    return {
+      id: '0',
+      tanggal: '',
+      status: 'Belum Terealisasi',
+      keterangan: '',
+      planningId: '0',
+      rencanaId: '0',
+      transactionGroup: 'group_0',
+      isFirstInGroup: true,
+      rows: []
+    };
+  }
+  
+  // Get account details from mapping
+  const debitAccount = accountMap.get(apiItem.account_debit_id?.toString() || '');
+  const creditAccount = accountMap.get(apiItem.account_credit_id?.toString() || '');
+  
+  const debitName = debitAccount?.name || `ID: ${apiItem.account_debit_id}`;
+  const creditName = creditAccount?.name || `ID: ${apiItem.account_credit_id}`;
+  const debitCode = debitAccount?.code || '';
+  const creditCode = creditAccount?.code || '';
+  
+  // Create rows for debit and credit
+  const rows = [
+    {
+      namaAkun: `${debitCode} - ${debitName}`,
+      debit: apiItem.amount || 0,
+      kredit: 0
+    },
+    {
+      namaAkun: `${creditCode} - ${creditName}`,
+      debit: 0,
+      kredit: apiItem.amount || 0
+    }
+  ];
+  
+  return {
+    id: apiItem.id?.toString() || '0',
+    tanggal: apiItem.date || '',
+    status: 'Belum Terealisasi',
+    keterangan: apiItem.note || '',
+    planningId: apiItem.planning_id?.toString() || '0',
+    rencanaId: apiItem.id?.toString() || '0',
+    transactionGroup: `group_${apiItem.id || 0}`,
+    isFirstInGroup: true,
+    rows
   };
 };
 
@@ -75,6 +155,7 @@ const convertRencanaItemToFormData = (item: RencanaItem): any => {
 export function RencanaTab({ planningId }: RencanaTabProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [deletingItem, setDeletingItem] = useState<RencanaRowItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAccount, setSelectedAccount] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -86,26 +167,56 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
   // Build query parameters for API
   const queryParams = useMemo(() => ({
     ...(searchQuery ? { q: searchQuery } : {}),
-    ...(dateFrom ? { date_from: dateFrom } : {}),
-    ...(dateTo ? { date_to: dateTo } : {}),
+    ...(dateFrom ? { date_from: convertDateToISO(dateFrom) } : {}),
+    ...(dateTo ? { date_to: convertDateToISO(dateTo) } : {}),
     page: 1,
     limit: 100
   }), [searchQuery, dateFrom, dateTo]);
 
   // Use API hooks
   const { data: entriesResponse, isLoading, error, refetch } = useGetPlanningEntries(planningId, queryParams);
+  const { data: accountsResponse } = useGetPlanningAccounts({ page: 1, limit: 1000 });
   const createMutation = useCreatePlanningEntry(planningId);
   const updateMutation = useUpdatePlanningEntry(planningId, editingItem?.id || '');
 
-  // Convert API response to RencanaItem format
+  // Create account mapping for quick lookup
+  const accountMap = useMemo(() => {
+    if (!accountsResponse?.items) return new Map();
+    
+    const map = new Map();
+    accountsResponse.items.forEach((account: any) => {
+      map.set(account.id.toString(), {
+        name: account.name,
+        code: account.code
+      });
+    });
+    return map;
+  }, [accountsResponse]);
+
+  // Convert API response to flat array for table display with merged cells
   const rencanaData = useMemo(() => {
     console.log('Processing entries response:', entriesResponse);
     if (!entriesResponse?.items || !Array.isArray(entriesResponse.items)) {
       console.log('No valid items in response');
       return [];
     }
-    return entriesResponse.items.map(convertApiResponseToRencanaItem);
-  }, [entriesResponse]);
+    
+    const flatData: RencanaRowItem[] = [];
+    entriesResponse.items.forEach((item: PlanningEntryResponse) => {
+      const rowItem = convertApiResponseToRencanaRowItem(item, accountMap);
+      // Add multiple rows for each transaction (debit and credit)
+      rowItem.rows.forEach((_, index) => {
+        flatData.push({
+          ...rowItem,
+          // Add a unique key for each row
+          id: `${rowItem.id}_${index}`,
+          isFirstInGroup: index === 0
+        });
+      });
+    });
+    
+    return flatData;
+  }, [entriesResponse, accountMap]);
 
   const handleCreateRencana = async (data: any) => {
     try {
@@ -149,7 +260,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
       }
       
       const apiData = {
-        date: data.planningDate,
+        date: convertDateToISO(data.planningDate),
         account_debit_id: parseInt(firstAccount.account_id),
         account_credit_id: parseInt(firstAccount.account_id), // Same account for both debit and credit
         amount: totalAmount,
@@ -178,17 +289,29 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
     }
   };
 
-  const handleEditRencana = (item: RencanaItem) => {
-    const formData = convertRencanaItemToFormData(item);
+  const handleEditRencana = (item: RencanaRowItem) => {
+    // Convert RencanaRowItem back to form data format
+    const formData = {
+      name: item.keterangan || '',
+      planningDate: item.tanggal || '',
+      accounts: item.rows.map(row => ({
+        accountName: row.namaAkun,
+        debit: row.debit,
+        credit: row.kredit
+      }))
+    };
     setEditingItem({ ...formData, id: item.id });
     setShowCreateDialog(true);
   };
 
-  const handleDeleteRencana = async (item: RencanaItem) => {
+  const handleDeleteRencana = useCallback(async (item: RencanaRowItem) => {
     try {
-      // Use the delete mutation hook with the correct parameters
-      const deleteMutation = useDeletePlanningEntry(planningId, item.id);
-      await deleteMutation.mutateAsync();
+      // Set the item to be deleted first
+      setDeletingItem(item);
+      
+      // Import the API client directly
+      const { deletePlanningEntry } = await import('@/client/perencanaanClient');
+      await deletePlanningEntry(planningId, item.id.split('_')[0]);
       
       toast({
         title: 'Success',
@@ -203,10 +326,12 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
         description: 'Gagal menghapus rencana',
         variant: 'destructive',
       });
+    } finally {
+      setDeletingItem(null);
     }
-  };
+  }, [planningId, refetch, toast]);
 
-  const handleViewRencana = (item: RencanaItem) => {
+  const handleViewRencana = (item: RencanaRowItem) => {
     console.log('Viewing rencana:', item);
   };
 
@@ -238,7 +363,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
   return (
     <div className="space-y-4">
       {/* Search and Filter Section */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {/* Top Row: Search and Action Buttons */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1">
@@ -281,25 +406,25 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
         {/* Bottom Row: Date Range and Filters */}
         <div className="flex items-center gap-4">
           {/* Date Range */}
-          <div className="flex items-center gap-2 flex-1">
-            <div className="relative flex-1">
+          <div className="flex items-center gap-2">
+            <div className="relative">
               <Input
                 type="date"
-                placeholder="Tanggal Mulai"
+                placeholder="mm/dd/yyyy"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="pr-10"
+                className="w-[140px] pr-10"
               />
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             </div>
             
-            <div className="relative flex-1">
+            <div className="relative">
               <Input
                 type="date"
-                placeholder="Tanggal Selesai"
+                placeholder="mm/dd/yyyy"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="pr-10"
+                className="w-[140px] pr-10"
               />
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             </div>
@@ -307,7 +432,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
           
           {/* Account Filter */}
           <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Semua Akun" />
             </SelectTrigger>
             <SelectContent>
@@ -320,7 +445,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
           
           {/* Status Filter */}
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Semua Status" />
             </SelectTrigger>
             <SelectContent>
@@ -337,7 +462,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
       <Card>
         <CardContent className="p-0">
           <RencanaTable
-            columns={createRencanaColumns({
+            columns={createRencanaRowColumns({
               onEdit: handleEditRencana,
               onDelete: handleDeleteRencana,
               onView: handleViewRencana

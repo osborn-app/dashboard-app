@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatRupiah, formatDateIndonesian } from "@/lib/utils";
 import { Perencanaan } from "@/types/perencanaan";
+import Link from "next/link";
 
 export type PerencanaanItem = Perencanaan;
 
@@ -32,10 +33,14 @@ export const createPerencanaanColumns = ({
     header: "Description",
     cell: ({ row }) => {
       const name = row.getValue("name") as string;
+      const id = row.original.id;
       return (
-        <div className="font-medium text-sm">
+        <Link 
+          href={`/dashboard/perencanaan/${id}`}
+          className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline"
+        >
           {name}
-        </div>
+        </Link>
       );
     },
   },
@@ -91,12 +96,12 @@ export const createPerencanaanColumns = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            {onView && (
-              <DropdownMenuItem onClick={() => onView(perencanaan)}>
+            <DropdownMenuItem asChild>
+              <Link href={`/dashboard/perencanaan/${perencanaan.id}`}>
                 <Eye className="mr-2 h-4 w-4" />
                 Lihat Detail
-              </DropdownMenuItem>
-            )}
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEdit(perencanaan)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit

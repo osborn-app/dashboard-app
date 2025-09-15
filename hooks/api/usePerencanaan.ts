@@ -181,50 +181,50 @@ export const useGetPlanningAccounts = (params?: any) => {
 };
 
 // ===== PLANNING REPORTS API =====
-export const useGetLabaRugiReport = (planningId: string | number, params?: any) => {
+export const useGetLabaRugiReport = (params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getLabaRugiReport = async () => {
     const { data } = await axiosAuth.get(`${baseEndpoint}/reports/laba-rugi`, {
-      params: { planning_id: planningId, ...params },
+      params,
     });
     return data;
   };
 
   return useQuery({
-    queryKey: ["laba-rugi-report", planningId, params],
+    queryKey: ["laba-rugi-report", params],
     queryFn: getLabaRugiReport,
   });
 };
 
-export const useGetNeracaReport = (planningId: string | number, params?: any) => {
+export const useGetNeracaReport = (params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getNeracaReport = async () => {
     const { data } = await axiosAuth.get(`${baseEndpoint}/reports/neraca`, {
-      params: { planning_id: planningId, ...params },
+      params,
     });
     return data;
   };
 
   return useQuery({
-    queryKey: ["neraca-report", planningId, params],
+    queryKey: ["neraca-report", params],
     queryFn: getNeracaReport,
   });
 };
 
-export const useGetArusKasReport = (planningId: string | number, params?: any) => {
+export const useGetArusKasReport = (params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getArusKasReport = async () => {
     const { data } = await axiosAuth.get(`${baseEndpoint}/reports/arus-kas`, {
-      params: { planning_id: planningId, ...params },
+      params,
     });
     return data;
   };
 
   return useQuery({
-    queryKey: ["arus-kas-report", planningId, params],
+    queryKey: ["arus-kas-report", params],
     queryFn: getArusKasReport,
   });
 };

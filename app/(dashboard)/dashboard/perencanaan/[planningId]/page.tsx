@@ -19,7 +19,7 @@ const breadcrumbItems = [
 export default function DetailPerencanaanPage() {
   const params = useParams();
   const planningId = params.planningId as string;
-  const [activeTab, setActiveTab] = useState("rekening");
+  const [activeTab, setActiveTab] = useState("rencana");
 
   // Fetch planning data based on planningId
   const { data: planningData, isLoading, error } = useGetDetailPerencanaan(planningId);
