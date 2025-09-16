@@ -197,6 +197,13 @@ export const navItems: NavItem[] = [
         roles: ["admin"],
       },
       {
+        title: "Customer Ranking",
+        href: "/dashboard/customer-ranking",
+        icon: "users",
+        label: "customer-ranking",
+        roles: ["admin"],
+      },
+      {
         title: "Owners",
         href: "/dashboard/owners",
         icon: "owners",
@@ -353,46 +360,25 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    title: "KEUANGAN", //redeploy
-    label: "Keuangan",
-    roles: ["admin"],
-    items: [  
+    title: "Content Management System",
+    label: "extra",
+    roles: ["admin", "driver"],
+    items: [
       {
-        title: "Rekap Pencatatan",
-        href: "/dashboard/rekap-pencatatan",
-        icon: "files",
-        label: "Rekap Pencatatan",
-        roles: ["admin"],
+        title: "Content Management",
+        href: "/dashboard/cms",
+        icon: "contentImage",
+        label: "Content Management",
+        roles: ["admin"]
       },
       {
-        title: "Perencanaan",
-        href: "/dashboard/perencanaan",
-        icon: "files",
-        label: "Perencanaan",
-        roles: ["admin"],
-      },
-      {
-        title: "realisasi",
-        href: "/dashboard/realisasi",
-        icon: "notebookText",
-        label: "realisasi",
-        roles: ["admin"],
-      },
-      {
-        title: "Inventaris",
-        href: "/dashboard/inventaris",
-        icon: "archive",
-        label: "Inventaris",
-        roles: ["admin"],
+        title: "Kategori CMS",
+        href: "/dashboard/category-cms",
+        icon: "contentImage",
+        label: "Kategori CMS",
+        roles: ["admin"]
       },
     ],
-  },
-  {
-  title: "Content Management",
-  href: "/dashboard/cms",
-  icon: "contentImage",
-  label: "Content Management",
-  roles: ["admin"],
   },
 ];
 

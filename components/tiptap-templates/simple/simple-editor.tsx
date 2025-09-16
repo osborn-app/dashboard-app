@@ -148,9 +148,9 @@ const MainToolbarContent = ({
 
       {isMobile && <ToolbarSeparator />}
 
-      <ToolbarGroup>
+      {/* <ToolbarGroup>
         <ThemeToggle />
-      </ToolbarGroup>
+      </ToolbarGroup> */}
     </>
   )
 }
@@ -184,7 +184,12 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({ onChange }: { onChange?: (html: string) => void }) {
+interface SimpleEditorProps {
+  onChange?: (html: string) => void
+  initialContent?: string
+}
+
+export function SimpleEditor({ onChange, initialContent = '' }: SimpleEditorProps) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -196,6 +201,7 @@ export function SimpleEditor({ onChange }: { onChange?: (html: string) => void }
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
+    content: initialContent,
     editorProps: {
       attributes: {
         autocomplete: "off",
@@ -223,65 +229,69 @@ export function SimpleEditor({ onChange }: { onChange?: (html: string) => void }
       Superscript,
       Subscript,
       Selection,
-    ImageUploadNode.configure({
-      accept: "image/*",
-      maxSize: MAX_FILE_SIZE,
-      limit: 3,
-      upload: (file) => handleImageUpload(file, axiosAuth), // panggil versi yang pakai parameter
-      onError: (error) => console.error("Upload failed:", error),
-    }),
-
+      ImageUploadNode.configure({
+        accept: "image/*",
+        maxSize: MAX_FILE_SIZE,
+        limit: 3,
+        upload: (file) => handleImageUpload(file, axiosAuth),
+        onError: (error) => console.error("Upload failed:", error),
+      }),
     ],
-  content,
     onUpdate({ editor }) {
-    onChange?.(editor.getHTML())
-  },
-})
+      onChange?.(editor.getHTML())
+    },
+  })
 
-const rect = useCursorVisibility({
-  editor,
-  overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
-})
+  React.useEffect(() => {
+    if (editor && initialContent && editor.getHTML() !== initialContent) {
+      editor.commands.setContent(initialContent)
+    }
+  }, [editor, initialContent])
 
-React.useEffect(() => {
-  if (!isMobile && mobileView !== "main") {
-    setMobileView("main")
-  }
-}, [isMobile, mobileView])
+  const rect = useCursorVisibility({
+    editor,
+    overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
+  })
 
-return (
-  <div className="simple-editor-wrapper">
-    <EditorContext.Provider value={{ editor }}>
-      <Toolbar
-        ref={toolbarRef}
-        style={{
-          ...(isMobile
-            ? {
-              bottom: `calc(100% - ${height - rect.y}px)`,
-            }
-            : {}),
-        }}
-      >
-        {mobileView === "main" ? (
-          <MainToolbarContent
-            onHighlighterClick={() => setMobileView("highlighter")}
-            onLinkClick={() => setMobileView("link")}
-            isMobile={isMobile}
-          />
-        ) : (
-          <MobileToolbarContent
-            type={mobileView === "highlighter" ? "highlighter" : "link"}
-            onBack={() => setMobileView("main")}
-          />
-        )}
-      </Toolbar>
+  React.useEffect(() => {
+    if (!isMobile && mobileView !== "main") {
+      setMobileView("main")
+    }
+  }, [isMobile, mobileView])
 
-      <EditorContent
-        editor={editor}
-        role="presentation"
-        className="simple-editor-content"
-      />
-    </EditorContext.Provider>
-  </div>
-)
+  return (
+    <div className="simple-editor-wrapper">
+      <EditorContext.Provider value={{ editor }}>
+        <Toolbar
+          ref={toolbarRef}
+          style={{
+            ...(isMobile
+              ? {
+                bottom: `calc(100% - ${height - rect.y}px)`,
+              }
+              : {}),
+          }}
+        >
+          {mobileView === "main" ? (
+            <MainToolbarContent
+              onHighlighterClick={() => setMobileView("highlighter")}
+              onLinkClick={() => setMobileView("link")}
+              isMobile={isMobile}
+            />
+          ) : (
+            <MobileToolbarContent
+              type={mobileView === "highlighter" ? "highlighter" : "link"}
+              onBack={() => setMobileView("main")}
+            />
+          )}
+        </Toolbar>
+
+        <EditorContent
+          editor={editor}
+          role="presentation"
+          className="simple-editor-content"
+        />
+      </EditorContext.Provider>
+    </div>
+  )
 }

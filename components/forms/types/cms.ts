@@ -1,14 +1,17 @@
+import { Category } from "@/client/cmsCategoryClient";
+
 export interface CMSItem {
   id: number;
   title: string;
   slug: string;
-  thumbnail?: string;
+  thumbnail: string;
   description: string;
-  content?: string;
+  content: string;
   is_active: boolean;
+  categories?: Category[];
+  already_indexed: boolean;
   created_at: string;
   updated_at: string;
-  deleted_at?: string | null;
 }
 
 export interface CMSTableProps {

@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -25,6 +25,11 @@ import {
   DoubleArrowRightIcon,
 } from "@radix-ui/react-icons";
 import { CMSItem, CMSTableProps } from "@/components/forms/types/cms";
+import { X, Check, Link, Plus } from "lucide-react"
+import { Popover } from "antd"
+import { cn } from "@/lib/tiptap-utils";
+import { useRouter } from "next/navigation";
+import { formatDate, formatDateTime } from "@/lib/utils";
 
 
 export function CMSTable({
@@ -32,11 +37,10 @@ export function CMSTable({
   pageCount,
   pageNo,
   pageSize,
-  totalUsers,
   pageSizeOptions = [10, 20, 30, 40, 50],
   onPageChange,
   onPageSizeChange,
-  onToggleStatus, 
+  onToggleStatus,
 }: CMSTableProps) {
   const [rows, setRows] = React.useState<CMSItem[]>(() => data);
   const [loadingToggle, setLoadingToggle] = React.useState<number | null>(null);
@@ -47,7 +51,7 @@ export function CMSTable({
 
   const canPreviousPage = pageNo > 1;
   const canNextPage = pageNo < pageCount;
-
+  const router = useRouter();
   const handleFirstPage = () => onPageChange?.(1);
   const handlePreviousPage = () => canPreviousPage && onPageChange?.(pageNo - 1);
   const handleNextPage = () => canNextPage && onPageChange?.(pageNo + 1);
@@ -56,9 +60,9 @@ export function CMSTable({
 
   const handleToggleStatus = async (id: number, newStatus: boolean) => {
     if (!onToggleStatus) return;
-    
+
     setLoadingToggle(id);
-    
+
     setRows((prev) =>
       prev.map((item) => (item.id === id ? { ...item, is_active: newStatus } : item))
     );
@@ -78,47 +82,115 @@ export function CMSTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+
+        <Table className="table-fixed w-full min-w-[800px]">
           <TableHeader>
             <TableRow>
-              <TableHead>No</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="w-[5%] text-center">No</TableHead>
+              <TableHead className="w-[25%]">Judul Artikel</TableHead>
+              <TableHead className="w-[15%]">Tanggal Dibuat</TableHead>
+              <TableHead className="w-[15%]">Tanggal Update</TableHead>
+              <TableHead className="w-[8%] text-center">Indexed</TableHead>
+              <TableHead className="w-[10%] text-center">Status</TableHead>
+              <TableHead className="w-[13%] text-center">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length > 0 ? (
               rows.map((item, index) => (
                 <TableRow key={item.id}>
-                  <TableCell>{(pageNo - 1) * pageSize + index + 1}</TableCell>
-                  <TableCell>{item.title}</TableCell>
-                  <TableCell>{item.slug}</TableCell>
-                  <TableCell className="max-w-[250px] truncate">
-                    {item.description}
+                  <TableCell className="text-center">
+                    {(pageNo - 1) * pageSize + index + 1}
+                  </TableCell>
+                  <TableCell className="pr-2">
+                    <div 
+                      className="line-clamp-2 text-sm leading-relaxed" 
+                      title={item.title}
+                    >
+                      {item.title}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Switch
-                      checked={item.is_active}
-                      disabled={loadingToggle === item.id}
-                      onCheckedChange={(checked) =>
-                        handleToggleStatus(item.id, checked)
-                      }
-                    />
+                    <div 
+                      className="line-clamp-2 text-sm leading-relaxed break-words"
+                      title={formatDateTime(new Date(item.created_at))}
+                    >
+                      {formatDateTime(new Date(item.created_at))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div 
+                      className="line-clamp-2 text-sm leading-relaxed break-words"
+                      title={formatDateTime(new Date(item.updated_at))}
+                    >
+                      {formatDateTime(new Date(item.updated_at))}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {item.already_indexed ? (
+                      <Check className="h-5 w-5 text-green-600 mx-auto" />
+                    ) : (
+                      <X className="h-5 w-5 text-red-600 mx-auto" />
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center">
+                      <Switch
+                        checked={item.is_active}
+                        disabled={loadingToggle === item.id}
+                        onCheckedChange={(checked) =>
+                          handleToggleStatus(item.id, checked)
+                        }
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <Popover
+                        placement="left"
+                        trigger="click"
+                        content={
+                          <div className="max-w-[250px] p-3 flex flex-col gap-2">
+                            <a
+                              href={`https://transgo.id/content/${item.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block text-left text-sm text-gray-700 hover:bg-gray-100 px-2 py-1 rounded"
+                            >
+                              Lihat Artikel
+                            </a>
+
+
+                            <hr className="border-gray-200 my-1" />
+
+                           <button
+                            className="text-left text-sm text-gray-700 hover:bg-gray-100 px-2 py-1 rounded"
+                            onClick={() => router.push(`/dashboard/cms/edit/${item.id}`)}
+                          >
+                            Edit Artikel
+                          </button>
+                          </div>
+                        }
+                      >
+                        <Button>
+                          Lihat Detail
+                        </Button>
+                      </Popover>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center">
+                <TableCell colSpan={7} className="text-center">
                   No data found.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
