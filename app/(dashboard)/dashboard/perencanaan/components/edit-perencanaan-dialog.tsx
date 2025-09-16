@@ -13,8 +13,8 @@ type PerencanaanItem = Perencanaan;
 
 interface EditPerencanaanFormData {
   name: string;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
 }
 
 interface EditPerencanaanDialogProps {
@@ -27,8 +27,8 @@ interface EditPerencanaanDialogProps {
 export function EditPerencanaanDialog({ open, onOpenChange, item, onSubmit }: EditPerencanaanDialogProps) {
   const [formData, setFormData] = useState<EditPerencanaanFormData>({
     name: '',
-    startDate: '',
-    endDate: '',
+    start_date: '',
+    end_date: '',
   });
   const [errors, setErrors] = useState<Partial<EditPerencanaanFormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,8 +39,8 @@ export function EditPerencanaanDialog({ open, onOpenChange, item, onSubmit }: Ed
     if (item) {
       setFormData({
         name: item.name || '',
-        startDate: item.startDate || '',
-        endDate: item.endDate || '',
+        start_date: item.start_date || '',
+        end_date: item.end_date || '',
       });
     }
   }, [item]);
@@ -52,16 +52,16 @@ export function EditPerencanaanDialog({ open, onOpenChange, item, onSubmit }: Ed
       newErrors.name = 'Nama perencanaan harus diisi';
     }
 
-    if (!formData.startDate) {
-      newErrors.startDate = 'Tanggal awal harus diisi';
+    if (!formData.start_date) {
+      newErrors.start_date = 'Tanggal awal harus diisi';
     }
 
-    if (!formData.endDate) {
-      newErrors.endDate = 'Tanggal akhir harus diisi';
+    if (!formData.end_date) {
+      newErrors.end_date = 'Tanggal akhir harus diisi';
     }
 
-    if (formData.startDate && formData.endDate && new Date(formData.startDate) > new Date(formData.endDate)) {
-      newErrors.endDate = 'Tanggal akhir harus lebih besar dari tanggal awal';
+    if (formData.start_date && formData.end_date && new Date(formData.start_date) > new Date(formData.end_date)) {
+      newErrors.end_date = 'Tanggal akhir harus lebih besar dari tanggal awal';
     }
 
     setErrors(newErrors);
@@ -85,8 +85,8 @@ export function EditPerencanaanDialog({ open, onOpenChange, item, onSubmit }: Ed
     try {
       const apiData = {
         name: formData.name.trim(),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
       };
 
       onSubmit(apiData);
@@ -138,30 +138,30 @@ export function EditPerencanaanDialog({ open, onOpenChange, item, onSubmit }: Ed
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Tanggal Awal *</Label>
+              <Label htmlFor="start_date">Tanggal Awal *</Label>
               <Input
-                id="startDate"
+                id="start_date"
                 type="date"
-                value={formData.startDate}
-                onChange={(e) => handleInputChange('startDate', e.target.value)}
-                className={errors.startDate ? 'border-red-500' : ''}
+                value={formData.start_date}
+                onChange={(e) => handleInputChange('start_date', e.target.value)}
+                className={errors.start_date ? 'border-red-500' : ''}
               />
-              {errors.startDate && (
-                <p className="text-sm text-red-500">{errors.startDate}</p>
+              {errors.start_date && (
+                <p className="text-sm text-red-500">{errors.start_date}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">Tanggal Akhir *</Label>
+              <Label htmlFor="end_date">Tanggal Akhir *</Label>
               <Input
-                id="endDate"
+                id="end_date"
                 type="date"
-                value={formData.endDate}
-                onChange={(e) => handleInputChange('endDate', e.target.value)}
-                className={errors.endDate ? 'border-red-500' : ''}
+                value={formData.end_date}
+                onChange={(e) => handleInputChange('end_date', e.target.value)}
+                className={errors.end_date ? 'border-red-500' : ''}
               />
-              {errors.endDate && (
-                <p className="text-sm text-red-500">{errors.endDate}</p>
+              {errors.end_date && (
+                <p className="text-sm text-red-500">{errors.end_date}</p>
               )}
             </div>
           </div>

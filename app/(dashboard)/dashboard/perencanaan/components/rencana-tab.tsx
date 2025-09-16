@@ -290,6 +290,10 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
   };
 
   const handleEditRencana = (item: RencanaRowItem) => {
+    console.log('Edit rencana - original item.id:', item.id);
+    const baseId = item.id.split('_')[0];
+    console.log('Edit rencana - base ID for API:', baseId);
+    
     // Convert RencanaRowItem back to form data format
     const formData = {
       name: item.keterangan || '',
@@ -302,6 +306,11 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
     };
     setEditingItem({ ...formData, id: item.id });
     setShowCreateDialog(true);
+  };
+
+  const handleDeleteFromDialog = () => {
+    // Refresh the data after deletion
+    refetch();
   };
 
   const handleDeleteRencana = useCallback(async (item: RencanaRowItem) => {
@@ -478,6 +487,9 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
         onOpenChange={setShowCreateDialog}
         onSubmit={handleCreateRencana}
         editingData={editingItem}
+        planningId={planningId}
+        entryId={editingItem?.id ? parseInt(editingItem.id.split('_')[0]) : undefined}
+        onDelete={handleDeleteFromDialog}
       />
     </div>
   );

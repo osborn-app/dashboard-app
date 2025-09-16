@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
+import { useGetPlanningAccounts, useDeletePlanningEntry } from '@/hooks/api/usePerencanaan';
 import { Plus, Trash2 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 
@@ -31,9 +31,12 @@ interface CreateRencanaDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreateRencanaFormData) => void;
   editingData?: CreateRencanaFormData | null;
+  planningId?: string;
+  entryId?: string | number;
+  onDelete?: () => void;
 }
 
-export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData }: CreateRencanaDialogProps) {
+export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData, planningId, entryId, onDelete }: CreateRencanaDialogProps) {
   const [formData, setFormData] = useState<CreateRencanaFormData>({
     name: '',
     planningDate: '',
@@ -43,10 +46,14 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
   });
   const [errors, setErrors] = useState<Partial<Record<keyof CreateRencanaFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   // Fetch accounts data (level 2 only)
   const { data: accountsResponse } = useGetPlanningAccounts({ page: 1, limit: 1000 });
+  
+  // Delete mutation hook
+  const deleteMutation = useDeletePlanningEntry(planningId || '', entryId || '');
   
   const level2Accounts = useMemo(() => {
     if (!accountsResponse?.items) {
@@ -131,6 +138,48 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    console.log('Delete attempt - planningId:', planningId, 'entryId:', entryId);
+    
+    if (!planningId || !entryId) {
+      console.error('Missing IDs - planningId:', planningId, 'entryId:', entryId);
+      toast({
+        title: 'Error',
+        description: 'ID perencanaan atau entri tidak ditemukan',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+    
+    try {
+      console.log('Calling delete API with planningId:', planningId, 'entryId:', entryId);
+      await deleteMutation.mutateAsync();
+      
+      toast({
+        title: 'Success',
+        description: 'Rencana berhasil dihapus',
+      });
+      
+      // Close dialog and call onDelete callback
+      onOpenChange(false);
+      if (onDelete) {
+        onDelete();
+      }
+      
+    } catch (error) {
+      console.error('Error deleting rencana:', error);
+      toast({
+        title: 'Error',
+        description: 'Gagal menghapus rencana',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -356,15 +405,36 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData 
               Telah Terealisasi
             </Button>
             )}
+            {editingData && planningId && entryId && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDelete}
+                disabled={isDeleting || isSubmitting}
+                className="bg-red-500 text-white hover:bg-red-600"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Menghapus...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Hapus
+                  </>
+                )}
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isDeleting}
             >
               Batal
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || isDeleting}>
               {isSubmitting ? 'Menyimpan...' : 'Simpan'}
             </Button>
           </DialogFooter>
