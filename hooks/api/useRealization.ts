@@ -345,21 +345,38 @@ interface GetFinancialTransactionsParams {
   sort_dir?: 'ASC' | 'DESC';
 }
 
-export const useGetFinancialTransactions = (params: GetFinancialTransactionsParams = {}, options = {}) => {
+// export const useGetFinancialTransactions = (params: GetFinancialTransactionsParams = {}, options = {}) => {
+//   const axiosAuth = useAxiosAuth();
+
+//   const getFinancialTransactions = async () => {
+//     console.log("useGetFinancialTransactions params:", params); // Debug log
+    
+//     // Filter out undefined values
+//     const cleanParams = Object.fromEntries(
+//       Object.entries(params).filter(([_, value]) => value !== undefined)
+//     );
+    
+//     console.log("useGetFinancialTransactions cleanParams:", cleanParams); // Debug log
+    
+//     const { data } = await axiosAuth.get(`${baseEndpoint}/financial-transactions`, {
+//       params: cleanParams,
+//     });
+//     return data;
+//   };
+
+//   return useQuery({
+//     queryKey: ["realization", "transactions", params],
+//     queryFn: getFinancialTransactions,
+//     ...options,
+//   });
+// };
+
+export const useGetFinancialTransactions = (params?: GetFinancialTransactionsParams) => {
   const axiosAuth = useAxiosAuth();
 
   const getFinancialTransactions = async () => {
-    console.log("useGetFinancialTransactions params:", params); // Debug log
-    
-    // Filter out undefined values
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([_, value]) => value !== undefined)
-    );
-    
-    console.log("useGetFinancialTransactions cleanParams:", cleanParams); // Debug log
-    
     const { data } = await axiosAuth.get(`${baseEndpoint}/financial-transactions`, {
-      params: cleanParams,
+      params,
     });
     return data;
   };
@@ -367,7 +384,6 @@ export const useGetFinancialTransactions = (params: GetFinancialTransactionsPara
   return useQuery({
     queryKey: ["realization", "transactions", params],
     queryFn: getFinancialTransactions,
-    ...options,
   });
 };
 

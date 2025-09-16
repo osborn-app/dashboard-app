@@ -2,6 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import BreadCrumb from "@/components/breadcrumb";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -88,6 +91,12 @@ export default function JurnalUmumPage() {
   const params = useParams();
   const planningId = params.planningId as string;
   const { toast } = useToast();
+
+  const breadcrumbItems = [
+    { title: "Perencanaan", link: "/dashboard/perencanaan" },
+    { title: "Detail Perencanaan", link: `/dashboard/perencanaan/${planningId}` },
+    { title: "Laporan Jurnal Umum", link: "#" }
+  ];
 
   // State untuk search dan filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -179,8 +188,16 @@ export default function JurnalUmumPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <Card>
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <BreadCrumb items={breadcrumbItems} />
+
+      <div className="flex items-start justify-between">
+        <Heading title="Laporan Jurnal Umum" description="Laporan jurnal umum perencanaan keuangan" />
+      </div>
+      <Separator />
+
+      <div className="space-y-6">
+        <Card>
         <CardHeader>
           <CardTitle>Jurnal Umum Perencanaan</CardTitle>
         </CardHeader>
@@ -275,6 +292,7 @@ export default function JurnalUmumPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

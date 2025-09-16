@@ -11,7 +11,7 @@ import { FinancialTransaction, CreateFinancialTransactionData, Account, Transact
 import { TransactionTable } from "@/components/tables/transaction-tables/transaction-table";
 import { createTransactionColumns, TransactionItem } from "@/components/tables/transaction-tables/columns";
 import { AdvancedPagination } from "@/components/ui/advanced-pagination";
-import { useFinancialTransactionsWithFilters } from "@/hooks/useFinancialTransactionsPaginated";
+// import { useFinancialTransactionsWithFilters } from "@/hooks/useFinancialTransactionsPaginated";
 import { TransactionsSkeleton } from "./ui/skeleton-loading";
 
 interface TransactionListProps {
@@ -39,32 +39,37 @@ export default function TransactionList({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTransactionId, setSelectedTransactionId] = useState<number | null>(null);
 
-  // Use custom hook for paginated data with default limit 50
-  const {
-    transactions,
-    totalItems,
-    totalPages,
-    currentPage,
-    itemsPerPage,
-    isLoading,
-    error,
-    searchQuery,
-    setSearchQuery,
-    filters,
-    updateFilters,
-    goToPage,
-    updatePageSize,
-    refetch,
-  } = useFinancialTransactionsWithFilters({
-    limit: 50, // Default limit 50, can be changed
-    search: "",
+  // Use data from props instead of internal hook
+  const transactions = externalTransactions || [];
+  const [searchQuery, setSearchQuery] = useState(externalSearchQuery || "");
+  const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
     accountCode: "",
     categoryId: "",
   });
+  
+  // Local filtering for search
+  const filteredTransactions = transactions.filter(transaction => {
+    if (!searchQuery) return true;
+    const searchLower = searchQuery.toLowerCase();
+    return transaction.description?.toLowerCase().includes(searchLower) ||
+           (transaction as any).reference_number?.toLowerCase().includes(searchLower);
+  });
+
+  // Mock pagination data since we're using external data
+  const totalItems = filteredTransactions.length;
+  const totalPages = 1;
+  const currentPage = 1;
+  const itemsPerPage = 50;
+  const isLoading = false;
+  const error = null;
 
   // Handle filter changes
+  const updateFilters = (newFilters: Partial<typeof filters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
   const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
     updateFilters({ [field]: value });
   };
@@ -75,6 +80,19 @@ export default function TransactionList({
 
   const handleCategoryFilterChange = (value: string) => {
     updateFilters({ categoryId: value });
+  };
+
+  // Mock functions for pagination
+  const goToPage = (page: number) => {
+    console.log("Go to page:", page);
+  };
+
+  const updatePageSize = (newLimit: number) => {
+    console.log("Update page size:", newLimit);
+  };
+
+  const refetch = () => {
+    console.log("Refetch data");
   };
 
 
@@ -244,7 +262,7 @@ export default function TransactionList({
                 </Button>
               </div>
             </div>
-          ) : transactions.length === 0 ? (
+          ) : filteredTransactions.length === 0 ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <p className="text-gray-500">Tidak ada data transaksi</p>
@@ -254,13 +272,13 @@ export default function TransactionList({
             <TransactionTable
               columns={createTransactionColumns({
                 onEdit: (item) => {
-                  const transaction = transactions.find(t => t.id === item.id);
+                  const transaction = filteredTransactions.find(t => t.id === item.id);
                   if (transaction) {
                     handleEditClick(transaction);
                   }
                 }
               })}
-              data={convertToTransactionItems(transactions)}
+              data={convertToTransactionItems(filteredTransactions)}
             />
           )}
         </CardContent>
