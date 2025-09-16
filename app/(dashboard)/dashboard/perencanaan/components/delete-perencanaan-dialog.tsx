@@ -60,7 +60,7 @@ export function DeletePerencanaanDialog({ open, onOpenChange, item, onConfirm }:
             <h4 className="font-medium text-red-800 mb-2">Perencanaan yang akan dihapus:</h4>
             <p className="text-red-700 font-medium">{item.name}</p>
             <p className="text-red-600 text-sm mt-1">
-              Periode: {new Date(item.startDate).toLocaleDateString('id-ID')} - {new Date(item.endDate).toLocaleDateString('id-ID')}
+              Periode: {new Date(item.start_date).toLocaleDateString('id-ID')} - {new Date(item.end_date).toLocaleDateString('id-ID')}
             </p>
           </div>
         </div>
