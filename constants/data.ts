@@ -360,6 +360,41 @@ export const navItems: NavItem[] = [
     ],
   },
   {
+    title: "Finance Management",
+    label: "extra",
+    roles: ["admin", "driver"],
+    items: [
+      {
+        title: "Rekap Pencatatan",
+        href: "/dashboard/rekap-pencatatan",
+        icon: "contentImage",
+        label: "Rekap Pencatatan",
+        roles: ["admin"]
+      },
+      {
+        title: "realisasi",
+        href: "/dashboard/realisasi",
+        icon: "contentImage",
+        label: "realisasi",
+        roles: ["admin"]
+      },
+      {
+        title: "Inventaris",
+        href: "/dashboard/inventaris",
+        icon: "archive",
+        label: "Inventaris",
+        roles: ["admin"]
+      },
+      {
+        title: "Lainnya",
+        href: "/dashboard/lainnya",
+        icon: "archive",
+        label: "Lainnya",
+        roles: ["admin"]
+      },
+    ],
+  },
+  {
     title: "Content Management System",
     label: "extra",
     roles: ["admin", "driver"],
