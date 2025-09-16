@@ -21,11 +21,13 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  mergedColumns?: string[]; // Optional: specify which columns should be merged
 }
 
 export function RencanaTable<TData, TValue>({
   columns,
   data,
+  mergedColumns = ['tanggal', 'status', 'keterangan', 'actions'], // Default merged columns
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -80,7 +82,6 @@ export function RencanaTable<TData, TValue>({
                         const isLastColumn = cellIndex === row.getVisibleCells().length - 1;
                         
                         // Columns that should be merged (rowspan) - only show in first row of group
-                        const mergedColumns = ['tanggal', 'status', 'keterangan', 'actions'];
                         const shouldMerge = mergedColumns.includes(columnId);
                         
                         // Skip rendering merged columns for non-first rows

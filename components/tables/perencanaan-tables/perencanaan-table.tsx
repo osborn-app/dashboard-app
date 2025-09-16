@@ -197,7 +197,8 @@ export function PerencanaanTable<TData, TValue>({
                         className="px-4 py-3 last:flex last:justify-end"
                         onClick={() => {
                           if (!cell.id.includes("actions")) {
-                            const detailPath = `/dashboard/perencanaan/detail`;
+                            const planningId = row.original.id;
+                            const detailPath = `/dashboard/perencanaan/${planningId}`;
                             router.push(detailPath);
                           }
                         }}

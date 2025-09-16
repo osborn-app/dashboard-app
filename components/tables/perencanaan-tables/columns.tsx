@@ -11,8 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatRupiah, formatDate } from "@/lib/utils";
+import { formatRupiah, formatDateIndonesian } from "@/lib/utils";
 import { Perencanaan } from "@/types/perencanaan";
+import Link from "next/link";
 
 export type PerencanaanItem = Perencanaan;
 
@@ -32,42 +33,46 @@ export const createPerencanaanColumns = ({
     header: "Description",
     cell: ({ row }) => {
       const name = row.getValue("name") as string;
+      const id = row.original.id;
       return (
-        <div className="font-medium text-sm">
+        <Link 
+          href={`/dashboard/perencanaan/${id}`}
+          className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline"
+        >
           {name}
-        </div>
+        </Link>
       );
     },
   },
   {
-    accessorKey: "endDate",
+    accessorKey: "end_date",
     header: "Tanggal Akhir",
     cell: ({ row }) => {
-      const date = row.getValue("endDate") as string;
+      const date = row.getValue("end_date") as string;
       return (
         <div className="text-sm">
-          {formatDate(date, false)}
+          {formatDateIndonesian(date, false)}
         </div>
       );
     },
   },
   {
-    accessorKey: "startDate",
+    accessorKey: "start_date",
     header: "Tanggal Awal",
     cell: ({ row }) => {
-      const date = row.getValue("startDate") as string;
+      const date = row.getValue("start_date") as string;
       return (
         <div className="text-sm">
-          {formatDate(date, false)}
+          {formatDateIndonesian(date, false)}
         </div>
       );
     },
   },
   {
-    accessorKey: "totalValue",
+    accessorKey: "total_amount",
     header: "Total Perencanaan",
     cell: ({ row }) => {
-      const value = row.getValue("totalValue") as number;
+      const value = row.getValue("total_amount") as number;
       return (
         <div className="font-medium text-sm">
           {value ? formatRupiah(value) : "-"}
@@ -91,12 +96,12 @@ export const createPerencanaanColumns = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            {onView && (
-              <DropdownMenuItem onClick={() => onView(perencanaan)}>
+            <DropdownMenuItem asChild>
+              <Link href={`/dashboard/perencanaan/${perencanaan.id}`}>
                 <Eye className="mr-2 h-4 w-4" />
                 Lihat Detail
-              </DropdownMenuItem>
-            )}
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEdit(perencanaan)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit

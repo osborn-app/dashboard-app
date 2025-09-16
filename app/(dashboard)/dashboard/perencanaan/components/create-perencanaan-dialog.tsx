@@ -19,9 +19,10 @@ interface CreatePerencanaanDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreatePerencanaanData) => void;
+  isLoading?: boolean;
 }
 
-export function CreatePerencanaanDialog({ open, onOpenChange, onSubmit }: CreatePerencanaanDialogProps) {
+export function CreatePerencanaanDialog({ open, onOpenChange, onSubmit, isLoading = false }: CreatePerencanaanDialogProps) {
   const [formData, setFormData] = useState<CreatePerencanaanFormData>({
     name: '',
     startDate: '',
@@ -66,34 +67,14 @@ export function CreatePerencanaanDialog({ open, onOpenChange, onSubmit }: Create
       return;
     }
 
-    setIsSubmitting(true);
-    
-    try {
-      const apiData = {
-        name: formData.name.trim(),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-      };
+    const apiData = {
+      name: formData.name.trim(),
+      start_date: formData.startDate,
+      end_date: formData.endDate,
+    };
 
-      onSubmit(apiData);
 
-      // Reset form
-      setFormData({
-        name: '',
-        startDate: '',
-        endDate: '',
-      });
-      setErrors({});
-      
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Terjadi kesalahan saat membuat perencanaan',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    onSubmit(apiData);
   };
 
   const handleInputChange = (field: keyof CreatePerencanaanFormData, value: string) => {
@@ -169,8 +150,15 @@ export function CreatePerencanaanDialog({ open, onOpenChange, onSubmit }: Create
             >
               Batal
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Menyimpan...
+                </>
+              ) : (
+                'Simpan'
+              )}
             </Button>
           </DialogFooter>
         </form>
