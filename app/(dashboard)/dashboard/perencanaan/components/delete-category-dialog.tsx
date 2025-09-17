@@ -54,7 +54,7 @@ export const DeleteCategoryDialog = ({
             Hapus Kategori
           </DialogTitle>
           <DialogDescription>
-            Apakah Anda yakin ingin menghapus kategori <strong>"{categoryName}"</strong>?
+            Apakah Anda yakin ingin menghapus kategori <strong>&quot;{categoryName}&quot;</strong>?
             <br />
             <span className="text-red-600 font-medium">
               Tindakan ini tidak dapat dibatalkan dan akan menghapus semua akun yang terkait dengan kategori ini.
