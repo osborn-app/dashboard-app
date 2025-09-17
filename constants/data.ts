@@ -372,10 +372,17 @@ export const navItems: NavItem[] = [
         roles: ["admin"]
       },
       {
-        title: "realisasi",
-        href: "/dashboard/realisasi",
+        title: "Perencanaan",
+        href: "/dashboard/perencanaan",
         icon: "contentImage",
-        label: "realisasi",
+        label: "Perencanaan",
+        roles: ["admin"]
+      },
+      {
+        title: "Realisasi",
+        href: "/dashboard/realisasi",
+        icon: "archive",
+        label: "Realisasi",
         roles: ["admin"]
       },
       {
@@ -383,13 +390,6 @@ export const navItems: NavItem[] = [
         href: "/dashboard/inventaris",
         icon: "archive",
         label: "Inventaris",
-        roles: ["admin"]
-      },
-      {
-        title: "Lainnya",
-        href: "/dashboard/lainnya",
-        icon: "archive",
-        label: "Lainnya",
         roles: ["admin"]
       },
     ],
