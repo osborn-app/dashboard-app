@@ -32,6 +32,8 @@ export default function KategoriTab({ registerRefetchCallback }: KategoriTabProp
   });
   const { data: accountsData } = useGetAccounts({ page: 1, limit: 1000 });
   const createCategoryMutation = useCreateTransactionCategory();
+  const updateCategoryMutation = useUpdateTransactionCategory();
+  const deleteCategoryMutation = useDeleteTransactionCategory();
 
   // Register refetch callback for this tab
   useEffect(() => {
@@ -51,7 +53,9 @@ export default function KategoriTab({ registerRefetchCallback }: KategoriTabProp
 
   const handleUpdateCategory = async (id: number, categoryData: CreateTransactionCategoryData) => {
     try {
+      await updateCategoryMutation.mutateAsync({ id, body: categoryData });
       toast.success("Kategori berhasil diperbarui");
+      refetchCategories();
     } catch (error) {
       toast.error("Gagal memperbarui kategori");
       console.error("Error updating category:", error);
@@ -60,7 +64,9 @@ export default function KategoriTab({ registerRefetchCallback }: KategoriTabProp
 
   const handleDeleteCategory = async (id: number) => {
     try {
+      await deleteCategoryMutation.mutateAsync(id);
       toast.success("Kategori berhasil dihapus");
+      refetchCategories();
     } catch (error) {
       toast.error("Gagal menghapus kategori");
       console.error("Error deleting category:", error);

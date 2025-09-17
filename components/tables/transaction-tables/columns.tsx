@@ -96,23 +96,24 @@ export const createTransactionColumns = ({
       );
     },
   },
-  {
-    id: "actions",
-    header: "AKSI",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const transaction = row.original;
+  // Action column temporarily hidden
+  // {
+  //   id: "actions",
+  //   header: "AKSI",
+  //   enableHiding: false,
+  //   cell: ({ row }) => {
+  //     const transaction = row.original;
 
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(transaction)}
-          className="h-8 w-8 p-0"
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-      );
-    },
-  },
+  //     return (
+  //       <Button
+  //         variant="ghost"
+  //         size="sm"
+  //         onClick={() => onEdit(transaction)}
+  //         className="h-8 w-8 p-0"
+  //       >
+  //         <Edit className="h-4 w-4" />
+  //       </Button>
+  //     );
+  //   },
+  // },
 ];

@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Search, Filter, Download, Plus, Edit, Trash2 } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Account } from "../types";
 
@@ -32,18 +31,12 @@ interface BankAccount {
 
 interface BankAccountsTableProps {
   accounts: BankAccount[];
-  onAddAccount?: () => void;
-  onEditAccount?: (id: number) => void;
-  onDeleteAccount?: (id: number) => void;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
 }
 
 export default function BankAccountsTable({ 
   accounts, 
-  onAddAccount, 
-  onEditAccount, 
-  onDeleteAccount,
   searchQuery = "",
   onSearchChange
 }: BankAccountsTableProps) {
@@ -89,12 +82,12 @@ export default function BankAccountsTable({
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Bank Account Cards */}
@@ -120,21 +113,14 @@ export default function BankAccountsTable({
                     {/* Account Details */}
                     <div className="space-y-1">
                       <h4 className="font-bold text-gray-900">
-                        {account.bank_name}
+                        {account.bank_name} - {account.bank_account_number}
                       </h4>
                       <p className="text-sm text-gray-600">
-                        BANK - {account.bank_account_number}
+                        {account.name}
                       </p>
-                      {/* {account.bank_name && (
-                        <p className="text-sm text-blue-600 font-medium">
-                          {account.name}
-                        </p>
-                      )}
-                      {account.bank_account_number && (
-                        <p className="text-xs text-gray-500">
-                          No. Rek: {account.code} - {account.type}
-                        </p>
-                      )} */}
+                      <p className="text-sm text-blue-600 font-medium">
+                        Kode: {account.code}
+                      </p>
                     </div>
                   </div>
 
@@ -148,31 +134,6 @@ export default function BankAccountsTable({
                       <p className="text-xs text-gray-500">
                         {account.realTimeBalance !== undefined ? 'Saldo Real-time' : 'Saldo Awal'}
                       </p>
-                    </div>
-
-                    {/* Status and Actions */}
-                    <div className="flex items-center space-x-2">
-                      {/* {getStatusBadge(account.is_active)} */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onEditAccount?.(account.id)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => onDeleteAccount?.(account.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Hapus
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
                   </div>
                 </div>

@@ -106,7 +106,7 @@ function AccountItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEditAccount?.(account.id)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem>
+            {/* <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem> */}
             <DropdownMenuItem>View Details</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -219,7 +219,7 @@ function SortableAccountItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEditAccount?.(account.id)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem>
+            {/* <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem> */}
             <DropdownMenuItem>View Details</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
