@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
+import { useGetPlanningAccounts, useAssignAccountsToCategory } from '@/hooks/api/usePerencanaan';
 
 const formSchema = z.object({
   accountId: z.string().min(1, 'Akun wajib dipilih'),
@@ -51,6 +51,9 @@ export function ArusKasAccountForm({ isOpen, onClose, categoryId, onSuccess }: A
     search: accountSearch,
   });
 
+  // Mutation untuk assign account ke category
+  const assignAccountsMutation = useAssignAccountsToCategory(categoryId);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,10 +64,10 @@ export function ArusKasAccountForm({ isOpen, onClose, categoryId, onSuccess }: A
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
-      // TODO: Implement API call untuk assign account ke arus kas category
-      // await assignAccountsMutation.mutateAsync({
-      //   account_ids: [parseInt(values.accountId)]
-      // });
+      // API call untuk assign account ke arus kas category
+      await assignAccountsMutation.mutateAsync({
+        account_ids: [parseInt(values.accountId)]
+      });
       
       toast({
         title: 'Success',

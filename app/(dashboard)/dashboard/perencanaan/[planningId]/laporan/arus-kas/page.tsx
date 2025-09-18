@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import BreadCrumb from "@/components/breadcrumb";
 import { Heading } from "@/components/ui/heading";
@@ -15,7 +15,7 @@ import { CalendarIcon, Search, Plus, Trash2, MoreVertical, Edit } from 'lucide-r
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useGetArusKasReport } from '@/hooks/api/usePerencanaan';
+import { useGetArusKasReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ArusKasCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-category-accounts';
@@ -38,7 +38,7 @@ export default function ArusKasPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
-  const [activeTab, setActiveTab] = useState('data');
+  const [activeTab, setActiveTab] = useState('template');
   const [activeSubTab, setActiveSubTab] = useState('kategori');
   
   // State untuk modal
@@ -51,27 +51,14 @@ export default function ArusKasPage() {
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
-  // Mock data untuk kategori arus kas - TODO: Replace with real API
-  const [arusKasCategories, setArusKasCategories] = useState([
-    {
-      id: '1',
-      name: 'Arus Kas dari Aktivitas Operasi',
-      type: 'OPERASI',
-      accounts: []
-    },
-    {
-      id: '2', 
-      name: 'Arus Kas dari Aktivitas Investasi',
-      type: 'INVESTASI',
-      accounts: []
-    },
-    {
-      id: '3',
-      name: 'Arus Kas dari Aktivitas Pendanaan', 
-      type: 'PENDANAAN',
-      accounts: []
-    }
-  ]);
+  // State untuk template categories dan accounts - akan diisi dari API
+  const [arusKasCategories, setArusKasCategories] = useState<Array<{
+    id: string, 
+    name: string, 
+    description: string,
+    type: string,
+    accounts: Array<{id: string, name: string, code: string}>
+  }>>([]);
 
   // Fetch data dari API
   const { data: arusKasData, isLoading, error } = useGetArusKasReport({
@@ -79,15 +66,31 @@ export default function ArusKasPage() {
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
-  // TODO: Integrate with these API hooks when endpoints are ready:
-  // - useGetPlanningCategoriesSelect() - untuk mengambil kategori arus kas
-  // - useGetPlanningCategoryAccounts(categoryId) - untuk mengambil akun per kategori
-  // - usePostPlanningCategories() - untuk membuat kategori baru
-  // - useUpdatePlanningCategory() - untuk update kategori
-  // - useDeletePlanningCategory() - untuk delete kategori
-  // - usePostPlanningAccounts() - untuk membuat akun baru
-  // - useUpdatePlanningAccount() - untuk update akun
-  // - useDeletePlanningAccount() - untuk delete akun
+  // Hook untuk API categories
+  const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+
+  // Process categories data from API
+  useEffect(() => {
+    if (categoriesData) {
+      const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData.data || [];
+      
+      // Filter kategori berdasarkan tipe LAINNYA saja
+      const lainnyaCategories = categories.filter((cat: any) => cat.type === 'LAINNYA');
+      
+      // Transform data to match expected format
+      const transformCategory = (category: any) => ({
+        id: category.id.toString(),
+        name: category.name,
+        description: category.description || '',
+        type: category.type || 'OPERASI',
+        accounts: []
+      });
+      
+      const transformedCategories = lainnyaCategories.map(transformCategory);
+      
+      setArusKasCategories(transformedCategories);
+    }
+  }, [categoriesData]);
 
   // Handle rekap
   const handleRekap = () => {
@@ -128,11 +131,7 @@ export default function ArusKasPage() {
 
   // Handler untuk data change
   const handleDataChange = () => {
-    // TODO: Implement data refresh when API is ready
-    toast({
-      title: 'Data Updated',
-      description: 'Data berhasil diperbarui',
-    });
+    refetchCategories();
   };
 
   if (error) {
@@ -444,39 +443,64 @@ export default function ArusKasPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    {arusKasCategories.map((category) => (
-                      <div key={category.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-3">
-                          <h4 className="font-medium text-blue-600">{category.name}</h4>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem onClick={() => handleEditCategory(category)}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-red-600"
-                                onClick={() => handleDeleteCategory(category)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Hapus
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                    {/* Dynamic Categories - akan diisi dari API */}
+                    {arusKasCategories.length > 0 ? (
+                      arusKasCategories.map((category) => (
+                        <div key={category.id} className="border rounded-lg p-4">
+                          <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-bold text-blue-600 text-lg">{category.name}</h4>
+                            <div className="flex space-x-2">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                  <DropdownMenuItem onClick={() => handleEditCategory({
+                                    id: category.id,
+                                    name: category.name,
+                                    description: category.description,
+                                    type: category.type
+                                  })}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    className="text-red-600"
+                                    onClick={() => handleDeleteCategory({
+                                      id: category.id,
+                                      name: category.name,
+                                      description: category.description,
+                                      type: category.type
+                                    })}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Hapus
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                          
+                          {/* Header NAMA AKUN */}
+                          <div className="bg-gray-100 p-2 mb-2">
+                            <p className="font-bold text-gray-900">NAMA AKUN</p>
+                          </div>
+                          
+                          <ArusKasCategoryAccounts
+                            categoryId={category.id}
+                            onAddAccount={() => handleAddAccount(category.id)}
+                            onEditAccount={handleEditAccount}
+                            onDeleteAccount={handleDeleteAccount}
+                          />
                         </div>
-                        <ArusKasCategoryAccounts
-                          categoryId={category.id}
-                          onAddAccount={() => handleAddAccount(category.id)}
-                          onEditAccount={handleEditAccount}
-                          onDeleteAccount={handleDeleteAccount}
-                        />
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>Belum ada kategori arus kas. Tambahkan kategori di atas.</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </TabsContent>
 
