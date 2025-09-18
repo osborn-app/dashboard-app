@@ -12,7 +12,7 @@ const breadcrumbItems = [{ title: "Perencanaan", link: "/dashboard/perencanaan" 
 export const metadata: Metadata = {
   title: "Perencanaan | Transgo",
   description: "Kelola perencanaan keuangan perusahaan",
-};
+}; //redeploy
 
 const page = async () => {
   const session = await getServerSession(authOptions);
