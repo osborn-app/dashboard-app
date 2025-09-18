@@ -11,11 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useGetPlanningAccounts, useDeletePlanningEntry } from '@/hooks/api/usePerencanaan';
 import { Plus, Trash2 } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RencanaAccount {
   id: string;
   accountName: string;
-  account_id: string;
+  account_debit_id: string;
+  account_credit_id: string;
   debit: number;
   credit: number;
 }
@@ -41,12 +43,14 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
     name: '',
     planningDate: '',
     accounts: [
-      { id: '1', accountName: '', account_id: '', debit: 0, credit: 0 }
+      { id: '1', accountName: '', account_debit_id: '', account_credit_id: '', debit: 0, credit: 0 }
     ]
   });
   const [errors, setErrors] = useState<Partial<Record<keyof CreateRencanaFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [debitAccountSearch, setDebitAccountSearch] = useState('');
+  const [creditAccountSearch, setCreditAccountSearch] = useState('');
   const { toast } = useToast();
 
   // Fetch accounts data (level 2 only)
@@ -67,14 +71,17 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
 
   // Initialize form data when editing or reset when creating
   React.useEffect(() => {
+    console.log('useEffect triggered, editingData:', editingData);
     if (editingData) {
+      console.log('Setting form data from editingData:', editingData);
       setFormData(editingData);
     } else {
       // Reset form when creating new
+      console.log('Resetting form for new entry');
       setFormData({
         name: '',
         planningDate: '',
-        accounts: [{ id: '1', accountName: '', account_id: '', debit: 0, credit: 0 }]
+        accounts: [{ id: '1', accountName: '', account_debit_id: '', account_credit_id: '', debit: 0, credit: 0 }]
       });
       setErrors({});
     }
@@ -82,6 +89,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof CreateRencanaFormData, string>> = {};
+
+    console.log('Validating form data:', formData);
 
     if (!formData.name.trim()) {
       newErrors.name = 'Nama rencana harus diisi';
@@ -91,15 +100,20 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
       newErrors.planningDate = 'Tanggal perencanaan harus diisi';
     }
 
-    // Validate accounts
-    const hasValidAccounts = formData.accounts.some(account => 
-      account.account_id && (account.debit > 0 || account.credit > 0)
-    );
+    // Validate accounts - check if we have at least one complete journal entry
+    const hasValidAccounts = formData.accounts.some(account => {
+      const isValid = account.account_debit_id && account.account_credit_id && account.debit > 0 && account.credit > 0 && account.debit === account.credit;
+      console.log('Account validation:', { account, isValid });
+      return isValid;
+    });
+
+    console.log('Has valid accounts:', hasValidAccounts);
 
     if (!hasValidAccounts) {
-      newErrors.accounts = 'Minimal satu akun harus diisi dengan jumlah debit atau kredit';
+      newErrors.accounts = 'Pilih akun debit, akun credit, dan isi jumlah yang sama untuk debit & kredit';
     }
 
+    console.log('Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -107,7 +121,10 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted, validating...');
+    
     if (!validateForm()) {
+      console.log('Validation failed');
       toast({
         title: 'Validation Error',
         description: 'Mohon periksa kembali form yang diisi',
@@ -115,6 +132,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
       });
       return;
     }
+    
+    console.log('Validation passed, submitting...');
 
     setIsSubmitting(true);
     
@@ -126,7 +145,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
       setFormData({
         name: '',
         planningDate: '',
-        accounts: [{ id: '1', accountName: '', account_id: '', debit: 0, credit: 0 }]
+        accounts: [{ id: '1', accountName: '', account_debit_id: '', account_credit_id: '', debit: 0, credit: 0 }]
       });
       setErrors({});
       
@@ -196,7 +215,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
     const newAccount: RencanaAccount = {
       id: Date.now().toString(),
       accountName: '',
-      account_id: '',
+      account_debit_id: '',
+      account_credit_id: '',
       debit: 0,
       credit: 0
     };
@@ -216,30 +236,19 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   };
 
   const updateAccount = (accountId: string, field: keyof RencanaAccount, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      accounts: prev.accounts.map(account =>
-        account.id === accountId ? { ...account, [field]: value } : account
-      )
-    }));
+    console.log('updateAccount called:', { accountId, field, value });
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        accounts: prev.accounts.map(account =>
+          account.id === accountId ? { ...account, [field]: value } : account
+        )
+      };
+      console.log('Form data updated:', updated);
+      return updated;
+    });
   };
 
-  const handleAccountSelect = (accountId: string, selectedAccount: any) => {
-    console.log('Account selected:', { accountId, selectedAccount });
-    
-    setFormData(prev => ({
-      ...prev,
-      accounts: prev.accounts.map(account =>
-        account.id === accountId 
-          ? { 
-              ...account, 
-              account_id: selectedAccount.id.toString(),
-              accountName: `${selectedAccount.code} - ${selectedAccount.name}`
-            } 
-          : account
-      )
-    }));
-  };
 
 
   const totalDebit = formData.accounts.reduce((sum, account) => sum + (account.debit || 0), 0);
@@ -297,57 +306,118 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
             <CardContent className="space-y-4">
               {/* Table Header */}
               <div className="grid grid-cols-12 gap-4 font-medium text-sm">
-                <div className="col-span-5">Nama Akun</div>
-                <div className="col-span-3">Debit</div>
-                <div className="col-span-3">Kredit</div>
-                <div className="col-span-1"></div>
+                <div className="col-span-3">Akun Debit</div>
+                <div className="col-span-3">Akun Credit</div>
+                <div className="col-span-2">Debit</div>
+                <div className="col-span-2">Kredit</div>
+                <div className="col-span-2"></div>
               </div>
 
               {/* Account Rows */}
               {formData.accounts.map((account, index) => (
                 <div key={account.id} className="grid grid-cols-12 gap-4 items-center">
-                  {/* Account Dropdown */}
-                  <div className="col-span-5">
+                  {/* Debit Account Dropdown */}
+                  <div className="col-span-3">
                     <Select
-                      value={account.account_id || ""}
+                      value={account.account_debit_id || ""}
                       onValueChange={(value) => {
-                        console.log('Select value changed:', value);
-                        const selectedAccount = level2Accounts.find((acc: any) => acc.id.toString() === value);
-                        if (selectedAccount) {
-                          handleAccountSelect(account.id, selectedAccount);
-                        }
+                        console.log('Debit account selected:', value);
+                        updateAccount(account.id, 'account_debit_id', value);
                       }}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Pilih akun" />
+                        <SelectValue placeholder="Pilih akun debit" />
                       </SelectTrigger>
                       <SelectContent>
-                        {level2Accounts.map((acc: any) => (
-                          <SelectItem key={acc.id} value={acc.id.toString()}>
-                            <div className="flex flex-col">
-                              <span className="font-mono text-xs">{acc.code}</span>
-                              <span className="text-sm">{acc.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
+                        <div className="p-2">
+                          <Input
+                            placeholder="Cari akun debit..."
+                            value={debitAccountSearch}
+                            onChange={(e) => setDebitAccountSearch(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        <ScrollArea className="max-h-60 overflow-y-auto">
+                          {level2Accounts
+                            .filter((acc: any) => 
+                              acc.name.toLowerCase().includes(debitAccountSearch.toLowerCase()) ||
+                              acc.code.toLowerCase().includes(debitAccountSearch.toLowerCase())
+                            )
+                            .map((acc: any) => (
+                              <SelectItem key={acc.id} value={acc.id.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-mono text-xs">{acc.code}</span>
+                                  <span className="text-sm">{acc.name}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </ScrollArea>
                       </SelectContent>
                     </Select>
                   </div>
 
+                  {/* Credit Account Dropdown */}
                   <div className="col-span-3">
+                    <Select
+                      value={account.account_credit_id || ""}
+                      onValueChange={(value) => {
+                        console.log('Credit account selected:', value);
+                        updateAccount(account.id, 'account_credit_id', value);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Pilih akun credit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="p-2">
+                          <Input
+                            placeholder="Cari akun credit..."
+                            value={creditAccountSearch}
+                            onChange={(e) => setCreditAccountSearch(e.target.value)}
+                            className="h-8"
+                          />
+                        </div>
+                        <ScrollArea className="max-h-60 overflow-y-auto">
+                          {level2Accounts
+                            .filter((acc: any) => 
+                              acc.name.toLowerCase().includes(creditAccountSearch.toLowerCase()) ||
+                              acc.code.toLowerCase().includes(creditAccountSearch.toLowerCase())
+                            )
+                            .map((acc: any) => (
+                              <SelectItem key={acc.id} value={acc.id.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-mono text-xs">{acc.code}</span>
+                                  <span className="text-sm">{acc.name}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </ScrollArea>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="col-span-2">
                     <Input
                       type="number"
                       placeholder="0"
                       value={account.debit || ''}
-                      onChange={(e) => updateAccount(account.id, 'debit', parseFloat(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const debitValue = parseFloat(e.target.value) || 0;
+                        updateAccount(account.id, 'debit', debitValue);
+                        updateAccount(account.id, 'credit', debitValue); // Auto-sync credit with debit
+                      }}
                     />
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <Input
                       type="number"
                       placeholder="0"
                       value={account.credit || ''}
-                      onChange={(e) => updateAccount(account.id, 'credit', parseFloat(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const creditValue = parseFloat(e.target.value) || 0;
+                        updateAccount(account.id, 'credit', creditValue);
+                        updateAccount(account.id, 'debit', creditValue); // Auto-sync debit with credit
+                      }}
                     />
                   </div>
                   <div className="col-span-1">

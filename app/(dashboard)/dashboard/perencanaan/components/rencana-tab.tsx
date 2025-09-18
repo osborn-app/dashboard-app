@@ -114,12 +114,16 @@ const convertApiResponseToRencanaRowItem = (apiItem: any, accountMap: Map<string
     {
       namaAkun: `${debitCode} - ${debitName}`,
       debit: apiItem.amount || 0,
-      kredit: 0
+      kredit: 0,
+      account_debit_id: apiItem.account_debit_id?.toString() || '',
+      account_credit_id: apiItem.account_credit_id?.toString() || ''
     },
     {
       namaAkun: `${creditCode} - ${creditName}`,
       debit: 0,
-      kredit: apiItem.amount || 0
+      kredit: apiItem.amount || 0,
+      account_debit_id: apiItem.account_debit_id?.toString() || '',
+      account_credit_id: apiItem.account_credit_id?.toString() || ''
     }
   ];
   
@@ -235,10 +239,10 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
       const firstAccount = data.accounts[0];
       
       // Validate account selection
-      if (!firstAccount?.account_id) {
+      if (!firstAccount?.account_debit_id || !firstAccount?.account_credit_id) {
         toast({
           title: 'Error',
-          description: 'Pilih akun terlebih dahulu',
+          description: 'Pilih akun debit dan credit terlebih dahulu',
           variant: 'destructive',
         });
         return;
@@ -247,22 +251,32 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
       // Convert form data to API format
       const debitAmount = parseFloat(firstAccount.debit || '0');
       const creditAmount = parseFloat(firstAccount.credit || '0');
-      const totalAmount = debitAmount + creditAmount;
       
-      // Validate amount
-      if (totalAmount <= 0) {
+      // Validate amount - debit and credit should be equal for proper journal entry
+      if (debitAmount <= 0 || creditAmount <= 0) {
         toast({
           title: 'Error',
-          description: 'Jumlah debit atau kredit harus lebih dari 0',
+          description: 'Jumlah debit dan kredit harus lebih dari 0',
           variant: 'destructive',
         });
         return;
       }
       
+      if (debitAmount !== creditAmount) {
+        toast({
+          title: 'Error',
+          description: 'Jumlah debit dan kredit harus sama',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const totalAmount = debitAmount; // Use debit amount as total
+      
       const apiData = {
         date: convertDateToISO(data.planningDate),
-        account_debit_id: parseInt(firstAccount.account_id),
-        account_credit_id: parseInt(firstAccount.account_id), // Same account for both debit and credit
+        account_debit_id: parseInt(firstAccount.account_debit_id),
+        account_credit_id: parseInt(firstAccount.account_credit_id),
         amount: totalAmount,
         note: data.name || null
       };
@@ -298,11 +312,14 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
     const formData = {
       name: item.keterangan || '',
       planningDate: item.tanggal || '',
-      accounts: item.rows.map(row => ({
-        accountName: row.namaAkun,
-        debit: row.debit,
-        credit: row.kredit
-      }))
+      accounts: [{
+        id: '1',
+        accountName: '',
+        account_debit_id: item.rows[0]?.account_debit_id || '',
+        account_credit_id: item.rows[0]?.account_credit_id || '',
+        debit: item.rows[0]?.debit || 0,
+        credit: item.rows[1]?.kredit || 0
+      }]
     };
     setEditingItem({ ...formData, id: item.id });
     setShowCreateDialog(true);
