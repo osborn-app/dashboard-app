@@ -1,129 +1,182 @@
 "use client";
-import React, { useState } from 'react';
+
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
+
+const formSchema = z.object({
+  accountId: z.string().min(1, 'Akun wajib dipilih'),
+});
 
 interface ArusKasAccountFormProps {
   isOpen: boolean;
   onClose: () => void;
   categoryId: string;
   onSuccess?: () => void;
-  editData?: {
-    id: string;
-    name: string;
-    code: string;
-    formula?: string;
-  } | null;
-  onDataChange?: () => void;
 }
 
-export const ArusKasAccountForm = ({ 
-  isOpen, 
-  onClose, 
-  categoryId,
-  onSuccess,
-  editData,
-  onDataChange 
-}: ArusKasAccountFormProps) => {
+export function ArusKasAccountForm({ isOpen, onClose, categoryId, onSuccess }: ArusKasAccountFormProps) {
+  const [loading, setLoading] = useState(false);
+  const [accountSearch, setAccountSearch] = useState('');
   const { toast } = useToast();
-  const isEditMode = !!editData;
   
-  const [formData, setFormData] = useState({
-    name: editData?.name || '',
-    code: editData?.code || '',
-    formula: editData?.formula || '',
-    category_id: categoryId
+  // Get all planning accounts for dropdown
+  const { data: accountsData, isLoading: isLoadingAccounts } = useGetPlanningAccounts({
+    search: accountSearch,
   });
 
-  React.useEffect(() => {
-    if (editData) {
-      setFormData({
-        name: editData.name,
-        code: editData.code,
-        formula: editData.formula || '',
-        category_id: categoryId
-      });
-    }
-  }, [editData, categoryId]);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      accountId: '',
+    },
+  });
 
-  // TODO: Integrate with API hooks when ready
-  // const createAccountMutation = usePostPlanningAccounts(formData);
-  // const updateAccountMutation = useUpdatePlanningAccount(editData?.id || '');
-
-  const handleSubmit = async () => {
-    if (!formData.name.trim()) {
-      toast({ title: 'Error', description: 'Nama akun harus diisi', variant: 'destructive' });
-      return;
-    }
-
-    if (!formData.code.trim()) {
-      toast({ title: 'Error', description: 'Kode akun harus diisi', variant: 'destructive' });
-      return;
-    }
-
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    setLoading(true);
     try {
-      // TODO: Replace with real API calls
-      if (isEditMode) {
-        // await updateAccountMutation.mutateAsync(formData);
-        toast({ title: 'Success', description: 'Akun berhasil diperbarui' });
-      } else {
-        // await createAccountMutation.mutateAsync();
-        toast({ title: 'Success', description: 'Akun berhasil ditambahkan' });
-      }
-      onClose();
+      // TODO: Implement API call untuk assign account ke arus kas category
+      // await assignAccountsMutation.mutateAsync({
+      //   account_ids: [parseInt(values.accountId)]
+      // });
+      
+      toast({
+        title: 'Success',
+        description: 'Akun berhasil ditambahkan ke kategori arus kas',
+      });
+      
       onSuccess?.();
-      onDataChange?.();
-    } catch (error) {
-      toast({ title: 'Error', description: isEditMode ? 'Gagal memperbarui akun' : 'Gagal menambahkan akun', variant: 'destructive' });
+      onClose();
+      form.reset();
+      setAccountSearch('');
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error?.response?.data?.message || 'Gagal menambahkan akun',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setFormData({ name: '', code: '', formula: '', category_id: categoryId });
+    form.reset();
+    setAccountSearch('');
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit Akun' : 'Tambah Akun'}</DialogTitle>
+          <DialogTitle>Tambah Akun ke Kategori Arus Kas</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Nama Akun</label>
-            <Input 
-              placeholder="Masukkan nama akun" 
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="accountId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Pilih Akun</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih akun..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <div className="p-2">
+                        <Input
+                          placeholder="Cari akun..."
+                          value={accountSearch}
+                          onChange={(e) => setAccountSearch(e.target.value)}
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {isLoadingAccounts ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            Loading...
+                          </div>
+                        ) : accountsData?.items?.length > 0 ? (
+                          accountsData.items
+                            .filter((account: any) =>
+                              account.name.toLowerCase().includes(accountSearch.toLowerCase()) ||
+                              account.code.toLowerCase().includes(accountSearch.toLowerCase())
+                            )
+                            .map((account: any) => (
+                              <SelectItem key={account.id} value={account.id.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{account.code} - {account.name}</span>
+                                  {account.description && (
+                                    <span className="text-sm text-muted-foreground">
+                                      {account.description}
+                                    </span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            Akun tidak ditemukan
+                          </div>
+                        )}
+                        {accountsData?.items?.filter((account: any) =>
+                          account.name.toLowerCase().includes(accountSearch.toLowerCase()) ||
+                          account.code.toLowerCase().includes(accountSearch.toLowerCase())
+                        )?.length === 0 && accountsData?.items?.length > 0 && (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            Akun tidak ditemukan
+                          </div>
+                        )}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Kode Akun</label>
-            <Input 
-              placeholder="Masukkan kode akun" 
-              value={formData.code}
-              onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Formula</label>
-            <Input 
-              placeholder="Masukkan formula (opsional)" 
-              value={formData.formula}
-              onChange={(e) => setFormData(prev => ({ ...prev, formula: e.target.value }))}
-            />
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={handleClose}>Batal</Button>
-            <Button onClick={handleSubmit}>
-              {isEditMode ? 'Perbarui' : 'Simpan'}
-            </Button>
-          </div>
-        </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Batal
+              </Button>
+              <Button type="submit" disabled={loading || isLoadingAccounts}>
+                {loading ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
-};
+}

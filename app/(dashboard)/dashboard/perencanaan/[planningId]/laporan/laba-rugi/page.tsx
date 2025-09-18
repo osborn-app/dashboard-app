@@ -16,8 +16,10 @@ import { CalendarIcon, Search, Plus, Trash2, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useGetLabaRugiReport } from '@/hooks/api/usePerencanaan';
+import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
+import { AccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/account-form';
+import { LabaRugiCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/laba-rugi-category-accounts';
 
 export default function LabaRugiPage() {
   const params = useParams();
@@ -37,10 +39,14 @@ export default function LabaRugiPage() {
   const [activeTab, setActiveTab] = useState('data');
   const [activeSubTab, setActiveSubTab] = useState('pendapatan');
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
-  // State untuk template accounts - akan diisi dari API
-  const [pendapatanAccounts, setPendapatanAccounts] = useState<Array<{id: string, name: string, code: string}>>([]);
-  const [bebanAccounts, setBebanAccounts] = useState<Array<{id: string, name: string, code: string}>>([]);
+  // Get planning categories untuk laba rugi (PENDAPATAN dan BEBAN)
+  const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+  
+  // Filter categories berdasarkan type
+  const pendapatanCategories = categoriesData?.filter((cat: any) => cat.type === 'PENDAPATAN') || [];
+  const bebanCategories = categoriesData?.filter((cat: any) => cat.type === 'BEBAN') || [];
 
   // TODO: Implementasi endpoint untuk mengambil template accounts
   // Endpoint yang diperlukan:
@@ -68,6 +74,33 @@ export default function LabaRugiPage() {
       title: 'Rekap Laba Rugi',
       description: 'Fitur rekap akan segera tersedia',
     });
+  };
+
+  // Handler untuk tambah akun
+  const handleAddAccount = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setIsAddAccountModalOpen(true);
+  };
+
+  // Handler untuk edit akun
+  const handleEditAccount = (accountId: string) => {
+    toast({
+      title: 'Edit Account',
+      description: `Edit account dengan ID: ${accountId}`,
+    });
+  };
+
+  // Handler untuk delete akun
+  const handleDeleteAccount = (accountId: string) => {
+    toast({
+      title: 'Delete Account',
+      description: `Hapus account dengan ID: ${accountId}`,
+    });
+  };
+
+  // Handler untuk data change
+  const handleDataChange = () => {
+    refetchCategories();
   };
 
   if (error) {
@@ -367,96 +400,28 @@ export default function LabaRugiPage() {
 
                 {/* Pendapatan Sub Tab */}
                 <TabsContent value="pendapatan" className="space-y-4">
-                  <h2 className="text-lg font-bold text-gray-900">PENDAPATAN</h2>
-                  
-                  {/* Header NAMA AKUN */}
-                  <div className="bg-gray-100 p-2">
-                    <p className="font-bold text-gray-900">NAMA AKUN</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {/* Account Items - akan diisi dari API */}
-                    {pendapatanAccounts.length > 0 ? (
-                      pendapatanAccounts.map((account, index) => (
-                        <div key={index} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                            <div>
-                              <p className="text-sm text-gray-500">-</p>
-                            </div>
-                          </div>
-                          <div className="flex space-x-2">
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:text-red-700">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="bg-gray-50 rounded-lg p-3 text-center">
-                        <p className="text-sm text-gray-500">Belum ada akun pendapatan</p>
-                      </div>
-                    )}
-
-                    {/* Add Button */}
-                    <div 
-                      onClick={() => setIsAddAccountModalOpen(true)}
-                      className="bg-gray-50 rounded-lg p-3 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                      <div className="text-blue-500 font-medium text-sm">TAMBAH</div>
-                    </div>
-                  </div>
+                  {pendapatanCategories.map((category: any) => (
+                    <LabaRugiCategoryAccounts
+                      key={category.id}
+                      category={category}
+                      onAddAccount={handleAddAccount}
+                      onEditAccount={handleEditAccount}
+                      onDeleteAccount={handleDeleteAccount}
+                    />
+                  ))}
                 </TabsContent>
 
                 {/* Beban Sub Tab */}
                 <TabsContent value="beban" className="space-y-4">
-                  <h2 className="text-lg font-bold text-gray-900">BEBAN</h2>
-                  
-                  {/* Header NAMA AKUN */}
-                  <div className="bg-gray-100 p-2">
-                    <p className="font-bold text-gray-900">NAMA AKUN</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {/* Account Items - akan diisi dari API */}
-                    {bebanAccounts.length > 0 ? (
-                      bebanAccounts.map((account, index) => (
-                        <div key={index} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                            <div>
-                              <p className="text-sm text-gray-500">-</p>
-                            </div>
-                          </div>
-                          <div className="flex space-x-2">
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:text-red-700">
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="bg-gray-50 rounded-lg p-3 text-center">
-                        <p className="text-sm text-gray-500">Belum ada akun beban</p>
-                      </div>
-                    )}
-
-                    {/* Add Button */}
-                    <div 
-                      onClick={() => setIsAddAccountModalOpen(true)}
-                      className="bg-gray-50 rounded-lg p-3 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                      <div className="text-blue-500 font-medium text-sm">+ TAMBAH</div>
-                    </div>
-                  </div>
+                  {bebanCategories.map((category: any) => (
+                    <LabaRugiCategoryAccounts
+                      key={category.id}
+                      category={category}
+                      onAddAccount={handleAddAccount}
+                      onEditAccount={handleEditAccount}
+                      onDeleteAccount={handleDeleteAccount}
+                    />
+                  ))}
                 </TabsContent>
 
                 {/* Rumus Sub Tab */}
@@ -502,6 +467,14 @@ export default function LabaRugiPage() {
       </Card>
         </div>
       </Tabs>
+
+      {/* Account Form Modal */}
+      <AccountForm
+        isOpen={isAddAccountModalOpen}
+        onClose={() => setIsAddAccountModalOpen(false)}
+        categoryId={selectedCategoryId}
+        onSuccess={handleDataChange}
+      />
     </div>
   );
 }
