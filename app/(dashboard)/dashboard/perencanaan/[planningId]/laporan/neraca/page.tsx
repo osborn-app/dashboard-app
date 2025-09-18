@@ -45,24 +45,27 @@ export default function NeracaPage() {
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
   const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
   const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] = useState(false);
+  const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{
     id: string;
     name: string;
     description: string;
     type: string;
   } | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
   // State untuk template categories dan accounts - akan diisi dari API
   const [aktivaCategories, setAktivaCategories] = useState<Array<{
     id: string, 
-    name: string,
+    name: string, 
     description: string,
     type: string,
     accounts: Array<{id: string, name: string, code: string}>
   }>>([]);
   const [pasivaCategories, setPasivaCategories] = useState<Array<{
     id: string, 
-    name: string,
+    name: string, 
     description: string,
     type: string,
     accounts: Array<{id: string, name: string, code: string}>
@@ -122,24 +125,6 @@ export default function NeracaPage() {
     setIsAddCategoryModalOpen(true);
   };
 
-  // Handle aksi akun
-  const handleAddAccount = () => {
-    setIsAddAccountModalOpen(true);
-  };
-
-  const handleEditAccount = (accountId: string) => {
-    toast({
-      title: 'Edit Account',
-      description: `Edit account dengan ID: ${accountId}`,
-    });
-  };
-
-  const handleDeleteAccount = (accountId: string) => {
-    toast({
-      title: 'Delete Account',
-      description: `Hapus account dengan ID: ${accountId}`,
-    });
-  };
 
   // Handle edit kategori
   const handleEditCategory = (category: { id: string; name: string; description: string; type: string }) => {
@@ -151,6 +136,24 @@ export default function NeracaPage() {
   const handleDeleteCategory = (category: { id: string; name: string; description: string; type: string }) => {
     setSelectedCategory(category);
     setIsDeleteCategoryModalOpen(true);
+  };
+
+  // Handler functions untuk akun
+  const handleAddAccount = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setIsAddAccountModalOpen(true);
+  };
+
+  const handleEditAccount = (accountId: string) => {
+    setSelectedAccount({ id: accountId });
+    setIsEditAccountModalOpen(true);
+  };
+
+  const handleDeleteAccount = (accountId: string) => {
+    toast({
+      title: 'Delete Account',
+      description: `Hapus account dengan ID: ${accountId}`,
+    });
   };
 
   // Handle refresh data
@@ -181,6 +184,13 @@ export default function NeracaPage() {
       </div>
       <Separator />
 
+      {/* Main Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="data">Data Laporan</TabsTrigger>
+          <TabsTrigger value="template">Template Laporan</TabsTrigger>
+        </TabsList>
+
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -192,11 +202,6 @@ export default function NeracaPage() {
             )}
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="data">Data Laporan</TabsTrigger>
-                <TabsTrigger value="template">Template Laporan</TabsTrigger>
-              </TabsList>
 
               {/* Data Laporan Tab */}
               <TabsContent value="data" className="space-y-4">
@@ -510,7 +515,7 @@ export default function NeracaPage() {
                             
                             <CategoryAccounts 
                               categoryId={category.id}
-                              onAddAccount={handleAddAccount}
+                              onAddAccount={() => handleAddAccount(category.id)}
                               onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
                             />
@@ -582,7 +587,7 @@ export default function NeracaPage() {
                             
                             <CategoryAccounts 
                               categoryId={category.id}
-                              onAddAccount={handleAddAccount}
+                              onAddAccount={() => handleAddAccount(category.id)}
                               onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
                             />
@@ -597,45 +602,57 @@ export default function NeracaPage() {
                   </TabsContent>
                 </Tabs>
               </TabsContent>
-            </Tabs>
-
-            {/* Form Components */}
-            <CategoryForm 
-              isOpen={isAddCategoryModalOpen}
-              onClose={() => setIsAddCategoryModalOpen(false)}
-              categoryType={activeSubTab.toUpperCase() as 'AKTIVA' | 'PASIVA'}
-              onDataChange={handleDataChange}
-            />
-            
-            <CategoryForm 
-              isOpen={isEditCategoryModalOpen}
-              onClose={() => {
-                setIsEditCategoryModalOpen(false);
-                setSelectedCategory(null);
-              }}
-              categoryType={selectedCategory?.type as 'AKTIVA' | 'PASIVA' || activeSubTab.toUpperCase() as 'AKTIVA' | 'PASIVA'}
-              editData={selectedCategory}
-              onDataChange={handleDataChange}
-            />
-            
-            <DeleteCategoryDialog
-              isOpen={isDeleteCategoryModalOpen}
-              onClose={() => {
-                setIsDeleteCategoryModalOpen(false);
-                setSelectedCategory(null);
-              }}
-              categoryId={selectedCategory?.id || ''}
-              categoryName={selectedCategory?.name || ''}
-              onDataChange={handleDataChange}
-            />
-            
-            <AccountForm 
-              isOpen={isAddAccountModalOpen}
-              onClose={() => setIsAddAccountModalOpen(false)}
-            />
           </CardContent>
         </Card>
       </div>
+      </Tabs>
+
+      {/* Form Components */}
+      <CategoryForm 
+        isOpen={isAddCategoryModalOpen}
+        onClose={() => setIsAddCategoryModalOpen(false)}
+        categoryType={activeSubTab.toUpperCase() as 'AKTIVA' | 'PASIVA'}
+        onDataChange={handleDataChange}
+      />
+      
+      <CategoryForm 
+        isOpen={isEditCategoryModalOpen}
+        onClose={() => {
+          setIsEditCategoryModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        categoryType={selectedCategory?.type as 'AKTIVA' | 'PASIVA' || activeSubTab.toUpperCase() as 'AKTIVA' | 'PASIVA'}
+        editData={selectedCategory}
+        onDataChange={handleDataChange}
+      />
+      
+      <DeleteCategoryDialog
+        isOpen={isDeleteCategoryModalOpen}
+        onClose={() => {
+          setIsDeleteCategoryModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        categoryId={selectedCategory?.id || ''}
+        categoryName={selectedCategory?.name || ''}
+        onDataChange={handleDataChange}
+      />
+      
+      <AccountForm 
+        isOpen={isAddAccountModalOpen}
+        onClose={() => setIsAddAccountModalOpen(false)}
+        categoryId={selectedCategoryId}
+        onSuccess={handleDataChange}
+      />
+      
+      <AccountForm
+        isOpen={isEditAccountModalOpen}
+        onClose={() => {
+          setIsEditAccountModalOpen(false);
+          setSelectedAccount(null);
+        }}
+        categoryId={selectedCategoryId}
+        onSuccess={handleDataChange}
+      />
     </div>
   );
 }

@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CalendarIcon, Search, Plus, Trash2, MoreVertical, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -19,6 +18,10 @@ import { cn } from '@/lib/utils';
 import { useGetArusKasReport } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ArusKasCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-category-accounts';
+import { ArusKasCategoryForm } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-category-form';
+import { ArusKasAccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-account-form';
+import { ArusKasDeleteCategoryDialog } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-delete-category-dialog';
 
 export default function ArusKasPage() {
   const params = useParams();
@@ -37,8 +40,38 @@ export default function ArusKasPage() {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [activeTab, setActiveTab] = useState('data');
   const [activeSubTab, setActiveSubTab] = useState('kategori');
+  
+  // State untuk modal
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
+  const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] = useState(false);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
+  const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+
+  // Mock data untuk kategori arus kas - TODO: Replace with real API
+  const [arusKasCategories, setArusKasCategories] = useState([
+    {
+      id: '1',
+      name: 'Arus Kas dari Aktivitas Operasi',
+      type: 'OPERASI',
+      accounts: []
+    },
+    {
+      id: '2', 
+      name: 'Arus Kas dari Aktivitas Investasi',
+      type: 'INVESTASI',
+      accounts: []
+    },
+    {
+      id: '3',
+      name: 'Arus Kas dari Aktivitas Pendanaan', 
+      type: 'PENDANAAN',
+      accounts: []
+    }
+  ]);
 
   // Fetch data dari API
   const { data: arusKasData, isLoading, error } = useGetArusKasReport({
@@ -46,11 +79,59 @@ export default function ArusKasPage() {
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
+  // TODO: Integrate with these API hooks when endpoints are ready:
+  // - useGetPlanningCategoriesSelect() - untuk mengambil kategori arus kas
+  // - useGetPlanningCategoryAccounts(categoryId) - untuk mengambil akun per kategori
+  // - usePostPlanningCategories() - untuk membuat kategori baru
+  // - useUpdatePlanningCategory() - untuk update kategori
+  // - useDeletePlanningCategory() - untuk delete kategori
+  // - usePostPlanningAccounts() - untuk membuat akun baru
+  // - useUpdatePlanningAccount() - untuk update akun
+  // - useDeletePlanningAccount() - untuk delete akun
+
   // Handle rekap
   const handleRekap = () => {
     toast({
       title: 'Rekap Arus Kas',
       description: 'Fitur rekap akan segera tersedia',
+    });
+  };
+
+  // Handler functions untuk kategori
+  const handleEditCategory = (category: any) => {
+    setSelectedCategory(category);
+    setIsEditCategoryModalOpen(true);
+  };
+
+  const handleDeleteCategory = (category: any) => {
+    setSelectedCategory(category);
+    setIsDeleteCategoryModalOpen(true);
+  };
+
+  // Handler functions untuk akun
+  const handleAddAccount = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setIsAddAccountModalOpen(true);
+  };
+
+  const handleEditAccount = (accountId: string) => {
+    setSelectedAccount({ id: accountId });
+    setIsEditAccountModalOpen(true);
+  };
+
+  const handleDeleteAccount = (accountId: string) => {
+    toast({
+      title: 'Delete Account',
+      description: 'Fitur delete account akan segera tersedia',
+    });
+  };
+
+  // Handler untuk data change
+  const handleDataChange = () => {
+    // TODO: Implement data refresh when API is ready
+    toast({
+      title: 'Data Updated',
+      description: 'Data berhasil diperbarui',
     });
   };
 
@@ -77,22 +158,24 @@ export default function ArusKasPage() {
       </div>
       <Separator />
 
-      <div className="space-y-6">
-        <Card>
-        <CardHeader>
-          <CardTitle>Arus Kas Perencanaan</CardTitle>
-          {arusKasData?.period && (
-            <p className="text-sm text-gray-600 mt-1">
-              Periode: {arusKasData.period}
-            </p>
-          )}
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="data">Data Laporan</TabsTrigger>
-              <TabsTrigger value="template">Template Laporan</TabsTrigger>
-            </TabsList>
+      {/* Main Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="data">Data Laporan</TabsTrigger>
+          <TabsTrigger value="template">Template Laporan</TabsTrigger>
+        </TabsList>
+
+        <div className="space-y-6">
+          <Card>
+          <CardHeader>
+            <CardTitle>Arus Kas Perencanaan</CardTitle>
+            {arusKasData?.period && (
+              <p className="text-sm text-gray-600 mt-1">
+                Periode: {arusKasData.period}
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
 
             {/* Data Laporan Tab */}
             <TabsContent value="data" className="space-y-4">
@@ -326,10 +409,29 @@ export default function ArusKasPage() {
             {/* Template Laporan Tab */}
             <TabsContent value="template" className="space-y-4">
               <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="kategori">Kategori</TabsTrigger>
-                  <TabsTrigger value="rumus">Rumus</TabsTrigger>
-                </TabsList>
+                {/* Custom Tab Navigation - Clean Design */}
+                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+                  <button
+                    onClick={() => setActiveSubTab('kategori')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                      activeSubTab === 'kategori'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    KATEGORI
+                  </button>
+                  <button
+                    onClick={() => setActiveSubTab('rumus')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                      activeSubTab === 'rumus'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    RUMUS
+                  </button>
+                </div>
 
                 {/* Kategori Sub Tab */}
                 <TabsContent value="kategori" className="space-y-4">
@@ -342,14 +444,10 @@ export default function ArusKasPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    {/* Arus Kas dari Aktivitas Operasi */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-medium">Arus Kas dari Aktivitas Operasi</h4>
-                        <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm" onClick={() => setIsAddAccountModalOpen(true)}>
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                    {arusKasCategories.map((category) => (
+                      <div key={category.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-medium text-blue-600">{category.name}</h4>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm">
@@ -357,119 +455,28 @@ export default function ArusKasPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditCategory(category)}>
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
+                              <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={() => handleDeleteCategory(category)}
+                              >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Hapus
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
+                        <ArusKasCategoryAccounts
+                          categoryId={category.id}
+                          onAddAccount={() => handleAddAccount(category.id)}
+                          onEditAccount={handleEditAccount}
+                          onDeleteAccount={handleDeleteAccount}
+                        />
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 border rounded">
-                          <div>
-                            <p className="text-sm font-medium">Pendapatan Operasi</p>
-                            <p className="text-xs text-gray-500">4110</p>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="flex items-center justify-between p-2 border rounded">
-                          <div>
-                            <p className="text-sm font-medium">Beban Operasi</p>
-                            <p className="text-xs text-gray-500">5110</p>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Arus Kas dari Aktivitas Investasi */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-medium">Arus Kas dari Aktivitas Investasi</h4>
-                        <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm" onClick={() => setIsAddAccountModalOpen(true)}>
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Hapus
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 border rounded">
-                          <div>
-                            <p className="text-sm font-medium">Pembelian Aset</p>
-                            <p className="text-xs text-gray-500">1210</p>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Arus Kas dari Aktivitas Pendanaan */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-medium">Arus Kas dari Aktivitas Pendanaan</h4>
-                        <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm" onClick={() => setIsAddAccountModalOpen(true)}>
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Hapus
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 border rounded">
-                          <div>
-                            <p className="text-sm font-medium">Modal Pemilik</p>
-                            <p className="text-xs text-gray-500">3110</p>
-                          </div>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </TabsContent>
 
@@ -497,68 +504,58 @@ export default function ArusKasPage() {
                 </TabsContent>
               </Tabs>
             </TabsContent>
-          </Tabs>
+          </CardContent>
+        </Card>
+        </div>
+      </Tabs>
 
-          {/* Modal Tambah Kategori */}
-          <Dialog open={isAddCategoryModalOpen} onOpenChange={setIsAddCategoryModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Tambah Kategori</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Nama Kategori</label>
-                  <Input placeholder="Masukkan nama kategori" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Kode Kategori</label>
-                  <Input placeholder="Masukkan kode kategori" />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsAddCategoryModalOpen(false)}>
-                    Batal
-                  </Button>
-                  <Button onClick={() => setIsAddCategoryModalOpen(false)}>
-                    Simpan
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Modal Pengaturan Akun */}
-          <Dialog open={isAddAccountModalOpen} onOpenChange={setIsAddAccountModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Pengaturan Akun</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Nama Akun</label>
-                  <Input placeholder="Masukkan nama akun" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Kode Akun</label>
-                  <Input placeholder="Masukkan kode akun" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Formula</label>
-                  <Input placeholder="Masukkan formula" />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsAddAccountModalOpen(false)}>
-                    Batal
-                  </Button>
-                  <Button onClick={() => setIsAddAccountModalOpen(false)}>
-                    Simpan
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
-      </div>
+      {/* Modal Forms */}
+      <ArusKasCategoryForm 
+        isOpen={isAddCategoryModalOpen}
+        onClose={() => setIsAddCategoryModalOpen(false)}
+        categoryType="OPERASI"
+        onDataChange={handleDataChange}
+      />
+      
+      <ArusKasCategoryForm 
+        isOpen={isEditCategoryModalOpen}
+        onClose={() => {
+          setIsEditCategoryModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        categoryType={selectedCategory?.type as 'OPERASI' | 'INVESTASI' | 'PENDANAAN' || 'OPERASI'}
+        editData={selectedCategory}
+        onDataChange={handleDataChange}
+      />
+      
+      <ArusKasDeleteCategoryDialog
+        isOpen={isDeleteCategoryModalOpen}
+        onClose={() => {
+          setIsDeleteCategoryModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        categoryId={selectedCategory?.id || ''}
+        categoryName={selectedCategory?.name || ''}
+        onDataChange={handleDataChange}
+      />
+      
+      <ArusKasAccountForm
+        isOpen={isAddAccountModalOpen}
+        onClose={() => setIsAddAccountModalOpen(false)}
+        categoryId={selectedCategoryId}
+        onDataChange={handleDataChange}
+      />
+      
+      <ArusKasAccountForm
+        isOpen={isEditAccountModalOpen}
+        onClose={() => {
+          setIsEditAccountModalOpen(false);
+          setSelectedAccount(null);
+        }}
+        categoryId={selectedCategoryId}
+        editData={selectedAccount}
+        onDataChange={handleDataChange}
+      />
     </div>
   );
 }

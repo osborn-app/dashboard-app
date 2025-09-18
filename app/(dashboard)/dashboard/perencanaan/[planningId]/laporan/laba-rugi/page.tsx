@@ -93,22 +93,24 @@ export default function LabaRugiPage() {
       </div>
       <Separator />
 
-      <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Laba Rugi Perencanaan</CardTitle>
-          {labaRugiData?.period && (
-            <p className="text-sm text-gray-600 mt-1">
-              Periode: {labaRugiData.period}
-            </p>
-          )}
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="data">Data Laporan</TabsTrigger>
-              <TabsTrigger value="template">Template Laporan</TabsTrigger>
-            </TabsList>
+      {/* Main Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="data">Data Laporan</TabsTrigger>
+          <TabsTrigger value="template">Template Laporan</TabsTrigger>
+        </TabsList>
+
+        <div className="space-y-6">
+          <Card>
+          <CardHeader>
+            <CardTitle>Laba Rugi Perencanaan</CardTitle>
+            {labaRugiData?.period && (
+              <p className="text-sm text-gray-600 mt-1">
+                Periode: {labaRugiData.period}
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
 
             {/* Data Laporan Tab */}
             <TabsContent value="data" className="space-y-4">
@@ -469,7 +471,6 @@ export default function LabaRugiPage() {
                 </TabsContent>
               </Tabs>
             </TabsContent>
-          </Tabs>
 
           {/* Modal Tambah Akun */}
           <Dialog open={isAddAccountModalOpen} onOpenChange={setIsAddAccountModalOpen}>
@@ -499,7 +500,8 @@ export default function LabaRugiPage() {
           </Dialog>
         </CardContent>
       </Card>
-      </div>
+        </div>
+      </Tabs>
     </div>
   );
 }
