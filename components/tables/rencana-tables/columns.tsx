@@ -40,6 +40,8 @@ export interface RencanaRowItem {
     namaAkun: string;
     debit: number;
     kredit: number;
+    account_debit_id: string;
+    account_credit_id: string;
   }[];
 }
 
