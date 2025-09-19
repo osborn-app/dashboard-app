@@ -55,7 +55,7 @@ export default function AccountFilter({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between font-medium"
+          className="w-full justify-between font-medium cursor-pointer hover:bg-gray-50"
           disabled={disabled}
         >
           {selectedAccount ? (
@@ -66,7 +66,7 @@ export default function AccountFilter({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-4 w-4 p-0 hover:bg-gray-200"
+                className="h-4 w-4 p-0 hover:bg-gray-200 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAccountSelect(null);
@@ -81,8 +81,8 @@ export default function AccountFilter({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" style={{ zIndex: 9999 }}>
-        <Command style={{ zIndex: 9999 }}>
+      <PopoverContent className="w-[400px] p-0 z-50">
+        <Command>
           <div className="flex items-center border-b px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
             <Input
@@ -103,7 +103,6 @@ export default function AccountFilter({
                   value={`${account.code} ${account.name}`}
                   onSelect={() => handleAccountSelect(account.id)}
                   className="cursor-pointer relative"
-                  style={{ zIndex: 9999 }}
                 >
                   <Check
                     className={cn(

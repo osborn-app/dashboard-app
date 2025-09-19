@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,44 @@ interface AccountListProps {
   onDeleteAccount?: (id: number) => void;
 }
 
+// Animated Collapse Component
+function AnimatedCollapse({ 
+  isOpen, 
+  children 
+}: { 
+  isOpen: boolean; 
+  children: React.ReactNode 
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<string>(isOpen ? 'auto' : '0px');
+
+  useEffect(() => {
+    if (contentRef.current) {
+      const scrollHeight = contentRef.current.scrollHeight;
+      if (isOpen) {
+        setHeight(`${scrollHeight}px`);
+        // Reset to auto after animation completes
+        setTimeout(() => setHeight('auto'), 300);
+      } else {
+        setHeight(`${scrollHeight}px`);
+        // Force reflow
+        contentRef.current.offsetHeight;
+        setHeight('0px');
+      }
+    }
+  }, [isOpen]);
+
+  return (
+    <div
+      ref={contentRef}
+      className="overflow-hidden transition-all duration-300 ease-in-out"
+      style={{ height }}
+    >
+      {children}
+    </div>
+  );
+}
+
 // Non-sortable Account Item Component (for children)
 function AccountItem({ 
   account, 
@@ -75,11 +113,16 @@ function AccountItem({
               onClick={() => onToggleExpansion(account.id)}
               className="p-1 hover:bg-gray-200 rounded"
             >
-              {isExpanded ? (
-                <Minus className="h-4 w-4 text-blue-600" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-blue-600" />
-              )}
+              <div className={cn(
+                "transition-transform duration-300 ease-in-out",
+                isExpanded ? "rotate-90" : "rotate-0"
+              )}>
+                {isExpanded ? (
+                  <Minus className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-blue-600" />
+                )}
+              </div>
             </button>
           ) : (
             <div className="w-6" />
@@ -106,25 +149,27 @@ function AccountItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEditAccount?.(account.id)}>Edit</DropdownMenuItem>
-            {/* <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem> */}
+            <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem>
             <DropdownMenuItem>View Details</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {hasChildren && isExpanded && (
-        <div className="ml-6">
-          {account.children.map((child) => (
-            <AccountItem
-              key={child.id}
-              account={child}
-              level={level + 1}
-              onToggleExpansion={onToggleExpansion}
-              onEditAccount={onEditAccount}
-              onDeleteAccount={onDeleteAccount}
-            />
-          ))}
-        </div>
+      {hasChildren && (
+        <AnimatedCollapse isOpen={isExpanded}>
+          <div className="ml-6 pt-2">
+            {account.children.map((child) => (
+              <AccountItem
+                key={child.id}
+                account={child}
+                level={level + 1}
+                onToggleExpansion={onToggleExpansion}
+                onEditAccount={onEditAccount}
+                onDeleteAccount={onDeleteAccount}
+              />
+            ))}
+          </div>
+        </AnimatedCollapse>
       )}
     </div>
   );
@@ -188,11 +233,16 @@ function SortableAccountItem({
               onClick={() => onToggleExpansion(account.id)}
               className="p-1 hover:bg-gray-200 rounded"
             >
-              {isExpanded ? (
-                <Minus className="h-4 w-4 text-blue-600" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-blue-600" />
-              )}
+              <div className={cn(
+                "transition-transform duration-300 ease-in-out",
+                isExpanded ? "rotate-90" : "rotate-0"
+              )}>
+                {isExpanded ? (
+                  <Minus className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-blue-600" />
+                )}
+              </div>
             </button>
           ) : (
             <div className="w-6" />
@@ -219,25 +269,27 @@ function SortableAccountItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEditAccount?.(account.id)}>Edit</DropdownMenuItem>
-            {/* <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem> */}
+            <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem>
             <DropdownMenuItem>View Details</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {hasChildren && isExpanded && (
-        <div className="ml-6">
-          {account.children.map((child) => (
-            <AccountItem
-              key={child.id}
-              account={child}
-              level={level + 1}
-              onToggleExpansion={onToggleExpansion}
-              onEditAccount={onEditAccount}
-              onDeleteAccount={onDeleteAccount}
-            />
-          ))}
-        </div>
+      {hasChildren && (
+        <AnimatedCollapse isOpen={isExpanded}>
+          <div className="ml-6 pt-2">
+            {account.children.map((child) => (
+              <AccountItem
+                key={child.id}
+                account={child}
+                level={level + 1}
+                onToggleExpansion={onToggleExpansion}
+                onEditAccount={onEditAccount}
+                onDeleteAccount={onDeleteAccount}
+              />
+            ))}
+          </div>
+        </AnimatedCollapse>
       )}
     </div>
   );
