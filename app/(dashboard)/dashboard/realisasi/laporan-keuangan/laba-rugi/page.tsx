@@ -91,7 +91,7 @@ export default function LabaRugiPage() {
           exportData.push({
             'No Akun': item.account_code || '-',
             'Nama Akun': item.account_name || '-',
-            'Pendapatan': item.running_balance && item.running_balance > 0 ? item.running_balance : 0,
+            'Pendapatan': item.running_balance && item.running_balance !== 0 ? item.running_balance : 0,
             'Beban': 0
           });
         });
@@ -128,7 +128,7 @@ export default function LabaRugiPage() {
             'No Akun': item.account_code || '-',
             'Nama Akun': item.account_name || '-',
             'Pendapatan': 0,
-            'Beban': item.running_balance && item.running_balance > 0 ? item.running_balance : 0
+            'Beban': item.running_balance && item.running_balance !== 0 ? item.running_balance : 0
           });
         });
       }
@@ -391,7 +391,7 @@ export default function LabaRugiPage() {
                                   {item.account_name || '-'}
                                 </td>
                                 <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
-                                  {item.running_balance && item.running_balance > 0 ? formatCurrency(item.running_balance) : ''}
+                                  {item.running_balance && item.running_balance !== 0 ? formatCurrency(item.running_balance) : ''}
                                 </td>
                                 <td className="py-2 px-4 text-sm text-gray-700 text-right">
                                   -
@@ -437,7 +437,7 @@ export default function LabaRugiPage() {
                                   -
                                 </td>
                                 <td className="py-2 px-4 text-sm text-gray-700 text-right">
-                                  {item.running_balance && item.running_balance > 0 ? formatCurrency(item.running_balance) : ''}
+                                  {item.running_balance && item.running_balance !== 0 ? formatCurrency(item.running_balance) : ''}
                                 </td>
                               </tr>
                             ))
