@@ -61,23 +61,18 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   
   const level2Accounts = useMemo(() => {
     if (!accountsResponse?.items) {
-      console.log('No accounts response data');
       return [];
     }
     const filtered = accountsResponse.items.filter((account: any) => account.level === 2);
-    console.log('Level 2 accounts:', filtered);
     return filtered;
   }, [accountsResponse]);
 
   // Initialize form data when editing or reset when creating
   React.useEffect(() => {
-    console.log('useEffect triggered, editingData:', editingData);
     if (editingData) {
-      console.log('Setting form data from editingData:', editingData);
       setFormData(editingData);
     } else {
       // Reset form when creating new
-      console.log('Resetting form for new entry');
       setFormData({
         name: '',
         planningDate: '',
@@ -90,8 +85,6 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof CreateRencanaFormData, string>> = {};
 
-    console.log('Validating form data:', formData);
-
     if (!formData.name.trim()) {
       newErrors.name = 'Nama rencana harus diisi';
     }
@@ -103,17 +96,13 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
     // Validate accounts - check if we have at least one complete journal entry
     const hasValidAccounts = formData.accounts.some(account => {
       const isValid = account.account_debit_id && account.account_credit_id && account.debit > 0 && account.credit > 0 && account.debit === account.credit;
-      console.log('Account validation:', { account, isValid });
       return isValid;
     });
-
-    console.log('Has valid accounts:', hasValidAccounts);
 
     if (!hasValidAccounts) {
       newErrors.accounts = 'Pilih akun debit, akun credit, dan isi jumlah yang sama untuk debit & kredit';
     }
 
-    console.log('Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -121,10 +110,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Form submitted, validating...');
-    
     if (!validateForm()) {
-      console.log('Validation failed');
       toast({
         title: 'Validation Error',
         description: 'Mohon periksa kembali form yang diisi',
@@ -132,13 +118,10 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
       });
       return;
     }
-    
-    console.log('Validation passed, submitting...');
 
     setIsSubmitting(true);
     
     try {
-      console.log('Dialog submitting formData:', formData);
       onSubmit(formData);
       
       // Reset form
@@ -161,10 +144,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   };
 
   const handleDelete = async () => {
-    console.log('Delete attempt - planningId:', planningId, 'entryId:', entryId);
     
     if (!planningId || !entryId) {
-      console.error('Missing IDs - planningId:', planningId, 'entryId:', entryId);
       toast({
         title: 'Error',
         description: 'ID perencanaan atau entri tidak ditemukan',
@@ -176,7 +157,6 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
     setIsDeleting(true);
     
     try {
-      console.log('Calling delete API with planningId:', planningId, 'entryId:', entryId);
       await deleteMutation.mutateAsync();
       
       toast({
@@ -191,7 +171,6 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
       }
       
     } catch (error) {
-      console.error('Error deleting rencana:', error);
       toast({
         title: 'Error',
         description: 'Gagal menghapus rencana',
@@ -236,7 +215,6 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   };
 
   const updateAccount = (accountId: string, field: keyof RencanaAccount, value: string | number) => {
-    console.log('updateAccount called:', { accountId, field, value });
     setFormData(prev => {
       const updated = {
         ...prev,
@@ -244,7 +222,6 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
           account.id === accountId ? { ...account, [field]: value } : account
         )
       };
-      console.log('Form data updated:', updated);
       return updated;
     });
   };
@@ -321,7 +298,6 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                     <Select
                       value={account.account_debit_id || ""}
                       onValueChange={(value) => {
-                        console.log('Debit account selected:', value);
                         updateAccount(account.id, 'account_debit_id', value);
                       }}
                     >
@@ -361,7 +337,6 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                     <Select
                       value={account.account_credit_id || ""}
                       onValueChange={(value) => {
-                        console.log('Credit account selected:', value);
                         updateAccount(account.id, 'account_credit_id', value);
                       }}
                     >

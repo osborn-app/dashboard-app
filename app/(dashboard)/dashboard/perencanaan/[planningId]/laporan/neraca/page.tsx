@@ -19,10 +19,10 @@ import { cn } from '@/lib/utils';
 import { useGetNeracaReport, useGetPlanningCategoriesSelect } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/category-accounts';
+import { CategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/display-components';
 import { CategoryForm } from '@/app/(dashboard)/dashboard/perencanaan/components/category-form';
 import { AccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/account-form';
-import { DeleteCategoryDialog } from '@/app/(dashboard)/dashboard/perencanaan/components/delete-category-dialog';
+import { DeleteCategoryDialog } from '@/app/(dashboard)/dashboard/perencanaan/components/dialogs';
 
 export default function NeracaPage() {
   const params = useParams();
@@ -84,31 +84,35 @@ export default function NeracaPage() {
 
 
 
-  // Process categories data from API
-  useEffect(() => {
-    if (categoriesData) {
-      const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData.data || [];
-      
-      // Filter kategori berdasarkan tipe (aktiva/pasiva)
-      const aktiva = categories.filter((cat: any) => cat.type === 'AKTIVA');
-      const pasiva = categories.filter((cat: any) => cat.type === 'PASIVA');
-      
-      // Transform data to match expected format
-      const transformCategory = (category: any) => ({
-        id: category.id.toString(),
-        name: category.name,
-        description: category.description || '',
-        type: category.type || 'AKTIVA',
-        accounts: []
-      });
-      
-      const transformedAktiva = aktiva.map(transformCategory);
-      const transformedPasiva = pasiva.map(transformCategory);
-      
-      setAktivaCategories(transformedAktiva);
-      setPasivaCategories(transformedPasiva);
-    }
+  // Process categories data from API - memoized for performance
+  const processedCategories = useMemo(() => {
+    if (!categoriesData) return { aktiva: [], pasiva: [] };
+    
+    const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData.data || [];
+    
+    // Filter kategori berdasarkan tipe (aktiva/pasiva)
+    const aktiva = categories.filter((cat: any) => cat.type === 'AKTIVA');
+    const pasiva = categories.filter((cat: any) => cat.type === 'PASIVA');
+    
+    // Transform data to match expected format
+    const transformCategory = (category: any) => ({
+      id: category.id.toString(),
+      name: category.name,
+      description: category.description || '',
+      type: category.type || 'AKTIVA',
+      accounts: []
+    });
+    
+    const transformedAktiva = aktiva.map(transformCategory);
+    const transformedPasiva = pasiva.map(transformCategory);
+    
+    return { aktiva: transformedAktiva, pasiva: transformedPasiva };
   }, [categoriesData]);
+  
+  useEffect(() => {
+    setAktivaCategories(processedCategories.aktiva);
+    setPasivaCategories(processedCategories.pasiva);
+  }, [processedCategories]);
 
 
 

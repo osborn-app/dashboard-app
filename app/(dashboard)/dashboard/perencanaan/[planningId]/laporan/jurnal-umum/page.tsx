@@ -33,11 +33,8 @@ interface PlanningEntryResponse {
 
 // Helper function to convert API response to JurnalUmumRowItem format for merged cells
 const convertApiResponseToJurnalUmumRowItem = (apiItem: any, accountMap: Map<string, {name: string, code: string}>): JurnalUmumRowItem => {
-  console.log('Converting API item to jurnal umum row format:', apiItem);
-  
   // Validate apiItem
   if (!apiItem) {
-    console.error('API item is undefined or null');
     return {
       id: '0',
       tanggal: '',
@@ -132,9 +129,7 @@ export default function JurnalUmumPage() {
 
   // Convert API response to flat array for table display with merged cells
   const jurnalUmumData = useMemo(() => {
-    console.log('Processing jurnal umum entries response:', entriesResponse);
     if (!entriesResponse?.items || !Array.isArray(entriesResponse.items)) {
-      console.log('No valid items in response');
       return [];
     }
     
@@ -162,7 +157,6 @@ export default function JurnalUmumPage() {
   // Handle search
   const handleSearch = () => {
     // Search akan otomatis trigger karena queryParams berubah
-    console.log('Searching with params:', queryParams);
   };
 
   // Handle rekap

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import BreadCrumb from "@/components/breadcrumb";
 import { Heading } from "@/components/ui/heading";
@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
 import { AccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/account-form';
-import { LabaRugiCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/laba-rugi-category-accounts';
+import { LabaRugiCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/display-components';
 
 export default function LabaRugiPage() {
   const params = useParams();
@@ -44,9 +44,16 @@ export default function LabaRugiPage() {
   // Get planning categories untuk laba rugi (PENDAPATAN dan BEBAN)
   const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
   
-  // Filter categories berdasarkan type
-  const pendapatanCategories = categoriesData?.filter((cat: any) => cat.type === 'PENDAPATAN') || [];
-  const bebanCategories = categoriesData?.filter((cat: any) => cat.type === 'BEBAN') || [];
+  // Filter categories berdasarkan type - memoized for performance
+  const pendapatanCategories = useMemo(() => 
+    categoriesData?.filter((cat: any) => cat.type === 'PENDAPATAN') || [], 
+    [categoriesData]
+  );
+  
+  const bebanCategories = useMemo(() => 
+    categoriesData?.filter((cat: any) => cat.type === 'BEBAN') || [], 
+    [categoriesData]
+  );
 
   // TODO: Implementasi endpoint untuk mengambil template accounts
   // Endpoint yang diperlukan:
