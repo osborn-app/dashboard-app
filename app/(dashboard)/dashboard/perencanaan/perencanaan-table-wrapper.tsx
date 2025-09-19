@@ -6,9 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search } from 'lucide-react';
-import { CreatePerencanaanDialog } from './components/create-perencanaan-dialog';
-import { EditPerencanaanDialog } from './components/edit-perencanaan-dialog';
-import { DeletePerencanaanDialog } from './components/delete-perencanaan-dialog';
+import { CreatePerencanaanDialog, EditPerencanaanDialog, DeletePerencanaanDialog } from './components/dialogs';
 import { useToast } from '@/hooks/use-toast';
 import { 
   useGetPerencanaan,
@@ -58,9 +56,24 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
   const deleteMutation = useDeletePerencanaan(Number(deletingItem?.id) || 0);
 
   // Extract data from API response - backend uses 'items' instead of 'data'
-  const perencanaan = perencanaanResponse?.items || perencanaanResponse?.data || [];
-  const totalItems = perencanaanResponse?.meta?.total_items || perencanaanResponse?.meta?.item_count || perencanaan.length;
-  const totalPages = perencanaanResponse?.pagination?.total_page || perencanaanResponse?.meta?.total_pages || 1;
+  const perencanaan = useMemo(() => 
+    perencanaanResponse?.items || perencanaanResponse?.data || [], 
+    [perencanaanResponse]
+  );
+  
+  const totalItems = useMemo(() => 
+    perencanaanResponse?.meta?.total_items || 
+    perencanaanResponse?.meta?.item_count || 
+    perencanaan.length, 
+    [perencanaanResponse, perencanaan.length]
+  );
+  
+  const totalPages = useMemo(() => 
+    perencanaanResponse?.pagination?.total_page || 
+    perencanaanResponse?.meta?.total_pages || 
+    1, 
+    [perencanaanResponse]
+  );
 
   // Handler untuk update URL search params
   const updateSearchParams = useCallback((newParams: Record<string, string | number | null>) => {
@@ -98,7 +111,6 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
         router.push("/dashboard/perencanaan");
       }
     } catch (error) {
-      console.error('Error creating perencanaan:', error);
       toast({
         title: 'Error',
         description: 'Gagal membuat perencanaan',
@@ -126,7 +138,6 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
       setShowEditDialog(false);
       setEditingItem(null);
     } catch (error) {
-      console.error('Error updating perencanaan:', error);
       toast({
         title: 'Error',
         description: 'Gagal mengupdate perencanaan',
@@ -152,7 +163,6 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
       setShowDeleteDialog(false);
       setDeletingItem(null);
     } catch (error) {
-      console.error('Error deleting perencanaan:', error);
       toast({
         title: 'Error',
         description: 'Gagal menghapus perencanaan',

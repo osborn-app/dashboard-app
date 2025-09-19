@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Calendar, RefreshCw } from 'lucide-react';
 import { RencanaTable } from '@/components/tables/rencana-tables/rencana-table';
-import { createRencanaColumns, createRencanaRowColumns, RencanaItem, RencanaRowItem } from '@/components/tables/rencana-tables/columns';
+import { createRencanaRowColumns, RencanaRowItem } from '@/components/tables/rencana-tables/columns';
 import { CreateRencanaDialog } from './create-rencana-dialog';
 import { useGetPlanningEntries, useCreatePlanningEntry, useUpdatePlanningEntry, useDeletePlanningEntry, useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
@@ -29,25 +29,20 @@ interface PlanningEntryResponse {
   note: string;
 }
 
-// Helper function to convert API response to RencanaItem format
-const convertApiResponseToRencanaItem = (apiItem: any, accountMap: Map<string, {name: string, code: string}>): RencanaItem => {
-  console.log('Converting API item:', apiItem);
-  
+// Helper function to convert API response to RencanaRowItem format
+const convertApiResponseToRencanaItem = (apiItem: any, accountMap: Map<string, {name: string, code: string}>): RencanaRowItem => {
   // Validate apiItem
   if (!apiItem) {
-    console.error('API item is undefined or null');
     return {
       id: '0',
       tanggal: '',
-      namaAkun: 'Unknown Account',
-      debit: 0,
-      kredit: 0,
-      keterangan: '',
       status: 'Belum Terealisasi',
+      keterangan: '',
       planningId: '0',
       rencanaId: '0',
       transactionGroup: 'group_0',
-      isFirstInGroup: true
+      isFirstInGroup: true,
+      rows: []
     };
   }
   
@@ -68,25 +63,28 @@ const convertApiResponseToRencanaItem = (apiItem: any, accountMap: Map<string, {
   return {
     id: apiItem.id?.toString() || '0',
     tanggal: apiItem.date || '',
-    namaAkun,
-    debit: apiItem.amount || 0,
-    kredit: apiItem.amount || 0,
+    status: 'Belum Terealisasi',
     keterangan: apiItem.note || '',
-    status: 'Belum Terealisasi', // Default status sesuai gambar
     planningId: apiItem.planning_id?.toString() || '0',
     rencanaId: apiItem.id?.toString() || '0',
     transactionGroup: `group_${apiItem.id || 0}`,
-    isFirstInGroup: true
+    isFirstInGroup: true,
+    rows: [
+      {
+        namaAkun,
+        debit: apiItem.amount || 0,
+        kredit: apiItem.amount || 0,
+        account_debit_id: apiItem.account_debit_id?.toString() || '',
+        account_credit_id: apiItem.account_credit_id?.toString() || ''
+      }
+    ]
   };
 };
 
 // Helper function to convert API response to RencanaRowItem format for merged cells
 const convertApiResponseToRencanaRowItem = (apiItem: any, accountMap: Map<string, {name: string, code: string}>): RencanaRowItem => {
-  console.log('Converting API item to row format:', apiItem);
-  
   // Validate apiItem
   if (!apiItem) {
-    console.error('API item is undefined or null');
     return {
       id: '0',
       tanggal: '',
@@ -140,17 +138,17 @@ const convertApiResponseToRencanaRowItem = (apiItem: any, accountMap: Map<string
   };
 };
 
-// Helper function to convert RencanaItem to CreateRencanaFormData
-const convertRencanaItemToFormData = (item: RencanaItem): any => {
+// Helper function to convert RencanaRowItem to CreateRencanaFormData
+const convertRencanaItemToFormData = (item: RencanaRowItem): any => {
   return {
     name: item.keterangan || '',
     planningDate: item.tanggal || '',
     accounts: [
       {
         id: item.id,
-        accountName: item.namaAkun,
-        debit: item.debit,
-        credit: item.kredit
+        accountName: item.rows[0]?.namaAkun || '',
+        debit: item.rows[0]?.debit || 0,
+        credit: item.rows[1]?.kredit || 0
       }
     ]
   };
@@ -199,9 +197,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
 
   // Convert API response to flat array for table display with merged cells
   const rencanaData = useMemo(() => {
-    console.log('Processing entries response:', entriesResponse);
     if (!entriesResponse?.items || !Array.isArray(entriesResponse.items)) {
-      console.log('No valid items in response');
       return [];
     }
     
@@ -224,7 +220,6 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
 
   const handleCreateRencana = async (data: any) => {
     try {
-      console.log('Form data received:', data);
       
       // Validate form data structure
       if (!data || !data.accounts || !Array.isArray(data.accounts) || data.accounts.length === 0) {
@@ -281,9 +276,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
         note: data.name || null
       };
 
-      console.log('Creating planning entry with data:', apiData);
       const response = await createMutation.mutateAsync(apiData);
-      console.log('Planning entry response:', response);
       
       toast({
         title: 'Success',
@@ -294,7 +287,6 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
       setEditingItem(null);
       refetch();
     } catch (error) {
-      console.error('Error creating rencana:', error);
       toast({
         title: 'Error',
         description: 'Gagal membuat rencana',
@@ -304,9 +296,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
   };
 
   const handleEditRencana = (item: RencanaRowItem) => {
-    console.log('Edit rencana - original item.id:', item.id);
     const baseId = item.id.split('_')[0];
-    console.log('Edit rencana - base ID for API:', baseId);
     
     // Convert RencanaRowItem back to form data format
     const formData = {
@@ -346,7 +336,6 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
       
       refetch();
     } catch (error) {
-      console.error('Error deleting rencana:', error);
       toast({
         title: 'Error',
         description: 'Gagal menghapus rencana',
@@ -358,7 +347,7 @@ export function RencanaTab({ planningId }: RencanaTabProps) {
   }, [planningId, refetch, toast]);
 
   const handleViewRencana = (item: RencanaRowItem) => {
-    console.log('Viewing rencana:', item);
+    // View rencana functionality
   };
 
   if (isLoading) {

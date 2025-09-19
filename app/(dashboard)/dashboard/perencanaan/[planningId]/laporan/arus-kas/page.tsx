@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import BreadCrumb from "@/components/breadcrumb";
 import { Heading } from "@/components/ui/heading";
@@ -18,10 +18,10 @@ import { cn } from '@/lib/utils';
 import { useGetArusKasReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArusKasCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-category-accounts';
+import { ArusKasCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/display-components';
 import { ArusKasCategoryForm } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-category-form';
 import { ArusKasAccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-account-form';
-import { ArusKasDeleteCategoryDialog } from '@/app/(dashboard)/dashboard/perencanaan/components/arus-kas-delete-category-dialog';
+import { ArusKasDeleteCategoryDialog } from '@/app/(dashboard)/dashboard/perencanaan/components/dialogs';
 
 export default function ArusKasPage() {
   const params = useParams();
@@ -69,28 +69,30 @@ export default function ArusKasPage() {
   // Hook untuk API categories
   const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
 
-  // Process categories data from API
-  useEffect(() => {
-    if (categoriesData) {
-      const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData.data || [];
-      
-      // Filter kategori berdasarkan tipe LAINNYA saja
-      const lainnyaCategories = categories.filter((cat: any) => cat.type === 'LAINNYA');
-      
-      // Transform data to match expected format
-      const transformCategory = (category: any) => ({
-        id: category.id.toString(),
-        name: category.name,
-        description: category.description || '',
-        type: category.type || 'OPERASI',
-        accounts: []
-      });
-      
-      const transformedCategories = lainnyaCategories.map(transformCategory);
-      
-      setArusKasCategories(transformedCategories);
-    }
+  // Process categories data from API - memoized for performance
+  const processedCategories = useMemo(() => {
+    if (!categoriesData) return [];
+    
+    const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData.data || [];
+    
+    // Filter kategori berdasarkan tipe LAINNYA saja
+    const lainnyaCategories = categories.filter((cat: any) => cat.type === 'LAINNYA');
+    
+    // Transform data to match expected format
+    const transformCategory = (category: any) => ({
+      id: category.id.toString(),
+      name: category.name,
+      description: category.description || '',
+      type: category.type || 'OPERASI',
+      accounts: []
+    });
+    
+    return lainnyaCategories.map(transformCategory);
   }, [categoriesData]);
+  
+  useEffect(() => {
+    setArusKasCategories(processedCategories);
+  }, [processedCategories]);
 
   // Handle rekap
   const handleRekap = () => {
