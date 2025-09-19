@@ -154,7 +154,7 @@ const convertRencanaItemToFormData = (item: RencanaRowItem): any => {
   };
 };
 
-export function RencanaTab({ planningId }: RencanaTabProps) {
+export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [deletingItem, setDeletingItem] = useState<RencanaRowItem | null>(null);

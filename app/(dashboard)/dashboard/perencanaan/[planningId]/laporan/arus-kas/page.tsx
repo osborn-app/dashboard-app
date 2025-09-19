@@ -69,7 +69,7 @@ export default function ArusKasPage() {
   // Hook untuk API categories
   const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
 
-  // Process categories data from API - memoized for performance
+  // ✅ Process categories data from API - memoized for performance
   const processedCategories = useMemo(() => {
     if (!categoriesData) return [];
     
@@ -90,8 +90,11 @@ export default function ArusKasPage() {
     return lainnyaCategories.map(transformCategory);
   }, [categoriesData]);
   
+  // ✅ useEffect dengan dependency yang benar
   useEffect(() => {
-    setArusKasCategories(processedCategories);
+    if (processedCategories.length > 0) {
+      setArusKasCategories(processedCategories);
+    }
   }, [processedCategories]);
 
   // Handle rekap

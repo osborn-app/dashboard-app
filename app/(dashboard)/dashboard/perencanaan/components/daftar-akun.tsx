@@ -66,25 +66,20 @@ const convertApiResponseToAccount = (apiItem: any): Account => {
 
 // Helper function to organize accounts into hierarchical structure (same as realisasi)
 const organizeAccountsHierarchy = (accounts: Account[]): AccountItem[] => {
-  // Extract unique parent accounts from level 2 accounts
-  // Memoize expensive calculations for better performance
-  const { parentMap, rootAccounts, level2Accounts } = useMemo(() => {
-    const parentMap = new Map<number, Account>();
-    
-    accounts.forEach(account => {
-      if (account.level === 2 && account.parent) {
-        // Store parent if not already stored
-        if (!parentMap.has(account.parent.id)) {
-          parentMap.set(account.parent.id, account.parent);
-        }
+  // ✅ Pindahkan useMemo ke dalam komponen, bukan di helper function
+  const parentMap = new Map<number, Account>();
+  
+  accounts.forEach(account => {
+    if (account.level === 2 && account.parent) {
+      // Store parent if not already stored
+      if (!parentMap.has(account.parent.id)) {
+        parentMap.set(account.parent.id, account.parent);
       }
-    });
-    
-    const rootAccounts = Array.from(parentMap.values());
-    const level2Accounts = accounts.filter(account => account.level === 2);
-    
-    return { parentMap, rootAccounts, level2Accounts };
-  }, [accounts]);
+    }
+  });
+  
+  const rootAccounts = Array.from(parentMap.values());
+  const level2Accounts = accounts.filter(account => account.level === 2);
   
   // Build hierarchy manually since API doesn't provide nested structure
   const buildHierarchy = (rootAccount: Account): AccountItem => {
@@ -237,7 +232,7 @@ export function DaftarAkun({ planningId }: DaftarAkunProps) {
   // Use API hook
   const { data: accountsResponse, isLoading, error, refetch } = useGetPlanningAccounts(queryParams);
 
-  // Convert API response to Account format and organize hierarchy
+  // ✅ Convert API response to Account format and organize hierarchy dengan useMemo yang benar
   const accountsData = useMemo(() => {
     if (!accountsResponse?.items) return [];
     

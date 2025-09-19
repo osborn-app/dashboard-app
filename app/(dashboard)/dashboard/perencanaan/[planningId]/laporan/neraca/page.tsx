@@ -84,7 +84,7 @@ export default function NeracaPage() {
 
 
 
-  // Process categories data from API - memoized for performance
+  // ✅ Process categories data from API - memoized for performance
   const processedCategories = useMemo(() => {
     if (!categoriesData) return { aktiva: [], pasiva: [] };
     
@@ -109,9 +109,12 @@ export default function NeracaPage() {
     return { aktiva: transformedAktiva, pasiva: transformedPasiva };
   }, [categoriesData]);
   
+  // ✅ useEffect dengan dependency yang benar
   useEffect(() => {
-    setAktivaCategories(processedCategories.aktiva);
-    setPasivaCategories(processedCategories.pasiva);
+    if (processedCategories.aktiva.length > 0 || processedCategories.pasiva.length > 0) {
+      setAktivaCategories(processedCategories.aktiva);
+      setPasivaCategories(processedCategories.pasiva);
+    }
   }, [processedCategories]);
 
 
