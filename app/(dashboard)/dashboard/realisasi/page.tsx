@@ -9,7 +9,7 @@ import React from "react";
 // Import hooks
 import { useTabState } from "./hooks/use-tab-state";
 
-// Import tab component
+// Import tab components
 import DaftarAkunTab from "./components/tabs/daftar-akun-tab";
 import DaftarRekeningTab from "./components/tabs/daftar-rekening-tab";
 import TransaksiTab from "./components/tabs/transaksi-tab";
