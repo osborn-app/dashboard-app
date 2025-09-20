@@ -10,8 +10,13 @@ export async function middleware(req: NextRequest) {
   const token = (await getToken({ req })) as Token;
   const { pathname } = req.nextUrl;
 
+  // Allow access to auth pages without token
+  if (pathname.startsWith("/role-selection") || pathname.startsWith("/login")) {
+    return NextResponse.next();
+  }
+
   if (!token || !token.user) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/role-selection", req.url));
   }
 
   const role = token?.user?.role || "admin";
@@ -35,10 +40,16 @@ export async function middleware(req: NextRequest) {
   });
 
   if (role === "owner" && !isMatch) {
-    return NextResponse.redirect(new URL("/dashboard/calendar", req.url));
+    return NextResponse.redirect(new URL("/dashboard/calender", req.url));
   }
 
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/dashboard/:path*"] };
+export const config = { 
+  matcher: [
+    "/dashboard/:path*",
+    "/role-selection",
+    "/login"
+  ] 
+};

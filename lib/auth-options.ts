@@ -15,15 +15,23 @@ export const authOptions: NextAuthOptions = {
           label: "password",
           type: "password",
         },
+        role: {
+          label: "role",
+          type: "text",
+        },
       },
       async authorize(credentials, req) {
         try {
           if (typeof credentials !== "undefined") {
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_HOST}/auth/login`,
+              `${process.env.NEXT_PUBLIC_API_HOST || process.env.NEXTAUTH_URL}/api/auth/login`,
               {
                 method: "POST",
-                body: JSON.stringify(credentials),
+                body: JSON.stringify({
+                  email: credentials.email,
+                  password: credentials.password,
+                  role: credentials.role,
+                }),
                 headers: {
                   "Content-Type": "application/json",
                 },
