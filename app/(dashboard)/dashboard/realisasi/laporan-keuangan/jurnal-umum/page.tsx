@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarDateRangePicker } from "@/components/date-range-picker";
-import { Loader2, Download, RefreshCw, FileText, Search } from "lucide-react";
-import { useGetGeneralJournal, GetGeneralJournalParams, GeneralJournalEntry } from "@/hooks/api/useFinancialReports";
+import { Loader2, Download, RefreshCw, FileText, Search, X } from "lucide-react";
+import { useGetGeneralJournal, GetGeneralJournalParams, GeneralJournalEntry, GeneralJournalResponse } from "@/hooks/api/useFinancialReports";
 import { DateRange } from "react-day-picker";
 import dayjs from "dayjs";
 import { toast } from "sonner";
@@ -54,15 +54,30 @@ export default function JurnalUmumPage() {
   const [limit, setLimit] = useState<number>(1000);
   const [isExporting, setIsExporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Prepare params for API call
   const params: GetGeneralJournalParams = {
     startDate: dateRange.from ? dayjs(dateRange.from).format('YYYY-MM-DD') : dayjs().startOf('month').format('YYYY-MM-DD'),
     endDate: dateRange.to ? dayjs(dateRange.to).format('YYYY-MM-DD') : dayjs().endOf('month').format('YYYY-MM-DD'),
     limit: limit,
+    q: debouncedSearchQuery.trim() || undefined,
   };
 
-  const { data: journalEntries, isLoading, error, refetch } = useGetGeneralJournal(params);
+  const { data: journalData, isLoading, error, refetch } = useGetGeneralJournal(params);
+  
+  // Extract transactions and summary from response
+  const journalEntries = journalData?.transactions || [];
+  const summary = journalData?.summary || { total_debit: 0, total_credit: 0, balance: 0, transaction_count: 0 };
 
   // Convert API response to flat array for table display with merged cells
   const jurnalUmumData = useMemo(() => {
@@ -108,6 +123,11 @@ export default function JurnalUmumPage() {
     refetch();
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setDebouncedSearchQuery('');
+  };
+
   const handleExport = async (format: 'excel' | 'csv') => {
     if (!journalEntries || journalEntries.length === 0) {
       toast.error('Tidak ada data untuk diekspor');
@@ -123,7 +143,7 @@ export default function JurnalUmumPage() {
           'Nomor Referensi': transaction.reference_number,
           'Deskripsi Transaksi': transaction.description,
           'Total Jumlah': transaction.total_amount,
-          'Kategori': transaction.category.name,
+          'Kategori': transaction.category?.name || '-',
           'Catatan': transaction.notes || '-',
           'Tipe Sumber': transaction.source_type,
           'ID Sumber': transaction.source_id,
@@ -133,14 +153,61 @@ export default function JurnalUmumPage() {
           'Tipe Entry': entry.entry_type,
           'Jumlah': entry.amount,
           'Deskripsi Entry': entry.description,
+          'Total Debit Transaksi': transaction.summary?.total_debit || 0,
+          'Total Credit Transaksi': transaction.summary?.total_credit || 0,
+          'Balance Transaksi': transaction.summary?.balance || 0,
         }))
       );
 
+      // Add summary data to export
+      const summaryData = [
+        {
+          'Tanggal Transaksi': 'SUMMARY',
+          'Nomor Referensi': 'TOTAL',
+          'Deskripsi Transaksi': 'Ringkasan Jurnal Umum',
+          'Total Jumlah': summary.total_debit + summary.total_credit,
+          'Kategori': '-',
+          'Catatan': `Periode: ${dayjs(dateRange.from).format('DD/MM/YYYY')} - ${dayjs(dateRange.to).format('DD/MM/YYYY')}`,
+          'Tipe Sumber': '-',
+          'ID Sumber': '-',
+          'Kode Akun': '-',
+          'Nama Akun': 'TOTAL DEBIT',
+          'Tipe Akun': '-',
+          'Tipe Entry': 'DEBIT',
+          'Jumlah': summary.total_debit,
+          'Deskripsi Entry': 'Total Debit Keseluruhan',
+          'Total Debit Transaksi': summary.total_debit,
+          'Total Credit Transaksi': summary.total_credit,
+          'Balance Transaksi': summary.balance,
+        },
+        {
+          'Tanggal Transaksi': 'SUMMARY',
+          'Nomor Referensi': 'TOTAL',
+          'Deskripsi Transaksi': 'Ringkasan Jurnal Umum',
+          'Total Jumlah': summary.total_debit + summary.total_credit,
+          'Kategori': '-',
+          'Catatan': `Jumlah Transaksi: ${summary.transaction_count}`,
+          'Tipe Sumber': '-',
+          'ID Sumber': '-',
+          'Kode Akun': '-',
+          'Nama Akun': 'TOTAL CREDIT',
+          'Tipe Akun': '-',
+          'Tipe Entry': 'CREDIT',
+          'Jumlah': summary.total_credit,
+          'Deskripsi Entry': 'Total Credit Keseluruhan',
+          'Total Debit Transaksi': summary.total_debit,
+          'Total Credit Transaksi': summary.total_credit,
+          'Balance Transaksi': summary.balance,
+        }
+      ];
+
+      const finalExportData = [...exportData, ...summaryData];
+
       if (format === 'csv') {
-        const csvContent = convertToCSV(exportData);
+        const csvContent = convertToCSV(finalExportData);
         downloadFile(csvContent, `jurnal_umum_${dayjs().format('YYYY-MM-DD')}.csv`, 'text/csv');
       } else {
-        const excelContent = convertToExcel(exportData);
+        const excelContent = convertToExcel(finalExportData);
         downloadFile(excelContent, `jurnal_umum_${dayjs().format('YYYY-MM-DD')}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', true);
       }
       
@@ -257,11 +324,23 @@ export default function JurnalUmumPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Cari berdasarkan nomor referensi atau deskripsi..."
+                  placeholder="Cari berdasarkan nomor referensi, deskripsi, atau nama akun..."
                   value={searchQuery}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
+                {searchQuery !== debouncedSearchQuery ? (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : searchQuery && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -292,6 +371,12 @@ export default function JurnalUmumPage() {
 
             {/* Action Buttons */}
             <div className="flex gap-2">
+              {debouncedSearchQuery && (
+                <Button onClick={handleClearSearch} variant="outline" size="sm">
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Search
+                </Button>
+              )}
               <Button onClick={handleRefresh} variant="outline" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
@@ -302,7 +387,11 @@ export default function JurnalUmumPage() {
                 size="sm"
                 disabled={isExporting}
               >
-                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
                 Excel
               </Button>
               <Button 
@@ -311,7 +400,11 @@ export default function JurnalUmumPage() {
                 size="sm"
                 disabled={isExporting}
               >
-                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
                 CSV
               </Button>
             </div>
@@ -319,11 +412,28 @@ export default function JurnalUmumPage() {
         </CardContent>
       </Card>
 
+      {/* Period Information */}
+      <div className="text-sm text-muted-foreground mb-4">
+        Periode: {dayjs(dateRange.from).format('DD MMM YYYY')} - {dayjs(dateRange.to).format('DD MMM YYYY')}
+        {debouncedSearchQuery && (
+          <span className="ml-2 text-blue-600">
+            • Filter: "{debouncedSearchQuery}"
+          </span>
+        )}
+      </div>
+
       {/* Journal Entries Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Jurnal Umum Realisasi
+            <div>
+              Jurnal Umum Realisasi
+              {debouncedSearchQuery && (
+                <div className="text-sm font-normal text-muted-foreground mt-1">
+                  Hasil pencarian untuk: "{debouncedSearchQuery}"
+                </div>
+              )}
+            </div>
             {journalEntries && (
               <span className="text-sm font-normal text-muted-foreground">
                 {journalEntries.length} transaksi
@@ -339,12 +449,48 @@ export default function JurnalUmumPage() {
                 <p className="text-gray-600">Loading jurnal umum data...</p>
               </div>
             </div>
+          ) : jurnalUmumData.length === 0 ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 text-lg font-medium">
+                  {debouncedSearchQuery ? 'Tidak ada data yang sesuai dengan pencarian' : 'Tidak ada data jurnal umum'}
+                </p>
+                {debouncedSearchQuery && (
+                  <p className="text-gray-500 text-sm mt-2">
+                    Coba ubah kata kunci pencarian atau hapus filter
+                  </p>
+                )}
+              </div>
+            </div>
           ) : (
-            <RencanaTable
-              columns={createJurnalUmumRowColumns()}
-              data={jurnalUmumData}
-              mergedColumns={['tanggal']} // Only merge tanggal column
-            />
+            <div>
+              <RencanaTable
+                columns={createJurnalUmumRowColumns()}
+                data={jurnalUmumData}
+                mergedColumns={['tanggal']} // Only merge tanggal column
+              />
+              
+              {/* Footer dengan Total Debit dan Credit */}
+              <div className="mt-4 border-t pt-4">
+                <div className="flex justify-end items-center text-base font-medium">
+                  <div className="flex gap-12">
+                    <div>
+                      <span className="text-dark">Debit:</span>
+                      <span className="ml-2 font-mono text-md">
+                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(summary.total_debit)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-dark">Credit:</span>
+                      <span className="ml-2 font-mono text-md">
+                        {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(summary.total_credit)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

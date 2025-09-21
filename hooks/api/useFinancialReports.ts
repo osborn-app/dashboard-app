@@ -78,6 +78,21 @@ export interface GeneralJournalEntry {
     name: string;
     description: string;
   };
+  summary: {
+    total_debit: number;
+    total_credit: number;
+    balance: number;
+  };
+}
+
+export interface GeneralJournalResponse {
+  transactions: GeneralJournalEntry[];
+  summary: {
+    total_debit: number;
+    total_credit: number;
+    balance: number;
+    transaction_count: number;
+  };
 }
 
 // Parameters untuk Financial Reports
@@ -99,6 +114,7 @@ export interface GetGeneralJournalParams {
   startDate: string; // Format: YYYY-MM-DD
   endDate: string;   // Format: YYYY-MM-DD
   limit?: number;    // Default: 1000
+  q?: string;        // Search query
 }
 
 // React Query Hooks
