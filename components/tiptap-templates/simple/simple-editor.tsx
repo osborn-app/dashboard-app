@@ -76,6 +76,34 @@ import "@/components/tiptap-templates/simple/simple-editor.scss"
 import content from "@/components/tiptap-templates/simple/data/content.json"
 import useAxiosAuth from "@/hooks/axios/use-axios-auth"
 
+const generateAltText = (filename: string): string => {
+  if (!filename) return "Uploaded image"
+  
+  const nameWithoutExt = filename.replace(/\.[^/.]+$/, "")
+  
+  const cleanName = nameWithoutExt
+    .replace(/[-_]/g, " ")
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .replace(/\s+/g, " ") 
+    .trim()
+  
+  return cleanName.charAt(0).toUpperCase() + cleanName.slice(1)
+}
+
+let currentFileName = ''
+
+const handleImageUploadWithAlt = async (file: File, axiosAuth: any): Promise<string> => {
+  try {
+    currentFileName = file.name
+    const result = await handleImageUpload(file, axiosAuth)
+    return result
+  } catch (error) {
+    console.error("Upload failed:", error)
+    throw error
+  }
+}
+
 const MainToolbarContent = ({
   onHighlighterClick,
   onLinkClick,
@@ -224,7 +252,12 @@ export function SimpleEditor({ onChange, initialContent = '' }: SimpleEditorProp
       TaskList,
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
-      Image,
+      Image.configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'uploaded-image',
+        },
+      }),
       Typography,
       Superscript,
       Subscript,
@@ -233,7 +266,33 @@ export function SimpleEditor({ onChange, initialContent = '' }: SimpleEditorProp
         accept: "image/*",
         maxSize: MAX_FILE_SIZE,
         limit: 3,
-        upload: (file) => handleImageUpload(file, axiosAuth),
+        upload: (file) => handleImageUploadWithAlt(file, axiosAuth),
+        onSuccess: (url: string) => {
+          const altText = generateAltText(currentFileName)
+          
+          if (editor) {
+            setTimeout(() => {
+              const { state, dispatch } = editor.view
+              const { tr } = state
+              let imageNodePos = -1
+              
+              state.doc.descendants((node: any, pos: number) => {
+                if (node.type.name === 'image' && node.attrs.src === url && !node.attrs.alt) {
+                  imageNodePos = pos
+                  return false
+                }
+              })
+              
+              if (imageNodePos >= 0) {
+                tr.setNodeMarkup(imageNodePos, null, {
+                  ...state.doc.nodeAt(imageNodePos)?.attrs,
+                  alt: altText
+                })
+                dispatch(tr)
+              }
+            }, 100)
+          }
+        },
         onError: (error) => console.error("Upload failed:", error),
       }),
     ],

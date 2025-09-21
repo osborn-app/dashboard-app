@@ -7,7 +7,10 @@ import { isObject, transform } from "lodash";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { navItems } from "@/constants/data";
+import 'dayjs/locale/id'; 
+
 dayjs.extend(duration);
+dayjs.locale('id');
 
 type DraggableData = ColumnDragData | TaskDragData;
 
@@ -164,4 +167,20 @@ export const formatDate = (date?: string | Date, withTime = true) => {
   return withTime
     ? dayjs(date).format("dddd, DD MMMM YYYY HH:mm")
     : dayjs(date).format("dddd, DD MMMM YYYY");
+};
+
+export const formatDateWithTimezone = (
+  date?: string | Date | null,
+  withTime = true,
+  numeric = false
+): string => {
+  if (!date) return "-";
+
+  const d = dayjs(date);
+  if (!d.isValid()) return String(date);
+
+  return d
+    .add(7, "hour")
+    .format((numeric ? "DD:MM:YYYY" : "DD MMMM YYYY") + (withTime ? " HH:mm" : "")) +
+    (withTime && !numeric ? " WIB" : "");
 };

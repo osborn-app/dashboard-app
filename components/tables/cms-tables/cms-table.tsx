@@ -29,7 +29,7 @@ import { X, Check, Link, Plus } from "lucide-react"
 import { Popover } from "antd"
 import { cn } from "@/lib/tiptap-utils";
 import { useRouter } from "next/navigation";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate, formatDateWithTimezone,  } from "@/lib/utils";
 
 
 export function CMSTable({
@@ -114,17 +114,17 @@ export function CMSTable({
                   <TableCell>
                     <div 
                       className="line-clamp-2 text-sm leading-relaxed break-words"
-                      title={formatDateTime(new Date(item.created_at))}
+                      title={formatDateWithTimezone((item.created_at))}
                     >
-                      {formatDateTime(new Date(item.created_at))}
+                      {formatDateWithTimezone((item.created_at))}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div 
                       className="line-clamp-2 text-sm leading-relaxed break-words"
-                      title={formatDateTime(new Date(item.updated_at))}
+                      title={formatDateWithTimezone((item.updated_at))}
                     >
-                      {formatDateTime(new Date(item.updated_at))}
+                      {formatDateWithTimezone((item.updated_at))}
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
