@@ -166,21 +166,21 @@ export const navItems: NavItem[] = [
   {
     title: "PESANAN",
     label: "orders",
-    roles: ["admin"],
+    roles: ["admin", "finance"],
     items: [
       {
         title: "Pesanan Kendaraan",
         href: "/dashboard/orders",
         icon: "car",
         label: "fleet-orders",
-        roles: ["admin"],
+        roles: ["admin", "finance"],
       },
       {
         title: "Pesanan Produk",
         href: "/dashboard/product-orders",
         icon: "package",
         label: "product-orders",
-        roles: ["admin"],
+        roles: ["admin", "finance"],
       },
     ],
   },
@@ -313,42 +313,42 @@ export const navItems: NavItem[] = [
   {
     title: "INSPEKSI & PERBAIKAN",
     label: "Inspections",
-    roles: ["admin", "owner"],
+    roles: ["admin", "owner", "operation"],
     items: [
       {
         title: "Inspections",
         href: "/dashboard/inspections",
         icon: "listchecks",
         label: "Inspections",
-        roles: ["admin", "owner"],
+        roles: ["admin", "owner", "operation"],
       },
       {
         title: "Keperluan & Perbaikan",
         href: "/dashboard/needs",
         icon: "wrench",
         label: "Keperluan Perbaikan",
-        roles: ["admin", "owner"],
+        roles: ["admin", "owner", "operation"],
       },
     ],
   },
   {
     title: "FITUR TAMBAHAN",
     label: "extra",
-    roles: ["admin", "driver"],
+    roles: ["admin", "driver", "finance", "operation"],
     items: [
       {
         title: "Reimburse",
         href: "/dashboard/reimburse",
         icon: "hand",
         label: "reimburse",
-        roles: ["admin", "driver"],
+        roles: ["admin", "finance", "driver"],
       },
       {
         title: "Buru Sergap",
         href: "/dashboard/buser",
         icon: "footprints",
         label: "Buru Sergap",
-        roles: ["admin"],
+        roles: ["admin", "operation"],
       },
       {
         title: "Template Pesan Fleet",
@@ -360,30 +360,30 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    title: "Finance Management",
-    label: "extra",
-    roles: ["admin", "driver"],
+    title: "KEUANGAN",
+    label: "keuangan",
+    roles: ["admin", "finance"],
     items: [
       {
         title: "Rekap Pencatatan",
         href: "/dashboard/rekap-pencatatan",
         icon: "contentImage",
         label: "Rekap Pencatatan",
-        roles: ["admin"]
-      },
-      {
-        title: "Perencanaan",
-        href: "/dashboard/perencanaan",
-        icon: "contentImage",
-        label: "Perencanaan",
-        roles: ["admin"]
+        roles: ["admin", "finance"]
       },
       {
         title: "Realisasi",
         href: "/dashboard/realisasi",
-        icon: "archive",
-        label: "Realisasi",
-        roles: ["admin"]
+        icon: "contentImage",
+        label: "realisasi",
+        roles: ["admin", "finance"]
+      },
+      {
+        title: "Perencanaan",
+        href: "/dashboard/perencanaan",
+        icon: "notebookText",
+        label: "Perencanaan",
+        roles: ["admin", "finance"]
       },
       {
         title: "Inventaris",

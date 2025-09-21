@@ -91,6 +91,10 @@ export function makeUrlsClickable(str: string) {
 }
 
 export function getNavItemsByRole(role?: string) {
+  if (role === "super_admin") {
+    return navItems;
+  }
+
   const filteredNavItems = navItems.filter((item) =>
     item.roles.includes(role || "admin"),
   );
