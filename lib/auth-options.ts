@@ -23,17 +23,18 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         try {
           if (typeof credentials !== "undefined") {
+            const loginPath = credentials?.role === "driver" ? "/auth/login/driver" : "/auth/login";
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_HOST || process.env.NEXTAUTH_URL}/api/auth/login`,
+              `${process.env.NEXT_PUBLIC_API_HOST}${loginPath}`,
               {
                 method: "POST",
                 body: JSON.stringify({
                   email: credentials.email,
                   password: credentials.password,
-                  role: credentials.role,
                 }),
                 headers: {
                   "Content-Type": "application/json",
+                  Accept: "application/json",
                 },
               },
             );
@@ -45,6 +46,11 @@ export const authOptions: NextAuthOptions = {
             }
 
             if (res.ok && user) {
+              // Enforce role mismatch: selected role must match backend role
+              const backendRole = user?.data?.user?.role;
+              if (credentials?.role && backendRole && credentials.role !== backendRole) {
+                throw new Error("ROLE_MISMATCH");
+              }
               // Any object returned will be saved in `user` property of the JWT
               return user.data;
             } else {

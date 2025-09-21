@@ -74,17 +74,34 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
+        const isRoleMismatch = result.error === "ROLE_MISMATCH";
         toast({
           variant: "destructive",
-          title: "Login Gagal",
-          description: "Email atau password salah",
+          title: isRoleMismatch ? "Role tidak sesuai" : "Login Gagal",
+          description: isRoleMismatch
+            ? `Email ini bukan untuk role ${roleName}.`
+            : "Email atau password salah",
         });
       } else {
         toast({
           title: "Login Berhasil",
           description: "Selamat datang di dashboard",
         });
-        router.push("/dashboard");
+        
+        // Redirect based on role
+        const getDefaultRoute = (role: string) => {
+          switch(role) {
+            case "owner": return "/dashboard/calendar";
+            case "finance": return "/dashboard/rekap-pencatatan";
+            case "operation": return "/dashboard/inspections";
+            case "driver": return "/dashboard/reimburse";
+            case "admin": return "/dashboard";
+            case "super_admin": return "/dashboard";
+            default: return "/dashboard";
+          }
+        };
+        
+        router.push(getDefaultRoute(selectedRole || "admin"));
       }
     } catch (error) {
       toast({

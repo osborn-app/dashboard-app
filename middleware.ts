@@ -21,26 +21,73 @@ export async function middleware(req: NextRequest) {
 
   const role = token?.user?.role || "admin";
 
-  const ownerRoutes = [
-    "/dashboard",
-    "/dashboard/calendar",
-    "/dashboard/fleets",
-    "/dashboard/recap",
-    { path: "/dashboard/orders/:orderId/detail", exact: true },
-  ];
+  // Super admin: full access to everything
+  if (role === "super_admin") {
+    return NextResponse.next();
+  }
 
-  const isMatch = ownerRoutes.some((route) => {
-    if (typeof route === "string") {
-      return pathname.startsWith(route);
-    } else if (route.exact) {
-      const regex = new RegExp(`^${route.path.replace(":orderId", "[^/]+")}$`);
-      return regex.test(pathname);
+  // Owner: limit to calendar, fleets, recap, order detail
+  if (role === "owner") {
+    const ownerRoutes = [
+      "/dashboard",
+      "/dashboard/calendar",
+      "/dashboard/fleets",
+      "/dashboard/recap",
+      { path: "/dashboard/orders/:orderId/detail", exact: true },
+    ];
+    const ownerMatch = ownerRoutes.some((route) => {
+      if (typeof route === "string") {
+        return pathname.startsWith(route);
+      } else if (route.exact) {
+        const regex = new RegExp(`^${route.path.replace(":orderId", "[^/]+")}$`);
+        return regex.test(pathname);
+      }
+      return false;
+    });
+    if (!ownerMatch) {
+      return NextResponse.redirect(new URL("/dashboard/calendar", req.url));
     }
-    return false;
-  });
+  }
 
-  if (role === "owner" && !isMatch) {
-    return NextResponse.redirect(new URL("/dashboard/calender", req.url));
+  // Finance: only keuangan pages + reimburse + orders pages
+  if (role === "finance") {
+    const financeAllowedPrefixes = [
+      "/dashboard/rekap-pencatatan",
+      "/dashboard/realisasi",
+      "/dashboard/inventaris",
+      "/dashboard/perencanaan",
+      "/dashboard/reimburse",
+      "/dashboard/orders",
+      "/dashboard/product-orders",
+    ];
+    const ok = financeAllowedPrefixes.some((p) => pathname.startsWith(p));
+    if (!ok) {
+      return NextResponse.redirect(new URL("/dashboard/rekap-pencatatan", req.url));
+    }
+  }
+
+  // Operation: only inspections, needs, buser
+  if (role === "operation") {
+    const operationAllowedPrefixes = [
+      "/dashboard/inspections",
+      "/dashboard/needs",
+      "/dashboard/buser",
+    ];
+    const ok = operationAllowedPrefixes.some((p) => pathname.startsWith(p));
+    if (!ok) {
+      return NextResponse.redirect(new URL("/dashboard/inspections", req.url));
+    }
+  }
+
+  // Driver: only reimburse page
+  if (role === "driver") {
+    const driverAllowedPrefixes = [
+      "/dashboard/reimburse",
+    ];
+    const ok = driverAllowedPrefixes.some((p) => pathname.startsWith(p));
+    if (!ok) {
+      return NextResponse.redirect(new URL("/dashboard/reimburse", req.url));
+    }
   }
 
   return NextResponse.next();
