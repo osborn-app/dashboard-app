@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import BreadCrumb from "@/components/breadcrumb";
 import { Heading } from "@/components/ui/heading";
@@ -12,12 +12,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CalendarIcon, Search, Plus, Trash2 } from 'lucide-react';
+import { CalendarIcon, Search, Plus, Trash2, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useGetLabaRugiReport } from '@/hooks/api/usePerencanaan';
+import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
+import { AccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/account-form';
+import { LabaRugiCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/display-components';
 
 export default function LabaRugiPage() {
   const params = useParams();
@@ -37,6 +39,35 @@ export default function LabaRugiPage() {
   const [activeTab, setActiveTab] = useState('data');
   const [activeSubTab, setActiveSubTab] = useState('pendapatan');
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+
+  // Get planning categories untuk laba rugi (PENDAPATAN dan BEBAN)
+  const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+  
+  // Filter categories berdasarkan type - memoized for performance
+  const pendapatanCategories = useMemo(() => 
+    categoriesData?.filter((cat: any) => cat.type === 'PENDAPATAN') || [], 
+    [categoriesData]
+  );
+  
+  const bebanCategories = useMemo(() => 
+    categoriesData?.filter((cat: any) => cat.type === 'BEBAN') || [], 
+    [categoriesData]
+  );
+
+  // TODO: Implementasi endpoint untuk mengambil template accounts
+  // Endpoint yang diperlukan:
+  // 1. GET /api/planning/{planningId}/template-accounts/pendapatan - untuk mengambil akun pendapatan
+  // 2. GET /api/planning/{planningId}/template-accounts/beban - untuk mengambil akun beban
+  // 3. POST /api/planning/{planningId}/template-accounts - untuk menambah akun baru
+  // 4. DELETE /api/planning/{planningId}/template-accounts/{accountId} - untuk menghapus akun
+  
+  // useEffect(() => {
+  //   // Fetch pendapatan accounts
+  //   // fetchPendapatanAccounts();
+  //   // Fetch beban accounts  
+  //   // fetchBebanAccounts();
+  // }, [planningId]);
 
   // Fetch data dari API
   const { data: labaRugiData, isLoading, error } = useGetLabaRugiReport({
@@ -50,6 +81,33 @@ export default function LabaRugiPage() {
       title: 'Rekap Laba Rugi',
       description: 'Fitur rekap akan segera tersedia',
     });
+  };
+
+  // Handler untuk tambah akun
+  const handleAddAccount = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    setIsAddAccountModalOpen(true);
+  };
+
+  // Handler untuk edit akun
+  const handleEditAccount = (accountId: string) => {
+    toast({
+      title: 'Edit Account',
+      description: `Edit account dengan ID: ${accountId}`,
+    });
+  };
+
+  // Handler untuk delete akun
+  const handleDeleteAccount = (accountId: string) => {
+    toast({
+      title: 'Delete Account',
+      description: `Hapus account dengan ID: ${accountId}`,
+    });
+  };
+
+  // Handler untuk data change
+  const handleDataChange = () => {
+    refetchCategories();
   };
 
   if (error) {
@@ -75,22 +133,24 @@ export default function LabaRugiPage() {
       </div>
       <Separator />
 
-      <div className="space-y-6">
-        <Card>
-        <CardHeader>
-          <CardTitle>Laba Rugi Perencanaan</CardTitle>
-          {labaRugiData?.period && (
-            <p className="text-sm text-gray-600 mt-1">
-              Periode: {labaRugiData.period}
-            </p>
-          )}
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="data">Data Laporan</TabsTrigger>
-              <TabsTrigger value="template">Template Laporan</TabsTrigger>
-            </TabsList>
+      {/* Main Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="data">Data Laporan</TabsTrigger>
+          <TabsTrigger value="template">Template Laporan</TabsTrigger>
+        </TabsList>
+
+        <div className="space-y-6">
+          <Card>
+          <CardHeader>
+            <CardTitle>Laba Rugi Perencanaan</CardTitle>
+            {labaRugiData?.period && (
+              <p className="text-sm text-gray-600 mt-1">
+                Periode: {labaRugiData.period}
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
 
             {/* Data Laporan Tab */}
             <TabsContent value="data" className="space-y-4">
@@ -309,97 +369,80 @@ export default function LabaRugiPage() {
             </TabsContent>
 
             {/* Template Laporan Tab */}
-            <TabsContent value="template" className="space-y-4">
+            <TabsContent value="template" className="space-y-6">
               <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="pendapatan">Pendapatan</TabsTrigger>
-                  <TabsTrigger value="beban">Beban</TabsTrigger>
-                  <TabsTrigger value="rumus">Rumus</TabsTrigger>
-                </TabsList>
+                {/* Custom Tab Navigation - Clean Design */}
+                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+                  <button
+                    onClick={() => setActiveSubTab('pendapatan')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                      activeSubTab === 'pendapatan'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    PENDAPATAN
+                  </button>
+                  <button
+                    onClick={() => setActiveSubTab('beban')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                      activeSubTab === 'beban'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    BEBAN
+                  </button>
+                  <button
+                    onClick={() => setActiveSubTab('rumus')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                      activeSubTab === 'rumus'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    RUMUS
+                  </button>
+                </div>
 
                 {/* Pendapatan Sub Tab */}
                 <TabsContent value="pendapatan" className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Akun Pendapatan</h3>
-                    <Button onClick={() => setIsAddAccountModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Tambah Akun
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {/* Dummy data untuk pendapatan */}
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Pendapatan Sewa Kendaraan</p>
-                        <p className="text-sm text-gray-500">4110</p>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Pendapatan Sewa Produk</p>
-                        <p className="text-sm text-gray-500">4120</p>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  {pendapatanCategories.map((category: any) => (
+                    <LabaRugiCategoryAccounts
+                      key={category.id}
+                      category={category}
+                      onAddAccount={handleAddAccount}
+                      onEditAccount={handleEditAccount}
+                      onDeleteAccount={handleDeleteAccount}
+                    />
+                  ))}
                 </TabsContent>
 
                 {/* Beban Sub Tab */}
                 <TabsContent value="beban" className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Akun Beban</h3>
-                    <Button onClick={() => setIsAddAccountModalOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Tambah Akun
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {/* Dummy data untuk beban */}
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Beban Operasional Umum</p>
-                        <p className="text-sm text-gray-500">5110</p>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Beban Transport Pihak Ketiga</p>
-                        <p className="text-sm text-gray-500">5112</p>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                  {bebanCategories.map((category: any) => (
+                    <LabaRugiCategoryAccounts
+                      key={category.id}
+                      category={category}
+                      onAddAccount={handleAddAccount}
+                      onEditAccount={handleEditAccount}
+                      onDeleteAccount={handleDeleteAccount}
+                    />
+                  ))}
                 </TabsContent>
 
                 {/* Rumus Sub Tab */}
                 <TabsContent value="rumus" className="space-y-4">
-                  <h3 className="text-lg font-semibold">Rumus Laba Rugi</h3>
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-lg">
-                      <h4 className="font-medium mb-2">Laba Kotor</h4>
-                      <p className="text-sm text-gray-600">Total Pendapatan - Total Beban</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <h4 className="font-medium mb-2">Laba Bersih</h4>
-                      <p className="text-sm text-gray-600">Laba Kotor - Beban Operasional</p>
-                    </div>
+                  <h2 className="text-lg font-bold text-gray-900">RUMUS</h2>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm font-bold text-gray-900">
+                      KUMULATIF LABA RUGI = Subtotal Pendapatan - Subtotal Beban
+                    </p>
                   </div>
                 </TabsContent>
               </Tabs>
             </TabsContent>
-          </Tabs>
 
           {/* Modal Tambah Akun */}
           <Dialog open={isAddAccountModalOpen} onOpenChange={setIsAddAccountModalOpen}>
@@ -429,7 +472,16 @@ export default function LabaRugiPage() {
           </Dialog>
         </CardContent>
       </Card>
-      </div>
+        </div>
+      </Tabs>
+
+      {/* Account Form Modal */}
+      <AccountForm
+        isOpen={isAddAccountModalOpen}
+        onClose={() => setIsAddAccountModalOpen(false)}
+        categoryId={selectedCategoryId}
+        onSuccess={handleDataChange}
+      />
     </div>
   );
 }

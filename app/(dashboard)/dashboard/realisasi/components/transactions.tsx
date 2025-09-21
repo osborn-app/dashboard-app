@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, TrendingUp, Edit, RefreshCw, Calendar } from "lucide-react";
+import { Search, Plus, TrendingUp, Edit, RefreshCw } from "lucide-react";
 import EditTransactionModal from "./transaksi/edit-transaction-modal";
 import { FinancialTransaction, CreateFinancialTransactionData, Account, TransactionCategory } from "../types";
 import { TransactionTable } from "@/components/tables/transaction-tables/transaction-table";
@@ -13,6 +12,11 @@ import { createTransactionColumns, TransactionItem } from "@/components/tables/t
 import { AdvancedPagination } from "@/components/ui/advanced-pagination";
 // import { useFinancialTransactionsWithFilters } from "@/hooks/useFinancialTransactionsPaginated";
 import { TransactionsSkeleton } from "./ui/skeleton-loading";
+import { CalendarDateRangePicker } from "@/components/date-range-picker";
+import { DateRange } from "react-day-picker";
+import CategoryFilter from "./category-filter";
+import ExportModal from "./modals/export-modal";
+import Swal from "sweetalert2";
 
 interface TransactionListProps {
   transactions?: FinancialTransaction[];
@@ -23,6 +27,25 @@ interface TransactionListProps {
   onCreateTransaction: (transactionData: CreateFinancialTransactionData) => void;
   onDeleteTransaction: (id: number) => void;
   onSyncAll: () => void;
+  onExportTransactions?: (format: 'excel' | 'csv', exportType: 'all' | 'filtered') => void;
+  // Filter props
+  filters?: {
+    accountCode: string;
+    categoryId: string;
+  };
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange) => void;
+  onClearDate?: () => void;
+  onAccountFilterChange?: (value: string) => void;
+  onCategoryFilterChange?: (value: string) => void;
+  // Pagination props
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  isLoading?: boolean;
 }
 
 export default function TransactionList({ 
@@ -33,65 +56,48 @@ export default function TransactionList({
   onSearchChange: externalOnSearchChange,
   onCreateTransaction, 
   onDeleteTransaction,
-  onSyncAll
+  onSyncAll,
+  onExportTransactions,
+  // Filter props
+  filters = { accountCode: "", categoryId: "" },
+  dateRange,
+  onDateRangeChange,
+  onClearDate,
+  onAccountFilterChange,
+  onCategoryFilterChange,
+  // Pagination props
+  currentPage = 1,
+  totalPages = 1,
+  totalItems = 0,
+  pageSize = 50,
+  onPageChange,
+  onPageSizeChange,
+  isLoading = false
 }: TransactionListProps) {
   // Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTransactionId, setSelectedTransactionId] = useState<number | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Use data from props instead of internal hook
   const transactions = externalTransactions || [];
   const [searchQuery, setSearchQuery] = useState(externalSearchQuery || "");
-  const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
-    accountCode: "",
-    categoryId: "",
-  });
-  
-  // Local filtering for search
-  const filteredTransactions = transactions.filter(transaction => {
-    if (!searchQuery) return true;
-    const searchLower = searchQuery.toLowerCase();
-    return transaction.description?.toLowerCase().includes(searchLower) ||
-           (transaction as any).reference_number?.toLowerCase().includes(searchLower);
-  });
 
-  // Mock pagination data since we're using external data
-  const totalItems = filteredTransactions.length;
-  const totalPages = 1;
-  const currentPage = 1;
-  const itemsPerPage = 50;
-  const isLoading = false;
+  // Use real pagination data from props
   const error = null;
 
-  // Handle filter changes
-  const updateFilters = (newFilters: Partial<typeof filters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  };
-
-  const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
-    updateFilters({ [field]: value });
-  };
-
-  const handleAccountFilterChange = (value: string) => {
-    updateFilters({ accountCode: value });
-  };
-
-  const handleCategoryFilterChange = (value: string) => {
-    updateFilters({ categoryId: value });
-  };
-
-  // Mock functions for pagination
+  // Pagination handlers using real functions
   const goToPage = (page: number) => {
-    console.log("Go to page:", page);
+    onPageChange?.(page);
   };
 
   const updatePageSize = (newLimit: number) => {
-    console.log("Update page size:", newLimit);
+    onPageSizeChange?.(newLimit);
   };
 
   const refetch = () => {
+    // This will be handled by the parent component
     console.log("Refetch data");
   };
 
@@ -99,6 +105,54 @@ export default function TransactionList({
   const handleEditClick = (transaction: FinancialTransaction) => {
     setSelectedTransactionId(transaction.id);
     setIsEditModalOpen(true);
+  };
+
+  const handleExportClick = () => {
+    setIsExportModalOpen(true);
+  };
+
+  const handleExport = async (format: 'excel' | 'csv', exportType: 'all' | 'filtered') => {
+    try {
+      setIsExporting(true);
+      
+      // Call parent export handler
+      if (onExportTransactions) {
+        await onExportTransactions(format, exportType);
+      }
+      
+      // Close modal
+      setIsExportModalOpen(false);
+      
+      // Show success message
+      const exportTypeText = exportType === 'all' ? 'semua data' : 'data sesuai filter';
+      await Swal.fire({
+        title: "Berhasil!",
+        text: `${exportTypeText} berhasil diekspor dalam format ${format.toUpperCase()}`,
+        icon: "success",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#10b981",
+        timer: 3000,
+        timerProgressBar: true,
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+      });
+      
+    } catch (error) {
+      console.error("Export error:", error);
+      
+      // Show error message
+      await Swal.fire({
+        title: "Gagal!",
+        text: "Gagal mengekspor data transaksi",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#ef4444",
+        allowOutsideClick: true,
+        allowEscapeKey: true,
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleDeleteTransaction = (id: number) => {
@@ -173,7 +227,10 @@ export default function TransactionList({
             <Input
               placeholder="Cari transaksi....."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                externalOnSearchChange?.(e.target.value);
+              }}
               className="pl-10"
             />
           </div>
@@ -183,7 +240,11 @@ export default function TransactionList({
             Sync Data
           </Button>
           
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleExportClick}
+          >
             <TrendingUp className="mr-2 h-4 w-4" />
             Rekap Transaksi
           </Button>
@@ -193,55 +254,19 @@ export default function TransactionList({
         <div className="flex items-center gap-4">
           {/* Date Range */}
           <div className="flex items-center gap-2 flex-1">
-            <div className="relative flex-1">
-            <Input
-              type="date"
-              value={filters.startDate}
-              onChange={(e) => handleDateChange('startDate', e.target.value)}
-              placeholder="Tanggal Mulai"
-                className="pr-10"
+            <CalendarDateRangePicker
+              onDateRangeChange={onDateRangeChange || (() => {})}
+              onClearDate={onClearDate || (() => {})}
+              dateRange={dateRange}
             />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            </div>
-            
-            <div className="relative flex-1">
-            <Input
-              type="date"
-              value={filters.endDate}
-              onChange={(e) => handleDateChange('endDate', e.target.value)}
-              placeholder="Tanggal Selesai"
-                className="pr-10"
-            />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            </div>
           </div>
-          
-          {/* Account Filter */}
-          <Select value={filters.accountCode || "all"} onValueChange={handleAccountFilterChange}>
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Semua Akun" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Akun</SelectItem>
-              <SelectItem value="11100">11100 - KAS & BANK</SelectItem>
-              <SelectItem value="41000">41000 - Pendapatan Sewa Kendaraan</SelectItem>
-            </SelectContent>
-          </Select>
-          
           {/* Category Filter */}
-          <Select value={filters.categoryId || "all"} onValueChange={handleCategoryFilterChange}>
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Semua Kategori" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Kategori</SelectItem>
-              {categories?.map((category) => (
-                <SelectItem key={category.id} value={category.id.toString()}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CategoryFilter
+            categories={categories || []}
+            selectedCategoryId={filters.categoryId || "all"}
+            onCategoryChange={onCategoryFilterChange}
+            placeholder="Semua Kategori"
+          />
         </div>
       </div>
 
@@ -262,7 +287,7 @@ export default function TransactionList({
                 </Button>
               </div>
             </div>
-          ) : filteredTransactions.length === 0 ? (
+          ) : transactions.length === 0 ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <p className="text-gray-500">Tidak ada data transaksi</p>
@@ -272,30 +297,30 @@ export default function TransactionList({
             <TransactionTable
               columns={createTransactionColumns({
                 onEdit: (item) => {
-                  const transaction = filteredTransactions.find(t => t.id === item.id);
+                  const transaction = transactions.find(t => t.id === item.id);
                   if (transaction) {
                     handleEditClick(transaction);
                   }
                 }
               })}
-              data={convertToTransactionItems(filteredTransactions)}
+              data={convertToTransactionItems(transactions)}
             />
           )}
         </CardContent>
       </Card>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {totalPages > 0 && totalItems > 0 && (
         <div className="mt-4">
           <AdvancedPagination
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}
-            itemsPerPage={itemsPerPage} // Dynamic limit
+            itemsPerPage={pageSize}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
-            pageSizeOptions={[10, 20, 50, 100]} // Multiple options
-            showPageSizeSelector={true} // Show selector
+            pageSizeOptions={[10, 20, 50, 100]}
+            showPageSizeSelector={true}
             showInfo={true}
             maxVisiblePages={5}
           />
@@ -312,6 +337,14 @@ export default function TransactionList({
         transactionId={selectedTransactionId}
         onEdit={handleEditTransaction}
         onDelete={handleDeleteTransaction}
+      />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        onExport={handleExport}
+        isExporting={isExporting}
       />
 
     </div>

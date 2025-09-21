@@ -40,6 +40,8 @@ export interface RencanaRowItem {
     namaAkun: string;
     debit: number;
     kredit: number;
+    account_debit_id: string;
+    account_credit_id: string;
   }[];
 }
 
@@ -86,7 +88,7 @@ export const createRencanaColumns = ({
   },
   {
     accessorKey: "keterangan",
-    header: "KETERANGAN RENCANA TRANSAKSI",
+    header: "KETERANGAN",
     cell: ({ row }) => {
       const keterangan = row.getValue("keterangan") as string;
       return (
@@ -210,7 +212,7 @@ export const createRencanaRowColumns = ({
   },
   {
     accessorKey: "keterangan",
-    header: "KETERANGAN RENCANA TRANSAKSI",
+    header: "KETERANGAN",
     cell: ({ row, table }) => {
       const keterangan = row.getValue("keterangan") as string;
       const currentId = row.original.id.split('_')[0]; // Get base ID without suffix

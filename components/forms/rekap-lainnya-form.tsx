@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateLainnya, useEditLainnya } from "@/hooks/api/useRekap";
+import { useGetTransactionCategories } from "@/hooks/api/useRealization";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -41,7 +42,7 @@ import { cn } from "@/lib/utils";
 // Form schema untuk validasi
 const formSchema = z.object({
   name: z.string().min(1, "Nama transaksi wajib diisi"),
-  category: z.string().min(1, "Kategori wajib dipilih"),
+  categoryId: z.string().min(1, "Kategori wajib dipilih"),
   nominal: z.string().min(1, "Nominal wajib diisi"),
   date: z.date({
     required_error: "Tanggal wajib dipilih",
@@ -50,16 +51,6 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-// Kategori transaksi yang tersedia
-const categoryOptions = [
-  { value: "operasional", label: "Operasional" },
-  { value: "administrasi", label: "Administrasi" },
-  { value: "pemeliharaan", label: "Pemeliharaan" },
-  { value: "transportasi", label: "Transportasi" },
-  { value: "komunikasi", label: "Komunikasi" },
-  { value: "lainnya", label: "Lainnya" },
-];
 
 interface RekapLainnyaFormProps {
   initialData?: any | null;
@@ -75,6 +66,7 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
 
   // Determine form mode and title
   const isDetailMode = !isEdit && initialData;
@@ -93,19 +85,24 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
   // API hooks
   const { mutate: createLainnya } = useCreateLainnya();
   const { mutate: editLainnya } = useEditLainnya();
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetTransactionCategories({ 
+    is_active: true,
+    page: 1,
+    limit: 1000 
+  });
 
   // Default values
   const defaultValues = initialData
     ? {
         name: initialData.name || "",
-        category: initialData.category || "",
+        categoryId: initialData.categoryId || initialData.category || "",
         nominal: initialData.nominal?.toString() || "",
         date: initialData.date ? new Date(initialData.date) : new Date(),
         description: initialData.description || "",
       }
     : {
         name: "",
-        category: "",
+        categoryId: "",
         nominal: "",
         date: new Date(),
         description: "",
@@ -128,6 +125,7 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
     try {
       const formData = {
         ...values,
+        categoryId: values.categoryId,
         nominal: parseFloat(values.nominal),
         date: values.date.toISOString(),
       };
@@ -224,7 +222,7 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
 
             <FormField
               control={form.control}
-              name="category"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="relative label-required">
@@ -233,7 +231,7 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={isDetailMode}
+                    disabled={isDetailMode || categoriesLoading}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -241,11 +239,41 @@ export const RekapLainnyaForm: React.FC<RekapLainnyaFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categoryOptions.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
+                      <div className="p-2">
+                        <Input
+                          placeholder="Cari kategori..."
+                          value={categorySearch}
+                          onChange={(e) => setCategorySearch(e.target.value)}
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {categoriesData?.items
+                          ?.filter((category: any) =>
+                            category.name.toLowerCase().includes(categorySearch.toLowerCase()) ||
+                            (category.description && category.description.toLowerCase().includes(categorySearch.toLowerCase()))
+                          )
+                          ?.map((category: any) => (
+                            <SelectItem key={category.id} value={category.id.toString()}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{category.name}</span>
+                                {category.description && (
+                                  <span className="text-sm text-muted-foreground">
+                                    {category.description}
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        {categoriesData?.items?.filter((category: any) =>
+                          category.name.toLowerCase().includes(categorySearch.toLowerCase()) ||
+                          (category.description && category.description.toLowerCase().includes(categorySearch.toLowerCase()))
+                        )?.length === 0 && (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            Kategori tidak ditemukan
+                          </div>
+                        )}
+                      </div>
                     </SelectContent>
                   </Select>
                   <FormMessage />

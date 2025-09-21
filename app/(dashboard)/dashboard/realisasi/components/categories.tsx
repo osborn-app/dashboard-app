@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Edit, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import { TransactionCategory, CreateTransactionCategoryData, Account } from "../types";
+import AccountFilter from "./account-filter";
+import CategoryModal from "./modals/category-modal";
 
 interface CategoriesProps {
   categories: TransactionCategory[];
@@ -20,7 +16,7 @@ interface CategoriesProps {
   onSearchChange?: (query: string) => void;
   onCreateCategory?: (category: CreateTransactionCategoryData) => void;
   onUpdateCategory?: (id: number, category: CreateTransactionCategoryData) => void;
-  onDeleteCategory?: (id: number) => void;
+  onDeleteCategory?: (id: number, categoryName: string) => void;
 }
 
 export default function Categories({ 
@@ -32,23 +28,49 @@ export default function Categories({
   onUpdateCategory, 
   onDeleteCategory 
 }: CategoriesProps) {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [editingCategory, setEditingCategory] = useState<TransactionCategory | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    debitAccountId: 0,
-    creditAccountId: 0
+    debitAccountId: null as number | null,
+    creditAccountId: null as number | null
   });
-  const [debitPopoverOpen, setDebitPopoverOpen] = useState(false);
-  const [creditPopoverOpen, setCreditPopoverOpen] = useState(false);
 
-  // Use API search instead of local filtering
-  const filteredCategories = categories;
+  // Client-side filtering based on search query
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return categories;
+    }
+    
+    return categories.filter((category) =>
+      category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.debit_account?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.credit_account?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [categories, searchQuery]);
+
+  // Check if category is a new category (can be edited/deleted)
+  // Based on the response structure, categories with specific names are system categories
+  const isNewCategory = (category: TransactionCategory) => {
+    // Categories that start with "Orderan", "Reimburse", "Inventaris", "Diskon Penjualan" are system categories
+    const systemCategoryPrefixes = [
+      "Orderan Fleets",
+      "Orderan Product", 
+      "Orderan Sewa",
+      "Reimburse",
+      "Inventaris",
+      "Diskon Penjualan"
+    ];
+    
+    return !systemCategoryPrefixes.some(prefix => category.name.startsWith(prefix));
+  };
 
   const handleAddClick = () => {
-    setFormData({ name: "", debitAccountId: 0, creditAccountId: 0 });
-    setIsAddModalOpen(true);
+    setFormData({ name: "", debitAccountId: null, creditAccountId: null });
+    setIsEditMode(false);
+    setEditingCategory(null);
+    setIsModalOpen(true);
   };
 
   const handleEditClick = (category: TransactionCategory) => {
@@ -58,10 +80,11 @@ export default function Categories({
       debitAccountId: parseInt(category.debit_account_id.toString()),
       creditAccountId: parseInt(category.credit_account_id.toString())
     });
-    setIsEditModalOpen(true);
+    setIsEditMode(true);
+    setIsModalOpen(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async (): Promise<boolean> => {
     if (formData.name && formData.debitAccountId && formData.creditAccountId) {
       const categoryData = {
         name: formData.name,
@@ -69,20 +92,34 @@ export default function Categories({
         credit_account_id: formData.creditAccountId
       };
       
-      if (isEditModalOpen && editingCategory) {
-        onUpdateCategory?.(editingCategory.id, categoryData);
-      } else {
-        onCreateCategory?.(categoryData);
+      try {
+        if (isEditMode && editingCategory) {
+          await onUpdateCategory?.(editingCategory.id, categoryData);
+        } else {
+          await onCreateCategory?.(categoryData);
+        }
+        return true; // Success
+      } catch (error) {
+        console.error("Error saving category:", error);
+        return false; // Failure
       }
-      handleCloseModal();
     }
+    return false; // Validation failed
   };
 
   const handleCloseModal = () => {
-    setIsAddModalOpen(false);
-    setIsEditModalOpen(false);
+    setIsModalOpen(false);
+    setIsEditMode(false);
     setEditingCategory(null);
-    setFormData({ name: "", debitAccountId: 0, creditAccountId: 0 });
+    setFormData({ name: "", debitAccountId: null, creditAccountId: null });
+  };
+
+  const handleFormChange = (data: Partial<{
+    name: string;
+    debitAccountId: number | null;
+    creditAccountId: number | null;
+  }>) => {
+    setFormData(prev => ({ ...prev, ...data }));
   };
 
   return (
@@ -108,10 +145,10 @@ export default function Categories({
       {/* Categories Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="max-h-[600px] overflow-y-auto">
             <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
+              <thead className="sticky top-0 bg-gray-50 z-10">
+                <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Nama Kategori</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Akun Debit</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">Akun Kredit</th>
@@ -122,7 +159,7 @@ export default function Categories({
                 {filteredCategories.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="text-center py-8 text-gray-500">
-                      Tidak ada kategori yang ditemukan
+                      {searchQuery.trim() ? 'Tidak ada kategori yang sesuai dengan pencarian' : 'Tidak ada kategori yang ditemukan'}
                     </td>
                   </tr>
                 ) : (
@@ -132,26 +169,30 @@ export default function Categories({
                       <td className="py-3 px-4 text-gray-900">{category.debit_account?.name || "N/A"}</td>
                       <td className="py-3 px-4 text-gray-900">{category.credit_account?.name || "N/A"}</td>
                       <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditClick(category)}
-                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            title="Edit Kategori"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDeleteCategory?.(category.id)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            title="Hapus Kategori"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        {isNewCategory(category) ? (
+                          <div className="flex items-center justify-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditClick(category)}
+                              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title="Edit Kategori"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onDeleteCategory?.(category.id, category.name)}
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Hapus Kategori"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">-</span>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -162,219 +203,16 @@ export default function Categories({
         </CardContent>
       </Card>
 
-      {/* Add Category Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
-          <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-white/20 rounded-full">
-                  <Plus className="h-5 w-5" />
-                </div>
-                <div>
-                  <DialogTitle className="text-xl font-semibold">
-                    Tambah Kategori
-                  </DialogTitle>
-                  <p className="text-sm text-blue-100 mt-1">
-                    Tambah Kategori yang ingin ditambahkan
-                  </p>
-                </div>
-              </div>
-            </div>
-          </DialogHeader>
-          
-          <div className="p-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nama Kategori</Label>
-              <Input
-                id="name"
-                placeholder="Masukkan nama kategori"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="debit">Pilih Debit</Label>
-              <Popover open={debitPopoverOpen} onOpenChange={setDebitPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={debitPopoverOpen}
-                    className="w-full justify-between"
-                  >
-                    {formData.debitAccountId 
-                      ? accounts.find(account => account.id === formData.debitAccountId)?.code + " - " + accounts.find(account => account.id === formData.debitAccountId)?.name
-                      : "Pilih akun debit..."
-                    }
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput placeholder="Cari akun debit..." />
-                    <CommandList>
-                      <CommandEmpty>Akun tidak ditemukan.</CommandEmpty>
-                      <CommandGroup>
-                        {accounts.map((account) => (
-                          <CommandItem
-                            key={account.id}
-                            value={`${account.code} ${account.name}`}
-                            onSelect={() => {
-                              setFormData({ ...formData, debitAccountId: account.id });
-                              setDebitPopoverOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                formData.debitAccountId === account.id ? "opacity-100" : "opacity-0"
-                              }`}
-                            />
-                            {account.code} - {account.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="credit">Pilih Kredit</Label>
-              <Popover open={creditPopoverOpen} onOpenChange={setCreditPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={creditPopoverOpen}
-                    className="w-full justify-between"
-                  >
-                    {formData.creditAccountId 
-                      ? accounts.find(account => account.id === formData.creditAccountId)?.code + " - " + accounts.find(account => account.id === formData.creditAccountId)?.name
-                      : "Pilih akun kredit..."
-                    }
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput placeholder="Cari akun kredit..." />
-                    <CommandList>
-                      <CommandEmpty>Akun tidak ditemukan.</CommandEmpty>
-                      <CommandGroup>
-                        {accounts.map((account) => (
-                          <CommandItem
-                            key={account.id}
-                            value={`${account.code} ${account.name}`}
-                            onSelect={() => {
-                              setFormData({ ...formData, creditAccountId: account.id });
-                              setCreditPopoverOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={`mr-2 h-4 w-4 ${
-                                formData.creditAccountId === account.id ? "opacity-100" : "opacity-0"
-                              }`}
-                            />
-                            {account.code} - {account.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between p-6 bg-gray-50">
-            <Button variant="outline" onClick={handleCloseModal}>
-              Batal
-            </Button>
-            <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
-              Simpan
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Category Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
-          <DialogHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-white/20 rounded-full">
-                  <Edit className="h-5 w-5" />
-                </div>
-                <div>
-                  <DialogTitle className="text-xl font-semibold">
-                    Edit Kategori
-                  </DialogTitle>
-                  <p className="text-sm text-blue-100 mt-1">
-                    Ubah informasi kategori yang dipilih
-                  </p>
-                </div>
-              </div>
-            </div>
-          </DialogHeader>
-          
-          <div className="p-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Nama Kategori</Label>
-              <Input
-                id="edit-name"
-                placeholder="Masukkan nama kategori"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-debit">Pilih Debit</Label>
-              <Select value={formData.debitAccountId.toString()} onValueChange={(value) => setFormData({ ...formData, debitAccountId: parseInt(value) })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih akun debit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id.toString()}>
-                      {account.code} - {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-credit">Pilih Kredit</Label>
-              <Select value={formData.creditAccountId.toString()} onValueChange={(value) => setFormData({ ...formData, creditAccountId: parseInt(value) })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih akun kredit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id.toString()}>
-                      {account.code} - {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between p-6 bg-gray-50">
-            <Button variant="outline" onClick={handleCloseModal}>
-              Batal
-            </Button>
-            <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
-              Simpan Perubahan
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Category Modal */}
+      <CategoryModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSubmit}
+        isEditMode={isEditMode}
+        formData={formData}
+        onFormChange={handleFormChange}
+        accounts={accounts}
+      />
     </div>
   );
 }

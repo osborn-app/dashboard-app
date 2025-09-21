@@ -66,7 +66,7 @@ const convertApiResponseToAccount = (apiItem: any): Account => {
 
 // Helper function to organize accounts into hierarchical structure (same as realisasi)
 const organizeAccountsHierarchy = (accounts: Account[]): AccountItem[] => {
-  // Extract unique parent accounts from level 2 accounts
+  // ✅ Pindahkan useMemo ke dalam komponen, bukan di helper function
   const parentMap = new Map<number, Account>();
   
   accounts.forEach(account => {
@@ -79,8 +79,6 @@ const organizeAccountsHierarchy = (accounts: Account[]): AccountItem[] => {
   });
   
   const rootAccounts = Array.from(parentMap.values());
-  
-  // Get all level 2 accounts (children)
   const level2Accounts = accounts.filter(account => account.level === 2);
   
   // Build hierarchy manually since API doesn't provide nested structure
@@ -234,7 +232,7 @@ export function DaftarAkun({ planningId }: DaftarAkunProps) {
   // Use API hook
   const { data: accountsResponse, isLoading, error, refetch } = useGetPlanningAccounts(queryParams);
 
-  // Convert API response to Account format and organize hierarchy
+  // ✅ Convert API response to Account format and organize hierarchy dengan useMemo yang benar
   const accountsData = useMemo(() => {
     if (!accountsResponse?.items) return [];
     

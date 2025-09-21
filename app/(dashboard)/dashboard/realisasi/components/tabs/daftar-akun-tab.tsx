@@ -211,10 +211,6 @@ export default function DaftarAkunTab({ registerRefetchCallback }: DaftarAkunTab
   };
 
   const handleDeleteAccount = async (id: number) => {
-    console.log("handleDeleteAccount called with id:", id);
-    console.log("accountsData:", accountsData);
-    console.log("accountsData?.items:", accountsData?.items);
-    
     const result = await Swal.fire({
       title: "Konfirmasi Hapus",
       text: "Apakah Anda yakin ingin menghapus akun ini?",

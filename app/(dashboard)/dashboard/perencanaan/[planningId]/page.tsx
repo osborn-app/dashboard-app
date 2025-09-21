@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { DaftarAkun } from "../components/daftar-akun";
-import { RencanaTab } from "../components/rencana-tab";
+import { PerencanaanRencanaTab } from "../components/rencana-tab";
 import { LaporanTabs } from "../components/laporan-tabs";
 import { useGetDetailPerencanaan } from "@/hooks/api/usePerencanaan";
 
@@ -24,6 +24,7 @@ export default function DetailPerencanaanPage() {
   // Fetch planning data based on planningId
   const { data: planningData, isLoading, error } = useGetDetailPerencanaan(planningId);
 
+  // ✅ Semua hooks dipanggil di level teratas, baru kemudian conditional rendering
   if (isLoading) {
     return (
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -73,7 +74,7 @@ export default function DetailPerencanaanPage() {
 
           {/* Rencana Tab */}
           <TabsContent value="rencana" className="space-y-4">
-            <RencanaTab planningId={planningId} />
+            <PerencanaanRencanaTab planningId={planningId} />
           </TabsContent>
 
           {/* Laporan Tab */}

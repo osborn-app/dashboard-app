@@ -15,11 +15,7 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
   const customerId = initialData?.order?.customer?.id?.toString();
   const fleetId = initialData?.order?.fleet?.id?.toString();
 
-  // Debug logging for IDs
-  console.log("Customer ID:", customerId);
-  console.log("Fleet ID:", fleetId);
-  console.log("Initial Data:", initialData);
-  console.log("Should fetch:", !!(customerId && fleetId));
+  // Get customer and fleet IDs for API calls
 
   const {
     data: totalsData,
@@ -35,18 +31,10 @@ const BuserForm: React.FC<BuserFormProps> = ({ initialData, children }) => {
     },
   );
 
-  console.log("Totals Data Response:", totalsData);
-  console.log("Is Loading:", isLoadingTotals);
-  console.log("Error:", totalsError);
-
   // Get the first item from the data array
   const totalsItem = totalsData?.data?.data?.[0];
   const estimatedPaidTotal = totalsItem?.estimated_paid_total || 0;
   const estimatedUnpaidTotal = totalsItem?.estimated_unpaid_total || 0;
-
-  console.log("Totals Item:", totalsItem);
-  console.log("Estimated Paid Total:", estimatedPaidTotal);
-  console.log("Estimated Unpaid Total:", estimatedUnpaidTotal);
 
   return (
     <div className="space-y-6">

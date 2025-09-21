@@ -379,18 +379,18 @@ export const navItems: NavItem[] = [
         roles: ["admin", "finance"]
       },
       {
-        title: "Inventaris",
-        href: "/dashboard/inventaris",
-        icon: "archive",
-        label: "Inventaris",
-        roles: ["admin", "finance"]
-      },
-      {
         title: "Perencanaan",
         href: "/dashboard/perencanaan",
         icon: "notebookText",
         label: "Perencanaan",
         roles: ["admin", "finance"]
+      },
+      {
+        title: "Inventaris",
+        href: "/dashboard/inventaris",
+        icon: "archive",
+        label: "Inventaris",
+        roles: ["admin"]
       },
     ],
   },
