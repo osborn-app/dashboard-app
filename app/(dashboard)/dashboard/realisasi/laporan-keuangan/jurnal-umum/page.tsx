@@ -24,7 +24,7 @@ const breadcrumbItems = [
   { title: "Jurnal Umum", link: "/dashboard/realisasi/laporan-keuangan/jurnal-umum" }
 ];
 
-// Helper function to convert API response to JurnalUmumRowItem format for merged cells
+// Helper function to convert API response to JurnalUmumRowItem format for merged cell
 const convertApiResponseToJurnalUmumRowItem = (transaction: GeneralJournalEntry): JurnalUmumRowItem => {
   // Create rows for debit and credit entries
   const rows = transaction.entries.map(entry => ({
