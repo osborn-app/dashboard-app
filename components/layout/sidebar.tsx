@@ -15,7 +15,8 @@ export default function Sidebar({ className }: SidebarProps) {
 
   const { user } = useUser();
 
-  const navItems = getNavItemsByRole(user?.role || "admin");
+  const role = user?.role;
+  const navItems = role ? getNavItemsByRole(role) : [];
 
   return (
     <nav

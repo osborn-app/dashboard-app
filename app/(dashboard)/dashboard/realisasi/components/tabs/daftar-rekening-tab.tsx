@@ -1,84 +1,47 @@
 "use client";
 
-import React from "react";
-import AccountTable from "../account-table";
-import AccountModal from "../modals/account-modal";
-import { useAccountForm, AccountFormData } from "../../hooks/use-account-form";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import BankAccountsTable from "../bank-accounts-table";
+import { AccountTableSkeleton, FadeInWrapper } from "../ui/skeleton-loading";
+import {
+  useGetBankAccountsWithBalance
+} from "@/hooks/api/useRealization";
+import { TabType } from "../../hooks/use-tab-state";
+import { useDebounce } from "../../hooks/use-debounce";
 
 interface DaftarRekeningTabProps {
-  accountTableData: any[];
-  onEditAccount: (id: string) => void;
-  onDeleteAccount: (id: string) => void;
+  registerRefetchCallback: (tab: TabType, callback: () => void) => void;
 }
 
-export default function DaftarRekeningTab({
-  accountTableData,
-  onEditAccount,
-  onDeleteAccount
-}: DaftarRekeningTabProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function DaftarRekeningTab({ registerRefetchCallback }: DaftarRekeningTabProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // 500ms delay
   
-  const {
-    formData,
-    isEditMode,
-    editingAccountId,
-    updateFormData,
-    resetForm,
-    setEditMode
-  } = useAccountForm();
+  // API Hooks
+  const { data: bankAccountsData, isLoading: bankAccountsLoading, refetch: refetchBankAccounts } = useGetBankAccountsWithBalance({
+    ...(debouncedSearchQuery && { q: debouncedSearchQuery })
+  });
 
-  const handleAddAccount = () => {
-    resetForm();
-    setIsModalOpen(true);
-  };
-
-  const handleEditAccount = (id: string) => {
-    // Find account data and populate form
-    const account = accountTableData.find(acc => acc.id === id);
-    if (account) {
-      setEditMode(id, {
-        namaAkun: account.name,
-        kodeAkun: account.code,
-        tipeAkun: account.type,
-        kelompokAkun: "",
-        terhubungRekening: "tidak",
-        namaBank: "",
-        nomorRekening: "",
-        saldoAwal: ""
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    resetForm();
-  };
-
-  const handleSaveAccount = (data: AccountFormData) => {
-    console.log("Saving account:", data);
-    // Here you would typically save to your backend
-    handleCloseModal();
-  };
+  // Register refetch callback for this tab
+  useEffect(() => {
+    registerRefetchCallback("daftar-rekening", refetchBankAccounts);
+  }, [registerRefetchCallback, refetchBankAccounts]);
 
   return (
     <div className="space-y-4">
-      <AccountTable 
-        accounts={accountTableData}
-        onAddAccount={handleAddAccount}
-        onEditAccount={handleEditAccount}
-        onDeleteAccount={onDeleteAccount}
-      />
-
-      <AccountModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSave={handleSaveAccount}
-        isEditMode={isEditMode}
-        formData={formData}
-        onFormChange={updateFormData}
-      />
+      {bankAccountsLoading ? (
+        <FadeInWrapper>
+          <AccountTableSkeleton />
+        </FadeInWrapper>
+      ) : (
+        <FadeInWrapper delay={200}>
+          <BankAccountsTable
+            accounts={bankAccountsData?.data || []}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        </FadeInWrapper>
+      )}
     </div>
   );
 }

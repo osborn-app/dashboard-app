@@ -94,6 +94,10 @@ export function makeUrlsClickable(str: string) {
 }
 
 export function getNavItemsByRole(role?: string) {
+  if (role === "super_admin") {
+    return navItems;
+  }
+
   const filteredNavItems = navItems.filter((item) =>
     item.roles.includes(role || "admin"),
   );
@@ -167,6 +171,57 @@ export const formatDate = (date?: string | Date, withTime = true) => {
   return withTime
     ? dayjs(date).format("dddd, DD MMMM YYYY HH:mm")
     : dayjs(date).format("dddd, DD MMMM YYYY");
+};
+
+export const formatDateIndonesian = (date?: string | Date, withTime = true) => {
+  if (!date) return "-";
+  
+  const dayNames = {
+    Sunday: "Minggu",
+    Monday: "Senin", 
+    Tuesday: "Selasa",
+    Wednesday: "Rabu",
+    Thursday: "Kamis",
+    Friday: "Jumat",
+    Saturday: "Sabtu"
+  };
+  
+  const monthNames = {
+    January: "Januari",
+    February: "Februari", 
+    March: "Maret",
+    April: "April",
+    May: "Mei",
+    June: "Juni",
+    July: "Juli",
+    August: "Agustus",
+    September: "September",
+    October: "Oktober",
+    November: "November",
+    December: "Desember"
+  };
+  
+  // Force dayjs to use English locale for consistent formatting
+  const dayjsDate = dayjs(date).locale('en');
+  const dayName = dayNames[dayjsDate.format("dddd") as keyof typeof dayNames];
+  const monthName = monthNames[dayjsDate.format("MMMM") as keyof typeof monthNames];
+  
+  if (withTime) {
+    return `${dayName}, ${dayjsDate.format("DD")} ${monthName} ${dayjsDate.format("YYYY")} ${dayjsDate.format("HH:mm")}`;
+  } else {
+    return `${dayName}, ${dayjsDate.format("DD")} ${monthName} ${dayjsDate.format("YYYY")}`;
+  }
+};
+
+/**
+ * Convert date string (YYYY-MM-DD) to ISO 8601 format
+ * @param dateString - Date string in YYYY-MM-DD format
+ * @returns ISO 8601 formatted date string
+ */
+export const convertDateToISO = (dateString: string): string => {
+  if (!dateString) return '';
+  // Convert YYYY-MM-DD to ISO 8601 format
+  return new Date(dateString + 'T00:00:00.000Z').toISOString();
 };
 
 export const formatDateWithTimezone = (

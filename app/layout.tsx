@@ -58,7 +58,7 @@ export default async function RootLayout({
           key="twitter-banner"
         />
       </head>
-      <body className={`${inter.className} overflow-hidden`}>
+      <body className={`${inter.className}`}>
         <Providers session={session}>
           <Toaster />
           <NextSSRPlugin

@@ -1,5 +1,7 @@
-import { createContext, useContext, ReactNode } from "react";
+"use client";
+import { createContext, useContext, ReactNode, useMemo } from "react";
 import type { Session } from "next-auth";
+import { useSession } from "next-auth/react";
 
 type UserContextType = {
   user: Session["user"] | null;
@@ -14,11 +16,14 @@ export const UserProvider = ({
   children: ReactNode;
   initialUser: Session["user"] | null;
 }) => {
-  return (
-    <UserContext.Provider value={{ user: initialUser }}>
-      {children}
-    </UserContext.Provider>
+  const { data } = useSession();
+
+  const value = useMemo(
+    () => ({ user: (data?.user as Session["user"]) ?? initialUser ?? null }),
+    [data?.user, initialUser],
   );
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => {

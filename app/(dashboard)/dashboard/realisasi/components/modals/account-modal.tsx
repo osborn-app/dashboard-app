@@ -7,24 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface AccountFormData {
-  namaAkun: string;
-  kodeAkun: string;
-  tipeAkun: string;
-  kelompokAkun: string;
-  terhubungRekening: string;
-  namaBank: string;
-  nomorRekening: string;
-  saldoAwal: string;
-}
+import { AccountFormData } from "../../hooks/use-account-form";
+import { Account } from "../../types";
 
 interface AccountModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: AccountFormData) => void;
+  onSave: () => void;
   isEditMode: boolean;
   formData: AccountFormData;
   onFormChange: (data: Partial<AccountFormData>) => void;
+  headerAccounts?: Account[];
+  onSuccess?: () => void;
 }
 
 export default function AccountModal({
@@ -33,26 +27,37 @@ export default function AccountModal({
   onSave,
   isEditMode,
   formData,
-  onFormChange
+  onFormChange,
+  headerAccounts = [],
+  onSuccess
 }: AccountModalProps) {
-  const handleInputChange = (field: keyof AccountFormData, value: string) => {
-    onFormChange({ [field]: value });
+  const handleInputChange = (field: keyof AccountFormData, value: string | number) => {
+    onFormChange({ [field]: value } as Partial<AccountFormData>);
   };
 
   const handleRadioChange = (value: string) => {
     onFormChange({ 
-      terhubungRekening: value,
+      is_connected_to_bank: value === "ya",
       // Clear bank details if switching to "tidak"
       ...(value === "tidak" && {
-        namaBank: "",
-        nomorRekening: "",
-        saldoAwal: ""
+        bank_name: "",
+        bank_account_number: "",
+        initial_balance: 0
       })
-    });
+    } as Partial<AccountFormData>);
+  };
+
+  const handleHeaderChange = (value: string) => {
+    const isHeader = value === "header";
+    onFormChange({
+      is_header: isHeader,
+      level: isHeader ? 1 : 2,
+      parent_id: isHeader ? undefined : (value === "none" ? undefined : parseInt(value))
+    } as Partial<AccountFormData>);
   };
 
   const handleSave = () => {
-    onSave(formData);
+    onSave();
   };
 
   return (
@@ -71,27 +76,61 @@ export default function AccountModal({
           {/* Left Column */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="namaAkun">Nama Akun</Label>
+              <Label htmlFor="name">Nama Akun</Label>
               <Input
-                id="namaAkun"
-                value={formData.namaAkun}
-                onChange={(e) => handleInputChange("namaAkun", e.target.value)}
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Masukkan nama akun"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="tipeAkun">Tipe Akun</Label>
+              <Label htmlFor="code">Kode Akun</Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={(e) => handleInputChange("code", e.target.value)}
+                placeholder="Masukkan kode akun"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="type">Tipe Akun</Label>
               <Select 
-                value={formData.tipeAkun} 
-                onValueChange={(value) => handleInputChange("tipeAkun", value)}
+                value={formData.type} 
+                onValueChange={(value) => handleInputChange("type", value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih tipe akun" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="header">Header</SelectItem>
-                  <SelectItem value="detail">Detail</SelectItem>
+                  <SelectItem value="ASSETS">ASSETS</SelectItem>
+                  <SelectItem value="LIABILITIES">LIABILITIES</SelectItem>
+                  <SelectItem value="EQUITY">EQUITY</SelectItem>
+                  <SelectItem value="REVENUE">REVENUE</SelectItem>
+                  <SelectItem value="EXPENSE">EXPENSE</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Jenis Akun</Label>
+              <Select 
+                value={formData.is_header ? "header" : (formData.parent_id ? formData.parent_id.toString() : "none")}
+                onValueChange={handleHeaderChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih jenis akun" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="header">Header Account</SelectItem>
+                  <SelectItem value="none">Detail Account (Tanpa Parent)</SelectItem>
+                  {headerAccounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id.toString()}>
+                      Detail Account - {account.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -103,9 +142,9 @@ export default function AccountModal({
                   <input
                     type="radio"
                     id="ya"
-                    name="terhubungRekening"
+                    name="is_connected_to_bank"
                     value="ya"
-                    checked={formData.terhubungRekening === "ya"}
+                    checked={formData.is_connected_to_bank === true}
                     onChange={(e) => handleRadioChange(e.target.value)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
@@ -115,9 +154,9 @@ export default function AccountModal({
                   <input
                     type="radio"
                     id="tidak"
-                    name="terhubungRekening"
+                    name="is_connected_to_bank"
                     value="tidak"
-                    checked={formData.terhubungRekening === "tidak"}
+                    checked={formData.is_connected_to_bank === false}
                     onChange={(e) => handleRadioChange(e.target.value)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
@@ -129,78 +168,55 @@ export default function AccountModal({
           
           {/* Right Column */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="kodeAkun">Kode Akun</Label>
-              <Input
-                id="kodeAkun"
-                value={formData.kodeAkun}
-                onChange={(e) => handleInputChange("kodeAkun", e.target.value)}
-                placeholder="Masukkan kode akun"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="kelompokAkun">Pilih Kelompok Akun</Label>
-              <Select 
-                value={formData.kelompokAkun} 
-                onValueChange={(value) => handleInputChange("kelompokAkun", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih kelompok akun" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="harta">Harta</SelectItem>
-                  <SelectItem value="kewajiban">Kewajiban</SelectItem>
-                  <SelectItem value="modal">Modal</SelectItem>
-                  <SelectItem value="pendapatan">Pendapatan</SelectItem>
-                  <SelectItem value="beban">Beban</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        
-        {/* Bank Account Details - Conditional */}
-        {formData.terhubungRekening === "ya" && (
-          <div className="space-y-4 pt-4 border-t">
-            <h3 className="text-lg font-medium text-gray-900">Detail Rekening Bank</h3>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="namaBank">Nama Bank</Label>
-                <Input
-                  id="namaBank"
-                  value={formData.namaBank}
-                  onChange={(e) => handleInputChange("namaBank", e.target.value)}
-                  placeholder="Masukkan nama bank"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+            {/* Bank Information - Only show if connected to bank */}
+            {formData.is_connected_to_bank && (
+              <>
                 <div className="space-y-2">
-                  <Label htmlFor="nomorRekening">Nomor Rekening</Label>
+                  <Label htmlFor="bank_name">Nama Bank</Label>
                   <Input
-                    id="nomorRekening"
-                    value={formData.nomorRekening}
-                    onChange={(e) => handleInputChange("nomorRekening", e.target.value)}
+                    id="bank_name"
+                    value={formData.bank_name || ""}
+                    onChange={(e) => handleInputChange("bank_name", e.target.value)}
+                    placeholder="Masukkan nama bank"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="bank_account_number">Nomor Rekening</Label>
+                  <Input
+                    id="bank_account_number"
+                    value={formData.bank_account_number || ""}
+                    onChange={(e) => handleInputChange("bank_account_number", e.target.value)}
                     placeholder="Masukkan nomor rekening"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="saldoAwal">Saldo Awal</Label>
+                  <Label htmlFor="initial_balance">Saldo Awal</Label>
                   <Input
-                    id="saldoAwal"
-                    value={formData.saldoAwal}
-                    onChange={(e) => handleInputChange("saldoAwal", e.target.value)}
-                    placeholder="Masukkan saldo awal"
+                    id="initial_balance"
                     type="number"
+                    value={formData.initial_balance}
+                    onChange={(e) => handleInputChange("initial_balance", parseFloat(e.target.value) || 0)}
+                    placeholder="Masukkan saldo awal"
                   />
                 </div>
-              </div>
+              </>
+            )}
+            
+            {/* Description field */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Deskripsi</Label>
+              <Input
+                id="description"
+                value={formData.description || ""}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                placeholder="Masukkan deskripsi (opsional)"
+              />
             </div>
           </div>
-        )}
+        </div>
+        
         
         {/* Action Buttons */}
         <div className="flex justify-end space-x-3 pt-6 border-t">

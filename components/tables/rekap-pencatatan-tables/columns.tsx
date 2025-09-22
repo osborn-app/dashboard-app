@@ -190,7 +190,7 @@ export const columnsLainnya: ColumnDef<any>[] = [
   {
     accessorKey: "kategori",
     header: "Kategori",
-    cell: ({ row }) => <span>{row.original.category ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.categoryEntity?.name ?? "-"}</span>,
   },
   {
     accessorKey: "total",

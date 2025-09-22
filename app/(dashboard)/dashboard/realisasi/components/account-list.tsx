@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,21 +27,152 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-interface AccountItem {
-  id: string;
-  code: string;
-  name: string;
-  type: string;
-  level: number;
+import { Account, ReorderAccountsData } from "../types";
+
+interface AccountItem extends Account {
   expanded: boolean;
   children: AccountItem[];
 }
 
 interface AccountListProps {
   accounts: AccountItem[];
-  onReorder?: (newOrder: AccountItem[]) => void;
-  onEditAccount?: (id: string) => void;
-  onDeleteAccount?: (id: string) => void;
+  onReorder?: (newOrder: ReorderAccountsData) => void;
+  onEditAccount?: (id: number) => void;
+  onDeleteAccount?: (id: number) => void;
+}
+
+// Animated Collapse Component
+function AnimatedCollapse({ 
+  isOpen, 
+  children 
+}: { 
+  isOpen: boolean; 
+  children: React.ReactNode 
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<string>(isOpen ? 'auto' : '0px');
+
+  useEffect(() => {
+    if (contentRef.current) {
+      const scrollHeight = contentRef.current.scrollHeight;
+      if (isOpen) {
+        setHeight(`${scrollHeight}px`);
+        // Reset to auto after animation completes
+        setTimeout(() => setHeight('auto'), 300);
+      } else {
+        setHeight(`${scrollHeight}px`);
+        // Force reflow
+        contentRef.current.offsetHeight;
+        setHeight('0px');
+      }
+    }
+  }, [isOpen]);
+
+  return (
+    <div
+      ref={contentRef}
+      className="overflow-hidden transition-all duration-300 ease-in-out"
+      style={{ height }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Non-sortable Account Item Component (for children)
+function AccountItem({ 
+  account, 
+  level = 0, 
+  onToggleExpansion,
+  onEditAccount,
+  onDeleteAccount
+}: { 
+  account: AccountItem; 
+  level?: number;
+  onToggleExpansion: (id: number) => void;
+  onEditAccount?: (id: number) => void;
+  onDeleteAccount?: (id: number) => void;
+}) {
+  const hasChildren = account.children && account.children.length > 0;
+  const isExpanded = account.expanded;
+
+  return (
+    <div className="mb-2">
+      <div
+        className={cn(
+          "flex items-center justify-between p-3 rounded-lg border transition-all duration-200",
+          "hover:bg-gray-50 cursor-pointer",
+          level === 0 ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200",
+          level === 1 ? "ml-6" : level === 2 ? "ml-12" : level === 3 ? "ml-18" : ""
+        )}
+      >
+        <div className="flex items-center space-x-3">
+          {/* Expand/Collapse Button */}
+          {hasChildren ? (
+            <button
+              onClick={() => onToggleExpansion(account.id)}
+              className="p-1 hover:bg-gray-200 rounded"
+            >
+              <div className={cn(
+                "transition-transform duration-300 ease-in-out",
+                isExpanded ? "rotate-90" : "rotate-0"
+              )}>
+                {isExpanded ? (
+                  <Minus className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-blue-600" />
+                )}
+              </div>
+            </button>
+          ) : (
+            <div className="w-6" />
+          )}
+          
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="text-xs font-mono">
+              {account.code}
+            </Badge>
+            <span className="font-medium text-gray-900">
+              {account.name}
+            </span>
+            <span className="text-sm text-gray-500">
+              ({account.type})
+            </span>
+          </div>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEditAccount?.(account.id)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDeleteAccount?.(account.id)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem>View Details</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {hasChildren && (
+        <AnimatedCollapse isOpen={isExpanded}>
+          <div className="ml-6 pt-2">
+            {account.children.map((child) => (
+              <AccountItem
+                key={child.id}
+                account={child}
+                level={level + 1}
+                onToggleExpansion={onToggleExpansion}
+                onEditAccount={onEditAccount}
+                onDeleteAccount={onDeleteAccount}
+              />
+            ))}
+          </div>
+        </AnimatedCollapse>
+      )}
+    </div>
+  );
 }
 
 // Sortable Account Item Component
@@ -54,9 +185,9 @@ function SortableAccountItem({
 }: { 
   account: AccountItem; 
   level?: number;
-  onToggleExpansion: (id: string) => void;
-  onEditAccount?: (id: string) => void;
-  onDeleteAccount?: (id: string) => void;
+  onToggleExpansion: (id: number) => void;
+  onEditAccount?: (id: number) => void;
+  onDeleteAccount?: (id: number) => void;
 }) {
   const {
     attributes,
@@ -102,11 +233,16 @@ function SortableAccountItem({
               onClick={() => onToggleExpansion(account.id)}
               className="p-1 hover:bg-gray-200 rounded"
             >
-              {isExpanded ? (
-                <Minus className="h-4 w-4 text-blue-600" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-blue-600" />
-              )}
+              <div className={cn(
+                "transition-transform duration-300 ease-in-out",
+                isExpanded ? "rotate-90" : "rotate-0"
+              )}>
+                {isExpanded ? (
+                  <Minus className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-blue-600" />
+                )}
+              </div>
             </button>
           ) : (
             <div className="w-6" />
@@ -139,19 +275,21 @@ function SortableAccountItem({
         </DropdownMenu>
       </div>
 
-      {hasChildren && isExpanded && (
-        <div className="ml-6">
-          {account.children.map((child) => (
-            <SortableAccountItem
-              key={child.id}
-              account={child}
-              level={level + 1}
-              onToggleExpansion={onToggleExpansion}
-              onEditAccount={onEditAccount}
-              onDeleteAccount={onDeleteAccount}
-            />
-          ))}
-        </div>
+      {hasChildren && (
+        <AnimatedCollapse isOpen={isExpanded}>
+          <div className="ml-6 pt-2">
+            {account.children.map((child) => (
+              <AccountItem
+                key={child.id}
+                account={child}
+                level={level + 1}
+                onToggleExpansion={onToggleExpansion}
+                onEditAccount={onEditAccount}
+                onDeleteAccount={onDeleteAccount}
+              />
+            ))}
+          </div>
+        </AnimatedCollapse>
       )}
     </div>
   );
@@ -159,9 +297,15 @@ function SortableAccountItem({
 
 export default function AccountList({ accounts, onReorder, onEditAccount, onDeleteAccount }: AccountListProps) {
   const [localAccounts, setLocalAccounts] = useState<AccountItem[]>(accounts);
-  const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(
+  const [expandedAccounts, setExpandedAccounts] = useState<Set<number>>(
     new Set(accounts.filter(acc => acc.expanded).map(acc => acc.id))
   );
+
+  // Update local state when accounts prop changes
+  React.useEffect(() => {
+    setLocalAccounts(accounts);
+    setExpandedAccounts(new Set(accounts.filter(acc => acc.expanded).map(acc => acc.id)));
+  }, [accounts]);
 
   // DnD sensors
   const sensors = useSensors(
@@ -188,7 +332,13 @@ export default function AccountList({ accounts, onReorder, onEditAccount, onDele
     // Call the onReorder callback if provided
     if (onReorder) {
       try {
-        await onReorder(newOrder);
+        const reorderData: ReorderAccountsData = {
+          accounts: newOrder.map((account, index) => ({
+            id: account.id,
+            sort_order: index
+          }))
+        };
+        await onReorder(reorderData);
         console.log("Order updated successfully");
       } catch (error) {
         console.error("Failed to update order:", error);
@@ -199,7 +349,7 @@ export default function AccountList({ accounts, onReorder, onEditAccount, onDele
   };
 
   // Handle expansion toggle
-  const handleToggleExpansion = (accountId: string) => {
+  const handleToggleExpansion = (accountId: number) => {
     setExpandedAccounts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(accountId)) {

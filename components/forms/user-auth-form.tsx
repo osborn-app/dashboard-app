@@ -40,9 +40,11 @@ export default function UserAuthForm() {
 
   const onSubmit = async (data: UserFormValue) => {
     setLoading(true);
+    const role = localStorage.getItem("selectedRole");
     signIn("credentials", {
       email: data.email,
       password: data.password,
+      role: role,
       callbackUrl: callbackUrl ?? "/dashboard",
     });
   };

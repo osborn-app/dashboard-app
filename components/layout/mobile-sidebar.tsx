@@ -15,7 +15,8 @@ export function MobileSidebar({ className }: SidebarProps) {
 
   const [open, setOpen] = useState(false);
 
-  const navItems = getNavItemsByRole(user?.role || "admin");
+  const role = user?.role;
+  const navItems = role ? getNavItemsByRole(role) : [];
 
   return (
     <>

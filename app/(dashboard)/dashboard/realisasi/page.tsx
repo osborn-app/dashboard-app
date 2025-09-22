@@ -16,66 +16,10 @@ import TransaksiTab from "./components/tabs/transaksi-tab";
 import LaporanTab from "./components/tabs/laporan-tab";
 import KategoriTab from "./components/tabs/kategori-tab";
 
-// Import data
-import { 
-  accountsData, 
-  accountTableData, 
-  transactionData, 
-  reportData, 
-  categoryData 
-} from "./data/sample-data";
-
 const breadcrumbItems = [{ title: "Realisasi", link: "/dashboard/realisasi" }];
 
 export default function RealisasiPage() {
-  const { activeTab, setActiveTab } = useTabState();
-
-  // Handler functions
-
-  const handleReorderAccounts = async (newOrder: any[]) => {
-    console.log("New account order:", newOrder);
-    // Here you would typically save the new order to your backend
-  };
-
-  const handleEditAccount = (id: string) => {
-    console.log("Edit account:", id);
-    // Handle edit account
-  };
-
-  const handleDeleteAccount = (id: string) => {
-    console.log("Delete account:", id);
-    // Handle delete account
-  };
-
-  const handleAddTransaction = () => {
-    console.log("Add transaction clicked");
-    // Handle add transaction
-  };
-
-  const handleEditTransaction = (id: string) => {
-    console.log("Edit transaction:", id);
-    // Handle edit transaction
-  };
-
-  const handleDeleteTransaction = (id: string) => {
-    console.log("Delete transaction:", id);
-    // Handle delete transaction
-  };
-
-  const handleAddCategory = (category: { name: string; debitAccount: string; creditAccount: string }) => {
-    console.log("Add category:", category);
-    // Handle add category
-  };
-
-  const handleEditCategory = (id: string, category: { name: string; debitAccount: string; creditAccount: string }) => {
-    console.log("Edit category:", id, category);
-    // Handle edit category
-  };
-
-  const handleDeleteCategory = (id: string) => {
-    console.log("Delete category:", id);
-    // Handle delete category
-  };
+  const { activeTab, setActiveTab, registerRefetchCallback } = useTabState();
 
   return (
     <>
@@ -98,46 +42,27 @@ export default function RealisasiPage() {
 
           {/* Daftar Akun Tab */}
           <TabsContent value="daftar-akun" className="space-y-4">
-            <DaftarAkunTab
-              accountsData={accountsData}
-              onReorderAccounts={handleReorderAccounts}
-              onEditAccount={handleEditAccount}
-              onDeleteAccount={handleDeleteAccount}
-            />
+            <DaftarAkunTab registerRefetchCallback={registerRefetchCallback} />
           </TabsContent>
 
           {/* Daftar Rekening Tab */}
           <TabsContent value="daftar-rekening" className="space-y-4">
-            <DaftarRekeningTab
-              accountTableData={accountTableData}
-              onEditAccount={handleEditAccount}
-              onDeleteAccount={handleDeleteAccount}
-            />
+            <DaftarRekeningTab registerRefetchCallback={registerRefetchCallback} />
           </TabsContent>
 
           {/* Transaksi Tab */}
           <TabsContent value="transaksi" className="space-y-4">
-            <TransaksiTab
-              transactionData={transactionData}
-              onAddTransaction={handleAddTransaction}
-              onEditTransaction={handleEditTransaction}
-              onDeleteTransaction={handleDeleteTransaction}
-            />
+            <TransaksiTab registerRefetchCallback={registerRefetchCallback} />
           </TabsContent>
 
           {/* Laporan Tab */}
           <TabsContent value="laporan" className="space-y-4">
-            <LaporanTab />
+            <LaporanTab registerRefetchCallback={registerRefetchCallback} />
           </TabsContent>
 
           {/* Kategori Tab */}
           <TabsContent value="kategori" className="space-y-4">
-            <KategoriTab
-              categoryData={categoryData}
-              onAddCategory={handleAddCategory}
-              onEditCategory={handleEditCategory}
-              onDeleteCategory={handleDeleteCategory}
-            />
+            <KategoriTab registerRefetchCallback={registerRefetchCallback} />
           </TabsContent>
         </Tabs>
       </div>
