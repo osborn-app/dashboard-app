@@ -91,7 +91,7 @@ export default function RoleSelectionPage() {
 
       <div className="w-full max-w-4xl mx-auto relative z-10 pb-8">
         {/* Logo */}
-        <div className="mb-6 animate-fade-in text-center">
+        <div className="mb-2 animate-fade-in text-center">
           <Image
             alt="Transgo Logo"
             src="/image 3.svg"
@@ -147,6 +147,13 @@ export default function RoleSelectionPage() {
               </Card>
             );
           })}
+        </div>
+        
+        {/* Copyright */}
+        <div className="text-center mt-8 pt-6 border-t border-gray-200">
+          <p className="text-sm text-gray-500">
+            ©copyright 2025 Powered by Transgo Group
+          </p>
         </div>
       </div>
 
