@@ -7,7 +7,10 @@ import { isObject, transform } from "lodash";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import { navItems } from "@/constants/data";
+import 'dayjs/locale/id'; 
+
 dayjs.extend(duration);
+dayjs.locale('id');
 
 type DraggableData = ColumnDragData | TaskDragData;
 
@@ -219,4 +222,20 @@ export const convertDateToISO = (dateString: string): string => {
   if (!dateString) return '';
   // Convert YYYY-MM-DD to ISO 8601 format
   return new Date(dateString + 'T00:00:00.000Z').toISOString();
+};
+
+export const formatDateWithTimezone = (
+  date?: string | Date | null,
+  withTime = true,
+  numeric = false
+): string => {
+  if (!date) return "-";
+
+  const d = dayjs(date);
+  if (!d.isValid()) return String(date);
+
+  return d
+    .add(7, "hour")
+    .format((numeric ? "DD:MM:YYYY" : "DD MMMM YYYY") + (withTime ? " HH:mm" : "")) +
+    (withTime && !numeric ? " WIB" : "");
 };
