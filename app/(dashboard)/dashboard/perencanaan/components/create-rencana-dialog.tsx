@@ -53,18 +53,18 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   const [creditAccountSearch, setCreditAccountSearch] = useState('');
   const { toast } = useToast();
 
-  // Fetch accounts data (level 2 only)
+  // Fetch accounts data (all accounts like table rencana)
   const { data: accountsResponse } = useGetPlanningAccounts({ page: 1, limit: 1000 });
   
   // Delete mutation hook
   const deleteMutation = useDeletePlanningEntry(planningId || '', entryId || '');
   
-  const level2Accounts = useMemo(() => {
+  // Use all accounts like in table rencana
+  const allAccounts = useMemo(() => {
     if (!accountsResponse?.items) {
       return [];
     }
-    const filtered = accountsResponse.items.filter((account: any) => account.level === 2);
-    return filtered;
+    return accountsResponse.items;
   }, [accountsResponse]);
 
   // Initialize form data when editing or reset when creating
@@ -314,12 +314,12 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                           />
                         </div>
                         <ScrollArea className="max-h-60 overflow-y-auto">
-                          {level2Accounts
-                            .filter((acc: any) => 
+                          {allAccounts
+                            ?.filter((acc: any) => 
                               acc.name.toLowerCase().includes(debitAccountSearch.toLowerCase()) ||
                               acc.code.toLowerCase().includes(debitAccountSearch.toLowerCase())
                             )
-                            .map((acc: any) => (
+                            ?.map((acc: any) => (
                               <SelectItem key={acc.id} value={acc.id.toString()}>
                                 <div className="flex flex-col">
                                   <span className="font-mono text-xs">{acc.code}</span>
@@ -353,12 +353,12 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                           />
                         </div>
                         <ScrollArea className="max-h-60 overflow-y-auto">
-                          {level2Accounts
-                            .filter((acc: any) => 
+                          {allAccounts
+                            ?.filter((acc: any) => 
                               acc.name.toLowerCase().includes(creditAccountSearch.toLowerCase()) ||
                               acc.code.toLowerCase().includes(creditAccountSearch.toLowerCase())
                             )
-                            .map((acc: any) => (
+                            ?.map((acc: any) => (
                               <SelectItem key={acc.id} value={acc.id.toString()}>
                                 <div className="flex flex-col">
                                   <span className="font-mono text-xs">{acc.code}</span>

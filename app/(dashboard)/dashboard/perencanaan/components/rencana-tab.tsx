@@ -12,6 +12,7 @@ import { CreateRencanaDialog } from './create-rencana-dialog';
 import { useGetPlanningEntries, useCreatePlanningEntry, useUpdatePlanningEntry, useDeletePlanningEntry, useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
 import { convertDateToISO } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RencanaTabProps {
   planningId: string;
@@ -163,6 +164,7 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [accountSearch, setAccountSearch] = useState('');
   
   const { toast } = useToast();
 
@@ -179,7 +181,7 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
   const { data: entriesResponse, isLoading, error, refetch } = useGetPlanningEntries(planningId, queryParams);
   const { data: accountsResponse } = useGetPlanningAccounts({ page: 1, limit: 1000 });
   const createMutation = useCreatePlanningEntry(planningId);
-  const updateMutation = useUpdatePlanningEntry(planningId, editingItem?.id || '');
+  const updateMutation = useUpdatePlanningEntry(planningId, editingItem?.id ? editingItem.id.split('_')[0] : '');
 
   // Create account mapping for quick lookup
   const accountMap = useMemo(() => {
@@ -276,20 +278,32 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
         note: data.name || null
       };
 
-      const response = await createMutation.mutateAsync(apiData);
+      // Check if we're in edit mode or create mode
+      if (editingItem) {
+        // Use updateMutation for edit mode
+        const response = await updateMutation.mutateAsync(apiData);
+        
+        toast({
+          title: 'Success',
+          description: 'Rencana berhasil diperbarui',
+        });
+      } else {
+        // Use createMutation for create mode
+        const response = await createMutation.mutateAsync(apiData);
+        
+        toast({
+          title: 'Success',
+          description: 'Rencana berhasil dibuat',
+        });
+      }
       
-      toast({
-        title: 'Success',
-        description: 'Rencana berhasil dibuat',
-      });
-      
-    setShowCreateDialog(false);
+      setShowCreateDialog(false);
       setEditingItem(null);
       refetch();
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Gagal membuat rencana',
+        description: editingItem ? 'Gagal memperbarui rencana' : 'Gagal membuat rencana',
         variant: 'destructive',
       });
     }
@@ -419,57 +433,80 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
         </div>
         
         {/* Bottom Row: Date Range and Filters */}
-        <div className="flex items-center gap-4">
-          {/* Date Range */}
-          <div className="flex items-center gap-2">
-            <div className="relative">
+        <div className="grid grid-cols-12 gap-4 w-full">
+          {/* Date Range - Takes 4 columns */}
+          <div className="col-span-4 flex items-center gap-3">
+            <div className="relative flex-1">
               <Input
                 type="date"
                 placeholder="mm/dd/yyyy"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="w-[140px] pr-10"
+                className="w-full pr-10"
               />
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             </div>
             
-            <div className="relative">
+            <div className="relative flex-1">
               <Input
                 type="date"
                 placeholder="mm/dd/yyyy"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="w-[140px] pr-10"
+                className="w-full pr-10"
               />
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             </div>
           </div>
           
-          {/* Account Filter */}
-          <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Semua Akun" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Akun</SelectItem>
-              <SelectItem value="kas">Kas & Bank</SelectItem>
-              <SelectItem value="inventaris">Inventaris</SelectItem>
-              <SelectItem value="kendaraan">Kendaraan</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Account Filter - Takes 4 columns */}
+          <div className="col-span-4">
+            <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Semua Akun" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="p-2">
+                  <Input
+                    placeholder="Cari akun..."
+                    value={accountSearch}
+                    onChange={(e) => setAccountSearch(e.target.value)}
+                    className="h-8"
+                  />
+                </div>
+                <ScrollArea className="max-h-60 overflow-y-auto">
+                  <SelectItem value="all">Semua Akun</SelectItem>
+                  {accountsResponse?.items
+                    ?.filter((account: any) => 
+                      account.name.toLowerCase().includes(accountSearch.toLowerCase()) ||
+                      account.code.toLowerCase().includes(accountSearch.toLowerCase())
+                    )
+                    ?.map((account: any) => (
+                      <SelectItem key={account.id} value={account.id.toString()}>
+                        <div className="flex flex-col">
+                          <span className="font-mono text-xs">{account.code}</span>
+                          <span className="text-sm">{account.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                </ScrollArea>
+              </SelectContent>
+            </Select>
+          </div>
           
-          {/* Status Filter */}
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Semua Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="belum">Belum Terealisasi</SelectItem>
-              <SelectItem value="sudah">Sudah Terealisasi</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Status Filter - Takes 4 columns */}
+          <div className="col-span-4">
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Semua Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="belum">Belum Terealisasi</SelectItem>
+                <SelectItem value="sudah">Sudah Terealisasi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

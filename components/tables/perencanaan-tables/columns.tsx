@@ -30,7 +30,8 @@ export const createPerencanaanColumns = ({
 }: PerencanaanColumnsProps): ColumnDef<PerencanaanItem>[] => [
   {
     accessorKey: "name",
-    header: "Description",
+    header: "Nama Perencanaan",
+    enableColumnFilter: false,
     cell: ({ row }) => {
       const name = row.getValue("name") as string;
       const id = row.original.id;
@@ -45,20 +46,9 @@ export const createPerencanaanColumns = ({
     },
   },
   {
-    accessorKey: "end_date",
-    header: "Tanggal Akhir",
-    cell: ({ row }) => {
-      const date = row.getValue("end_date") as string;
-      return (
-        <div className="text-sm">
-          {formatDateIndonesian(date, false)}
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: "start_date",
     header: "Tanggal Awal",
+    enableColumnFilter: false,
     cell: ({ row }) => {
       const date = row.getValue("start_date") as string;
       return (
@@ -69,8 +59,22 @@ export const createPerencanaanColumns = ({
     },
   },
   {
+    accessorKey: "end_date",
+    header: "Tanggal Akhir",
+    enableColumnFilter: false,
+    cell: ({ row }) => {
+      const date = row.getValue("end_date") as string;
+      return (
+        <div className="text-sm">
+          {formatDateIndonesian(date, false)}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "total_amount",
     header: "Total Perencanaan",
+    enableColumnFilter: false,
     cell: ({ row }) => {
       const value = row.getValue("total_amount") as number;
       return (

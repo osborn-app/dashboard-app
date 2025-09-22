@@ -196,8 +196,14 @@ export const useGetLabaRugiReport = (params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getLabaRugiReport = async () => {
+    // Ensure template_id is included in params
+    const requestParams = {
+      ...params,
+      template_id: params?.template_id || '1', // Default template ID
+    };
+    
     const { data } = await axiosAuth.get(`${baseEndpoint}/reports/laba-rugi`, {
-      params,
+      params: requestParams,
     });
     return data;
   };
@@ -213,8 +219,14 @@ export const useGetNeracaReport = (params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getNeracaReport = async () => {
+    // Ensure template_id is included in params
+    const requestParams = {
+      ...params,
+      template_id: params?.template_id || '1', // Default template ID
+    };
+    
     const { data } = await axiosAuth.get(`${baseEndpoint}/reports/neraca`, {
-      params,
+      params: requestParams,
     });
     return data;
   };
@@ -230,8 +242,14 @@ export const useGetArusKasReport = (params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getArusKasReport = async () => {
+    // Ensure template_id is included in params
+    const requestParams = {
+      ...params,
+      template_id: params?.template_id || '1', // Default template ID
+    };
+    
     const { data } = await axiosAuth.get(`${baseEndpoint}/reports/arus-kas`, {
-      params,
+      params: requestParams,
     });
     return data;
   };

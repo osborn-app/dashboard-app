@@ -73,6 +73,7 @@ export default function LabaRugiPage() {
   const { data: labaRugiData, isLoading, error } = useGetLabaRugiReport({
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    template_id: planningId, // Use planningId as template_id
   });
 
   // Handle rekap

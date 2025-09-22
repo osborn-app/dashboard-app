@@ -64,6 +64,7 @@ export default function ArusKasPage() {
   const { data: arusKasData, isLoading, error } = useGetArusKasReport({
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    template_id: planningId, // Use planningId as template_id
   });
 
   // Hook untuk API categories

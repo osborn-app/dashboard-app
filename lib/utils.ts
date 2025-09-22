@@ -198,7 +198,8 @@ export const formatDateIndonesian = (date?: string | Date, withTime = true) => {
     December: "Desember"
   };
   
-  const dayjsDate = dayjs(date);
+  // Force dayjs to use English locale for consistent formatting
+  const dayjsDate = dayjs(date).locale('en');
   const dayName = dayNames[dayjsDate.format("dddd") as keyof typeof dayNames];
   const monthName = monthNames[dayjsDate.format("MMMM") as keyof typeof monthNames];
   
