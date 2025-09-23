@@ -138,21 +138,21 @@ export const navItems: NavItem[] = [
   {
     title: "DASHBOARD",
     label: "Dashboard",
-    roles: ["admin", "owner"],
+    roles: ["admin", "owner", "operation"],
     items: [
       {
         title: "Data",
         href: "/dashboard",
         icon: "dashboard",
         label: "Dashboard",
-        roles: ["admin", "owner"],
+        roles: ["admin", "owner", "operation"],
       },
       {
         title: "Calendar",
         href: "/dashboard/calendar",
         icon: "calendar",
         label: "calendar",
-        roles: ["admin", "owner"],
+        roles: ["admin", "owner", "operation"],
       },
       {
         title: "Request Tasks",

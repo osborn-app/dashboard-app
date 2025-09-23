@@ -12,9 +12,10 @@ import { toast } from "@/components/ui/use-toast";
 import { User } from "@/constants/data";
 import { useDeleteOrder } from "@/hooks/api/useOrder";
 import { useQueryClient } from "@tanstack/react-query";
-import { Edit, MoreHorizontal, Trash } from "lucide-react";
+import { Edit, MoreHorizontal, Trash, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useUser } from "@/context/UserContext";
 
 interface CellActionProps {
   data: User;
@@ -29,6 +30,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const router = useRouter();
   const id = data?.id;
   const queryClient = useQueryClient();
+  const { user } = useUser();
 
   const { mutateAsync: deleteOrder } = useDeleteOrder(id, force);
 
@@ -80,23 +82,37 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/dashboard/orders/${data?.id}/edit`);
-            }}
-          >
-            <Edit className="mr-2 h-4 w-4" /> Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-red-500"
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen(true);
-            }}
-          >
-            <Trash className="mr-2 h-4 w-4" /> Hapus
-          </DropdownMenuItem>
+          {/* For operation role, only show detail view */}
+          {user?.role === "operation" ? (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/dashboard/orders/${data?.id}/detail`);
+              }}
+            >
+              <Eye className="mr-2 h-4 w-4" /> Lihat Detail
+            </DropdownMenuItem>
+          ) : (
+            <>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/dashboard/orders/${data?.id}/edit`);
+                }}
+              >
+                <Edit className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(true);
+                }}
+              >
+                <Trash className="mr-2 h-4 w-4" /> Hapus
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
