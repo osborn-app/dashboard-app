@@ -12,11 +12,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CalendarIcon, Search, Plus, Trash2, MoreVertical, Edit } from 'lucide-react';
+import { CalendarIcon, Search, Plus, Trash2, MoreVertical, Edit, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useGetNeracaReport, useGetPlanningCategoriesSelect } from '@/hooks/api/usePerencanaan';
+import { useGetNeracaReport, useGetPlanningCategoriesSelect, useGetDetailPerencanaan } from '@/hooks/api/usePerencanaan';
+import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/display-components';
@@ -46,6 +47,10 @@ export default function NeracaPage() {
   const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
   const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] = useState(false);
   const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
+  
+  // State untuk export
+  const [isExporting, setIsExporting] = useState(false);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{
     id: string;
     name: string;
@@ -72,14 +77,17 @@ export default function NeracaPage() {
   }>>([]);
 
   // Fetch data dari API
-  const { data: neracaData, isLoading, error } = useGetNeracaReport({
+  const { data: neracaData, isLoading, error } = useGetNeracaReport(planningId, {
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: planningId, // Use planningId as template_id
+    template_id: '1', // Default template ID
   });
 
   // Hook untuk API categories
   const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+  
+  // Hook untuk fetch planning detail (untuk filename)
+  const { data: planningDetail } = useGetDetailPerencanaan(planningId);
 
 
 
@@ -120,12 +128,130 @@ export default function NeracaPage() {
 
 
 
-  // Handle rekap
-  const handleRekap = () => {
-    toast({
-      title: 'Rekap Neraca',
-      description: 'Fitur rekap akan segera tersedia',
-    });
+  // Helper function untuk generate filename
+  const generateFilename = (format: 'csv' | 'xlsx') => {
+    const planningName = (planningDetail as any)?.data?.data?.name || 'Neraca';
+    const sanitizedName = planningName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+    const date = new Date().toISOString().split('T')[0];
+    return `${sanitizedName}_${date}.${format}`;
+  };
+
+  // Handle export CSV
+  const handleExportNeracaCSV = async () => {
+    if (!neracaData?.data || neracaData.data.length === 0) {
+      toast({
+        title: 'Tidak Ada Data',
+        description: 'Tidak ada data neraca untuk diekspor',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExportingCSV(true);
+    try {
+      const exportData = neracaData.data.map((item: any, index: number) => ({
+        No: index + 1,
+        'Kode Akun': item.account_code || '',
+        'Nama Akun': item.account_name || '',
+        'Debit': item.debit_balance || 0,
+        'Kredit': item.credit_balance || 0,
+        'Saldo': item.running_balance || 0,
+        'Tipe': item.type || '',
+      }));
+
+      const headers = ['No', 'Kode Akun', 'Nama Akun', 'Debit', 'Kredit', 'Saldo', 'Tipe'] as const;
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map((row: Record<string, any>) => 
+          headers.map(header => {
+            const value = row[header];
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', generateFilename('csv'));
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: 'Success',
+        description: 'Data neraca berhasil diekspor ke CSV',
+      });
+    } catch (error) {
+      console.error('Export CSV error:', error);
+      toast({
+        title: 'Error',
+        description: 'Gagal mengekspor data ke CSV',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExportingCSV(false);
+    }
+  };
+
+  // Handle export XLSX
+  const handleRekap = async () => {
+    if (!neracaData?.data || neracaData.data.length === 0) {
+      toast({
+        title: 'Tidak Ada Data',
+        description: 'Tidak ada data neraca untuk diekspor',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const exportData = neracaData.data.map((item: any, index: number) => ({
+        No: index + 1,
+        'Kode Akun': item.account_code || '',
+        'Nama Akun': item.account_name || '',
+        'Debit': item.debit_balance || 0,
+        'Kredit': item.credit_balance || 0,
+        'Saldo': item.running_balance || 0,
+        'Tipe': item.type || '',
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Neraca');
+      
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', generateFilename('xlsx'));
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: 'Success',
+        description: 'Data neraca berhasil diekspor ke XLSX',
+      });
+    } catch (error) {
+      console.error('Export XLSX error:', error);
+      toast({
+        title: 'Error',
+        description: 'Gagal mengekspor data ke XLSX',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Handle tambah kategori
@@ -280,9 +406,43 @@ export default function NeracaPage() {
                     </Popover>
                   </div>
 
-                  {/* Rekap Button */}
-                  <Button onClick={handleRekap} className="min-w-[200px]">
-                    Rekap Neraca
+                  {/* Unduh CSV Button */}
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportNeracaCSV}
+                    disabled={isExportingCSV}
+                  >
+                    {isExportingCSV ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                        Mengekspor...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="mr-2 h-4 w-4" />
+                        Unduh CSV
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Unduh XLSX Button */}
+                  <Button 
+                    size="sm"
+                    onClick={handleRekap}
+                    disabled={isExporting}
+                  >
+                    {isExporting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Mengekspor...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="mr-2 h-4 w-4" />
+                        Unduh XLSX
+                      </>
+                    )}
                   </Button>
                 </div>
 
@@ -620,6 +780,7 @@ export default function NeracaPage() {
         isOpen={isAddCategoryModalOpen}
         onClose={() => setIsAddCategoryModalOpen(false)}
         categoryType={activeSubTab.toUpperCase() as 'AKTIVA' | 'PASIVA'}
+        planningId={planningId}
         onDataChange={handleDataChange}
       />
       
@@ -630,6 +791,7 @@ export default function NeracaPage() {
           setSelectedCategory(null);
         }}
         categoryType={selectedCategory?.type as 'AKTIVA' | 'PASIVA' || activeSubTab.toUpperCase() as 'AKTIVA' | 'PASIVA'}
+        planningId={planningId}
         editData={selectedCategory}
         onDataChange={handleDataChange}
       />

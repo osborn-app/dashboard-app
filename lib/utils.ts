@@ -95,7 +95,8 @@ export function makeUrlsClickable(str: string) {
 
 export function getNavItemsByRole(role?: string) {
   if (role === "super_admin") {
-    return navItems;
+    // Super admin gets all menus EXCEPT PEMASUKAN
+    return navItems.filter((item) => item.title !== "PEMASUKAN");
   }
 
   const filteredNavItems = navItems.filter((item) =>

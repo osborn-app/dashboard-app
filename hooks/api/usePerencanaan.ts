@@ -192,13 +192,14 @@ export const useGetPlanningAccounts = (params?: any) => {
 
 // ===== PLANNING REPORTS API =====
 // ===== GET Laba Rugi Report =====
-export const useGetLabaRugiReport = (params?: any) => {
+export const useGetLabaRugiReport = (planningId: string | number, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getLabaRugiReport = async () => {
-    // Ensure template_id is included in params
+    // Ensure planning_id and template_id are included in params
     const requestParams = {
       ...params,
+      planning_id: planningId, // Required planning_id parameter
       template_id: params?.template_id || '1', // Default template ID
     };
     
@@ -209,19 +210,20 @@ export const useGetLabaRugiReport = (params?: any) => {
   };
 
   return useQuery({
-    queryKey: ["laba-rugi-report", params],
+    queryKey: ["laba-rugi-report", planningId, params],
     queryFn: getLabaRugiReport,
   });
 };
 
 // ===== GET Neraca Report =====
-export const useGetNeracaReport = (params?: any) => {
+export const useGetNeracaReport = (planningId: string | number, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getNeracaReport = async () => {
-    // Ensure template_id is included in params
+    // Ensure planning_id and template_id are included in params
     const requestParams = {
       ...params,
+      planning_id: planningId, // Required planning_id parameter
       template_id: params?.template_id || '1', // Default template ID
     };
     
@@ -232,19 +234,20 @@ export const useGetNeracaReport = (params?: any) => {
   };
 
   return useQuery({
-    queryKey: ["neraca-report", params],
+    queryKey: ["neraca-report", planningId, params],
     queryFn: getNeracaReport,
   });
 };
 
 // ===== GET Arus Kas Report =====
-export const useGetArusKasReport = (params?: any) => {
+export const useGetArusKasReport = (planningId: string | number, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getArusKasReport = async () => {
-    // Ensure template_id is included in params
+    // Ensure planning_id and template_id are included in params
     const requestParams = {
       ...params,
+      planning_id: planningId, // Required planning_id parameter
       template_id: params?.template_id || '1', // Default template ID
     };
     
@@ -255,7 +258,7 @@ export const useGetArusKasReport = (params?: any) => {
   };
 
   return useQuery({
-    queryKey: ["arus-kas-report", params],
+    queryKey: ["arus-kas-report", planningId, params],
     queryFn: getArusKasReport,
   });
 };

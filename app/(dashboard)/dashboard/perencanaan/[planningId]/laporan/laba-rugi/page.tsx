@@ -12,11 +12,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CalendarIcon, Search, Plus, Trash2, Edit } from 'lucide-react';
+import { CalendarIcon, Search, Plus, Trash2, Edit, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts } from '@/hooks/api/usePerencanaan';
+import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts, useGetDetailPerencanaan } from '@/hooks/api/usePerencanaan';
+import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { AccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/account-form';
 import { LabaRugiCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/display-components';
@@ -40,9 +41,16 @@ export default function LabaRugiPage() {
   const [activeSubTab, setActiveSubTab] = useState('pendapatan');
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  
+  // State untuk export
+  const [isExporting, setIsExporting] = useState(false);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
 
   // Get planning categories untuk laba rugi (PENDAPATAN dan BEBAN)
   const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+  
+  // Hook untuk fetch planning detail (untuk filename)
+  const { data: planningDetail } = useGetDetailPerencanaan(planningId);
   
   // Filter categories berdasarkan type - memoized for performance
   const pendapatanCategories = useMemo(() => 
@@ -70,18 +78,136 @@ export default function LabaRugiPage() {
   // }, [planningId]);
 
   // Fetch data dari API
-  const { data: labaRugiData, isLoading, error } = useGetLabaRugiReport({
+  const { data: labaRugiData, isLoading, error } = useGetLabaRugiReport(planningId, {
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: planningId, // Use planningId as template_id
+    template_id: '1', // Default template ID
   });
 
-  // Handle rekap
-  const handleRekap = () => {
+  // Helper function untuk generate filename
+  const generateFilename = (format: 'csv' | 'xlsx') => {
+    const planningName = (planningDetail as any)?.data?.data?.name || 'Laba Rugi';
+    const sanitizedName = planningName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+    const date = new Date().toISOString().split('T')[0];
+    return `${sanitizedName}_${date}.${format}`;
+  };
+
+  // Handle export CSV
+  const handleExportLabaRugiCSV = async () => {
+    if (!labaRugiData?.data || labaRugiData.data.length === 0) {
+      toast({
+        title: 'Tidak Ada Data',
+        description: 'Tidak ada data laba rugi untuk diekspor',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExportingCSV(true);
+    try {
+      const exportData = labaRugiData.data.map((item: any, index: number) => ({
+        No: index + 1,
+        'Kode Akun': item.account_code || '',
+        'Nama Akun': item.account_name || '',
+        'Debit': item.debit_balance || 0,
+        'Kredit': item.credit_balance || 0,
+        'Saldo': item.running_balance || 0,
+        'Tipe': item.type || '',
+      }));
+
+      const headers = ['No', 'Kode Akun', 'Nama Akun', 'Debit', 'Kredit', 'Saldo', 'Tipe'] as const;
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map((row: Record<string, any>) => 
+          headers.map(header => {
+            const value = row[header];
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', generateFilename('csv'));
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: 'Success',
+        description: 'Data laba rugi berhasil diekspor ke CSV',
+      });
+    } catch (error) {
+      console.error('Export CSV error:', error);
+      toast({
+        title: 'Error',
+        description: 'Gagal mengekspor data ke CSV',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExportingCSV(false);
+    }
+  };
+
+  // Handle export XLSX
+  const handleRekap = async () => {
+    if (!labaRugiData?.data || labaRugiData.data.length === 0) {
+      toast({
+        title: 'Tidak Ada Data',
+        description: 'Tidak ada data laba rugi untuk diekspor',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const exportData = labaRugiData.data.map((item: any, index: number) => ({
+        No: index + 1,
+        'Kode Akun': item.account_code || '',
+        'Nama Akun': item.account_name || '',
+        'Debit': item.debit_balance || 0,
+        'Kredit': item.credit_balance || 0,
+        'Saldo': item.running_balance || 0,
+        'Tipe': item.type || '',
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Laba Rugi');
+      
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', generateFilename('xlsx'));
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: 'Success',
+        description: 'Data laba rugi berhasil diekspor ke XLSX',
+      });
+    } catch (error) {
+      console.error('Export XLSX error:', error);
     toast({
-      title: 'Rekap Laba Rugi',
-      description: 'Fitur rekap akan segera tersedia',
+        title: 'Error',
+        description: 'Gagal mengekspor data ke XLSX',
+        variant: 'destructive',
     });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Handler untuk tambah akun
@@ -222,9 +348,43 @@ export default function LabaRugiPage() {
                   </Popover>
                 </div>
 
-                {/* Rekap Button */}
-                <Button onClick={handleRekap} className="min-w-[200px]">
-                  Rekap Laba Rugi
+                {/* Unduh CSV Button */}
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportLabaRugiCSV}
+                  disabled={isExportingCSV}
+                >
+                  {isExportingCSV ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                      Mengekspor...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Unduh CSV
+                    </>
+                  )}
+                </Button>
+
+                {/* Unduh XLSX Button */}
+                <Button 
+                  size="sm"
+                  onClick={handleRekap}
+                  disabled={isExporting}
+                >
+                  {isExporting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Mengekspor...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Unduh XLSX
+                    </>
+                  )}
                 </Button>
               </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
+import { useDebounce } from 'use-debounce';
 import { useParams } from 'next/navigation';
 import BreadCrumb from "@/components/breadcrumb";
 import { Heading } from "@/components/ui/heading";
@@ -10,11 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Search } from 'lucide-react';
+import { CalendarIcon, Search, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useGetPlanningEntries, useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
+import * as XLSX from 'xlsx';
+import { useGetPlanningEntries, useGetPlanningAccounts, useGetDetailPerencanaan } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
 import { RencanaTable } from '@/components/tables/rencana-tables/rencana-table';
 import { createJurnalUmumRowColumns, JurnalUmumRowItem } from '@/components/tables/jurnal-umum-tables/columns';
@@ -97,21 +99,25 @@ export default function JurnalUmumPage() {
 
   // State untuk search dan filter
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchDebounce] = useDebounce(searchQuery, 500);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [isExporting, setIsExporting] = useState(false);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
 
   // Build query parameters untuk API
   const queryParams = useMemo(() => ({
-    ...(searchQuery ? { search: searchQuery } : {}),
+    ...(searchDebounce ? { search: searchDebounce } : {}),
     ...(dateFrom ? { date_from: dateFrom.toISOString() } : {}),
     ...(dateTo ? { date_to: dateTo.toISOString() } : {}),
     page: 1,
     limit: 100
-  }), [searchQuery, dateFrom, dateTo]);
+  }), [searchDebounce, dateFrom, dateTo]);
 
   // Fetch data dari API
   const { data: entriesResponse, isLoading, error } = useGetPlanningEntries(planningId, queryParams);
   const { data: accountsResponse } = useGetPlanningAccounts({ page: 1, limit: 1000 });
+  const { data: planningData } = useGetDetailPerencanaan(planningId);
 
   // Create account mapping for quick lookup
   const accountMap = useMemo(() => {
@@ -159,12 +165,182 @@ export default function JurnalUmumPage() {
     // Search akan otomatis trigger karena queryParams berubah
   };
 
-  // Handle rekap
-  const handleRekap = () => {
-    toast({
-      title: 'Rekap Jurnal Umum',
-      description: 'Fitur rekap akan segera tersedia',
-    });
+  // Handle rekap - Export to XLSX
+  const handleRekap = async () => {
+    if (!jurnalUmumData || jurnalUmumData.length === 0) {
+      toast({
+        title: 'Tidak Ada Data',
+        description: 'Tidak ada data jurnal umum untuk diekspor',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    
+    try {
+      // Get unique transactions (avoid duplicates from merged cells)
+      const uniqueTransactions = jurnalUmumData.filter((item, index, array) => {
+        // Only take the first row of each transaction group (isFirstInGroup)
+        return item.isFirstInGroup;
+      });
+
+      // Prepare data for export
+      const exportData = uniqueTransactions.map((item, index) => {
+        const debitRow = item.rows[0]; // Debit row
+        const creditRow = item.rows[1]; // Credit row
+        return {
+          'No': index + 1,
+          'Tanggal': item.tanggal ? format(new Date(item.tanggal), 'dd/MM/yyyy', { locale: id }) : '',
+          'Keterangan': item.keterangan || '',
+          'Akun Debit': debitRow?.namaAkun || '',
+          'Debit': debitRow?.debit || 0,
+          'Akun Kredit': creditRow?.namaAkun || '',
+          'Kredit': creditRow?.kredit || 0,
+        };
+      });
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Set column widths
+      const colWidths = [
+        { wch: 5 },   // No
+        { wch: 12 },  // Tanggal
+        { wch: 30 },  // Keterangan
+        { wch: 25 },  // Akun Debit
+        { wch: 15 },  // Debit
+        { wch: 25 },  // Akun Kredit
+        { wch: 15 },  // Kredit
+      ];
+      ws['!cols'] = colWidths;
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Jurnal Umum Perencanaan');
+
+      // Generate filename using planning name
+      const filename = generateFilename('xlsx');
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+
+      toast({
+        title: 'Export Berhasil',
+        description: `File ${filename} berhasil diunduh`,
+      });
+
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: 'Export Gagal',
+        description: 'Terjadi kesalahan saat mengekspor data',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Generate filename based on planning name
+  const generateFilename = (extension: string) => {
+    const dateFromStr = dateFrom ? format(dateFrom, 'dd-MM-yyyy') : 'semua';
+    const dateToStr = dateTo ? format(dateTo, 'dd-MM-yyyy') : 'semua';
+    const currentDate = format(new Date(), 'dd-MM-yyyy');
+    
+    // Get planning name from API data
+    const planningName = planningData?.data?.name || 'Perencanaan';
+    
+    // Clean planning name for filename (remove special characters)
+    const cleanPlanningName = planningName
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .trim();
+    
+    return `Jurnal_Umum_${cleanPlanningName}_${dateFromStr}_${dateToStr}_${currentDate}.${extension}`;
+  };
+
+  // Handle export jurnal umum to CSV
+  const handleExportJurnalUmumCSV = async () => {
+    if (!jurnalUmumData || jurnalUmumData.length === 0) {
+      toast({
+        title: 'Tidak Ada Data',
+        description: 'Tidak ada data jurnal umum untuk diekspor',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExportingCSV(true);
+    
+    try {
+      // Get unique transactions (avoid duplicates from merged cells)
+      const uniqueTransactions = jurnalUmumData.filter((item, index, array) => {
+        // Only take the first row of each transaction group (isFirstInGroup)
+        return item.isFirstInGroup;
+      });
+
+      // Prepare data for export
+      const exportData = uniqueTransactions.map((item, index) => {
+        const debitRow = item.rows[0]; // Debit row
+        const creditRow = item.rows[1]; // Credit row
+        return {
+          'No': index + 1,
+          'Tanggal': item.tanggal ? format(new Date(item.tanggal), 'dd/MM/yyyy', { locale: id }) : '',
+          'Keterangan': item.keterangan || '',
+          'Akun Debit': debitRow?.namaAkun || '',
+          'Debit': debitRow?.debit || 0,
+          'Akun Kredit': creditRow?.namaAkun || '',
+          'Kredit': creditRow?.kredit || 0,
+        };
+      });
+
+      // Convert to CSV format
+      const headers = ['No', 'Tanggal', 'Keterangan', 'Akun Debit', 'Debit', 'Akun Kredit', 'Kredit'] as const;
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map(row => 
+          headers.map(header => {
+            const value = row[header];
+            // Escape commas and quotes in CSV
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      
+      // Generate filename using planning name
+      const filename = generateFilename('csv');
+      
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: 'Export CSV Berhasil',
+        description: `File ${filename} berhasil diunduh`,
+      });
+
+    } catch (error) {
+      console.error('Export CSV error:', error);
+      toast({
+        title: 'Export CSV Gagal',
+        description: 'Terjadi kesalahan saat mengekspor data CSV',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExportingCSV(false);
+    }
   };
 
   if (error) {
@@ -197,9 +373,9 @@ export default function JurnalUmumPage() {
         </CardHeader>
         <CardContent>
           {/* Search dan Filter Section */}
-          <div className="flex flex-wrap gap-4 mb-6">
+          <div className="flex flex-wrap gap-3 items-center mb-6">
             {/* Search Input */}
-            <div className="flex-1 min-w-[300px]">
+            <div className="flex-1 min-w-[250px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -212,11 +388,12 @@ export default function JurnalUmumPage() {
             </div>
 
             {/* Date From */}
-            <div className="min-w-[200px]">
+            <div className="min-w-[160px]">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="sm"
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !dateFrom && "text-muted-foreground"
@@ -238,11 +415,12 @@ export default function JurnalUmumPage() {
             </div>
 
             {/* Date To */}
-            <div className="min-w-[200px]">
+            <div className="min-w-[160px]">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="sm"
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !dateTo && "text-muted-foreground"
@@ -263,9 +441,43 @@ export default function JurnalUmumPage() {
               </Popover>
             </div>
 
-            {/* Rekap Button */}
-            <Button onClick={handleRekap} className="min-w-[200px]">
-              Rekap Jurnal Umum Perencanaan
+            {/* Unduh CSV Button */}
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={handleExportJurnalUmumCSV} 
+              disabled={isExportingCSV}
+            >
+              {isExportingCSV ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                  Mengekspor...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Unduh CSV
+                </>
+              )}
+            </Button>
+
+            {/* Unduh XLSX Button */}
+            <Button 
+              size="sm"
+              onClick={handleRekap} 
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Mengekspor...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Unduh XLSX
+                </>
+              )}
             </Button>
           </div>
 

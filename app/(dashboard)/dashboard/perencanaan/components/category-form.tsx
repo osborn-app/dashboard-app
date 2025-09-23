@@ -11,6 +11,7 @@ interface CategoryFormProps {
   isOpen: boolean;
   onClose: () => void;
   categoryType: 'AKTIVA' | 'PASIVA';
+  planningId: string | number;
   onSuccess?: () => void;
   editData?: {
     id: string;
@@ -25,6 +26,7 @@ export const CategoryForm = ({
   isOpen, 
   onClose, 
   categoryType, 
+  planningId,
   onSuccess,
   editData,
   onDataChange 
@@ -33,6 +35,7 @@ export const CategoryForm = ({
   const isEditMode = !!editData;
   
   const [formData, setFormData] = useState({
+    planning_id: planningId,
     name: editData?.name || '',
     description: editData?.description || '',
     type: editData?.type || categoryType,
@@ -43,13 +46,14 @@ export const CategoryForm = ({
   React.useEffect(() => {
     if (editData) {
       setFormData({
+        planning_id: planningId,
         name: editData.name,
         description: editData.description,
         type: editData.type,
         sort_order: 1
       });
     }
-  }, [editData]);
+  }, [editData, planningId]);
 
   const createCategoryMutation = usePostPlanningCategories(formData);
   const updateCategoryMutation = useUpdatePlanningCategory(editData?.id || '');
@@ -81,6 +85,7 @@ export const CategoryForm = ({
       
       // Reset form
       setFormData({
+        planning_id: planningId,
         name: '',
         description: '',
         type: categoryType,
@@ -101,6 +106,7 @@ export const CategoryForm = ({
 
   const handleClose = () => {
     setFormData({
+      planning_id: planningId,
       name: '',
       description: '',
       type: categoryType,

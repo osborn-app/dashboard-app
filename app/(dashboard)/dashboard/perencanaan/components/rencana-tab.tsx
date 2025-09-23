@@ -1,18 +1,25 @@
 "use client";
 
 import { useState, useMemo, useCallback } from 'react';
+import { useDebounce } from 'use-debounce';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Calendar, RefreshCw } from 'lucide-react';
+import { Plus, Search, RefreshCw, Download, CalendarIcon } from 'lucide-react';
 import { RencanaTable } from '@/components/tables/rencana-tables/rencana-table';
 import { createRencanaRowColumns, RencanaRowItem } from '@/components/tables/rencana-tables/columns';
 import { CreateRencanaDialog } from './create-rencana-dialog';
-import { useGetPlanningEntries, useCreatePlanningEntry, useUpdatePlanningEntry, useDeletePlanningEntry, useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
+import { useGetPlanningEntries, useCreatePlanningEntry, useUpdatePlanningEntry, useDeletePlanningEntry, useGetPlanningAccounts, useGetDetailPerencanaan } from '@/hooks/api/usePerencanaan';
 import { useToast } from '@/hooks/use-toast';
 import { convertDateToISO } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 
 interface RencanaTabProps {
   planningId: string;
@@ -160,26 +167,32 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [deletingItem, setDeletingItem] = useState<RencanaRowItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchDebounce] = useDebounce(searchQuery, 4000);
   const [selectedAccount, setSelectedAccount] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [dateFromDebounce] = useDebounce(dateFrom, 4000);
+  const [dateToDebounce] = useDebounce(dateTo, 4000);
   const [accountSearch, setAccountSearch] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
   
   const { toast } = useToast();
 
   // Build query parameters for API
   const queryParams = useMemo(() => ({
-    ...(searchQuery ? { q: searchQuery } : {}),
-    ...(dateFrom ? { date_from: convertDateToISO(dateFrom) } : {}),
-    ...(dateTo ? { date_to: convertDateToISO(dateTo) } : {}),
+    ...(searchDebounce ? { q: searchDebounce } : {}),
+    ...(dateFromDebounce ? { date_from: dateFromDebounce.toISOString() } : {}),
+    ...(dateToDebounce ? { date_to: dateToDebounce.toISOString() } : {}),
     page: 1,
     limit: 100
-  }), [searchQuery, dateFrom, dateTo]);
+  }), [searchDebounce, dateFromDebounce, dateToDebounce]);
 
   // Use API hooks
   const { data: entriesResponse, isLoading, error, refetch } = useGetPlanningEntries(planningId, queryParams);
   const { data: accountsResponse } = useGetPlanningAccounts({ page: 1, limit: 1000 });
+  const { data: planningData } = useGetDetailPerencanaan(planningId);
   const createMutation = useCreatePlanningEntry(planningId);
   const updateMutation = useUpdatePlanningEntry(planningId, editingItem?.id ? editingItem.id.split('_')[0] : '');
 
@@ -364,6 +377,187 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
     // View rencana functionality
   };
 
+  // Generate filename based on planning name
+  const generateFilename = (extension: string) => {
+    const dateFromStr = dateFrom ? format(new Date(dateFrom), 'dd-MM-yyyy') : 'semua';
+    const dateToStr = dateTo ? format(new Date(dateTo), 'dd-MM-yyyy') : 'semua';
+    const currentDate = format(new Date(), 'dd-MM-yyyy');
+    
+    // Get planning name from API data
+    const planningName = planningData?.data?.name || 'Perencanaan';
+    
+    // Clean planning name for filename (remove special characters)
+    const cleanPlanningName = planningName
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .trim();
+    
+    return `${cleanPlanningName}_${dateFromStr}_${dateToStr}_${currentDate}.${extension}`;
+  };
+
+  // Handle export rencana to XLSX
+  const handleExportRencana = async () => {
+    if (!rencanaData || rencanaData.length === 0) {
+      toast({
+        title: 'Tidak Ada Data',
+        description: 'Tidak ada data rencana untuk diekspor',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    
+    try {
+      // Get unique transactions (avoid duplicates from merged cells)
+      const uniqueTransactions = rencanaData.filter((item, index, array) => {
+        // Only take the first row of each transaction group (isFirstInGroup)
+        return item.isFirstInGroup;
+      });
+
+      // Prepare data for export
+      const exportData = uniqueTransactions.map((item, index) => {
+        const debitRow = item.rows[0]; // Debit row
+        const creditRow = item.rows[1]; // Credit row
+        return {
+          'No': index + 1,
+          'Tanggal': item.tanggal ? format(new Date(item.tanggal), 'dd/MM/yyyy', { locale: id }) : '',
+          'Status': item.status || 'Belum Terealisasi',
+          'Keterangan': item.keterangan || '',
+          'Akun Debit': debitRow?.namaAkun || '',
+          'Debit': debitRow?.debit || 0,
+          'Akun Kredit': creditRow?.namaAkun || '',
+          'Kredit': creditRow?.kredit || 0,
+        };
+      });
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Set column widths
+      const colWidths = [
+        { wch: 5 },   // No
+        { wch: 12 },  // Tanggal
+        { wch: 15 },  // Status
+        { wch: 30 },  // Keterangan
+        { wch: 25 },  // Akun Debit
+        { wch: 15 },  // Debit
+        { wch: 25 },  // Akun Kredit
+        { wch: 15 },  // Kredit
+      ];
+      ws['!cols'] = colWidths;
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Rencana Perencanaan');
+
+      // Generate filename using planning name
+      const filename = generateFilename('xlsx');
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+
+      toast({
+        title: 'Export Berhasil',
+        description: `File ${filename} berhasil diunduh`,
+      });
+
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: 'Export Gagal',
+        description: 'Terjadi kesalahan saat mengekspor data',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Handle export rencana to CSV
+  const handleExportRencanaCSV = async () => {
+    if (!rencanaData || rencanaData.length === 0) {
+      toast({
+        title: 'Tidak Ada Data',
+        description: 'Tidak ada data rencana untuk diekspor',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsExportingCSV(true);
+    
+    try {
+      // Get unique transactions (avoid duplicates from merged cells)
+      const uniqueTransactions = rencanaData.filter((item, index, array) => {
+        // Only take the first row of each transaction group (isFirstInGroup)
+        return item.isFirstInGroup;
+      });
+
+      // Prepare data for export
+      const exportData = uniqueTransactions.map((item, index) => {
+        const debitRow = item.rows[0]; // Debit row
+        const creditRow = item.rows[1]; // Credit row
+        return {
+          'No': index + 1,
+          'Tanggal': item.tanggal ? format(new Date(item.tanggal), 'dd/MM/yyyy', { locale: id }) : '',
+          'Status': item.status || 'Belum Terealisasi',
+          'Keterangan': item.keterangan || '',
+          'Akun Debit': debitRow?.namaAkun || '',
+          'Debit': debitRow?.debit || 0,
+          'Akun Kredit': creditRow?.namaAkun || '',
+          'Kredit': creditRow?.kredit || 0,
+        };
+      });
+
+      // Convert to CSV format
+      const headers = ['No', 'Tanggal', 'Status', 'Keterangan', 'Akun Debit', 'Debit', 'Akun Kredit', 'Kredit'] as const;
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map(row => 
+          headers.map(header => {
+            const value = row[header];
+            // Escape commas and quotes in CSV
+            if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(',')
+        )
+      ].join('\n');
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      
+      // Generate filename using planning name
+      const filename = generateFilename('csv');
+      
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: 'Export CSV Berhasil',
+        description: `File ${filename} berhasil diunduh`,
+      });
+
+    } catch (error) {
+      console.error('Export CSV error:', error);
+      toast({
+        title: 'Export CSV Gagal',
+        description: 'Terjadi kesalahan saat mengekspor data CSV',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExportingCSV(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -398,16 +592,49 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="Cari akun....."
+              placeholder="Cari Keterangan....."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
           
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Rekap Rencana
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExportRencanaCSV}
+            disabled={isExportingCSV}
+          >
+            {isExportingCSV ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                Mengekspor...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Unduh CSV
+              </>
+            )}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExportRencana}
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                Mengekspor...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Unduh XLSX
+              </>
+            )}
           </Button>
           
           <Button 
@@ -436,26 +663,160 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
         <div className="grid grid-cols-12 gap-4 w-full">
           {/* Date Range - Takes 4 columns */}
           <div className="col-span-4 flex items-center gap-3">
-            <div className="relative flex-1">
-              <Input
-                type="date"
-                placeholder="mm/dd/yyyy"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="w-full pr-10"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            {/* Date From */}
+            <div className="flex-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateFrom && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateFrom ? format(dateFrom, "dd/MM/yyyy", { locale: id }) : "Dari Tanggal"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <div className="p-3 border-b">
+                    <div className="flex gap-2 items-center">
+                      <Select
+                        value={dateFrom ? dateFrom.getFullYear().toString() : new Date().getFullYear().toString()}
+                        onValueChange={(year) => {
+                          const currentDate = dateFrom || new Date();
+                          const newDate = new Date(parseInt(year), currentDate.getMonth(), currentDate.getDate());
+                          setDateFrom(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {Array.from({ length: 30 }, (_, i) => {
+                            const year = new Date().getFullYear() - 10 + i;
+                            return (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select
+                        value={dateFrom ? (dateFrom.getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()}
+                        onValueChange={(month) => {
+                          const currentDate = dateFrom || new Date();
+                          const newDate = new Date(currentDate.getFullYear(), parseInt(month) - 1, currentDate.getDate());
+                          setDateFrom(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-24">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {Array.from({ length: 12 }, (_, i) => {
+                            const month = i + 1;
+                            const monthName = new Date(2024, i, 1).toLocaleString('id-ID', { month: 'long' });
+                            return (
+                              <SelectItem key={month} value={month.toString()}>
+                                {monthName}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <Calendar
+                    mode="single"
+                    selected={dateFrom}
+                    onSelect={setDateFrom}
+                    defaultMonth={dateFrom || new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             
-            <div className="relative flex-1">
-              <Input
-                type="date"
-                placeholder="mm/dd/yyyy"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="w-full pr-10"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            {/* Date To */}
+            <div className="flex-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateTo && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateTo ? format(dateTo, "dd/MM/yyyy", { locale: id }) : "Sampai Tanggal"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <div className="p-3 border-b">
+                    <div className="flex gap-2 items-center">
+                      <Select
+                        value={dateTo ? dateTo.getFullYear().toString() : new Date().getFullYear().toString()}
+                        onValueChange={(year) => {
+                          const currentDate = dateTo || new Date();
+                          const newDate = new Date(parseInt(year), currentDate.getMonth(), currentDate.getDate());
+                          setDateTo(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {Array.from({ length: 30 }, (_, i) => {
+                            const year = new Date().getFullYear() - 10 + i;
+                            return (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select
+                        value={dateTo ? (dateTo.getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()}
+                        onValueChange={(month) => {
+                          const currentDate = dateTo || new Date();
+                          const newDate = new Date(currentDate.getFullYear(), parseInt(month) - 1, currentDate.getDate());
+                          setDateTo(newDate);
+                        }}
+                      >
+                        <SelectTrigger className="w-24">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          {Array.from({ length: 12 }, (_, i) => {
+                            const month = i + 1;
+                            const monthName = new Date(2024, i, 1).toLocaleString('id-ID', { month: 'long' });
+                            return (
+                              <SelectItem key={month} value={month.toString()}>
+                                {monthName}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <Calendar
+                    mode="single"
+                    selected={dateTo}
+                    onSelect={setDateTo}
+                    defaultMonth={dateTo || new Date()}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           
@@ -468,7 +829,7 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
               <SelectContent>
                 <div className="p-2">
                   <Input
-                    placeholder="Cari akun..."
+                    placeholder="Cari Keterangan..."
                     value={accountSearch}
                     onChange={(e) => setAccountSearch(e.target.value)}
                     className="h-8"

@@ -362,56 +362,56 @@ export const navItems: NavItem[] = [
   {
     title: "KEUANGAN",
     label: "keuangan",
-    roles: ["admin", "finance"],
+    roles: ["finance"],
     items: [
       {
         title: "Rekap Pencatatan",
         href: "/dashboard/rekap-pencatatan",
         icon: "contentImage",
         label: "Rekap Pencatatan",
-        roles: ["admin", "finance"]
+        roles: ["finance"]
       },
       {
         title: "Realisasi",
         href: "/dashboard/realisasi",
         icon: "contentImage",
         label: "realisasi",
-        roles: ["admin", "finance"]
+        roles: ["finance"]
       },
       {
         title: "Perencanaan",
         href: "/dashboard/perencanaan",
         icon: "notebookText",
         label: "Perencanaan",
-        roles: ["admin", "finance"]
+        roles: ["finance"]
       },
       {
         title: "Inventaris",
         href: "/dashboard/inventaris",
         icon: "archive",
         label: "Inventaris",
-        roles: ["admin"]
+        roles: ["finance"]
       },
     ],
   },
   {
     title: "Content Management System",
     label: "extra",
-    roles: ["admin", "driver"],
+    roles: [""],
     items: [
       {
         title: "Content Management",
         href: "/dashboard/cms",
         icon: "contentImage",
         label: "Content Management",
-        roles: ["admin"]
+        roles: [""]
       },
       {
         title: "Kategori CMS",
         href: "/dashboard/category-cms",
         icon: "contentImage",
         label: "Kategori CMS",
-        roles: ["admin"]
+        roles: [""]
       },
     ],
   },
