@@ -7,11 +7,10 @@ export const useGetBuser = (
   options = {},
   queryKeyPrefix: string = "buser",
 ) => {
+  const axiosAuth = useAxiosAuth();
+  
   const getBuser = async () => {
-    // Pastikan params.status dikirim ke getBussersByStatus
-    const response = await import("@/client/busserClient").then((mod) =>
-      mod.getBussersByStatus(params.status, params),
-    );
+    const response = await axiosAuth.get(`/busser/status/${params.status}`, { params });
     return response.data;
   };
 
@@ -73,6 +72,7 @@ const BUSSER_STATUSES = [
 ];
 
 export const useGetAllBuser = (params = {}) => {
+  const axiosAuth = useAxiosAuth();
   const [allBuser, setAllBuser] = useState<Buser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -83,8 +83,7 @@ export const useGetAllBuser = (params = {}) => {
     setError(null);
     Promise.all(
       BUSSER_STATUSES.map((status) =>
-        import("@/client/busserClient")
-          .then((mod) => mod.getBussersByStatus(status, params))
+        axiosAuth.get(`/busser/status/${status}`, { params })
           .then((res) => res.data.data || [])
           .catch((err) => []),
       ),
@@ -104,7 +103,7 @@ export const useGetAllBuser = (params = {}) => {
     return () => {
       isMounted = false;
     };
-  }, [JSON.stringify(params)]);
+  }, [JSON.stringify(params), axiosAuth]);
 
   return { data: allBuser, isLoading, error };
 };
@@ -152,4 +151,26 @@ export const useGetBusserStatistics = () => {
     queryKey: ['busser-statistics'],
     queryFn: getBusserStatistics,
   });
+};
+
+// Custom hook for assignBusserTask
+export const useAssignBusserTask = () => {
+  const axiosAuth = useAxiosAuth();
+  
+  const assignBusserTask = async (id: string | number, investigatorId: number) => {
+    return axiosAuth.patch(`/busser/${id}/assign`, { investigatorId });
+  };
+  
+  return assignBusserTask;
+};
+
+// Custom hook for resolveBusser
+export const useResolveBusser = () => {
+  const axiosAuth = useAxiosAuth();
+  
+  const resolveBusser = async (id: string | number, notes?: string) => {
+    return axiosAuth.patch(`/busser/${id}/resolve`, { notes });
+  };
+  
+  return resolveBusser;
 };

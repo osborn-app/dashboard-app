@@ -2,12 +2,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { assignBusserTask } from "@/client/busserClient";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import {
   useInvalidateBuserQueries,
   useGetBuserTotals,
+  useAssignBusserTask,
 } from "@/hooks/api/useBuser";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/utils";
@@ -132,6 +132,7 @@ const ActionButton: React.FC<{ row: Buser }> = ({ row }) => {
   const status = row.status;
   const router = useRouter();
   const invalidateBuserQueries = useInvalidateBuserQueries();
+  const assignBusserTask = useAssignBusserTask();
   const { toast } = useToast();
 
   if (status === "urgent") {
