@@ -69,12 +69,11 @@ export async function middleware(req: NextRequest) {
   // Operation: only inspections, needs, buser, calendar, dashboard, order details
   if (role === "operation") {
     const operationAllowedPrefixes = [
+      "/dashboard",
+      "/dashboard/calendar",
       "/dashboard/inspections",
       "/dashboard/needs",
       "/dashboard/buser",
-      "/dashboard/calendar",
-      "/dashboard",
-      "/dashboard/orders",
     ];
     
     // Check for exact order detail routes only (no edit/create)

@@ -2,10 +2,9 @@
 import BreadCrumb from "@/components/breadcrumb";
 import Spinner from "@/components/spinner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useGetDetailBuser } from "@/hooks/api/useBuser";
+import { useGetDetailBuser, useResolveBusser } from "@/hooks/api/useBuser";
 import React from "react";
 import BuserForm from "@/components/forms/buser-form";
-import { resolveBusser } from "@/client/busserClient";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
@@ -17,6 +16,7 @@ export default function InfoPage({ params }: { params: { buserId: string } }) {
 
   const { data, isFetching } = useGetDetailBuser(params.buserId);
   const buser = data?.data;
+  const resolveBusser = useResolveBusser();
 
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);

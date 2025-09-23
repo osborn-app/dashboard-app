@@ -5,10 +5,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useGetDetailBuser,
   useInvalidateBuserQueries,
+  useResolveBusser,
 } from "@/hooks/api/useBuser";
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { resolveBusser } from "@/client/busserClient";
 import { useRouter } from "next/navigation";
 import BuserForm from "@/components/forms/buser-form";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,7 @@ export default function ReviewPage({
   const { data, isFetching } = useGetDetailBuser(params.buserId);
   const buser = data?.data;
   const invalidateBuserQueries = useInvalidateBuserQueries();
+  const resolveBusser = useResolveBusser();
   const { toast } = useToast();
 
   const router = useRouter();
