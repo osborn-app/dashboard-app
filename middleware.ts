@@ -66,14 +66,24 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Operation: only inspections, needs, buser
+  // Operation: only inspections, needs, buser, calendar, dashboard, order details
   if (role === "operation") {
     const operationAllowedPrefixes = [
       "/dashboard/inspections",
       "/dashboard/needs",
       "/dashboard/buser",
+      "/dashboard/calendar",
+      "/dashboard",
+      "/dashboard/orders",
     ];
-    const ok = operationAllowedPrefixes.some((p) => pathname.startsWith(p));
+    
+    // Check for exact order detail routes only (no edit/create)
+    const orderDetailMatch = pathname.match(/^\/dashboard\/orders\/[^\/]+\/detail$/);
+    
+    // Block edit and create routes for operation role
+    const isEditOrCreateRoute = pathname.includes('/edit') || pathname.includes('/create');
+    
+    const ok = (operationAllowedPrefixes.some((p) => pathname.startsWith(p)) || orderDetailMatch) && !isEditOrCreateRoute;
     if (!ok) {
       return NextResponse.redirect(new URL("/dashboard/inspections", req.url));
     }
