@@ -7,7 +7,6 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   useReactTable,
-  getSortedRowModel,
 } from "@tanstack/react-table";
 import React from "react";
 import { useDebounce } from "use-debounce";
@@ -22,9 +21,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowDownIcon,
-  ArrowUpDown,
-  ArrowUpIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react";
@@ -42,8 +38,6 @@ interface DataTableProps<TData, TValue> {
   searchParams?: {
     [key: string]: string | string[] | undefined;
   };
-  sorting: any[];
-  setSorting: any;
 }
 
 export function PerencanaanTable<TData, TValue>({
@@ -55,8 +49,6 @@ export function PerencanaanTable<TData, TValue>({
   pageCount,
   pageSizeOptions = [10, 20, 30, 40, 50],
   searchQuery,
-  sorting,
-  setSorting,
 }: DataTableProps<TData, TValue> & { searchQuery: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -128,16 +120,12 @@ export function PerencanaanTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {
-      sorting,
       pagination: { pageIndex, pageSize },
     },
     onPaginationChange: setPagination,
-    onSortingChange: setSorting,
     getPaginationRowModel: getPaginationRowModel(),
     manualPagination: true,
     manualFiltering: true,
-    manualSorting: true,
-    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
@@ -152,7 +140,6 @@ export function PerencanaanTable<TData, TValue>({
                     <TableHead
                       key={header.id}
                       className="px-4 py-3 text-left font-medium text-gray-700 bg-gray-50"
-                      onClick={header.column.getToggleSortingHandler()}
                     >
                       <div className="flex items-center gap-2">
                         {header.isPlaceholder
@@ -161,20 +148,6 @@ export function PerencanaanTable<TData, TValue>({
                               header.column.columnDef.header,
                               header.getContext(),
                             )}
-                        {header.column.getIsSorted() ? (
-                          {
-                            asc: <ArrowDownIcon className="h-4 w-4" />,
-                            desc: <ArrowUpIcon className="h-4 w-4" />,
-                          }[(header.column.getIsSorted() as string) ?? null]
-                        ) : (
-                          <>
-                            {header.column.getCanSort() ? (
-                              <ArrowUpDown className="h-4 w-4" />
-                            ) : (
-                              ""
-                            )}
-                          </>
-                        )}
                       </div>
                     </TableHead>
                   );
@@ -186,22 +159,20 @@ export function PerencanaanTable<TData, TValue>({
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row: any) => (
                 <TableRow
-                  className="hover:bg-gray-50 transition-colors duration-200 ease-in-out border-b"
+                  className="hover:bg-gray-50 transition-colors duration-200 ease-in-out border-b cursor-pointer"
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={() => {
+                    const planningId = row.original.id;
+                    const detailPath = `/dashboard/perencanaan/${planningId}`;
+                    router.push(detailPath);
+                  }}
                 >
                   {row.getVisibleCells().map((cell: any) => {
                     return (
                       <TableCell
                         key={cell.id}
                         className="px-4 py-3 last:flex last:justify-end"
-                        onClick={() => {
-                          if (!cell.id.includes("actions")) {
-                            const planningId = row.original.id;
-                            const detailPath = `/dashboard/perencanaan/${planningId}`;
-                            router.push(detailPath);
-                          }
-                        }}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

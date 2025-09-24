@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,10 +38,27 @@ export default function LabaRugiPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  
+  // State untuk mengontrol month yang ditampilkan di kalender
+  const [calendarFromMonth, setCalendarFromMonth] = useState<Date>(new Date());
+  const [calendarToMonth, setCalendarToMonth] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState('data');
   const [activeSubTab, setActiveSubTab] = useState('pendapatan');
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  
+  // Sinkronisasi calendar month dengan tanggal yang dipilih
+  useEffect(() => {
+    if (dateFrom) {
+      setCalendarFromMonth(dateFrom);
+    }
+  }, [dateFrom]);
+
+  useEffect(() => {
+    if (dateTo) {
+      setCalendarToMonth(dateTo);
+    }
+  }, [dateTo]);
   
   // State untuk export
   const [isExporting, setIsExporting] = useState(false);
@@ -312,10 +330,72 @@ export default function LabaRugiPage() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
+                      <div className="p-3 border-b">
+                        <div className="flex gap-2 items-center">
+                          <Select
+                            value={calendarFromMonth.getFullYear().toString()}
+                            onValueChange={(year) => {
+                              const currentDate = calendarFromMonth;
+                              const newDate = new Date(parseInt(year), currentDate.getMonth(), currentDate.getDate());
+                              setCalendarFromMonth(newDate);
+                              // Update dateFrom jika sudah ada tanggal yang dipilih
+                              if (dateFrom) {
+                                const newDateFrom = new Date(parseInt(year), currentDate.getMonth(), dateFrom.getDate());
+                                setDateFrom(newDateFrom);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 overflow-y-auto">
+                              {Array.from({ length: 30 }, (_, i) => {
+                                const year = new Date().getFullYear() - 10 + i;
+                                return (
+                                  <SelectItem key={year} value={year.toString()}>
+                                    {year}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Select
+                            value={(calendarFromMonth.getMonth() + 1).toString()}
+                            onValueChange={(month) => {
+                              const currentDate = calendarFromMonth;
+                              const newDate = new Date(currentDate.getFullYear(), parseInt(month) - 1, currentDate.getDate());
+                              setCalendarFromMonth(newDate);
+                              // Update dateFrom jika sudah ada tanggal yang dipilih
+                              if (dateFrom) {
+                                const newDateFrom = new Date(currentDate.getFullYear(), parseInt(month) - 1, dateFrom.getDate());
+                                setDateFrom(newDateFrom);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 overflow-y-auto">
+                              {Array.from({ length: 12 }, (_, i) => {
+                                const month = i + 1;
+                                const monthName = new Date(2024, i, 1).toLocaleString('id-ID', { month: 'long' });
+                                return (
+                                  <SelectItem key={month} value={month.toString()}>
+                                    {monthName}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                       <Calendar
                         mode="single"
                         selected={dateFrom}
                         onSelect={setDateFrom}
+                        month={calendarFromMonth}
+                        onMonthChange={setCalendarFromMonth}
                         initialFocus
                       />
                     </PopoverContent>
@@ -338,10 +418,72 @@ export default function LabaRugiPage() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
+                      <div className="p-3 border-b">
+                        <div className="flex gap-2 items-center">
+                          <Select
+                            value={calendarToMonth.getFullYear().toString()}
+                            onValueChange={(year) => {
+                              const currentDate = calendarToMonth;
+                              const newDate = new Date(parseInt(year), currentDate.getMonth(), currentDate.getDate());
+                              setCalendarToMonth(newDate);
+                              // Update dateTo jika sudah ada tanggal yang dipilih
+                              if (dateTo) {
+                                const newDateTo = new Date(parseInt(year), currentDate.getMonth(), dateTo.getDate());
+                                setDateTo(newDateTo);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 overflow-y-auto">
+                              {Array.from({ length: 30 }, (_, i) => {
+                                const year = new Date().getFullYear() - 10 + i;
+                                return (
+                                  <SelectItem key={year} value={year.toString()}>
+                                    {year}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Select
+                            value={(calendarToMonth.getMonth() + 1).toString()}
+                            onValueChange={(month) => {
+                              const currentDate = calendarToMonth;
+                              const newDate = new Date(currentDate.getFullYear(), parseInt(month) - 1, currentDate.getDate());
+                              setCalendarToMonth(newDate);
+                              // Update dateTo jika sudah ada tanggal yang dipilih
+                              if (dateTo) {
+                                const newDateTo = new Date(currentDate.getFullYear(), parseInt(month) - 1, dateTo.getDate());
+                                setDateTo(newDateTo);
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 overflow-y-auto">
+                              {Array.from({ length: 12 }, (_, i) => {
+                                const month = i + 1;
+                                const monthName = new Date(2024, i, 1).toLocaleString('id-ID', { month: 'long' });
+                                return (
+                                  <SelectItem key={month} value={month.toString()}>
+                                    {monthName}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                       <Calendar
                         mode="single"
                         selected={dateTo}
                         onSelect={setDateTo}
+                        month={calendarToMonth}
+                        onMonthChange={setCalendarToMonth}
                         initialFocus
                       />
                     </PopoverContent>

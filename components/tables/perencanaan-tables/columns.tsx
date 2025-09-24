@@ -31,24 +31,18 @@ export const createPerencanaanColumns = ({
   {
     accessorKey: "name",
     header: "Nama Perencanaan",
-    enableColumnFilter: false,
     cell: ({ row }) => {
       const name = row.getValue("name") as string;
-      const id = row.original.id;
       return (
-        <Link 
-          href={`/dashboard/perencanaan/${id}`}
-          className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline"
-        >
+        <div className="font-medium text-sm">
           {name}
-        </Link>
+        </div>
       );
     },
   },
   {
     accessorKey: "start_date",
     header: "Tanggal Awal",
-    enableColumnFilter: false,
     cell: ({ row }) => {
       const date = row.getValue("start_date") as string;
       return (
@@ -61,7 +55,6 @@ export const createPerencanaanColumns = ({
   {
     accessorKey: "end_date",
     header: "Tanggal Akhir",
-    enableColumnFilter: false,
     cell: ({ row }) => {
       const date = row.getValue("end_date") as string;
       return (
@@ -74,7 +67,6 @@ export const createPerencanaanColumns = ({
   {
     accessorKey: "total_amount",
     header: "Total Perencanaan",
-    enableColumnFilter: false,
     cell: ({ row }) => {
       const value = row.getValue("total_amount") as number;
       return (

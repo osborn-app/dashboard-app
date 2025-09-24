@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import BreadCrumb from "@/components/breadcrumb";
 import { Heading } from "@/components/ui/heading";
@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -40,6 +41,10 @@ export default function NeracaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  
+  // State untuk mengontrol month yang ditampilkan di kalender
+  const [calendarFromMonth, setCalendarFromMonth] = useState<Date>(new Date());
+  const [calendarToMonth, setCalendarToMonth] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState('data');
   const [activeSubTab, setActiveSubTab] = useState('aktiva');
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
@@ -59,6 +64,19 @@ export default function NeracaPage() {
   } | null>(null);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+
+  // Sinkronisasi calendar month dengan tanggal yang dipilih
+  useEffect(() => {
+    if (dateFrom) {
+      setCalendarFromMonth(dateFrom);
+    }
+  }, [dateFrom]);
+
+  useEffect(() => {
+    if (dateTo) {
+      setCalendarToMonth(dateTo);
+    }
+  }, [dateTo]);
 
   // State untuk template categories dan accounts - akan diisi dari API
   const [aktivaCategories, setAktivaCategories] = useState<Array<{
@@ -370,10 +388,72 @@ export default function NeracaPage() {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
+                        <div className="p-3 border-b">
+                          <div className="flex gap-2 items-center">
+                            <Select
+                              value={calendarFromMonth.getFullYear().toString()}
+                              onValueChange={(year) => {
+                                const currentDate = calendarFromMonth;
+                                const newDate = new Date(parseInt(year), currentDate.getMonth(), currentDate.getDate());
+                                setCalendarFromMonth(newDate);
+                                // Update dateFrom jika sudah ada tanggal yang dipilih
+                                if (dateFrom) {
+                                  const newDateFrom = new Date(parseInt(year), currentDate.getMonth(), dateFrom.getDate());
+                                  setDateFrom(newDateFrom);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-20">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60 overflow-y-auto">
+                                {Array.from({ length: 30 }, (_, i) => {
+                                  const year = new Date().getFullYear() - 10 + i;
+                                  return (
+                                    <SelectItem key={year} value={year.toString()}>
+                                      {year}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                            
+                            <Select
+                              value={(calendarFromMonth.getMonth() + 1).toString()}
+                              onValueChange={(month) => {
+                                const currentDate = calendarFromMonth;
+                                const newDate = new Date(currentDate.getFullYear(), parseInt(month) - 1, currentDate.getDate());
+                                setCalendarFromMonth(newDate);
+                                // Update dateFrom jika sudah ada tanggal yang dipilih
+                                if (dateFrom) {
+                                  const newDateFrom = new Date(currentDate.getFullYear(), parseInt(month) - 1, dateFrom.getDate());
+                                  setDateFrom(newDateFrom);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-24">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60 overflow-y-auto">
+                                {Array.from({ length: 12 }, (_, i) => {
+                                  const month = i + 1;
+                                  const monthName = new Date(2024, i, 1).toLocaleString('id-ID', { month: 'long' });
+                                  return (
+                                    <SelectItem key={month} value={month.toString()}>
+                                      {monthName}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                         <Calendar
                           mode="single"
                           selected={dateFrom}
                           onSelect={setDateFrom}
+                          month={calendarFromMonth}
+                          onMonthChange={setCalendarFromMonth}
                           initialFocus
                         />
                       </PopoverContent>
@@ -396,10 +476,72 @@ export default function NeracaPage() {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
+                        <div className="p-3 border-b">
+                          <div className="flex gap-2 items-center">
+                            <Select
+                              value={calendarToMonth.getFullYear().toString()}
+                              onValueChange={(year) => {
+                                const currentDate = calendarToMonth;
+                                const newDate = new Date(parseInt(year), currentDate.getMonth(), currentDate.getDate());
+                                setCalendarToMonth(newDate);
+                                // Update dateTo jika sudah ada tanggal yang dipilih
+                                if (dateTo) {
+                                  const newDateTo = new Date(parseInt(year), currentDate.getMonth(), dateTo.getDate());
+                                  setDateTo(newDateTo);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-20">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60 overflow-y-auto">
+                                {Array.from({ length: 30 }, (_, i) => {
+                                  const year = new Date().getFullYear() - 10 + i;
+                                  return (
+                                    <SelectItem key={year} value={year.toString()}>
+                                      {year}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                            
+                            <Select
+                              value={(calendarToMonth.getMonth() + 1).toString()}
+                              onValueChange={(month) => {
+                                const currentDate = calendarToMonth;
+                                const newDate = new Date(currentDate.getFullYear(), parseInt(month) - 1, currentDate.getDate());
+                                setCalendarToMonth(newDate);
+                                // Update dateTo jika sudah ada tanggal yang dipilih
+                                if (dateTo) {
+                                  const newDateTo = new Date(currentDate.getFullYear(), parseInt(month) - 1, dateTo.getDate());
+                                  setDateTo(newDateTo);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-24">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60 overflow-y-auto">
+                                {Array.from({ length: 12 }, (_, i) => {
+                                  const month = i + 1;
+                                  const monthName = new Date(2024, i, 1).toLocaleString('id-ID', { month: 'long' });
+                                  return (
+                                    <SelectItem key={month} value={month.toString()}>
+                                      {monthName}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                         <Calendar
                           mode="single"
                           selected={dateTo}
                           onSelect={setDateTo}
+                          month={calendarToMonth}
+                          onMonthChange={setCalendarToMonth}
                           initialFocus
                         />
                       </PopoverContent>
@@ -486,95 +628,62 @@ export default function NeracaPage() {
                             </td>
                           </tr>
                           
-                          {/* AKTIVA LANCAR - Header (abu-abu) */}
-                          <tr className="bg-gray-100 border-b border-gray-200">
-                            <td className="py-3 px-4 text-sm font-medium text-gray-800 text-center" colSpan={4}>
-                              AKTIVA LANCAR
-                            </td>
-                          </tr>
-                          
-                          {/* Data AKTIVA LANCAR (putih) */}
-                          {neracaData.assets?.filter((item: any) => item.account_code?.startsWith('11')).length > 0 ? (
-                            neracaData.assets.filter((item: any) => item.account_code?.startsWith('11')).map((item: any, index: number) => (
-                              <tr key={`current-asset-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
-                                <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
-                                  {item.account_code || '-'}
-                                </td>
-                                <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
-                                  {item.account_name || '-'}
-                                </td>
-                                <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
-                                  {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
-                                </td>
-                                <td className="py-2 px-4 text-sm text-gray-700 text-right">
-                                  -
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr className="bg-white border-b border-gray-200">
-                              <td className="py-2 px-4 text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
-                                Belum ada data aktiva lancar
-                              </td>
-                            </tr>
-                          )}
-                          
-                          {/* TOTAL AKTIVA LANCAR - Header (abu-abu) */}
-                          <tr className="bg-gray-100 border-b border-gray-200">
-                            <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
-                              TOTAL AKTIVA LANCAR
-                            </td>
-                            <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
-                              {neracaData.assets?.filter((item: any) => item.account_code?.startsWith('11')).reduce((sum: number, item: any) => sum + (item.amount || 0), 0) > 0 ? 
-                                `Rp. ${new Intl.NumberFormat('id-ID').format(neracaData.assets.filter((item: any) => item.account_code?.startsWith('11')).reduce((sum: number, item: any) => sum + (item.amount || 0), 0))}` : 
-                                'Rp. 0'}
-                            </td>
-                          </tr>
-                          
-                          {/* AKTIVA TETAP - Header (abu-abu) */}
-                          <tr className="bg-gray-100 border-b border-gray-200">
-                            <td className="py-3 px-4 text-sm font-medium text-gray-800 text-center" colSpan={4}>
-                              AKTIVA TETAP
-                            </td>
-                          </tr>
-                          
-                          {/* Data AKTIVA TETAP (putih) */}
-                          {neracaData.assets?.filter((item: any) => item.account_code?.startsWith('12')).length > 0 ? (
-                            neracaData.assets.filter((item: any) => item.account_code?.startsWith('12')).map((item: any, index: number) => (
-                              <tr key={`fixed-asset-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
-                                <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
-                                  {item.account_code || '-'}
-                                </td>
-                                <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
-                                  {item.account_name || '-'}
-                                </td>
-                                <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
-                                  {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
-                                </td>
-                                <td className="py-2 px-4 text-sm text-gray-700 text-right">
-                                  -
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr className="bg-white border-b border-gray-200">
-                              <td className="py-2 px-4 text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
-                                Belum ada data aktiva tetap
-                              </td>
-                            </tr>
-                          )}
-                          
-                          {/* TOTAL AKTIVA TETAP - Header (abu-abu) */}
-                          <tr className="bg-gray-100 border-b border-gray-200">
-                            <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
-                              TOTAL AKTIVA TETAP
-                            </td>
-                            <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
-                              {neracaData.assets?.filter((item: any) => item.account_code?.startsWith('12')).reduce((sum: number, item: any) => sum + (item.amount || 0), 0) > 0 ? 
-                                `Rp. ${new Intl.NumberFormat('id-ID').format(neracaData.assets.filter((item: any) => item.account_code?.startsWith('12')).reduce((sum: number, item: any) => sum + (item.amount || 0), 0))}` : 
-                                'Rp. 0'}
-                            </td>
-                          </tr>
+                          {/* Dynamic AKTIVA Categories */}
+                          {aktivaCategories.map((category) => {
+                            // Filter data berdasarkan kategori
+                            const categoryData = neracaData?.assets?.filter((item: any) => 
+                              item.category_id === category.id || item.category_name === category.name
+                            ) || [];
+                            
+                            return (
+                              <React.Fragment key={`aktiva-category-${category.id}`}>
+                                {/* Kategori Header */}
+                                <tr className="bg-gray-100 border-b border-gray-200">
+                                  <td className="py-3 px-4 text-sm font-medium text-gray-800 text-center" colSpan={4}>
+                                    {category.name}
+                                  </td>
+                                </tr>
+                                
+                                {/* Data Akun dalam Kategori */}
+                                {categoryData.length > 0 ? (
+                                  categoryData.map((item: any, index: number) => (
+                                    <tr key={`aktiva-${category.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
+                                      <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
+                                        {item.account_code || '-'}
+                                      </td>
+                                      <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
+                                        {item.account_name || '-'}
+                                      </td>
+                                      <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
+                                        {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
+                                      </td>
+                                      <td className="py-2 px-4 text-sm text-gray-700 text-right">
+                                        -
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr className="bg-white border-b border-gray-200">
+                                    <td className="py-2 px-4 text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                                      Belum ada data untuk kategori {category.name}
+                                    </td>
+                                  </tr>
+                                )}
+                                
+                                {/* Total Kategori */}
+                                <tr className="bg-gray-100 border-b border-gray-200">
+                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
+                                    TOTAL {category.name.toUpperCase()}
+                                  </td>
+                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
+                                    {categoryData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0) > 0 ? 
+                                      `Rp. ${new Intl.NumberFormat('id-ID').format(categoryData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0))}` : 
+                                      'Rp. 0'}
+                                  </td>
+                                </tr>
+                              </React.Fragment>
+                            );
+                          })}
                           
                           {/* TOTAL AKTIVA - Header (abu-abu) */}
                           <tr className="bg-gray-100 border-t-2 border-gray-400 border-b border-gray-200">
@@ -583,6 +692,80 @@ export default function NeracaPage() {
                             </td>
                             <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
                               {neracaData.summary?.total_assets ? `Rp. ${new Intl.NumberFormat('id-ID').format(neracaData.summary.total_assets)}` : 'Rp. 0'}
+                            </td>
+                          </tr>
+                          
+                          {/* PASIVA Section - Header (abu-abu) */}
+                          <tr className="bg-gray-100 border-b border-gray-200">
+                            <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-center" colSpan={4}>
+                              PASIVA
+                            </td>
+                          </tr>
+                          
+                          {/* Dynamic PASIVA Categories */}
+                          {pasivaCategories.map((category) => {
+                            // Filter data berdasarkan kategori
+                            const categoryData = neracaData?.liabilities?.filter((item: any) => 
+                              item.category_id === category.id || item.category_name === category.name
+                            ) || [];
+                            
+                            return (
+                              <React.Fragment key={`pasiva-category-${category.id}`}>
+                                {/* Kategori Header */}
+                                <tr className="bg-gray-100 border-b border-gray-200">
+                                  <td className="py-3 px-4 text-sm font-medium text-gray-800 text-center" colSpan={4}>
+                                    {category.name}
+                                  </td>
+                                </tr>
+                                
+                                {/* Data Akun dalam Kategori */}
+                                {categoryData.length > 0 ? (
+                                  categoryData.map((item: any, index: number) => (
+                                    <tr key={`pasiva-${category.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
+                                      <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
+                                        {item.account_code || '-'}
+                                      </td>
+                                      <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
+                                        {item.account_name || '-'}
+                                      </td>
+                                      <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
+                                        -
+                                      </td>
+                                      <td className="py-2 px-4 text-sm text-gray-700 text-right">
+                                        {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr className="bg-white border-b border-gray-200">
+                                    <td className="py-2 px-4 text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                                      Belum ada data untuk kategori {category.name}
+                                    </td>
+                                  </tr>
+                                )}
+                                
+                                {/* Total Kategori */}
+                                <tr className="bg-gray-100 border-b border-gray-200">
+                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
+                                    TOTAL {category.name.toUpperCase()}
+                                  </td>
+                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
+                                    {categoryData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0) > 0 ? 
+                                      `Rp. ${new Intl.NumberFormat('id-ID').format(categoryData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0))}` : 
+                                      'Rp. 0'}
+                                  </td>
+                                </tr>
+                              </React.Fragment>
+                            );
+                          })}
+                          
+                          {/* TOTAL PASIVA - Header (abu-abu) */}
+                          <tr className="bg-gray-100 border-t-2 border-gray-400 border-b border-gray-200">
+                            <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
+                              TOTAL PASIVA
+                            </td>
+                            <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
+                              {neracaData.summary?.total_liabilities ? `Rp. ${new Intl.NumberFormat('id-ID').format(neracaData.summary.total_liabilities)}` : 'Rp. 0'}
                             </td>
                           </tr>
                         </>

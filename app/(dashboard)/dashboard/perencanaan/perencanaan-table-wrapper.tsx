@@ -232,8 +232,6 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
               pageCount={totalPages}
               pageNo={page}
               searchQuery={searchQuery}
-              sorting={[]}
-              setSorting={() => {}}
             />
           )}
         </CardContent>

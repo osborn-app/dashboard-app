@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -167,18 +167,35 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [deletingItem, setDeletingItem] = useState<RencanaRowItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchDebounce] = useDebounce(searchQuery, 4000);
+  const [searchDebounce] = useDebounce(searchQuery, 500);
   const [selectedAccount, setSelectedAccount] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
-  const [dateFromDebounce] = useDebounce(dateFrom, 4000);
-  const [dateToDebounce] = useDebounce(dateTo, 4000);
+  const [dateFromDebounce] = useDebounce(dateFrom, 300);
+  const [dateToDebounce] = useDebounce(dateTo, 300);
+  
+  // State untuk mengontrol month yang ditampilkan di kalender
+  const [calendarFromMonth, setCalendarFromMonth] = useState<Date>(new Date());
+  const [calendarToMonth, setCalendarToMonth] = useState<Date>(new Date());
   const [accountSearch, setAccountSearch] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingCSV, setIsExportingCSV] = useState(false);
   
   const { toast } = useToast();
+
+  // Sinkronisasi calendar month dengan tanggal yang dipilih
+  useEffect(() => {
+    if (dateFrom) {
+      setCalendarFromMonth(dateFrom);
+    }
+  }, [dateFrom]);
+
+  useEffect(() => {
+    if (dateTo) {
+      setCalendarToMonth(dateTo);
+    }
+  }, [dateTo]);
 
   // Build query parameters for API
   const queryParams = useMemo(() => ({
@@ -683,11 +700,16 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
                   <div className="p-3 border-b">
                     <div className="flex gap-2 items-center">
                       <Select
-                        value={dateFrom ? dateFrom.getFullYear().toString() : new Date().getFullYear().toString()}
+                        value={calendarFromMonth.getFullYear().toString()}
                         onValueChange={(year) => {
-                          const currentDate = dateFrom || new Date();
+                          const currentDate = calendarFromMonth;
                           const newDate = new Date(parseInt(year), currentDate.getMonth(), currentDate.getDate());
-                          setDateFrom(newDate);
+                          setCalendarFromMonth(newDate);
+                          // Update dateFrom jika sudah ada tanggal yang dipilih
+                          if (dateFrom) {
+                            const newDateFrom = new Date(parseInt(year), currentDate.getMonth(), dateFrom.getDate());
+                            setDateFrom(newDateFrom);
+                          }
                         }}
                       >
                         <SelectTrigger className="w-20">
@@ -706,11 +728,16 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
                       </Select>
                       
                       <Select
-                        value={dateFrom ? (dateFrom.getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()}
+                        value={(calendarFromMonth.getMonth() + 1).toString()}
                         onValueChange={(month) => {
-                          const currentDate = dateFrom || new Date();
+                          const currentDate = calendarFromMonth;
                           const newDate = new Date(currentDate.getFullYear(), parseInt(month) - 1, currentDate.getDate());
-                          setDateFrom(newDate);
+                          setCalendarFromMonth(newDate);
+                          // Update dateFrom jika sudah ada tanggal yang dipilih
+                          if (dateFrom) {
+                            const newDateFrom = new Date(currentDate.getFullYear(), parseInt(month) - 1, dateFrom.getDate());
+                            setDateFrom(newDateFrom);
+                          }
                         }}
                       >
                         <SelectTrigger className="w-24">
@@ -734,7 +761,8 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
                     mode="single"
                     selected={dateFrom}
                     onSelect={setDateFrom}
-                    defaultMonth={dateFrom || new Date()}
+                    month={calendarFromMonth}
+                    onMonthChange={setCalendarFromMonth}
                     initialFocus
                   />
                 </PopoverContent>
@@ -761,11 +789,16 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
                   <div className="p-3 border-b">
                     <div className="flex gap-2 items-center">
                       <Select
-                        value={dateTo ? dateTo.getFullYear().toString() : new Date().getFullYear().toString()}
+                        value={calendarToMonth.getFullYear().toString()}
                         onValueChange={(year) => {
-                          const currentDate = dateTo || new Date();
+                          const currentDate = calendarToMonth;
                           const newDate = new Date(parseInt(year), currentDate.getMonth(), currentDate.getDate());
-                          setDateTo(newDate);
+                          setCalendarToMonth(newDate);
+                          // Update dateTo jika sudah ada tanggal yang dipilih
+                          if (dateTo) {
+                            const newDateTo = new Date(parseInt(year), currentDate.getMonth(), dateTo.getDate());
+                            setDateTo(newDateTo);
+                          }
                         }}
                       >
                         <SelectTrigger className="w-20">
@@ -784,11 +817,16 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
                       </Select>
                       
                       <Select
-                        value={dateTo ? (dateTo.getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()}
+                        value={(calendarToMonth.getMonth() + 1).toString()}
                         onValueChange={(month) => {
-                          const currentDate = dateTo || new Date();
+                          const currentDate = calendarToMonth;
                           const newDate = new Date(currentDate.getFullYear(), parseInt(month) - 1, currentDate.getDate());
-                          setDateTo(newDate);
+                          setCalendarToMonth(newDate);
+                          // Update dateTo jika sudah ada tanggal yang dipilih
+                          if (dateTo) {
+                            const newDateTo = new Date(currentDate.getFullYear(), parseInt(month) - 1, dateTo.getDate());
+                            setDateTo(newDateTo);
+                          }
                         }}
                       >
                         <SelectTrigger className="w-24">
@@ -812,7 +850,8 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
                     mode="single"
                     selected={dateTo}
                     onSelect={setDateTo}
-                    defaultMonth={dateTo || new Date()}
+                    month={calendarToMonth}
+                    onMonthChange={setCalendarToMonth}
                     initialFocus
                   />
                 </PopoverContent>
