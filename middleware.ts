@@ -79,10 +79,30 @@ export async function middleware(req: NextRequest) {
     // Check for exact order detail routes only (no edit/create)
     const orderDetailMatch = pathname.match(/^\/dashboard\/orders\/[^\/]+\/detail$/);
     
-    // Block edit and create routes for operation role
-    const isEditOrCreateRoute = pathname.includes('/edit') || pathname.includes('/create');
+    // Define specific allowed create routes for operation
+    const allowedCreateRoutes = [
+      "/dashboard/inspections/create",
+      "/dashboard/needs/create",
+    ];
     
-    const ok = (operationAllowedPrefixes.some((p) => pathname.startsWith(p)) || orderDetailMatch) && !isEditOrCreateRoute;
+    // Define blocked edit routes for operation (more specific)
+    const blockedEditRoutes = [
+      "/dashboard/orders/",
+      "/dashboard/fleets/",
+      "/dashboard/customers/",
+      "/dashboard/owners/",
+      "/dashboard/products/",
+    ];
+    
+    // Check if it's a blocked edit route
+    const isBlockedEditRoute = blockedEditRoutes.some(route => pathname.includes(route) && pathname.includes('/edit'));
+    
+    // Check if it's an allowed create route
+    const isAllowedCreateRoute = allowedCreateRoutes.some(route => pathname.startsWith(route));
+    
+    // Allow if it's in allowed prefixes OR order detail OR allowed create route, but not blocked edit routes
+    const ok = (operationAllowedPrefixes.some((p) => pathname.startsWith(p)) || orderDetailMatch || isAllowedCreateRoute) && !isBlockedEditRoute;
+    
     if (!ok) {
       return NextResponse.redirect(new URL("/dashboard/inspections", req.url));
     }

@@ -1,11 +1,7 @@
 import BreadCrumb from "@/components/breadcrumb";
-import { buttonVariants } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
-import { Plus } from "lucide-react";
 import { Metadata } from "next";
-import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InspectionsTableWrapper from "./inspections-table-wrapper";
 import OwnerInspectionsWrapper from "@/components/owner-inspections-wrapper";
@@ -129,14 +125,6 @@ export default async function InspectionsPage({ searchParams }: paramsProps) {
         <BreadCrumb items={breadcrumbItems} />
         <div className="flex items-start justify-between">
           <Heading title="Inspections" />
-          {userRole !== "owner" && (
-            <Link
-              href="/dashboard/inspections/create"
-              className={cn(buttonVariants({ variant: "main" }))}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add New
-            </Link>
-          )}
         </div>
         <Separator />
 
