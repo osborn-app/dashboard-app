@@ -55,8 +55,8 @@ export const CategoryForm = ({
     }
   }, [editData, planningId]);
 
-  const createCategoryMutation = usePostPlanningCategories(formData);
-  const updateCategoryMutation = useUpdatePlanningCategory(editData?.id || '');
+  const createCategoryMutation = usePostPlanningCategories(planningId, formData);
+  const updateCategoryMutation = useUpdatePlanningCategory(planningId, editData?.id || '');
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
