@@ -91,7 +91,7 @@ export default function ArusKasPage() {
   });
 
   // Hook untuk API categories
-  const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId);
+  const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId, 'template_arus_kas');
   
   // Hook untuk delete account dari category
   const { mutateAsync: removeAccount } = useCategoriesRemoveAccount(planningId);

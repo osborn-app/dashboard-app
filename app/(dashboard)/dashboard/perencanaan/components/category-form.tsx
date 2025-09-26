@@ -10,8 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 interface CategoryFormProps {
   isOpen: boolean;
   onClose: () => void;
-  categoryType: 'AKTIVA' | 'PASIVA';
+  categoryType: 'AKTIVA' | 'PASIVA' | 'PENDAPATAN' | 'BEBAN' | 'LAINNYA';
   planningId: string | number;
+  templateId?: string;
   onSuccess?: () => void;
   editData?: {
     id: string;
@@ -27,9 +28,10 @@ export const CategoryForm = ({
   onClose, 
   categoryType, 
   planningId,
+  templateId,
   onSuccess,
   editData,
-  onDataChange 
+  onDataChange
 }: CategoryFormProps) => {
   const { toast } = useToast();
   const isEditMode = !!editData;
@@ -38,8 +40,9 @@ export const CategoryForm = ({
     planning_id: planningId,
     name: editData?.name || '',
     description: editData?.description || '',
-    type: editData?.type || categoryType,
-    sort_order: 1
+    type: editData?.type || categoryType || 'LAINNYA',
+    sort_order: 1,
+    template_id: templateId || 'template_default'
   });
 
   // Update form data when editData changes
@@ -50,10 +53,21 @@ export const CategoryForm = ({
         name: editData.name,
         description: editData.description,
         type: editData.type,
-        sort_order: 1
+        sort_order: 1,
+        template_id: templateId || 'template_default'
       });
     }
   }, [editData, planningId]);
+
+  // Ensure type is set when categoryType changes
+  React.useEffect(() => {
+    if (!editData && categoryType) {
+      setFormData(prev => ({
+        ...prev,
+        type: categoryType
+      }));
+    }
+  }, [categoryType, editData]);
 
   const createCategoryMutation = usePostPlanningCategories(planningId, formData);
   const updateCategoryMutation = useUpdatePlanningCategory(planningId, editData?.id || '');
@@ -67,6 +81,7 @@ export const CategoryForm = ({
       });
       return;
     }
+
 
     try {
       if (isEditMode) {
@@ -89,7 +104,8 @@ export const CategoryForm = ({
         name: '',
         description: '',
         type: categoryType,
-        sort_order: 1
+        sort_order: 1,
+        template_id: templateId || 'template_default'
       });
       
       onClose();
@@ -110,7 +126,8 @@ export const CategoryForm = ({
       name: '',
       description: '',
       type: categoryType,
-      sort_order: 1
+      sort_order: 1,
+      template_id: templateId || 'template_default'
     });
     onClose();
   };
@@ -131,6 +148,17 @@ export const CategoryForm = ({
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Template ID</label>
+            <Input 
+              placeholder="template_default" 
+              value={formData.template_id}
+              onChange={(e) => setFormData(prev => ({ ...prev, template_id: e.target.value }))}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Template untuk grouping kategori (contoh: template_retail, template_manufacturing)
+            </p>
           </div>
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={handleClose}>

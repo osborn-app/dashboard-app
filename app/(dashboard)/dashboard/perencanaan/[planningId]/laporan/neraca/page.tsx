@@ -102,7 +102,7 @@ export default function NeracaPage() {
   });
 
   // Hook untuk API categories
-  const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId);
+  const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId, 'template_neraca');
   
   // Hook untuk delete account dari category
   const { mutateAsync: removeAccount } = useCategoriesRemoveAccount(planningId);
@@ -1000,6 +1000,7 @@ export default function NeracaPage() {
         onClose={() => setIsAddCategoryModalOpen(false)}
         categoryType={activeSubTab.toUpperCase() as 'AKTIVA' | 'PASIVA'}
         planningId={planningId}
+        templateId="template_neraca"
         onDataChange={handleDataChange}
       />
       
@@ -1011,6 +1012,7 @@ export default function NeracaPage() {
         }}
         categoryType={selectedCategory?.type as 'AKTIVA' | 'PASIVA' || activeSubTab.toUpperCase() as 'AKTIVA' | 'PASIVA'}
         planningId={planningId}
+        templateId="template_neraca"
         editData={selectedCategory}
         onDataChange={handleDataChange}
       />

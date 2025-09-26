@@ -301,16 +301,17 @@ export const useGetPlanningCategories = (planningId: string | number, params?: a
 };
 
 // ===== GET Planning Categories Select =====
-export const useGetPlanningCategoriesSelect = (planningId: string | number) => {
+export const useGetPlanningCategoriesSelect = (planningId: string | number, templateId?: string) => {
   const axiosAuth = useAxiosAuth();
 
   const getPlanningCategoriesSelect = async () => {
-    const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/categories/select`);
+    const params = templateId ? { template_id: templateId } : {};
+    const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/categories/select`, { params });
     return data;
   };
 
   return useQuery({
-    queryKey: ["planning-categories-select"],
+    queryKey: ["planning-categories-select", planningId, templateId],
     queryFn: getPlanningCategoriesSelect,
   });
 };
@@ -365,12 +366,12 @@ export const useUpdatePlanningCategory = (planningId: string | number, id: strin
 };
 
 // ===== DELETE Planning Category =====
-export const useDeletePlanningCategory = (planningId: string | number, id: number) => {
+export const useDeletePlanningCategory = (id: number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const deletePlanningCategory = (id: number) => {
-    return axiosAuth.delete(`${baseEndpoint}/${planningId}/categories/${id}`);
+    return axiosAuth.delete(`${baseEndpoint}/categories/${id}`);
   };
 
   return useMutation({
@@ -458,14 +459,14 @@ export const useGetPlanningCategoryAccounts = (planningId: string | number, id: 
   const axiosAuth = useAxiosAuth();
 
   const getPlanningCategoryAccounts = async () => {
-    const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/categories/${id}/accounts`, {
+    const { data } = await axiosAuth.get(`${baseEndpoint}/categories/${id}/accounts`, {
       params,
     });
     return data;
   };
 
   return useQuery({
-    queryKey: ["planning-category-accounts", id, params],
+    queryKey: ["planning-category-accounts", planningId, id, params],
     queryFn: getPlanningCategoryAccounts,
   });
 };
@@ -476,14 +477,14 @@ export const useAssignAccountsToCategory = (planningId: string | number, id: str
   const queryClient = useQueryClient();
 
   const assignAccountsToCategory = (body: any) => {
-    return axiosAuth.post(`${baseEndpoint}/${planningId}/categories/${id}/assign-accounts`, body);
+    return axiosAuth.post(`${baseEndpoint}/categories/${id}/assign-accounts`, body);
   };
 
   return useMutation({
     mutationFn: assignAccountsToCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["planning-categories"] });
-      queryClient.invalidateQueries({ queryKey: ["planning-category-accounts", id] });
+      queryClient.invalidateQueries({ queryKey: ["planning-category-accounts", planningId, id] });
     },
   });
 };

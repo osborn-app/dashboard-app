@@ -13,7 +13,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CalendarIcon, Search, Plus, Trash2, Edit, Download } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { CalendarIcon, Search, Plus, Trash2, Edit, Download, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -21,7 +22,9 @@ import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCat
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { AccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/account-form';
+import { CategoryForm } from '@/app/(dashboard)/dashboard/perencanaan/components/category-form';
 import { LabaRugiCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/display-components';
+import { DeleteCategoryDialog } from '@/app/(dashboard)/dashboard/perencanaan/components/dialogs';
 
 export default function LabaRugiPage() {
   const params = useParams();
@@ -45,7 +48,17 @@ export default function LabaRugiPage() {
   const [activeTab, setActiveTab] = useState('data');
   const [activeSubTab, setActiveSubTab] = useState('pendapatan');
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
+  const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedCategoryType, setSelectedCategoryType] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<{
+    id: string;
+    name: string;
+    description: string;
+    type: string;
+  } | null>(null);
   
   // Sinkronisasi calendar month dengan tanggal yang dipilih
   useEffect(() => {
@@ -65,7 +78,7 @@ export default function LabaRugiPage() {
   const [isExportingCSV, setIsExportingCSV] = useState(false);
 
   // Get planning categories untuk laba rugi (PENDAPATAN dan BEBAN)
-  const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId);
+  const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId, 'template_laba_rugi');
   
   // Hook untuk delete account dari category
   const { mutateAsync: removeAccount } = useCategoriesRemoveAccount(planningId);
@@ -229,6 +242,26 @@ export default function LabaRugiPage() {
     } finally {
       setIsExporting(false);
     }
+  };
+
+  // Handler untuk tambah kategori
+  const handleAddCategory = (categoryType: string) => {
+    // Set type based on the tab
+    const type = categoryType === 'PENDAPATAN' ? 'PENDAPATAN' : 'BEBAN';
+    setSelectedCategoryType(type);
+    setIsAddCategoryModalOpen(true);
+  };
+
+  // Handler untuk edit kategori
+  const handleEditCategory = (category: { id: string; name: string; description: string; type: string }) => {
+    setSelectedCategory(category);
+    setIsEditCategoryModalOpen(true);
+  };
+
+  // Handler untuk delete kategori
+  const handleDeleteCategory = (category: { id: string; name: string; description: string; type: string }) => {
+    setSelectedCategory(category);
+    setIsDeleteCategoryModalOpen(true);
   };
 
   // Handler untuk tambah akun
@@ -745,30 +778,156 @@ export default function LabaRugiPage() {
 
                 {/* Pendapatan Sub Tab */}
                 <TabsContent value="pendapatan" className="space-y-4">
-                  {pendapatanCategories.map((category: any) => (
-                    <LabaRugiCategoryAccounts
-                      key={category.id}
-                      category={category}
-                      planningId={planningId}
-                      onAddAccount={handleAddAccount}
-                      onEditAccount={handleEditAccount}
-                      onDeleteAccount={handleDeleteAccount}
-                    />
-                  ))}
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Kategori Pendapatan</h3>
+                    <Button onClick={() => handleAddCategory('PENDAPATAN')} className="bg-green-600 hover:bg-green-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      TAMBAH KATEGORI
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                      {pendapatanCategories.length > 0 ? (
+                        pendapatanCategories.map((category: any) => (
+                          <div key={category.id} className="border rounded-lg p-4">
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-bold text-green-600 text-lg">{category.name}</h4>
+                              <div className="flex space-x-2">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => handleEditCategory({
+                                      id: category.id,
+                                      name: category.name,
+                                      description: category.description,
+                                      type: category.type
+                                    })}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="text-red-600"
+                                      onClick={() => handleDeleteCategory({
+                                        id: category.id,
+                                        name: category.name,
+                                        description: category.description,
+                                        type: category.type
+                                      })}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Hapus
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                            
+                            {/* Header NAMA AKUN */}
+                            <div className="bg-gray-100 p-2 mb-2">
+                              <p className="font-bold text-gray-900">NAMA AKUN</p>
+                            </div>
+                            
+                            {/* Accounts List */}
+                            <LabaRugiCategoryAccounts
+                              key={category.id}
+                              category={category}
+                              planningId={planningId}
+                              onAddAccount={handleAddAccount}
+                              onEditAccount={handleEditAccount}
+                              onDeleteAccount={handleDeleteAccount}
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500 mb-4">Belum ada kategori pendapatan</p>
+                          <Button onClick={() => handleAddCategory('PENDAPATAN')} className="bg-green-600 hover:bg-green-700">
+                            + Tambah Kategori Pendapatan
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                 </TabsContent>
 
                 {/* Beban Sub Tab */}
                 <TabsContent value="beban" className="space-y-4">
-                  {bebanCategories.map((category: any) => (
-                    <LabaRugiCategoryAccounts
-                      key={category.id}
-                      category={category}
-                      planningId={planningId}
-                      onAddAccount={handleAddAccount}
-                      onEditAccount={handleEditAccount}
-                      onDeleteAccount={handleDeleteAccount}
-                    />
-                  ))}
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Kategori Beban</h3>
+                    <Button onClick={() => handleAddCategory('BEBAN')} className="bg-red-600 hover:bg-red-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      TAMBAH KATEGORI
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                      {bebanCategories.length > 0 ? (
+                        bebanCategories.map((category: any) => (
+                          <div key={category.id} className="border rounded-lg p-4">
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-bold text-red-600 text-lg">{category.name}</h4>
+                              <div className="flex space-x-2">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => handleEditCategory({
+                                      id: category.id,
+                                      name: category.name,
+                                      description: category.description,
+                                      type: category.type
+                                    })}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="text-red-600"
+                                      onClick={() => handleDeleteCategory({
+                                        id: category.id,
+                                        name: category.name,
+                                        description: category.description,
+                                        type: category.type
+                                      })}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Hapus
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                            
+                            {/* Header NAMA AKUN */}
+                            <div className="bg-gray-100 p-2 mb-2">
+                              <p className="font-bold text-gray-900">NAMA AKUN</p>
+                            </div>
+                            
+                            {/* Accounts List */}
+                            <LabaRugiCategoryAccounts
+                              key={category.id}
+                              category={category}
+                              planningId={planningId}
+                              onAddAccount={handleAddAccount}
+                              onEditAccount={handleEditAccount}
+                              onDeleteAccount={handleDeleteAccount}
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500 mb-4">Belum ada kategori beban</p>
+                          <Button onClick={() => handleAddCategory('BEBAN')} className="bg-red-600 hover:bg-red-700">
+                            + Tambah Kategori Beban
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                 </TabsContent>
 
                 {/* Rumus Sub Tab */}
@@ -820,6 +979,43 @@ export default function LabaRugiPage() {
         isOpen={isAddAccountModalOpen}
         onClose={() => setIsAddAccountModalOpen(false)}
         categoryId={selectedCategoryId}
+        planningId={planningId}
+        onSuccess={handleDataChange}
+      />
+
+      {/* Category Form Modal */}
+      <CategoryForm
+        isOpen={isAddCategoryModalOpen}
+        onClose={() => setIsAddCategoryModalOpen(false)}
+        categoryType={selectedCategoryType as 'PENDAPATAN' | 'BEBAN'}
+        planningId={planningId}
+        templateId="template_laba_rugi"
+        onDataChange={handleDataChange}
+      />
+
+      {/* Edit Category Modal */}
+      <CategoryForm
+        isOpen={isEditCategoryModalOpen}
+        onClose={() => {
+          setIsEditCategoryModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        categoryType={selectedCategory?.type as 'PENDAPATAN' | 'BEBAN' || selectedCategoryType as 'PENDAPATAN' | 'BEBAN'}
+        planningId={planningId}
+        templateId="template_laba_rugi"
+        editData={selectedCategory}
+        onDataChange={handleDataChange}
+      />
+
+      {/* Delete Category Modal */}
+      <DeleteCategoryDialog
+        isOpen={isDeleteCategoryModalOpen}
+        onClose={() => {
+          setIsDeleteCategoryModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        categoryId={selectedCategory?.id || ''}
+        categoryName={selectedCategory?.name || ''}
         planningId={planningId}
         onSuccess={handleDataChange}
       />
