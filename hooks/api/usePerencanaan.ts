@@ -266,12 +266,12 @@ export const useGetArusKasReport = (planningId: string | number, params?: any) =
 // ===== PLANNING CATEGORIES API =====
 
 // ===== POST Planning Categories =====
-export const usePostPlanningCategories = (body: any) => {
+export const usePostPlanningCategories = (planningId: string | number, body: any) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const postPlanningCategories = async () => {
-    const { data } = await axiosAuth.post(`${baseEndpoint}/categories`, body);
+    const { data } = await axiosAuth.post(`${baseEndpoint}/${planningId}/categories`, body);
     return data;
   };
 
@@ -284,11 +284,11 @@ export const usePostPlanningCategories = (body: any) => {
 };
 
 // ===== GET Planning Categories =====
-export const useGetPlanningCategories = (params?: any) => {
+export const useGetPlanningCategories = (planningId: string | number, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getPlanningCategories = async () => {
-    const { data } = await axiosAuth.get(`${baseEndpoint}/categories`, {
+    const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/categories`, {
       params,
     });
     return data;
@@ -301,11 +301,11 @@ export const useGetPlanningCategories = (params?: any) => {
 };
 
 // ===== GET Planning Categories Select =====
-export const useGetPlanningCategoriesSelect = () => {
+export const useGetPlanningCategoriesSelect = (planningId: string | number) => {
   const axiosAuth = useAxiosAuth();
 
   const getPlanningCategoriesSelect = async () => {
-    const { data } = await axiosAuth.get(`${baseEndpoint}/categories/select`);
+    const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/categories/select`);
     return data;
   };
 
@@ -316,11 +316,11 @@ export const useGetPlanningCategoriesSelect = () => {
 };
 
 // ===== GET Planning Categories Statistics =====
-export const useGetPlanningCategoriesStatistics = () => {
+export const useGetPlanningCategoriesStatistics = (planningId: string | number) => {
   const axiosAuth = useAxiosAuth();
 
   const getPlanningCategoriesStatistics = async () => {
-    const { data } = await axiosAuth.get(`${baseEndpoint}/categories/statistics`);
+    const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/categories/statistics`);
     return data;
   };
 
@@ -331,11 +331,11 @@ export const useGetPlanningCategoriesStatistics = () => {
 };
 
 // ===== GET Planning Category Detail =====
-export const useGetPlanningCategoryDetail = (id: number | string) => {
+export const useGetPlanningCategoryDetail = (planningId: string | number, id: number | string) => {
   const axiosAuth = useAxiosAuth();
 
   const getPlanningCategoryDetail = () => {
-    return axiosAuth.get(`${baseEndpoint}/categories/${id}`);
+    return axiosAuth.get(`${baseEndpoint}/${planningId}/categories/${id}`);
   };
 
   return useQuery({
@@ -345,12 +345,12 @@ export const useGetPlanningCategoryDetail = (id: number | string) => {
 };
 
 // ===== UPDATE Planning Category =====
-export const useUpdatePlanningCategory = (id: string | number) => {
+export const useUpdatePlanningCategory = (planningId: string | number, id: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const updatePlanningCategory = (body: any) => {
-    return axiosAuth.put(`${baseEndpoint}/categories/${id}`, body);
+    return axiosAuth.put(`${baseEndpoint}/${planningId}/categories/${id}`, body);
   };
 
   return useMutation({
@@ -365,12 +365,12 @@ export const useUpdatePlanningCategory = (id: string | number) => {
 };
 
 // ===== DELETE Planning Category =====
-export const useDeletePlanningCategory = (id: number) => {
+export const useDeletePlanningCategory = (planningId: string | number, id: number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const deletePlanningCategory = (id: number) => {
-    return axiosAuth.delete(`${baseEndpoint}/categories/${id}`);
+    return axiosAuth.delete(`${baseEndpoint}/${planningId}/categories/${id}`);
   };
 
   return useMutation({
@@ -385,11 +385,11 @@ export const useDeletePlanningCategory = (id: number) => {
 };
 
 // ===== GET Planning Category Entries =====
-export const useGetPlanningCategoryEntries = (id: number | string, params?: any) => {
+export const useGetPlanningCategoryEntries = (planningId: string | number, id: number | string, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getPlanningCategoryEntries = async () => {
-    const { data } = await axiosAuth.get(`${baseEndpoint}/categories/${id}/entries`, {
+    const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/categories/${id}/entries`, {
       params,
     });
     return data;
@@ -402,12 +402,12 @@ export const useGetPlanningCategoryEntries = (id: number | string, params?: any)
 };
 
 // ===== ASSIGN Entries to Category =====
-export const useAssignEntriesToCategory = (id: string | number) => {
+export const useAssignEntriesToCategory = (planningId: string | number, id: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const assignEntriesToCategory = (body: any) => {
-    return axiosAuth.post(`${baseEndpoint}/categories/${id}/assign`, body);
+    return axiosAuth.post(`${baseEndpoint}/${planningId}/categories/${id}/assign`, body);
   };
 
   return useMutation({
@@ -420,12 +420,12 @@ export const useAssignEntriesToCategory = (id: string | number) => {
 };
 
 // ===== BULK UPDATE Category =====
-export const useBulkUpdateCategory = () => {
+export const useBulkUpdateCategory = (planningId: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const bulkUpdateCategory = (body: any) => {
-    return axiosAuth.put(`${baseEndpoint}/categories/bulk-update`, body);
+    return axiosAuth.put(`${baseEndpoint}/${planningId}/categories/bulk-update`, body);
   };
 
   return useMutation({
@@ -437,12 +437,12 @@ export const useBulkUpdateCategory = () => {
 };
 
 // ===== REMOVE Category from Entries =====
-export const useRemoveCategoryFromEntries = () => {
+export const useRemoveCategoryFromEntries = (planningId: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const removeCategoryFromEntries = (body: { entry_ids: number[] }) => {
-    return axiosAuth.delete(`${baseEndpoint}/categories/remove`, { data: body });
+    return axiosAuth.delete(`${baseEndpoint}/${planningId}/categories/remove`, { data: body });
   };
 
   return useMutation({
@@ -454,11 +454,11 @@ export const useRemoveCategoryFromEntries = () => {
 };
 
 // ===== GET Planning Category Accounts =====
-export const useGetPlanningCategoryAccounts = (id: number | string, params?: any) => {
+export const useGetPlanningCategoryAccounts = (planningId: string | number, id: number | string, params?: any) => {
   const axiosAuth = useAxiosAuth();
 
   const getPlanningCategoryAccounts = async () => {
-    const { data } = await axiosAuth.get(`${baseEndpoint}/categories/${id}/accounts`, {
+    const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/categories/${id}/accounts`, {
       params,
     });
     return data;
@@ -471,12 +471,12 @@ export const useGetPlanningCategoryAccounts = (id: number | string, params?: any
 };
 
 // ===== ASSIGN Accounts to Category =====
-export const useAssignAccountsToCategory = (id: string | number) => {
+export const useAssignAccountsToCategory = (planningId: string | number, id: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const assignAccountsToCategory = (body: any) => {
-    return axiosAuth.post(`${baseEndpoint}/categories/${id}/assign-accounts`, body);
+    return axiosAuth.post(`${baseEndpoint}/${planningId}/categories/${id}/assign-accounts`, body);
   };
 
   return useMutation({
@@ -489,12 +489,12 @@ export const useAssignAccountsToCategory = (id: string | number) => {
 };
 
 // ===== BULK UPDATE Account Category =====
-export const useBulkUpdateAccountCategory = () => {
+export const useBulkUpdateAccountCategory = (planningId: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const bulkUpdateAccountCategory = (body: any) => {
-    return axiosAuth.put(`${baseEndpoint}/categories/bulk-update-accounts`, body);
+    return axiosAuth.put(`${baseEndpoint}/${planningId}/categories/bulk-update-accounts`, body);
   };
 
   return useMutation({
@@ -506,12 +506,12 @@ export const useBulkUpdateAccountCategory = () => {
 };
 
 // ===== categories remove account =====
-export const useCategoriesRemoveAccount = () => {
+export const useCategoriesRemoveAccount = (planningId: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const categoriesRemoveAccount = (body: any) => {
-    return axiosAuth.delete(`${baseEndpoint}/categories/remove-accounts`, { data: body });
+    return axiosAuth.delete(`${baseEndpoint}/${planningId}/categories/remove-accounts`, { data: body });
   };
 
   return useMutation({

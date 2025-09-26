@@ -65,10 +65,10 @@ export default function LabaRugiPage() {
   const [isExportingCSV, setIsExportingCSV] = useState(false);
 
   // Get planning categories untuk laba rugi (PENDAPATAN dan BEBAN)
-  const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+  const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId);
   
   // Hook untuk delete account dari category
-  const { mutateAsync: removeAccount } = useCategoriesRemoveAccount();
+  const { mutateAsync: removeAccount } = useCategoriesRemoveAccount(planningId);
   
   // Hook untuk fetch planning detail (untuk filename)
   const { data: planningDetail } = useGetDetailPerencanaan(planningId);

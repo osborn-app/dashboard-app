@@ -102,10 +102,10 @@ export default function NeracaPage() {
   });
 
   // Hook untuk API categories
-  const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+  const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId);
   
   // Hook untuk delete account dari category
-  const { mutateAsync: removeAccount } = useCategoriesRemoveAccount();
+  const { mutateAsync: removeAccount } = useCategoriesRemoveAccount(planningId);
   
   // Hook untuk fetch planning detail (untuk filename)
   const { data: planningDetail } = useGetDetailPerencanaan(planningId);
