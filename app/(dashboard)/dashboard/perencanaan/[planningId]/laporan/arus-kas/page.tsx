@@ -277,7 +277,12 @@ export default function ArusKasPage() {
 
   const handleDeleteAccount = async (accountId: string) => {
     try {
-      await removeAccount({ account_ids: [parseInt(accountId)] });
+      const accountIdNumber = parseInt(accountId);
+      if (isNaN(accountIdNumber)) {
+        throw new Error('Invalid account ID');
+      }
+      
+      await removeAccount({ account_ids: [accountIdNumber] });
       toast({
         title: 'Success',
         description: 'Akun berhasil dihapus dari kategori',

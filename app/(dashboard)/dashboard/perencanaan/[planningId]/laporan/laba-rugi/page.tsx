@@ -248,7 +248,12 @@ export default function LabaRugiPage() {
   // Handler untuk delete akun
   const handleDeleteAccount = async (accountId: string) => {
     try {
-      await removeAccount({ account_ids: [parseInt(accountId)] });
+      const accountIdNumber = parseInt(accountId);
+      if (isNaN(accountIdNumber)) {
+        throw new Error('Invalid account ID');
+      }
+      
+      await removeAccount({ account_ids: [accountIdNumber] });
       toast({
         title: 'Success',
         description: 'Akun berhasil dihapus dari kategori',
