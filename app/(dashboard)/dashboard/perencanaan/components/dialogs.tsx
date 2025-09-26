@@ -431,6 +431,7 @@ interface DeleteCategoryDialogProps {
   onClose: () => void;
   categoryId: string;
   categoryName: string;
+  planningId: string | number;
   onSuccess?: () => void;
   onDataChange?: () => void;
 }
@@ -440,11 +441,12 @@ export const DeleteCategoryDialog = ({
   onClose, 
   categoryId,
   categoryName,
+  planningId,
   onSuccess,
   onDataChange 
 }: DeleteCategoryDialogProps) => {
   const { toast } = useToast();
-  const deleteCategoryMutation = useDeletePlanningCategory(parseInt(categoryId));
+  const deleteCategoryMutation = useDeletePlanningCategory(planningId, parseInt(categoryId));
 
   const handleDelete = async () => {
     try {

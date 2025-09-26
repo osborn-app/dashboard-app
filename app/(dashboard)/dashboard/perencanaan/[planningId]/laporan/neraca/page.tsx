@@ -1021,6 +1021,7 @@ export default function NeracaPage() {
         }}
         categoryId={selectedCategory?.id || ''}
         categoryName={selectedCategory?.name || ''}
+        planningId={planningId}
         onDataChange={handleDataChange}
       />
       

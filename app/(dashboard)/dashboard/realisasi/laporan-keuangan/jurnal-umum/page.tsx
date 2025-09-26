@@ -417,7 +417,7 @@ export default function JurnalUmumPage() {
         Periode: {dayjs(dateRange.from).format('DD MMM YYYY')} - {dayjs(dateRange.to).format('DD MMM YYYY')}
         {debouncedSearchQuery && (
           <span className="ml-2 text-blue-600">
-            • Filter: "{debouncedSearchQuery}"
+            • Filter: &quot;{debouncedSearchQuery}&quot;
           </span>
         )}
       </div>
@@ -430,7 +430,7 @@ export default function JurnalUmumPage() {
               Jurnal Umum Realisasi
               {debouncedSearchQuery && (
                 <div className="text-sm font-normal text-muted-foreground mt-1">
-                  Hasil pencarian untuk: "{debouncedSearchQuery}"
+                  Hasil pencarian untuk: &quot;{debouncedSearchQuery}&quot;
                 </div>
               )}
             </div>
