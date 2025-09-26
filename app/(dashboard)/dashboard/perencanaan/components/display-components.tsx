@@ -7,6 +7,7 @@ import { useGetPlanningCategoryAccounts } from '@/hooks/api/usePerencanaan';
 // ===== ARUS KAS CATEGORY ACCOUNTS =====
 interface ArusKasCategoryAccountsProps {
   categoryId: string;
+  planningId: string | number;
   onAddAccount: () => void;
   onEditAccount: (accountId: string) => void;
   onDeleteAccount: (accountId: string) => void;
@@ -14,12 +15,13 @@ interface ArusKasCategoryAccountsProps {
 
 export const ArusKasCategoryAccounts = ({ 
   categoryId, 
+  planningId,
   onAddAccount, 
   onEditAccount, 
   onDeleteAccount 
 }: ArusKasCategoryAccountsProps) => {
   // Fetch accounts data from API
-  const { data: accountsData, isLoading, error } = useGetPlanningCategoryAccounts(categoryId);
+  const { data: accountsData, isLoading, error } = useGetPlanningCategoryAccounts(planningId, categoryId);
 
   // Extract accounts from API response
   const accounts = Array.isArray(accountsData) ? accountsData : accountsData?.items || accountsData?.data || [];
@@ -99,6 +101,7 @@ export const ArusKasCategoryAccounts = ({
 // ===== CATEGORY ACCOUNTS =====
 interface CategoryAccountsProps {
   categoryId: string;
+  planningId: string | number;
   onAddAccount?: () => void;
   onEditAccount?: (accountId: string) => void;
   onDeleteAccount?: (accountId: string) => void;
@@ -106,11 +109,12 @@ interface CategoryAccountsProps {
 
 export const CategoryAccounts = ({ 
   categoryId, 
+  planningId,
   onAddAccount, 
   onEditAccount, 
   onDeleteAccount 
 }: CategoryAccountsProps) => {
-  const { data: accountsData, isLoading, error } = useGetPlanningCategoryAccounts(categoryId);
+  const { data: accountsData, isLoading, error } = useGetPlanningCategoryAccounts(planningId, categoryId);
   
   if (isLoading) {
     return (
@@ -204,6 +208,7 @@ interface LabaRugiCategoryAccountsProps {
     entry_count: number;
     account_count: number;
   };
+  planningId: string | number;
   onAddAccount: (categoryId: string) => void;
   onEditAccount: (accountId: string) => void;
   onDeleteAccount: (accountId: string) => void;
@@ -211,12 +216,13 @@ interface LabaRugiCategoryAccountsProps {
 
 export function LabaRugiCategoryAccounts({ 
   category, 
+  planningId,
   onAddAccount, 
   onEditAccount, 
   onDeleteAccount 
 }: LabaRugiCategoryAccountsProps) {
   // Get accounts untuk kategori ini
-  const { data: accountsData, isLoading } = useGetPlanningCategoryAccounts(category.id);
+  const { data: accountsData, isLoading } = useGetPlanningCategoryAccounts(planningId, category.id);
 
   // Handle different data structures
   const accounts = Array.isArray(accountsData) ? accountsData : accountsData?.data || accountsData?.items || [];

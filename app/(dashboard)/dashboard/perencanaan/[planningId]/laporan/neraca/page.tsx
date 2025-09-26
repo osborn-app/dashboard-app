@@ -900,6 +900,7 @@ export default function NeracaPage() {
                             
                             <CategoryAccounts 
                               categoryId={category.id}
+                              planningId={planningId}
                               onAddAccount={() => handleAddAccount(category.id)}
                               onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
@@ -972,6 +973,7 @@ export default function NeracaPage() {
                             
                             <CategoryAccounts 
                               categoryId={category.id}
+                              planningId={planningId}
                               onAddAccount={() => handleAddAccount(category.id)}
                               onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}

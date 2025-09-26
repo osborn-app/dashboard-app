@@ -749,6 +749,7 @@ export default function LabaRugiPage() {
                     <LabaRugiCategoryAccounts
                       key={category.id}
                       category={category}
+                      planningId={planningId}
                       onAddAccount={handleAddAccount}
                       onEditAccount={handleEditAccount}
                       onDeleteAccount={handleDeleteAccount}
@@ -762,6 +763,7 @@ export default function LabaRugiPage() {
                     <LabaRugiCategoryAccounts
                       key={category.id}
                       category={category}
+                      planningId={planningId}
                       onAddAccount={handleAddAccount}
                       onEditAccount={handleEditAccount}
                       onDeleteAccount={handleDeleteAccount}

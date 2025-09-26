@@ -832,6 +832,7 @@ export default function ArusKasPage() {
                           
                           <ArusKasCategoryAccounts
                             categoryId={category.id}
+                            planningId={planningId}
                             onAddAccount={() => handleAddAccount(category.id)}
                             onEditAccount={handleEditAccount}
                             onDeleteAccount={handleDeleteAccount}
