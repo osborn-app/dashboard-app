@@ -39,14 +39,15 @@ interface AccountFormProps {
   isOpen: boolean;
   onClose: () => void;
   categoryId: string;
+  planningId: string | number;
   onSuccess?: () => void;
 }
 
-export function AccountForm({ isOpen, onClose, categoryId, onSuccess }: AccountFormProps) {
+export function AccountForm({ isOpen, onClose, categoryId, planningId, onSuccess }: AccountFormProps) {
   const [loading, setLoading] = useState(false);
   const [accountSearch, setAccountSearch] = useState('');
   const { toast } = useToast();
-  const assignAccountsMutation = useAssignAccountsToCategory(categoryId);
+  const assignAccountsMutation = useAssignAccountsToCategory(planningId, categoryId);
   
   // Get all planning accounts for dropdown
   const { data: accountsData, isLoading: isLoadingAccounts } = useGetPlanningAccounts({

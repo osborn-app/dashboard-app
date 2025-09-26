@@ -38,10 +38,11 @@ interface ArusKasAccountFormProps {
   isOpen: boolean;
   onClose: () => void;
   categoryId: string;
+  planningId: string | number;
   onSuccess?: () => void;
 }
 
-export function ArusKasAccountForm({ isOpen, onClose, categoryId, onSuccess }: ArusKasAccountFormProps) {
+export function ArusKasAccountForm({ isOpen, onClose, categoryId, planningId, onSuccess }: ArusKasAccountFormProps) {
   const [loading, setLoading] = useState(false);
   const [accountSearch, setAccountSearch] = useState('');
   const { toast } = useToast();
@@ -52,7 +53,7 @@ export function ArusKasAccountForm({ isOpen, onClose, categoryId, onSuccess }: A
   });
 
   // Mutation untuk assign account ke category
-  const assignAccountsMutation = useAssignAccountsToCategory(categoryId);
+  const assignAccountsMutation = useAssignAccountsToCategory(planningId, categoryId);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

@@ -909,6 +909,7 @@ export default function ArusKasPage() {
         isOpen={isAddAccountModalOpen}
         onClose={() => setIsAddAccountModalOpen(false)}
         categoryId={selectedCategoryId}
+        planningId={planningId}
         onSuccess={handleDataChange}
       />
       
@@ -919,6 +920,7 @@ export default function ArusKasPage() {
           setSelectedAccount(null);
         }}
         categoryId={selectedCategoryId}
+        planningId={planningId}
         onSuccess={handleDataChange}
       />
     </div>

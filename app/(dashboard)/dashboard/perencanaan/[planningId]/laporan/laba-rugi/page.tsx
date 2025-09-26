@@ -818,6 +818,7 @@ export default function LabaRugiPage() {
         isOpen={isAddAccountModalOpen}
         onClose={() => setIsAddAccountModalOpen(false)}
         categoryId={selectedCategoryId}
+        planningId={planningId}
         onSuccess={handleDataChange}
       />
     </div>

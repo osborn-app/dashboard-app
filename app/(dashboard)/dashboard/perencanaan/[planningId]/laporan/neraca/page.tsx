@@ -1028,6 +1028,7 @@ export default function NeracaPage() {
         isOpen={isAddAccountModalOpen}
         onClose={() => setIsAddAccountModalOpen(false)}
         categoryId={selectedCategoryId}
+        planningId={planningId}
         onSuccess={handleDataChange}
       />
       
@@ -1038,6 +1039,7 @@ export default function NeracaPage() {
           setSelectedAccount(null);
         }}
         categoryId={selectedCategoryId}
+        planningId={planningId}
         onSuccess={handleDataChange}
       />
     </div>
