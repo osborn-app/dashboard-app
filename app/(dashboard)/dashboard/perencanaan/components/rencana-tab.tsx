@@ -604,9 +604,9 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
     <div className="space-y-4">
       {/* Search and Filter Section */}
       <div className="space-y-4">
-        {/* Top Row: Search and Action Buttons */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1">
+        {/* Top Row: Search and Action Buttons - Responsive */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Cari Keterangan....."
@@ -616,70 +616,82 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
             />
           </div>
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportRencanaCSV}
-            disabled={isExportingCSV}
-          >
-            {isExportingCSV ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                Mengekspor...
-              </>
-            ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                Unduh CSV
-              </>
-            )}
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportRencana}
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                Mengekspor...
-              </>
-            ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                Unduh XLSX
-              </>
-            )}
-          </Button>
-          
-          <Button 
-            onClick={() => {
-              setEditingItem(null); // Reset editing item when creating new
-              setShowCreateDialog(true);
-            }} 
-            size="sm"
-            disabled={createMutation.isPending}
-          >
-            {createMutation.isPending ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Membuat...
-              </>
-            ) : (
-              <>
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Rencana
-              </>
-            )}
-          </Button>
+          {/* Action Buttons - Responsive Grid */}
+          <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportRencanaCSV}
+              disabled={isExportingCSV}
+              className="flex-1 sm:flex-none"
+            >
+              {isExportingCSV ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                  <span className="hidden sm:inline">Mengekspor...</span>
+                  <span className="sm:hidden">...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Unduh CSV</span>
+                  <span className="sm:hidden">CSV</span>
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportRencana}
+              disabled={isExporting}
+              className="flex-1 sm:flex-none"
+            >
+              {isExporting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                  <span className="hidden sm:inline">Mengekspor...</span>
+                  <span className="sm:hidden">...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Unduh XLSX</span>
+                  <span className="sm:hidden">XLSX</span>
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              onClick={() => {
+                setEditingItem(null); // Reset editing item when creating new
+                setShowCreateDialog(true);
+              }} 
+              size="sm"
+              disabled={createMutation.isPending}
+              className="flex-1 sm:flex-none"
+            >
+              {createMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <span className="hidden sm:inline">Membuat...</span>
+                  <span className="sm:hidden">...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Tambah Rencana</span>
+                  <span className="sm:hidden">Tambah</span>
+                </>
+              )}
+            </Button>
+          </div>
         </div>
         
-        {/* Bottom Row: Date Range and Filters */}
-        <div className="grid grid-cols-12 gap-4 w-full">
-          {/* Date Range - Takes 4 columns */}
-          <div className="col-span-4 flex items-center gap-3">
+        {/* Bottom Row: Date Range and Filters - Responsive */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 w-full">
+          {/* Date Range - Responsive columns */}
+          <div className="col-span-1 sm:col-span-2 lg:col-span-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Date From */}
             <div className="flex-1">
               <Popover>
@@ -859,8 +871,8 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
             </div>
           </div>
           
-          {/* Account Filter - Takes 4 columns */}
-          <div className="col-span-4">
+          {/* Account Filter - Responsive columns */}
+          <div className="col-span-1 sm:col-span-1 lg:col-span-4">
             <Select value={selectedAccount} onValueChange={setSelectedAccount}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Semua Akun" />
@@ -868,7 +880,7 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
               <SelectContent>
                 <div className="p-2">
                   <Input
-                    placeholder="Cari Keterangan..."
+                    placeholder="Cari Akun..."
                     value={accountSearch}
                     onChange={(e) => setAccountSearch(e.target.value)}
                     className="h-8"
@@ -894,8 +906,8 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
             </Select>
           </div>
           
-          {/* Status Filter - Takes 4 columns */}
-          <div className="col-span-4">
+          {/* Status Filter - Responsive columns */}
+          <div className="col-span-1 sm:col-span-1 lg:col-span-4">
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Semua Status" />
@@ -910,17 +922,19 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
         </div>
       </div>
 
-      {/* Rencana Table */}
+      {/* Rencana Table - Responsive */}
       <Card>
         <CardContent className="p-0">
-          <RencanaTable
-            columns={createRencanaRowColumns({
-              onEdit: handleEditRencana,
-              onDelete: handleDeleteRencana,
-              onView: handleViewRencana
-            })}
-            data={rencanaData}
-          />
+          <div className="overflow-x-auto">
+            <RencanaTable
+              columns={createRencanaRowColumns({
+                onEdit: handleEditRencana,
+                onDelete: handleDeleteRencana,
+                onView: handleViewRencana
+              })}
+              data={rencanaData}
+            />
+          </div>
         </CardContent>
       </Card>
 

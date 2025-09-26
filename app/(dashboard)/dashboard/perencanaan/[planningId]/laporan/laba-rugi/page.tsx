@@ -17,7 +17,7 @@ import { CalendarIcon, Search, Plus, Trash2, Edit, Download } from 'lucide-react
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts, useGetDetailPerencanaan } from '@/hooks/api/usePerencanaan';
+import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts, useGetDetailPerencanaan, useCategoriesRemoveAccount } from '@/hooks/api/usePerencanaan';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { AccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/account-form';
@@ -66,6 +66,9 @@ export default function LabaRugiPage() {
 
   // Get planning categories untuk laba rugi (PENDAPATAN dan BEBAN)
   const { data: categoriesData, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+  
+  // Hook untuk delete account dari category
+  const { mutateAsync: removeAccount } = useCategoriesRemoveAccount();
   
   // Hook untuk fetch planning detail (untuk filename)
   const { data: planningDetail } = useGetDetailPerencanaan(planningId);
@@ -243,11 +246,23 @@ export default function LabaRugiPage() {
   };
 
   // Handler untuk delete akun
-  const handleDeleteAccount = (accountId: string) => {
-    toast({
-      title: 'Delete Account',
-      description: `Hapus account dengan ID: ${accountId}`,
-    });
+  const handleDeleteAccount = async (accountId: string) => {
+    try {
+      await removeAccount({ account_ids: [parseInt(accountId)] });
+      toast({
+        title: 'Success',
+        description: 'Akun berhasil dihapus dari kategori',
+      });
+      // Refresh data
+      refetchCategories();
+    } catch (error) {
+      console.error('Delete account error:', error);
+      toast({
+        title: 'Error',
+        description: 'Gagal menghapus akun dari kategori',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Handler untuk data change
@@ -299,11 +314,11 @@ export default function LabaRugiPage() {
 
             {/* Data Laporan Tab */}
             <TabsContent value="data" className="space-y-4">
-              {/* Search dan Filter Section */}
-              <div className="flex flex-wrap gap-4 mb-6">
-                {/* Search Input */}
-                <div className="flex-1 min-w-[300px]">
-                  <div className="relative">
+              {/* Search dan Filter Section - Responsive */}
+              <div className="space-y-4 mb-6">
+                {/* Top Row: Search and Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                  <div className="relative flex-1 min-w-0">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       placeholder="Cari berdasarkan nama akun..."
@@ -312,11 +327,59 @@ export default function LabaRugiPage() {
                       className="pl-10"
                     />
                   </div>
-                </div>
+                  
+                  {/* Action Buttons - Responsive Grid */}
+                  <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportLabaRugiCSV}
+                      disabled={isExportingCSV}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isExportingCSV ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                          <span className="hidden sm:inline">Mengekspor...</span>
+                          <span className="sm:hidden">...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-4 w-4" />
+                          <span className="hidden sm:inline">Unduh CSV</span>
+                          <span className="sm:hidden">CSV</span>
+                        </>
+                      )}
+                    </Button>
 
-                {/* Date From */}
-                <div className="min-w-[200px]">
-                  <Popover>
+                    <Button 
+                      size="sm"
+                      onClick={handleRekap}
+                      disabled={isExporting}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isExporting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          <span className="hidden sm:inline">Mengekspor...</span>
+                          <span className="sm:hidden">...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-4 w-4" />
+                          <span className="hidden sm:inline">Unduh XLSX</span>
+                          <span className="sm:hidden">XLSX</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Bottom Row: Date Range Filters */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Date From */}
+                  <div className="flex-1">
+                    <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -489,67 +552,29 @@ export default function LabaRugiPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
-
-                {/* Unduh CSV Button */}
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportLabaRugiCSV}
-                  disabled={isExportingCSV}
-                >
-                  {isExportingCSV ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                      Mengekspor...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="mr-2 h-4 w-4" />
-                      Unduh CSV
-                    </>
-                  )}
-                </Button>
-
-                {/* Unduh XLSX Button */}
-                <Button 
-                  size="sm"
-                  onClick={handleRekap}
-                  disabled={isExporting}
-                >
-                  {isExporting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Mengekspor...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="mr-2 h-4 w-4" />
-                      Unduh XLSX
-                    </>
-                  )}
-                </Button>
               </div>
 
-              {/* Table Laba Rugi */}
+              {/* Table Laba Rugi - Responsive */}
               <div className="border rounded-lg overflow-hidden">
-                <table className="w-full border-collapse">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse min-w-[600px]">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 border-r border-gray-300" rowSpan={2}>
+                      <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-gray-700 border-r border-gray-300 text-xs sm:text-sm" rowSpan={2}>
                         No Akun
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 border-r border-gray-300" rowSpan={2}>
+                      <th className="text-left py-2 sm:py-3 px-2 sm:px-4 font-medium text-gray-700 border-r border-gray-300 text-xs sm:text-sm" rowSpan={2}>
                         Nama Akun
                       </th>
-                      <th className="text-center py-3 px-4 font-medium text-gray-700 border-r border-gray-300" colSpan={2}>
+                      <th className="text-center py-2 sm:py-3 px-2 sm:px-4 font-medium text-gray-700 border-r border-gray-300 text-xs sm:text-sm" colSpan={2}>
                         Rencana
                       </th>
                     </tr>
                     <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-right py-2 px-4 font-medium text-gray-600 border-r border-gray-300">
+                      <th className="text-right py-1 sm:py-2 px-2 sm:px-4 font-medium text-gray-600 border-r border-gray-300 text-xs sm:text-sm">
                         RP
                       </th>
-                      <th className="text-right py-2 px-4 font-medium text-gray-600">
+                      <th className="text-right py-1 sm:py-2 px-2 sm:px-4 font-medium text-gray-600 text-xs sm:text-sm">
                         RP
                       </th>
                     </tr>
@@ -557,7 +582,7 @@ export default function LabaRugiPage() {
                   <tbody>
                     {isLoading ? (
                       <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={4} className="px-2 sm:px-4 py-8 text-center text-gray-500 text-sm">
                           Loading...
                         </td>
                       </tr>
@@ -565,7 +590,7 @@ export default function LabaRugiPage() {
                       <>
                         {/* PENDAPATAN Section - Header (abu-abu) */}
                         <tr className="bg-gray-100 border-b border-gray-200">
-                          <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-center" colSpan={4}>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-center" colSpan={4}>
                             PENDAPATAN
                           </td>
                         </tr>
@@ -574,23 +599,23 @@ export default function LabaRugiPage() {
                         {labaRugiData.data?.filter((item: any) => item.account_code?.startsWith('4')).length > 0 ? (
                           labaRugiData.data.filter((item: any) => item.account_code?.startsWith('4')).map((item: any, index: number) => (
                             <tr key={`income-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
-                          <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
+                          <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                             {item.account_code || '-'}
                           </td>
-                          <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
+                          <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                             {item.account_name || '-'}
                           </td>
-                          <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
+                          <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right border-r border-gray-300">
                                 {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
                               </td>
-                              <td className="py-2 px-4 text-sm text-gray-700 text-right">
+                              <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">
                                 -
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr className="bg-white border-b border-gray-200">
-                            <td className="py-2 px-4 text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                            <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
                               Belum ada data pendapatan
                             </td>
                           </tr>
@@ -598,17 +623,17 @@ export default function LabaRugiPage() {
                         
                         {/* TOTAL PENDAPATAN - Header (abu-abu) */}
                         <tr className="bg-gray-100 border-b border-gray-200">
-                          <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-center border-r border-gray-300" colSpan={3}>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-center border-r border-gray-300" colSpan={3}>
                             TOTAL PENDAPATAN
                           </td>
-                          <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-right">
                             {labaRugiData.summary?.total_income ? `Rp. ${new Intl.NumberFormat('id-ID').format(labaRugiData.summary.total_income)}` : ''}
                           </td>
                         </tr>
                         
                         {/* RUGI Section - Header (abu-abu) */}
                         <tr className="bg-gray-100 border-b border-gray-200">
-                          <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-center" colSpan={4}>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-center" colSpan={4}>
                             RUGI
                           </td>
                         </tr>
@@ -617,23 +642,23 @@ export default function LabaRugiPage() {
                         {labaRugiData.data?.filter((item: any) => item.account_code?.startsWith('5')).length > 0 ? (
                           labaRugiData.data.filter((item: any) => item.account_code?.startsWith('5')).map((item: any, index: number) => (
                             <tr key={`expense-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
-                              <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
+                              <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                                 {item.account_code || '-'}
                               </td>
-                              <td className="py-2 px-4 text-sm text-gray-700 border-r border-gray-300">
+                              <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                                 {item.account_name || '-'}
                               </td>
-                              <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
+                              <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right border-r border-gray-300">
                                 {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
                           </td>
-                          <td className="py-2 px-4 text-sm text-gray-700 text-right">
+                          <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">
                                 -
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr className="bg-white border-b border-gray-200">
-                            <td className="py-2 px-4 text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                            <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
                               Belum ada data beban
                             </td>
                           </tr>
@@ -641,27 +666,27 @@ export default function LabaRugiPage() {
                         
                         {/* TOTAL BEBAN - Header (abu-abu) */}
                         <tr className="bg-gray-100 border-b border-gray-200">
-                          <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-center border-r border-gray-300" colSpan={3}>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-center border-r border-gray-300" colSpan={3}>
                             TOTAL BEBAN
                           </td>
-                          <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-right">
                             {labaRugiData.summary?.total_expense ? `Rp. ${new Intl.NumberFormat('id-ID').format(labaRugiData.summary.total_expense)}` : ''}
                           </td>
                         </tr>
                         
                         {/* LABA BERSIH - Header (abu-abu) */}
                         <tr className="bg-gray-100 border-t-2 border-gray-400 border-b border-gray-200">
-                          <td className="py-3 px-4 text-sm font-bold text-gray-900 text-center border-r border-gray-300" colSpan={3}>
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-bold text-gray-900 text-center border-r border-gray-300" colSpan={3}>
                             LABA BERSIH
                           </td>
-                          <td className="py-3 px-4 text-sm font-bold text-gray-900 text-right">
+                          <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-bold text-gray-900 text-right">
                             {labaRugiData.summary?.net_income ? `Rp. ${new Intl.NumberFormat('id-ID').format(labaRugiData.summary.net_income)}` : ''}
                           </td>
                         </tr>
                       </>
                     ) : (
                       <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={4} className="px-2 sm:px-4 py-8 text-center text-gray-500 text-sm">
                           Tidak ada data laba rugi
                         </td>
                       </tr>
@@ -669,42 +694,47 @@ export default function LabaRugiPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+            </div>
             </TabsContent>
 
             {/* Template Laporan Tab */}
             <TabsContent value="template" className="space-y-6">
               <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                {/* Custom Tab Navigation - Clean Design */}
-                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+                {/* Custom Tab Navigation - Responsive Design */}
+                <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 bg-gray-100 p-1 rounded-lg w-full sm:w-fit">
                   <button
                     onClick={() => setActiveSubTab('pendapatan')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex-1 sm:flex-none ${
                       activeSubTab === 'pendapatan'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    PENDAPATAN
+                    <span className="hidden sm:inline">PENDAPATAN</span>
+                    <span className="sm:hidden">PENDAPATAN</span>
                   </button>
                   <button
                     onClick={() => setActiveSubTab('beban')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex-1 sm:flex-none ${
                       activeSubTab === 'beban'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    BEBAN
+                    <span className="hidden sm:inline">BEBAN</span>
+                    <span className="sm:hidden">BEBAN</span>
                   </button>
                   <button
                     onClick={() => setActiveSubTab('rumus')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex-1 sm:flex-none ${
                       activeSubTab === 'rumus'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    RUMUS
+                    <span className="hidden sm:inline">RUMUS</span>
+                    <span className="sm:hidden">RUMUS</span>
                   </button>
                 </div>
 

@@ -390,11 +390,11 @@ export default function JurnalUmumPage() {
           <CardTitle>Jurnal Umum Perencanaan</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Search dan Filter Section */}
-          <div className="flex flex-wrap gap-3 items-center mb-6">
-            {/* Search Input */}
-            <div className="flex-1 min-w-[250px]">
-              <div className="relative">
+          {/* Search dan Filter Section - Responsive */}
+          <div className="space-y-4 mb-6">
+            {/* Top Row: Search and Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Cari berdasarkan keterangan..."
@@ -403,10 +403,58 @@ export default function JurnalUmumPage() {
                   className="pl-10"
                 />
               </div>
+              
+              {/* Action Buttons - Responsive Grid */}
+              <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportJurnalUmumCSV} 
+                  disabled={isExportingCSV}
+                  className="flex-1 sm:flex-none"
+                >
+                  {isExportingCSV ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                      <span className="hidden sm:inline">Mengekspor...</span>
+                      <span className="sm:hidden">...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Unduh CSV</span>
+                      <span className="sm:hidden">CSV</span>
+                    </>
+                  )}
+                </Button>
+
+                <Button 
+                  size="sm"
+                  onClick={handleRekap} 
+                  disabled={isExporting}
+                  className="flex-1 sm:flex-none"
+                >
+                  {isExporting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <span className="hidden sm:inline">Mengekspor...</span>
+                      <span className="sm:hidden">...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Unduh XLSX</span>
+                      <span className="sm:hidden">XLSX</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
+            {/* Bottom Row: Date Range Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Date From */}
-            <div className="min-w-[160px]">
+              <div className="flex-1">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -582,48 +630,10 @@ export default function JurnalUmumPage() {
                 </PopoverContent>
               </Popover>
             </div>
-
-            {/* Unduh CSV Button */}
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={handleExportJurnalUmumCSV} 
-              disabled={isExportingCSV}
-            >
-              {isExportingCSV ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                  Mengekspor...
-                </>
-              ) : (
-                <>
-                  <Download className="mr-2 h-4 w-4" />
-                  Unduh CSV
-                </>
-              )}
-            </Button>
-
-            {/* Unduh XLSX Button */}
-            <Button 
-              size="sm"
-              onClick={handleRekap} 
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Mengekspor...
-                </>
-              ) : (
-                <>
-                  <Download className="mr-2 h-4 w-4" />
-                  Unduh XLSX
-                </>
-              )}
-            </Button>
+            </div>
           </div>
 
-          {/* Jurnal Umum Table */}
+          {/* Jurnal Umum Table - Responsive */}
           {isLoading ? (
             <div className="flex items-center justify-center p-8">
               <div className="text-center">
@@ -632,11 +642,13 @@ export default function JurnalUmumPage() {
               </div>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <RencanaTable
               columns={createJurnalUmumRowColumns()}
               data={jurnalUmumData}
               mergedColumns={['tanggal']} // Only merge tanggal column
             />
+            </div>
           )}
         </CardContent>
       </Card>

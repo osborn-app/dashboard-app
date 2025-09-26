@@ -38,8 +38,8 @@ export function RencanaTable<TData, TValue>({
   return (
     <>
       <ScrollArea className="h-[calc(80vh-200px)]">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-300">
+        <div className="overflow-x-auto min-w-full">
+          <table className="w-full border-collapse border border-gray-300 min-w-[800px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-300">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -48,7 +48,7 @@ export function RencanaTable<TData, TValue>({
                     return (
                       <th
                         key={header.id}
-                        className={`py-3 px-4 font-semibold text-gray-800 text-left ${
+                        className={`py-3 px-2 sm:px-4 font-semibold text-gray-800 text-left text-xs sm:text-sm ${
                           isLastColumn ? '' : 'border-r border-gray-300'
                         }`}
                       >
@@ -92,7 +92,7 @@ export function RencanaTable<TData, TValue>({
                         return (
                           <td
                             key={cell.id}
-                            className={`py-3 px-4 text-gray-900 ${
+                            className={`py-2 sm:py-3 px-2 sm:px-4 text-gray-900 text-xs sm:text-sm ${
                               isLastColumn ? '' : 'border-r border-gray-300'
                             } ${columnId === 'actions' ? 'text-center' : ''}`}
                             rowSpan={shouldMerge && isFirstInGroup ? rowSpan : undefined}
@@ -112,7 +112,7 @@ export function RencanaTable<TData, TValue>({
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="h-24 text-center text-gray-500 border-b border-gray-300"
+                    className="h-24 text-center text-gray-500 border-b border-gray-300 text-sm"
                   >
                     Tidak ada data yang dapat ditampilkan.
                   </td>

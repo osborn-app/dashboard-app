@@ -16,7 +16,7 @@ import { CalendarIcon, Search, Plus, Trash2, MoreVertical, Edit, Download } from
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { useGetArusKasReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts, useGetDetailPerencanaan } from '@/hooks/api/usePerencanaan';
+import { useGetArusKasReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts, useGetDetailPerencanaan, useCategoriesRemoveAccount } from '@/hooks/api/usePerencanaan';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -92,6 +92,9 @@ export default function ArusKasPage() {
 
   // Hook untuk API categories
   const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect();
+  
+  // Hook untuk delete account dari category
+  const { mutateAsync: removeAccount } = useCategoriesRemoveAccount();
   
   // Hook untuk fetch planning detail (untuk filename)
   const { data: planningDetail } = useGetDetailPerencanaan(planningId);
@@ -272,11 +275,23 @@ export default function ArusKasPage() {
     setIsEditAccountModalOpen(true);
   };
 
-  const handleDeleteAccount = (accountId: string) => {
-    toast({
-      title: 'Delete Account',
-      description: 'Fitur delete account akan segera tersedia',
-    });
+  const handleDeleteAccount = async (accountId: string) => {
+    try {
+      await removeAccount({ account_ids: [parseInt(accountId)] });
+      toast({
+        title: 'Success',
+        description: 'Akun berhasil dihapus dari kategori',
+      });
+      // Refresh data
+      refetchCategories();
+    } catch (error) {
+      console.error('Delete account error:', error);
+      toast({
+        title: 'Error',
+        description: 'Gagal menghapus akun dari kategori',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Handler untuk data change
@@ -328,11 +343,11 @@ export default function ArusKasPage() {
 
             {/* Data Laporan Tab */}
             <TabsContent value="data" className="space-y-4">
-              {/* Search dan Filter Section */}
-              <div className="flex flex-wrap gap-4 mb-6">
-                {/* Search Input */}
-                <div className="flex-1 min-w-[300px]">
-                  <div className="relative">
+              {/* Search dan Filter Section - Responsive */}
+              <div className="space-y-4 mb-6">
+                {/* Top Row: Search and Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                  <div className="relative flex-1 min-w-0">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       placeholder="Cari berdasarkan nama kategori..."
@@ -341,10 +356,58 @@ export default function ArusKasPage() {
                       className="pl-10"
                     />
                   </div>
-                </div>
+                  
+                  {/* Action Buttons - Responsive Grid */}
+                  <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportArusKasCSV}
+                      disabled={isExportingCSV}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isExportingCSV ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                          <span className="hidden sm:inline">Mengekspor...</span>
+                          <span className="sm:hidden">...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-4 w-4" />
+                          <span className="hidden sm:inline">Unduh CSV</span>
+                          <span className="sm:hidden">CSV</span>
+                        </>
+                      )}
+                    </Button>
 
-                {/* Date From */}
-                <div className="min-w-[200px]">
+                    <Button 
+                      size="sm"
+                      onClick={handleRekap}
+                      disabled={isExporting}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isExporting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          <span className="hidden sm:inline">Mengekspor...</span>
+                          <span className="sm:hidden">...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-2 h-4 w-4" />
+                          <span className="hidden sm:inline">Unduh XLSX</span>
+                          <span className="sm:hidden">XLSX</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Bottom Row: Date Range Filters */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Date From */}
+                  <div className="flex-1">
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -517,57 +580,20 @@ export default function ArusKasPage() {
                       />
                     </PopoverContent>
                   </Popover>
+                  </div>
                 </div>
-
-                {/* Unduh CSV Button */}
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportArusKasCSV}
-                  disabled={isExportingCSV}
-                >
-                  {isExportingCSV ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                      Mengekspor...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="mr-2 h-4 w-4" />
-                      Unduh CSV
-                    </>
-                  )}
-                </Button>
-
-                {/* Unduh XLSX Button */}
-                <Button 
-                  size="sm"
-                  onClick={handleRekap}
-                  disabled={isExporting}
-                >
-                  {isExporting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Mengekspor...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="mr-2 h-4 w-4" />
-                      Unduh XLSX
-                    </>
-                  )}
-                </Button>
               </div>
 
-              {/* Table Arus Kas */}
+              {/* Table Arus Kas - Responsive */}
               <div className="border rounded-lg overflow-hidden">
-                <table className="w-full border-collapse">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse min-w-[400px]">
                   <thead>
                     <tr className="bg-gray-100 border-b border-gray-200">
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-900 border-r border-gray-300">
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-900 border-r border-gray-300">
                         Nama Kategori Akun
                       </th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-900">
+                      <th className="px-2 sm:px-4 py-2 sm:py-3 text-right text-xs sm:text-sm font-medium text-gray-900">
                         RP
                       </th>
                     </tr>
@@ -575,7 +601,7 @@ export default function ArusKasPage() {
                   <tbody>
                     {isLoading ? (
                       <tr className="bg-gray-100">
-                        <td colSpan={2} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={2} className="px-2 sm:px-4 py-8 text-center text-gray-500 text-sm">
                           Loading...
                         </td>
                       </tr>
@@ -585,17 +611,17 @@ export default function ArusKasPage() {
                         {arusKasData.operating_activities?.length > 0 ? (
                           arusKasData.operating_activities.map((item: any, index: number) => (
                             <tr key={`operating-${index}`} className="bg-gray-100 border-b border-gray-200">
-                              <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-300">
+                              <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                                 {item.account_name || 'Arus Kas dari Aktivitas Operasi'}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-700 text-right">
+                              <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 text-right">
                                 {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : '-'}
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr className="bg-gray-100 border-b border-gray-200">
-                            <td className="px-4 py-3 text-sm text-gray-500 italic border-r border-gray-300" colSpan={2}>
+                            <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={2}>
                               Belum ada data aktivitas operasi
                             </td>
                           </tr>
@@ -603,10 +629,10 @@ export default function ArusKasPage() {
 
                         {/* TOTAL Aktivitas Operasi */}
                         <tr className="bg-gray-100 border-b border-gray-200">
-                          <td className="px-4 py-3 text-sm font-semibold text-gray-900 border-r border-gray-300">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 border-r border-gray-300">
                             TOTAL Aktivitas Operasi
                           </td>
-                          <td className="px-4 py-3 text-sm font-semibold text-gray-900 text-right">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 text-right">
                             {arusKasData.summary?.net_operating_cashflow ? `Rp. ${new Intl.NumberFormat('id-ID').format(arusKasData.summary.net_operating_cashflow)}` : '-'}
                           </td>
                         </tr>
@@ -615,17 +641,17 @@ export default function ArusKasPage() {
                         {arusKasData.investing_activities?.length > 0 ? (
                           arusKasData.investing_activities.map((item: any, index: number) => (
                             <tr key={`investing-${index}`} className="bg-gray-100 border-b border-gray-200">
-                              <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-300">
+                              <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                                 {item.account_name || 'Arus Kas dari Aktivitas Investasi'}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-700 text-right">
+                              <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 text-right">
                                 {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : '-'}
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr className="bg-gray-100 border-b border-gray-200">
-                            <td className="px-4 py-3 text-sm text-gray-500 italic border-r border-gray-300" colSpan={2}>
+                            <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={2}>
                               Belum ada data aktivitas investasi
                             </td>
                           </tr>
@@ -633,10 +659,10 @@ export default function ArusKasPage() {
 
                         {/* TOTAL Aktivitas Investasi */}
                         <tr className="bg-gray-100 border-b border-gray-200">
-                          <td className="px-4 py-3 text-sm font-semibold text-gray-900 border-r border-gray-300">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 border-r border-gray-300">
                             TOTAL Aktivitas Investasi
                           </td>
-                          <td className="px-4 py-3 text-sm font-semibold text-gray-900 text-right">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 text-right">
                             {arusKasData.summary?.net_investing_cashflow ? `Rp. ${new Intl.NumberFormat('id-ID').format(arusKasData.summary.net_investing_cashflow)}` : '-'}
                           </td>
                         </tr>
@@ -645,17 +671,17 @@ export default function ArusKasPage() {
                         {arusKasData.financing_activities?.length > 0 ? (
                           arusKasData.financing_activities.map((item: any, index: number) => (
                             <tr key={`financing-${index}`} className="bg-gray-100 border-b border-gray-200">
-                              <td className="px-4 py-3 text-sm text-gray-700 border-r border-gray-300">
+                              <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                                 {item.account_name || 'Arus Kas dari Aktivitas Pendanaan'}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-700 text-right">
+                              <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 text-right">
                                 {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : '-'}
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr className="bg-gray-100 border-b border-gray-200">
-                            <td className="px-4 py-3 text-sm text-gray-500 italic border-r border-gray-300" colSpan={2}>
+                            <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={2}>
                               Belum ada data aktivitas pendanaan
                             </td>
                           </tr>
@@ -663,10 +689,10 @@ export default function ArusKasPage() {
 
                         {/* TOTAL Aktivitas Pendanaan */}
                         <tr className="bg-gray-100 border-b border-gray-200">
-                          <td className="px-4 py-3 text-sm font-semibold text-gray-900 border-r border-gray-300">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 border-r border-gray-300">
                             TOTAL Aktivitas Pendanaan
                           </td>
-                          <td className="px-4 py-3 text-sm font-semibold text-gray-900 text-right">
+                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold text-gray-900 text-right">
                             {arusKasData.summary?.net_financing_cashflow ? `Rp. ${new Intl.NumberFormat('id-ID').format(arusKasData.summary.net_financing_cashflow)}` : '-'}
                           </td>
                         </tr>
@@ -703,40 +729,43 @@ export default function ArusKasPage() {
                       </>
                     ) : (
                       <tr className="bg-gray-100">
-                        <td colSpan={2} className="px-4 py-8 text-center text-gray-500">
-                          Tidak ada data arus kas
-                        </td>
+                          <td colSpan={2} className="px-2 sm:px-4 py-8 text-center text-gray-500 text-sm">
+                            Tidak ada data arus kas
+                          </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
             </TabsContent>
 
             {/* Template Laporan Tab */}
             <TabsContent value="template" className="space-y-4">
               <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-                {/* Custom Tab Navigation - Clean Design */}
-                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+                {/* Custom Tab Navigation - Responsive Design */}
+                <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1 bg-gray-100 p-1 rounded-lg w-full sm:w-fit">
                   <button
                     onClick={() => setActiveSubTab('kategori')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex-1 sm:flex-none ${
                       activeSubTab === 'kategori'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    KATEGORI
+                    <span className="hidden sm:inline">KATEGORI</span>
+                    <span className="sm:hidden">KATEGORI</span>
                   </button>
                   <button
                     onClick={() => setActiveSubTab('rumus')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    className={`px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex-1 sm:flex-none ${
                       activeSubTab === 'rumus'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    RUMUS
+                    <span className="hidden sm:inline">RUMUS</span>
+                    <span className="sm:hidden">RUMUS</span>
                   </button>
                 </div>
 
