@@ -322,8 +322,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const { data: driver, isFetching: isFetchingDriver } = useGetDetailDriver(
     type == "start"
-      ? form.getValues("start_request.driver_id")
-      : form.getValues("end_request.driver_id"),
+      ? form.getValues("start_request.driver_id") || ""
+      : form.getValues("end_request.driver_id") || "",
   );
 
   // Get fleet type for addons filtering
@@ -390,7 +390,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     const createPayload = (data: OrderFormValues) => ({
       start_request: {
         is_self_pickup: data.start_request.is_self_pickup,
-        driver_id: +data.start_request.driver_id,
+        ...(data.start_request.driver_id && { driver_id: +data.start_request.driver_id }),
         ...(!startSelfPickUpField && {
           address: data.start_request.address,
           distance: +data.start_request.distance,
@@ -398,7 +398,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       },
       end_request: {
         is_self_pickup: data.end_request.is_self_pickup,
-        driver_id: +data.end_request.driver_id,
+        ...(data.end_request.driver_id && { driver_id: +data.end_request.driver_id }),
         ...(!endSelfPickUpField && {
           distance: +data.end_request.distance,
           address: data.end_request.address,
@@ -2100,7 +2100,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             render={({ field }) => {
               return (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="relative label-required w-fit">
+                  <FormLabel className="relative w-fit">
                     Layanan
                   </FormLabel>
                   <FormControl>
@@ -2152,7 +2152,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
               control={form.control}
               render={({ field }) => (
                 <Space size={12} direction="vertical" className="w-full">
-                  <FormLabel className="relative label-required">
+                  <FormLabel className="relative">
                     Penanggung Jawab
                   </FormLabel>
                   <div className="flex">
@@ -2288,7 +2288,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
               render={({ field }) => {
                 return (
                   <FormItem>
-                    <FormLabel className="relative label-required">
+                    <FormLabel className="relative">
                       Jarak
                     </FormLabel>
                     <FormControl>
@@ -2351,7 +2351,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                 name={`${type}_request.address`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="relative label-required">
+                    <FormLabel className="relative">
                       Alamat
                     </FormLabel>
                     <FormControl className="disabled:opacity-100">
