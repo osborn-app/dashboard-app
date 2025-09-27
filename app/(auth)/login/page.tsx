@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn } from "next-auth/react";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Crown, Car, DollarSign, Monitor, Wrench, User } from "lucide-react";
+import { ArrowLeft, Crown, Car, DollarSign, Monitor, Wrench, User, Eye, EyeOff } from "lucide-react";
 import LoadingMascot from "@/components/ui/loading-mascot";
 
 const roleIcons = {
@@ -37,6 +37,7 @@ export default function LoginPage() {
   const [showMascotLoading, setShowMascotLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
   useEffect(() => {
@@ -270,16 +271,30 @@ export default function LoginPage() {
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                 PASSWORD
               </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border-blue-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300 hover:border-blue-300"
-                placeholder="Masukkan password..."
-                disabled={loading}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border-blue-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300 hover:border-blue-300 pr-10"
+                  placeholder="Masukkan password..."
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 focus:outline-none"
+                  disabled={loading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <Button
