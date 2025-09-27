@@ -9,9 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useGetPlanningAccounts, useDeletePlanningEntry } from '@/hooks/api/usePerencanaan';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Check, ChevronsUpDown } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 interface RencanaAccount {
   id: string;
@@ -51,6 +54,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   const [isDeleting, setIsDeleting] = useState(false);
   const [debitAccountSearch, setDebitAccountSearch] = useState('');
   const [creditAccountSearch, setCreditAccountSearch] = useState('');
+  const [openDebitCombo, setOpenDebitCombo] = useState(false);
+  const [openCreditCombo, setOpenCreditCombo] = useState(false);
   const { toast } = useToast();
 
   // Fetch accounts data (all accounts like table rencana)
@@ -66,6 +71,26 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
     }
     return accountsResponse.items;
   }, [accountsResponse]);
+
+  // Filtered accounts for debit dropdown
+  const filteredDebitAccounts = useMemo(() => {
+    const list = allAccounts;
+    const q = debitAccountSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((acc: any) =>
+      acc.name?.toLowerCase().includes(q) || acc.code?.toLowerCase().includes(q)
+    );
+  }, [allAccounts, debitAccountSearch]);
+
+  // Filtered accounts for credit dropdown
+  const filteredCreditAccounts = useMemo(() => {
+    const list = allAccounts;
+    const q = creditAccountSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((acc: any) =>
+      acc.name?.toLowerCase().includes(q) || acc.code?.toLowerCase().includes(q)
+    );
+  }, [allAccounts, creditAccountSearch]);
 
   // Initialize form data when editing or reset when creating
   React.useEffect(() => {
@@ -295,80 +320,158 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                 <div key={account.id} className="grid grid-cols-12 gap-4 items-center">
                   {/* Debit Account Dropdown */}
                   <div className="col-span-3">
-                    <Select
-                      value={account.account_debit_id || ""}
-                      onValueChange={(value) => {
-                        updateAccount(account.id, 'account_debit_id', value);
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Pilih akun debit" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="p-2">
-                          <Input
+                    <Popover open={openDebitCombo} onOpenChange={setOpenDebitCombo}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                          type="button"
+                        >
+                          {account.account_debit_id ? (
+                            (() => {
+                              const selected = allAccounts.find((acc: any) => acc.id.toString() === account.account_debit_id);
+                              return selected ? (
+                                <>
+                                  <span className="font-mono text-xs">{selected.code}</span>
+                                  <span className="text-sm ml-2">{selected.name}</span>
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">Pilih akun debit...</span>
+                              );
+                            })()
+                          ) : (
+                            <span className="text-muted-foreground">Pilih akun debit...</span>
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                        <Command shouldFilter={false}>
+                          <CommandInput
                             placeholder="Cari akun debit..."
                             value={debitAccountSearch}
-                            onChange={(e) => setDebitAccountSearch(e.target.value)}
-                            className="h-8"
+                            onValueChange={setDebitAccountSearch}
                           />
-                        </div>
-                        <ScrollArea className="max-h-60 overflow-y-auto">
-                          {allAccounts
-                            ?.filter((acc: any) => 
-                              acc.name.toLowerCase().includes(debitAccountSearch.toLowerCase()) ||
-                              acc.code.toLowerCase().includes(debitAccountSearch.toLowerCase())
-                            )
-                            ?.map((acc: any) => (
-                              <SelectItem key={acc.id} value={acc.id.toString()}>
-                                <div className="flex flex-col">
-                                  <span className="font-mono text-xs">{acc.code}</span>
-                                  <span className="text-sm">{acc.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
+                          <CommandList className="max-h-60 overflow-y-auto">
+                            {filteredDebitAccounts.length === 0 ? (
+                              <div className="py-4 text-sm text-muted-foreground text-center">
+                                Akun tidak ditemukan
+                              </div>
+                            ) : (
+                              <CommandGroup>
+                                {filteredDebitAccounts.map((acc: any) => (
+                                  <div
+                                    key={acc.id}
+                                    className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm"
+                                    onClick={() => {
+                                      updateAccount(account.id, 'account_debit_id', acc.id.toString());
+                                      setOpenDebitCombo(false);
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      updateAccount(account.id, 'account_debit_id', acc.id.toString());
+                                      setOpenDebitCombo(false);
+                                    }}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-mono text-xs">{acc.code}</span>
+                                      <span className="text-sm">{acc.name}</span>
+                                    </div>
+                                    <Check
+                                      className={cn(
+                                        "ml-auto h-4 w-4",
+                                        account.account_debit_id === acc.id.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </div>
+                                ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   {/* Credit Account Dropdown */}
                   <div className="col-span-3">
-                    <Select
-                      value={account.account_credit_id || ""}
-                      onValueChange={(value) => {
-                        updateAccount(account.id, 'account_credit_id', value);
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Pilih akun credit" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="p-2">
-                          <Input
+                    <Popover open={openCreditCombo} onOpenChange={setOpenCreditCombo}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                          type="button"
+                        >
+                          {account.account_credit_id ? (
+                            (() => {
+                              const selected = allAccounts.find((acc: any) => acc.id.toString() === account.account_credit_id);
+                              return selected ? (
+                                <>
+                                  <span className="font-mono text-xs">{selected.code}</span>
+                                  <span className="text-sm ml-2">{selected.name}</span>
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">Pilih akun credit...</span>
+                              );
+                            })()
+                          ) : (
+                            <span className="text-muted-foreground">Pilih akun credit...</span>
+                          )}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                        <Command shouldFilter={false}>
+                          <CommandInput
                             placeholder="Cari akun credit..."
                             value={creditAccountSearch}
-                            onChange={(e) => setCreditAccountSearch(e.target.value)}
-                            className="h-8"
+                            onValueChange={setCreditAccountSearch}
                           />
-                        </div>
-                        <ScrollArea className="max-h-60 overflow-y-auto">
-                          {allAccounts
-                            ?.filter((acc: any) => 
-                              acc.name.toLowerCase().includes(creditAccountSearch.toLowerCase()) ||
-                              acc.code.toLowerCase().includes(creditAccountSearch.toLowerCase())
-                            )
-                            ?.map((acc: any) => (
-                              <SelectItem key={acc.id} value={acc.id.toString()}>
-                                <div className="flex flex-col">
-                                  <span className="font-mono text-xs">{acc.code}</span>
-                                  <span className="text-sm">{acc.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
+                          <CommandList className="max-h-60 overflow-y-auto">
+                            {filteredCreditAccounts.length === 0 ? (
+                              <div className="py-4 text-sm text-muted-foreground text-center">
+                                Akun tidak ditemukan
+                              </div>
+                            ) : (
+                              <CommandGroup>
+                                {filteredCreditAccounts.map((acc: any) => (
+                                  <div
+                                    key={acc.id}
+                                    className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm"
+                                    onClick={() => {
+                                      updateAccount(account.id, 'account_credit_id', acc.id.toString());
+                                      setOpenCreditCombo(false);
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      updateAccount(account.id, 'account_credit_id', acc.id.toString());
+                                      setOpenCreditCombo(false);
+                                    }}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-mono text-xs">{acc.code}</span>
+                                      <span className="text-sm">{acc.name}</span>
+                                    </div>
+                                    <Check
+                                      className={cn(
+                                        "ml-auto h-4 w-4",
+                                        account.account_credit_id === acc.id.toString()
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </div>
+                                ))}
+                              </CommandGroup>
+                            )}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div className="col-span-2">

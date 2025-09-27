@@ -838,10 +838,7 @@ export default function LabaRugiPage() {
                         ))
                       ) : (
                         <div className="text-center py-8">
-                          <p className="text-gray-500 mb-4">Belum ada kategori pendapatan</p>
-                          <Button onClick={() => handleAddCategory('PENDAPATAN')} className="bg-green-600 hover:bg-green-700">
-                            + Tambah Kategori Pendapatan
-                          </Button>
+                          <p className="text-gray-500">Belum ada kategori pendapatan</p>
                         </div>
                       )}
                     </div>
@@ -915,10 +912,7 @@ export default function LabaRugiPage() {
                         ))
                       ) : (
                         <div className="text-center py-8">
-                          <p className="text-gray-500 mb-4">Belum ada kategori beban</p>
-                          <Button onClick={() => handleAddCategory('BEBAN')} className="bg-red-600 hover:bg-red-700">
-                            + Tambah Kategori Beban
-                          </Button>
+                          <p className="text-gray-500">Belum ada kategori beban</p>
                         </div>
                       )}
                     </div>

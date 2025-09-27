@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -19,20 +20,26 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
+
+import { useToast } from "@/hooks/use-toast";
+import { useAssignAccountsToCategory, useGetPlanningAccounts } from "@/hooks/api/usePerencanaan";
+
+// ⬇️ NEW: Combobox building blocks
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { useAssignAccountsToCategory } from '@/hooks/api/usePerencanaan';
-import { useGetPlanningAccounts } from '@/hooks/api/usePerencanaan';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
-  accountId: z.string().min(1, 'Akun wajib dipilih'),
+  accountId: z.string().min(1, "Akun wajib dipilih"),
 });
 
 interface AccountFormProps {
@@ -43,21 +50,43 @@ interface AccountFormProps {
   onSuccess?: () => void;
 }
 
-export function AccountForm({ isOpen, onClose, categoryId, planningId, onSuccess }: AccountFormProps) {
+export function AccountForm({
+  isOpen,
+  onClose,
+  categoryId,
+  planningId,
+  onSuccess,
+}: AccountFormProps) {
   const [loading, setLoading] = useState(false);
-  const [accountSearch, setAccountSearch] = useState('');
+  const [openCombo, setOpenCombo] = useState(false);
+  const [search, setSearch] = useState("");
+
   const { toast } = useToast();
   const assignAccountsMutation = useAssignAccountsToCategory(planningId, categoryId);
+
+  // OPTIONAL: simple debounce biar gak nge-hit API tiap karakter
+  const debouncedSearch = useDebounce(search, 250);
   
-  // Get all planning accounts for dropdown
+  // Get all planning accounts (server-side filter)
   const { data: accountsData, isLoading: isLoadingAccounts } = useGetPlanningAccounts({
-    search: accountSearch,
+    search: debouncedSearch,
   });
+
+  // Client-side filter tambahan (aman kalau API belum support search)
+  const items = useMemo(() => {
+    const list = accountsData?.items ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(
+      (a: any) =>
+        a.name?.toLowerCase().includes(q) || a.code?.toLowerCase().includes(q)
+    );
+  }, [accountsData?.items, search]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      accountId: '',
+      accountId: "",
     },
   });
 
@@ -65,23 +94,21 @@ export function AccountForm({ isOpen, onClose, categoryId, planningId, onSuccess
     setLoading(true);
     try {
       await assignAccountsMutation.mutateAsync({
-        account_ids: [parseInt(values.accountId)]
+        account_ids: [parseInt(values.accountId, 10)],
       });
       
       toast({
-        title: 'Success',
-        description: 'Akun berhasil ditambahkan ke kategori',
+        title: "Success",
+        description: "Akun berhasil ditambahkan ke kategori",
       });
       
       onSuccess?.();
-      onClose();
-      form.reset();
-      setAccountSearch('');
+      handleClose(); // pastikan reset state
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error?.response?.data?.message || 'Gagal menambahkan akun',
-        variant: 'destructive',
+        title: "Error",
+        description: error?.response?.data?.message || "Gagal menambahkan akun",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -90,12 +117,19 @@ export function AccountForm({ isOpen, onClose, categoryId, planningId, onSuccess
 
   const handleClose = () => {
     form.reset();
-    setAccountSearch('');
+    setSearch("");
+    setOpenCombo(false);
     onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        // Jangan reset ketika open = true (dibuka). Reset hanya saat ditutup.
+        if (!open) handleClose();
+      }}
+    >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Tambah Akun ke Kategori</DialogTitle>
@@ -103,77 +137,112 @@ export function AccountForm({ isOpen, onClose, categoryId, planningId, onSuccess
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            {/* ⬇️ REPLACED: Select -> Combobox */}
             <FormField
               control={form.control}
               name="accountId"
-              render={({ field }) => (
-                <FormItem>
+              render={({ field }) => {
+                // untuk menampilkan label terpilih
+                const selected = (accountsData?.items ?? []).find(
+                  (a: any) => String(a.id) === String(field.value)
+                );
+
+                return (
+                  <FormItem className="flex flex-col">
                   <FormLabel>Pilih Akun</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Popover open={openCombo} onOpenChange={setOpenCombo}>
+                      <PopoverTrigger asChild>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih akun..." />
-                      </SelectTrigger>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                            type="button"
+                          >
+                            {selected ? (
+                              <>
+                                {selected.code} - {selected.name}
+                              </>
+                            ) : (
+                              <span className="text-muted-foreground">
+                                Pilih akun…
+                              </span>
+                            )}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                          </Button>
                     </FormControl>
-                    <SelectContent>
-                      <div className="p-2">
-                        <Input
-                          placeholder="Cari akun..."
-                          value={accountSearch}
-                          onChange={(e) => setAccountSearch(e.target.value)}
-                          className="h-8"
-                        />
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                        <Command shouldFilter={false}>
+                          {/* built-in search bar (beneran bisa diketik) */}
+                          <CommandInput
+                            placeholder="Cari akun…"
+                            value={search}
+                            onValueChange={setSearch}
+                          />
+                           <CommandList className="max-h-60 overflow-y-auto">
+                             {isLoadingAccounts ? (
+                               <div className="py-4 text-sm text-muted-foreground text-center">
+                                 Loading…
                       </div>
-                      <div className="max-h-60 overflow-y-auto">
-                        {isLoadingAccounts ? (
-                          <div className="p-2 text-sm text-muted-foreground text-center">
-                            Loading...
+                             ) : items.length === 0 ? (
+                               <div className="py-4 text-sm text-muted-foreground text-center">
+                                 Akun tidak ditemukan
                           </div>
-                        ) : accountsData?.items?.length > 0 ? (
-                          accountsData.items
-                            .filter((account: any) =>
-                              account.name.toLowerCase().includes(accountSearch.toLowerCase()) ||
-                              account.code.toLowerCase().includes(accountSearch.toLowerCase())
-                            )
-                            .map((account: any) => (
-                              <SelectItem key={account.id} value={account.id.toString()}>
+                             ) : (
+                               <CommandGroup>
+                                 {items.map((account: any) => (
+                                   <div
+                                     key={account.id}
+                                     className="flex items-center justify-between px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm"
+                                     onClick={() => {
+                                       field.onChange(String(account.id));
+                                       setOpenCombo(false);
+                                     }}
+                                     onMouseDown={(e) => {
+                                       e.preventDefault();
+                                       field.onChange(String(account.id));
+                                       setOpenCombo(false);
+                                     }}
+                                   >
                                 <div className="flex flex-col">
-                                  <span className="font-medium">{account.code} - {account.name}</span>
+                                       <span className="font-medium">
+                                         {account.code} - {account.name}
+                                       </span>
                                   {account.description && (
                                     <span className="text-sm text-muted-foreground">
                                       {account.description}
                                     </span>
                                   )}
                                 </div>
-                              </SelectItem>
-                            ))
-                        ) : (
-                          <div className="p-2 text-sm text-muted-foreground text-center">
-                            Akun tidak ditemukan
+                                     <Check
+                                       className={cn(
+                                         "ml-auto h-4 w-4",
+                                         String(field.value) === String(account.id)
+                                           ? "opacity-100"
+                                           : "opacity-0"
+                                       )}
+                                     />
                           </div>
-                        )}
-                        {accountsData?.items?.filter((account: any) =>
-                          account.name.toLowerCase().includes(accountSearch.toLowerCase()) ||
-                          account.code.toLowerCase().includes(accountSearch.toLowerCase())
-                        )?.length === 0 && accountsData?.items?.length > 0 && (
-                          <div className="p-2 text-sm text-muted-foreground text-center">
-                            Akun tidak ditemukan
-                          </div>
-                        )}
-                      </div>
-                    </SelectContent>
-                  </Select>
+                                 ))}
+                               </CommandGroup>
+                             )}
+                           </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   <FormMessage />
                 </FormItem>
-              )}
+                );
+              }}
             />
             
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Batal
               </Button>
               <Button type="submit" disabled={loading || isLoadingAccounts}>
-                {loading ? 'Menyimpan...' : 'Simpan'}
+                {loading ? "Menyimpan..." : "Simpan"}
               </Button>
             </div>
           </form>
@@ -181,4 +250,16 @@ export function AccountForm({ isOpen, onClose, categoryId, planningId, onSuccess
       </DialogContent>
     </Dialog>
   );
+}
+
+/** =========================
+ *  util: simple debounce hook
+ *  ========================= */
+function useDebounce<T>(value: T, delay = 250) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
 }

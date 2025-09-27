@@ -93,18 +93,18 @@ export const createPerencanaanColumns = ({
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link href={`/dashboard/perencanaan/${perencanaan.id}`}>
+              <Link href={`/dashboard/perencanaan/${perencanaan.id}`} onClick={(e) => e.stopPropagation()}>
                 <Eye className="mr-2 h-4 w-4" />
                 Lihat Detail
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onEdit(perencanaan)}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(perencanaan); }}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={() => onDelete(perencanaan)}
+              onClick={(e) => { e.stopPropagation(); onDelete(perencanaan); }}
               className="text-red-600"
             >
               <Trash2 className="mr-2 h-4 w-4" />
