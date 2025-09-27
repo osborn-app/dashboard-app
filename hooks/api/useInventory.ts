@@ -5,10 +5,12 @@ export const useGetInventory = (
   params: {
     limit?: number;
     page?: number;
-    search?: string;
+    q?: string;
     status?: string;
     dateFrom?: string;
     dateTo?: string;
+    order_by?: string;
+    order_column?: string;
   } = {},
   options?: {
     enabled?: boolean;

@@ -21,6 +21,9 @@ export interface InventoryItem {
   totalPrice: number;
   purchaseDate: string;
   status: 'pending' | 'verified';
+  isInstallment?: boolean;
+  installmentAmount?: number;
+  installmentEndDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,6 +91,44 @@ export const createInventoryColumns = (props?: InventoryColumnsProps): ColumnDef
         day: "numeric",
       });
       return <div>{formatted}</div>;
+    },
+  },
+  {
+    accessorKey: "isInstallment",
+    header: "Cicilan",
+    cell: ({ row }) => {
+      const inventory = row.original;
+      if (!inventory.isInstallment) {
+        return <div className="text-muted-foreground">-</div>;
+      }
+      
+      const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          minimumFractionDigits: 0,
+        }).format(amount);
+      };
+
+      const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("id-ID", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      };
+
+      return (
+        <div className="space-y-1">
+          <div className="text-sm font-medium">
+            {formatCurrency(inventory.installmentAmount || 0)}/bulan
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Selesai: {formatDate(inventory.installmentEndDate || '')}
+          </div>
+        </div>
+      );
     },
   },
   {
