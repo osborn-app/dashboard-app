@@ -187,6 +187,36 @@ const InventoryTableWrapper = ({ userRole }: InventoryTableWrapperProps) => {
     setShowEditDialog(true);
   };
 
+  const handleViewDetail = (item: InventoryItem) => {
+    router.push(`/dashboard/inventaris/${item.id}`);
+  };
+
+  const handleUpdateStatusFromCell = async (item: InventoryItem, newStatus: 'pending' | 'verified') => {
+    try {
+      await updateInventoryStatus(item.id, { status: newStatus });
+      
+      // Update local state
+      setInventory(prev => prev.map(inv => 
+        inv.id === item.id ? { ...inv, status: newStatus, updatedAt: new Date().toISOString() } : inv
+      ));
+      
+      // Reload statistics
+      queryClient.invalidateQueries({ queryKey: ['inventory-stats'] });
+      
+      toast({
+        title: 'Success',
+        description: `Status updated to ${newStatus}`,
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: 'Error',
+        description: 'Gagal mengupdate status inventaris',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleUpdateInventory = async (updatedData: Partial<InventoryItem>) => {
     if (!editingItem) return;
     
@@ -369,7 +399,9 @@ const InventoryTableWrapper = ({ userRole }: InventoryTableWrapperProps) => {
           <InventoryTable
             columns={createInventoryColumns({
               onEdit: handleEditInventory,
-              onDelete: handleDeleteInventory
+              onDelete: handleDeleteInventory,
+              onViewDetail: handleViewDetail,
+              onUpdateStatus: handleUpdateStatusFromCell
             })}
             data={inventory}
             searchKey="assetName"

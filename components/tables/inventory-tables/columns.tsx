@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash2, CheckCircle, Clock } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, CheckCircle, Clock, Eye, ToggleLeft, ToggleRight } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,8 @@ export interface InventoryItem {
 interface InventoryColumnsProps {
   onEdit?: (item: InventoryItem) => void;
   onDelete?: (item: InventoryItem) => void;
+  onViewDetail?: (item: InventoryItem) => void;
+  onUpdateStatus?: (item: InventoryItem, newStatus: 'pending' | 'verified') => void;
 }
 
 export const createInventoryColumns = (props?: InventoryColumnsProps): ColumnDef<InventoryItem>[] => [
@@ -92,21 +94,41 @@ export const createInventoryColumns = (props?: InventoryColumnsProps): ColumnDef
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
+      const inventory = row.original;
       const status = row.getValue("status") as string;
       const colorClass = status === "verified" 
         ? "bg-green-100 text-green-700 border-green-200 hover:!bg-green-100 hover:!text-green-700" 
         : "bg-yellow-100 text-yellow-700 border-yellow-200 hover:!bg-yellow-100 hover:!text-yellow-700";
+      
       return (
-        <Badge
-          className={`flex items-center gap-1 border ${colorClass}`}
-        >
-          {status === "verified" ? (
-            <CheckCircle className="h-3 w-3" />
-          ) : (
-            <Clock className="h-3 w-3" />
-          )}
-          {status === "verified" ? "Verified" : "Pending"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge
+            className={`flex items-center gap-1 border ${colorClass}`}
+          >
+            {status === "verified" ? (
+              <CheckCircle className="h-3 w-3" />
+            ) : (
+              <Clock className="h-3 w-3" />
+            )}
+            {status === "verified" ? "Verified" : "Pending"}
+          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
+            onClick={() => {
+              const newStatus = status === "verified" ? "pending" : "verified";
+              props?.onUpdateStatus?.(inventory, newStatus);
+            }}
+            title={`Change to ${status === "verified" ? "Pending" : "Verified"}`}
+          >
+            {status === "verified" ? (
+              <ToggleLeft className="h-4 w-4 text-yellow-600" />
+            ) : (
+              <ToggleRight className="h-4 w-4 text-green-600" />
+            )}
+          </Button>
+        </div>
       );
     },
   },
@@ -141,12 +163,20 @@ export const createInventoryColumns = (props?: InventoryColumnsProps): ColumnDef
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              onClick={() => props?.onViewDetail?.(inventory)}
+              className="cursor-pointer"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              View Detail
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => props?.onEdit?.(inventory)}
               className="cursor-pointer"
             >
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-red-600 cursor-pointer"
               onClick={() => props?.onDelete?.(inventory)}

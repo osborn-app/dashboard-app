@@ -2218,7 +2218,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             render={({ field }) => {
               return (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="relative label-required w-fit">
+                  <FormLabel className="relative w-fit">
                     Layanan
                   </FormLabel>
                   <FormControl>
@@ -2270,7 +2270,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
               control={form.control}
               render={({ field }) => (
                 <Space size={12} direction="vertical" className="w-full">
-                  <FormLabel className="relative label-required">
+                  <FormLabel className="relative">
                     Penanggung Jawab
                   </FormLabel>
                   <div className="flex">
@@ -2406,7 +2406,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
               render={({ field }) => {
                 return (
                   <FormItem>
-                    <FormLabel className="relative label-required">
+                    <FormLabel className="relative">
                       Jarak
                     </FormLabel>
                     <FormControl>
@@ -2469,7 +2469,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                 name={`${type}_request.address`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="relative label-required">
+                    <FormLabel className="relative">
                       Alamat
                     </FormLabel>
                     <FormControl className="disabled:opacity-100">
