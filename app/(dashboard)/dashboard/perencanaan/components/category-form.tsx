@@ -15,7 +15,7 @@ interface CategoryFormProps {
   templateId?: string;
   onSuccess?: () => void;
   editData?: {
-    id: string;
+    id: number;
     name: string;
     description: string;
     type: string;
@@ -70,7 +70,7 @@ export const CategoryForm = ({
   }, [categoryType, editData]);
 
   const createCategoryMutation = usePostPlanningCategories(planningId, formData);
-  const updateCategoryMutation = useUpdatePlanningCategory(planningId, editData?.id || '');
+  const updateCategoryMutation = useUpdatePlanningCategory(editData?.id || 0);
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {

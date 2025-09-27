@@ -57,7 +57,7 @@ export default function NeracaPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingCSV, setIsExportingCSV] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<{
-    id: string;
+    id: number;
     name: string;
     description: string;
     type: string;
@@ -283,13 +283,21 @@ export default function NeracaPage() {
 
   // Handle edit kategori
   const handleEditCategory = (category: { id: string; name: string; description: string; type: string }) => {
-    setSelectedCategory(category);
+    const categoryWithNumberId = {
+      ...category,
+      id: parseInt(category.id)
+    } as { id: number; name: string; description: string; type: string };
+    setSelectedCategory(categoryWithNumberId);
     setIsEditCategoryModalOpen(true);
   };
 
   // Handle delete kategori
   const handleDeleteCategory = (category: { id: string; name: string; description: string; type: string }) => {
-    setSelectedCategory(category);
+    const categoryWithNumberId = {
+      ...category,
+      id: parseInt(category.id)
+    } as { id: number; name: string; description: string; type: string };
+    setSelectedCategory(categoryWithNumberId);
     setIsDeleteCategoryModalOpen(true);
   };
 
@@ -1023,7 +1031,7 @@ export default function NeracaPage() {
           setIsDeleteCategoryModalOpen(false);
           setSelectedCategory(null);
         }}
-        categoryId={selectedCategory?.id || ''}
+        categoryId={selectedCategory?.id?.toString() || ''}
         categoryName={selectedCategory?.name || ''}
         planningId={planningId}
         onDataChange={handleDataChange}

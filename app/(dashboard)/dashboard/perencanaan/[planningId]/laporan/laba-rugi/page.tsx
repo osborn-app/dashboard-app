@@ -54,7 +54,7 @@ export default function LabaRugiPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedCategoryType, setSelectedCategoryType] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<{
-    id: string;
+    id: number;
     name: string;
     description: string;
     type: string;
@@ -96,20 +96,6 @@ export default function LabaRugiPage() {
     categoriesData?.filter((cat: any) => cat.type === 'BEBAN') || [], 
     [categoriesData]
   );
-
-  // TODO: Implementasi endpoint untuk mengambil template accounts
-  // Endpoint yang diperlukan:
-  // 1. GET /api/planning/{planningId}/template-accounts/pendapatan - untuk mengambil akun pendapatan
-  // 2. GET /api/planning/{planningId}/template-accounts/beban - untuk mengambil akun beban
-  // 3. POST /api/planning/{planningId}/template-accounts - untuk menambah akun baru
-  // 4. DELETE /api/planning/{planningId}/template-accounts/{accountId} - untuk menghapus akun
-  
-  // useEffect(() => {
-  //   // Fetch pendapatan accounts
-  //   // fetchPendapatanAccounts();
-  //   // Fetch beban accounts  
-  //   // fetchBebanAccounts();
-  // }, [planningId]);
 
   // Fetch data dari API
   const { data: labaRugiData, isLoading, error } = useGetLabaRugiReport(planningId, {
@@ -254,13 +240,21 @@ export default function LabaRugiPage() {
 
   // Handler untuk edit kategori
   const handleEditCategory = (category: { id: string; name: string; description: string; type: string }) => {
-    setSelectedCategory(category);
+    const categoryWithNumberId: { id: number; name: string; description: string; type: string } = {
+      ...category,
+      id: parseInt(category.id)
+    };
+    setSelectedCategory(categoryWithNumberId);
     setIsEditCategoryModalOpen(true);
   };
 
   // Handler untuk delete kategori
   const handleDeleteCategory = (category: { id: string; name: string; description: string; type: string }) => {
-    setSelectedCategory(category);
+    const categoryWithNumberId: { id: number; name: string; description: string; type: string } = {
+      ...category,
+      id: parseInt(category.id)
+    };
+    setSelectedCategory(categoryWithNumberId);
     setIsDeleteCategoryModalOpen(true);
   };
 
@@ -1003,7 +997,7 @@ export default function LabaRugiPage() {
         categoryType={selectedCategory?.type as 'PENDAPATAN' | 'BEBAN' || selectedCategoryType as 'PENDAPATAN' | 'BEBAN'}
         planningId={planningId}
         templateId="template_laba_rugi"
-        editData={selectedCategory}
+        editData={selectedCategory as { id: number; name: string; description: string; type: string } | null}
         onDataChange={handleDataChange}
       />
 
@@ -1014,7 +1008,7 @@ export default function LabaRugiPage() {
           setIsDeleteCategoryModalOpen(false);
           setSelectedCategory(null);
         }}
-        categoryId={selectedCategory?.id || ''}
+        categoryId={selectedCategory?.id?.toString() || ''}
         categoryName={selectedCategory?.name || ''}
         planningId={planningId}
         onSuccess={handleDataChange}

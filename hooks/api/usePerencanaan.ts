@@ -346,12 +346,12 @@ export const useGetPlanningCategoryDetail = (planningId: string | number, id: nu
 };
 
 // ===== UPDATE Planning Category =====
-export const useUpdatePlanningCategory = (planningId: string | number, id: string | number) => {
+export const useUpdatePlanningCategory = (id: string | number) => {
   const axiosAuth = useAxiosAuth();
   const queryClient = useQueryClient();
 
   const updatePlanningCategory = (body: any) => {
-    return axiosAuth.put(`${baseEndpoint}/${planningId}/categories/${id}`, body);
+    return axiosAuth.put(`${baseEndpoint}/categories/${id}`, body);
   };
 
   return useMutation({

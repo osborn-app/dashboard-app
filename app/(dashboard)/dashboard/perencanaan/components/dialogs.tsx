@@ -446,7 +446,7 @@ export const DeleteCategoryDialog = ({
   onDataChange 
 }: DeleteCategoryDialogProps) => {
   const { toast } = useToast();
-  const deleteCategoryMutation = useDeletePlanningCategory(planningId, parseInt(categoryId));
+  const deleteCategoryMutation = useDeletePlanningCategory(parseInt(categoryId));
 
   const handleDelete = async () => {
     try {
