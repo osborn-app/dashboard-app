@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateInventoryData {
@@ -14,6 +15,9 @@ interface CreateInventoryData {
   unitPrice: number;
   purchaseDate: string;
   status: 'pending' | 'verified';
+  isInstallment?: boolean;
+  installmentAmount?: number;
+  installmentEndDate?: string;
 }
 
 interface CreateInventoryFormData {
@@ -22,6 +26,9 @@ interface CreateInventoryFormData {
   unitPrice: number;
   purchaseDate: string;
   status: 'pending' | 'verified';
+  isInstallment: boolean;
+  installmentAmount: number;
+  installmentEndDate: string;
 }
 
 interface CreateInventoryDialogProps {
@@ -37,6 +44,9 @@ export function CreateInventoryDialog({ open, onOpenChange, onSubmit }: CreateIn
     unitPrice: 0,
     purchaseDate: new Date().toISOString().split('T')[0],
     status: 'pending',
+    isInstallment: false,
+    installmentAmount: 0,
+    installmentEndDate: '',
   });
   const [errors, setErrors] = useState<Partial<CreateInventoryFormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,6 +69,16 @@ export function CreateInventoryDialog({ open, onOpenChange, onSubmit }: CreateIn
 
     if (!formData.purchaseDate) {
       newErrors.purchaseDate = 'Tanggal pembelian harus diisi';
+    }
+
+    // Validate installment fields if isInstallment is true
+    if (formData.isInstallment) {
+      if (!formData.installmentAmount || formData.installmentAmount <= 0) {
+        (newErrors as any).installmentAmount = 'Nominal cicilan harus lebih dari 0';
+      }
+      if (!formData.installmentEndDate) {
+        (newErrors as any).installmentEndDate = 'Tanggal berakhir cicilan harus diisi';
+      }
     }
 
     setErrors(newErrors);
@@ -90,6 +110,11 @@ export function CreateInventoryDialog({ open, onOpenChange, onSubmit }: CreateIn
         unitPrice: Number(formData.unitPrice),
         purchaseDate: formData.purchaseDate,
         status: formData.status,
+        isInstallment: formData.isInstallment,
+        ...(formData.isInstallment && {
+          installmentAmount: Number(formData.installmentAmount),
+          installmentEndDate: formData.installmentEndDate,
+        }),
       };
 
       // Call the onSubmit function (which will handle the API call)
@@ -102,6 +127,9 @@ export function CreateInventoryDialog({ open, onOpenChange, onSubmit }: CreateIn
         unitPrice: 0,
         purchaseDate: new Date().toISOString().split('T')[0],
         status: 'pending',
+        isInstallment: false,
+        installmentAmount: 0,
+        installmentEndDate: '',
       });
       setErrors({});
       
@@ -116,7 +144,7 @@ export function CreateInventoryDialog({ open, onOpenChange, onSubmit }: CreateIn
     }
   };
 
-  const handleInputChange = (field: keyof CreateInventoryFormData, value: string | number) => {
+  const handleInputChange = (field: keyof CreateInventoryFormData, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error when user starts typing
@@ -134,7 +162,7 @@ export function CreateInventoryDialog({ open, onOpenChange, onSubmit }: CreateIn
   };
 
   // Handle number input changes properly
-  const handleNumberInputChange = (field: 'quantity' | 'unitPrice', value: string) => {
+  const handleNumberInputChange = (field: 'quantity' | 'unitPrice' | 'installmentAmount', value: string) => {
     // Allow empty string for better UX
     if (value === '') {
       setFormData(prev => ({ ...prev, [field]: '' }));
@@ -249,6 +277,54 @@ export function CreateInventoryDialog({ open, onOpenChange, onSubmit }: CreateIn
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Installment Section */}
+          <div className="space-y-4 border-t pt-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isInstallment"
+                checked={formData.isInstallment}
+                onCheckedChange={(checked) => handleInputChange('isInstallment', Boolean(checked))}
+              />
+              <Label htmlFor="isInstallment" className="text-sm font-medium">
+                Apakah ini pembelian cicilan?
+              </Label>
+            </div>
+
+            {formData.isInstallment && (
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <div className="space-y-2">
+                  <Label htmlFor="installmentAmount">Nominal Cicilan per Bulan</Label>
+                  <Input
+                    id="installmentAmount"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.installmentAmount}
+                    onChange={(e) => handleNumberInputChange('installmentAmount', e.target.value)}
+                    className={errors.installmentAmount ? 'border-red-500' : ''}
+                  />
+                  {errors.installmentAmount && (
+                    <p className="text-sm text-red-500">{errors.installmentAmount}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="installmentEndDate">Tanggal Berakhir Cicilan *</Label>
+                  <Input
+                    id="installmentEndDate"
+                    type="date"
+                    value={formData.installmentEndDate}
+                    onChange={(e) => handleInputChange('installmentEndDate', e.target.value)}
+                    className={errors.installmentEndDate ? 'border-red-500' : ''}
+                  />
+                  {errors.installmentEndDate && (
+                    <p className="text-sm text-red-500">{errors.installmentEndDate}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

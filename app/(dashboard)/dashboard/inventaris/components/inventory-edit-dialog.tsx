@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 
 interface InventoryItem {
@@ -16,6 +17,9 @@ interface InventoryItem {
   totalPrice: number;
   purchaseDate: string;
   status: 'pending' | 'verified';
+  isInstallment?: boolean;
+  installmentAmount?: number;
+  installmentEndDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +45,9 @@ export function InventoryEditDialog({ open, onOpenChange, item, onSubmit }: Inve
         unitPrice: item.unitPrice,
         purchaseDate: item.purchaseDate,
         status: item.status,
+        isInstallment: item.isInstallment || false,
+        installmentAmount: item.installmentAmount || 0,
+        installmentEndDate: item.installmentEndDate || '',
       });
     }
   }, [item]);
@@ -62,6 +69,16 @@ export function InventoryEditDialog({ open, onOpenChange, item, onSubmit }: Inve
 
     if (!formData.purchaseDate) {
       newErrors.purchaseDate = 'Tanggal pembelian harus diisi';
+    }
+
+    // Validate installment fields if isInstallment is true
+    if (formData.isInstallment) {
+      if (!formData.installmentAmount || formData.installmentAmount <= 0) {
+        (newErrors as any).installmentAmount = 'Nominal cicilan harus lebih dari 0';
+      }
+      if (!formData.installmentEndDate) {
+        (newErrors as any).installmentEndDate = 'Tanggal berakhir cicilan harus diisi';
+      }
     }
 
     setErrors(newErrors);
@@ -112,7 +129,7 @@ export function InventoryEditDialog({ open, onOpenChange, item, onSubmit }: Inve
     }
   };
 
-  const handleInputChange = (field: keyof InventoryItem, value: string | number) => {
+  const handleInputChange = (field: keyof InventoryItem, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error when user starts typing
@@ -130,7 +147,7 @@ export function InventoryEditDialog({ open, onOpenChange, item, onSubmit }: Inve
   };
 
   // Handle number input changes properly
-  const handleNumberInputChange = (field: 'quantity' | 'unitPrice', value: string) => {
+  const handleNumberInputChange = (field: 'quantity' | 'unitPrice' | 'installmentAmount', value: string) => {
     // Allow empty string for better UX
     if (value === '') {
       setFormData(prev => ({ ...prev, [field]: '' }));
@@ -257,6 +274,54 @@ export function InventoryEditDialog({ open, onOpenChange, item, onSubmit }: Inve
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Installment Section */}
+          <div className="space-y-4 border-t pt-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isInstallment"
+                checked={formData.isInstallment || false}
+                onCheckedChange={(checked) => handleInputChange('isInstallment', Boolean(checked))}
+              />
+              <Label htmlFor="isInstallment" className="text-sm font-medium">
+                Apakah ini pembelian cicilan?
+              </Label>
+            </div>
+
+            {(formData.isInstallment) && (
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <div className="space-y-2">
+                  <Label htmlFor="installmentAmount">Nominal Cicilan per Bulan</Label>
+                  <Input
+                    id="installmentAmount"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.installmentAmount || ''}
+                    onChange={(e) => handleNumberInputChange('installmentAmount', e.target.value)}
+                    className={errors.installmentAmount ? 'border-red-500' : ''}
+                  />
+                  {errors.installmentAmount && (
+                    <p className="text-sm text-red-500">{errors.installmentAmount}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="installmentEndDate">Tanggal Berakhir Cicilan *</Label>
+                  <Input
+                    id="installmentEndDate"
+                    type="date"
+                    value={formData.installmentEndDate || ''}
+                    onChange={(e) => handleInputChange('installmentEndDate', e.target.value)}
+                    className={errors.installmentEndDate ? 'border-red-500' : ''}
+                  />
+                  {errors.installmentEndDate && (
+                    <p className="text-sm text-red-500">{errors.installmentEndDate}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

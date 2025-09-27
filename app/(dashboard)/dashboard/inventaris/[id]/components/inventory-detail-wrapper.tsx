@@ -331,6 +331,29 @@ const InventoryDetailWrapper = ({ inventoryId, userRole }: InventoryDetailWrappe
                     <p className="text-lg">{formatDate(inventory.purchaseDate)}</p>
                   </div>
                 </div>
+
+                {/* Installment Information */}
+                {inventory.isInstallment && (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Cicilan per Bulan</p>
+                        <p className="text-lg font-semibold text-blue-600">
+                          {formatCurrency(inventory.installmentAmount || 0)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Tanggal Berakhir Cicilan</p>
+                        <p className="text-lg">{formatDate(inventory.installmentEndDate || '')}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>

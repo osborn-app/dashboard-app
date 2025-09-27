@@ -1,6 +1,10 @@
 import BreadCrumb from "@/components/breadcrumb";
+import { buttonVariants } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
@@ -10,14 +14,14 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import { getInventory, getInventoryStatistics } from "@/client/inventoryClient";
+import { getInventory } from "@/client/inventoryClient";
 import InventoryTableWrapper from "./components/inventory-table-wrapper";
 
 const breadcrumbItems = [{ title: "Inventaris", link: "/dashboard/inventaris" }];
 
 export const metadata: Metadata = {
   title: "Inventaris | Transgo",
-  description: "Kelola aset dan inventaris perusahaan",
+  description: "Manage company inventory and assets",
 };
 // re
 const page = async () => {
@@ -28,12 +32,7 @@ const page = async () => {
 
   await queryClient.prefetchQuery({
     queryKey: ["inventory"],
-    queryFn: () => getInventory({ limit: 10, page: 1 }),
-  });
-
-  await queryClient.prefetchQuery({
-    queryKey: ["inventory-stats"],
-    queryFn: getInventoryStatistics,
+    queryFn: getInventory,
   });
 
   return (
@@ -47,7 +46,7 @@ const page = async () => {
         <Separator />
         
         <HydrationBoundary state={dehydrate(queryClient)}>
-          <InventoryTableWrapper userRole={userRole} />
+          <InventoryTableWrapper />
         </HydrationBoundary>
       </div>
     </>
@@ -55,5 +54,3 @@ const page = async () => {
 };
 
 export default page;
-
-
