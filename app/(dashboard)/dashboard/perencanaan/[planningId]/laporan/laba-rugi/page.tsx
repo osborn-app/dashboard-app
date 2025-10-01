@@ -101,7 +101,7 @@ export default function LabaRugiPage() {
   const { data: labaRugiData, isLoading, error } = useGetLabaRugiReport(planningId, {
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: '1', // Default template ID
+    template_id: 'template_laba_rugi', // Template ID untuk laba rugi
   });
 
   // Helper function untuk generate filename
@@ -264,13 +264,6 @@ export default function LabaRugiPage() {
     setIsAddAccountModalOpen(true);
   };
 
-  // Handler untuk edit akun
-  const handleEditAccount = (accountId: string) => {
-    toast({
-      title: 'Edit Account',
-      description: `Edit account dengan ID: ${accountId}`,
-    });
-  };
 
   // Handler untuk delete akun
   const handleDeleteAccount = async (accountId: string) => {
@@ -831,7 +824,6 @@ export default function LabaRugiPage() {
                               category={category}
                               planningId={planningId}
                               onAddAccount={handleAddAccount}
-                              onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
                             />
                           </div>
@@ -905,7 +897,6 @@ export default function LabaRugiPage() {
                               category={category}
                               planningId={planningId}
                               onAddAccount={handleAddAccount}
-                              onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
                             />
                           </div>

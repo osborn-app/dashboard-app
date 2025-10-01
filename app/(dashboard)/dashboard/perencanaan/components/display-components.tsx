@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from '@/components/ui/button';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useGetPlanningCategoryAccounts } from '@/hooks/api/usePerencanaan';
 
 // ===== ARUS KAS CATEGORY ACCOUNTS =====
@@ -9,7 +9,6 @@ interface ArusKasCategoryAccountsProps {
   categoryId: string;
   planningId: string | number;
   onAddAccount: () => void;
-  onEditAccount: (accountId: string) => void;
   onDeleteAccount: (accountId: string) => void;
 }
 
@@ -17,7 +16,6 @@ export const ArusKasCategoryAccounts = ({
   categoryId, 
   planningId,
   onAddAccount, 
-  onEditAccount, 
   onDeleteAccount 
 }: ArusKasCategoryAccountsProps) => {
   // Fetch accounts data from API
@@ -75,14 +73,11 @@ export const ArusKasCategoryAccounts = ({
               )}
             </div>
           </div>
-          <div className="flex space-x-2">
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => onEditAccount(account.id)}>
-              <Edit className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:text-red-700" onClick={() => onDeleteAccount(account.id)}>
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
+           <div className="flex space-x-2">
+             <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500 hover:text-red-700" onClick={() => onDeleteAccount(account.id)}>
+               <Trash2 className="h-3 w-3" />
+             </Button>
+           </div>
         </div>
       ))}
 
@@ -103,7 +98,6 @@ interface CategoryAccountsProps {
   categoryId: string;
   planningId: string | number;
   onAddAccount?: () => void;
-  onEditAccount?: (accountId: string) => void;
   onDeleteAccount?: (accountId: string) => void;
 }
 
@@ -111,7 +105,6 @@ export const CategoryAccounts = ({
   categoryId, 
   planningId,
   onAddAccount, 
-  onEditAccount, 
   onDeleteAccount 
 }: CategoryAccountsProps) => {
   const { data: accountsData, isLoading, error } = useGetPlanningCategoryAccounts(planningId, categoryId);
@@ -166,24 +159,16 @@ export const CategoryAccounts = ({
               )}
             </div>
           </div>
-          <div className="flex space-x-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 w-6 p-0"
-              onClick={() => onEditAccount?.(account.id)}
-            >
-              <Edit className="h-3 w-3" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-              onClick={() => onDeleteAccount?.(account.id)}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
+           <div className="flex space-x-2">
+             <Button 
+               variant="ghost" 
+               size="sm" 
+               className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+               onClick={() => onDeleteAccount?.(account.id)}
+             >
+               <Trash2 className="h-3 w-3" />
+             </Button>
+           </div>
         </div>
       ))}
       
@@ -210,7 +195,6 @@ interface LabaRugiCategoryAccountsProps {
   };
   planningId: string | number;
   onAddAccount: (categoryId: string) => void;
-  onEditAccount: (accountId: string) => void;
   onDeleteAccount: (accountId: string) => void;
 }
 
@@ -218,7 +202,6 @@ export function LabaRugiCategoryAccounts({
   category, 
   planningId,
   onAddAccount, 
-  onEditAccount, 
   onDeleteAccount 
 }: LabaRugiCategoryAccountsProps) {
   // Get accounts untuk kategori ini
@@ -229,16 +212,6 @@ export function LabaRugiCategoryAccounts({
 
   return (
     <div className="space-y-4">
-      {/* Category Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
-          <p className="text-sm text-gray-500">
-            {category.account_count} akun • {category.entry_count} entri
-          </p>
-        </div>
-      </div>
-
       {/* Accounts List */}
       <div className="space-y-2">
         {isLoading ? (
@@ -258,24 +231,16 @@ export function LabaRugiCategoryAccounts({
                     )}
                   </div>
                 </div>
-                <div className="flex space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => onEditAccount(account.id)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                    onClick={() => onDeleteAccount(account.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
+                 <div className="flex space-x-2">
+                   <Button
+                     variant="ghost"
+                     size="sm"
+                     className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                     onClick={() => onDeleteAccount(account.id)}
+                   >
+                     <Trash2 className="h-3 w-3" />
+                   </Button>
+                 </div>
               </div>
             ))}
             

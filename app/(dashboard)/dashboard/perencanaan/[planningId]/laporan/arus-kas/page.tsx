@@ -56,7 +56,6 @@ export default function ArusKasPage() {
   // State untuk export
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingCSV, setIsExportingCSV] = useState(false);
-  const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -87,7 +86,7 @@ export default function ArusKasPage() {
   const { data: arusKasData, isLoading, error } = useGetArusKasReport(planningId, {
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: '1', // Default template ID
+    template_id: 'template_arus_kas', // Template ID untuk arus kas
   });
 
   // Hook untuk API categories
@@ -270,10 +269,6 @@ export default function ArusKasPage() {
     setIsAddAccountModalOpen(true);
   };
 
-  const handleEditAccount = (accountId: string) => {
-    setSelectedAccount({ id: accountId });
-    setIsEditAccountModalOpen(true);
-  };
 
   const handleDeleteAccount = async (accountId: string) => {
     try {
@@ -834,7 +829,6 @@ export default function ArusKasPage() {
                             categoryId={category.id}
                             planningId={planningId}
                             onAddAccount={() => handleAddAccount(category.id)}
-                            onEditAccount={handleEditAccount}
                             onDeleteAccount={handleDeleteAccount}
                           />
                         </div>
@@ -880,7 +874,7 @@ export default function ArusKasPage() {
       <ArusKasCategoryForm 
         isOpen={isAddCategoryModalOpen}
         onClose={() => setIsAddCategoryModalOpen(false)}
-        categoryType="OPERASI"
+        planningId={planningId}
         onDataChange={handleDataChange}
       />
       
@@ -890,7 +884,7 @@ export default function ArusKasPage() {
           setIsEditCategoryModalOpen(false);
           setSelectedCategory(null);
         }}
-        categoryType={selectedCategory?.type as 'OPERASI' | 'INVESTASI' | 'PENDANAAN' || 'OPERASI'}
+        planningId={planningId}
         editData={selectedCategory}
         onDataChange={handleDataChange}
       />
@@ -909,17 +903,6 @@ export default function ArusKasPage() {
       <ArusKasAccountForm
         isOpen={isAddAccountModalOpen}
         onClose={() => setIsAddAccountModalOpen(false)}
-        categoryId={selectedCategoryId}
-        planningId={planningId}
-        onSuccess={handleDataChange}
-      />
-      
-      <ArusKasAccountForm
-        isOpen={isEditAccountModalOpen}
-        onClose={() => {
-          setIsEditAccountModalOpen(false);
-          setSelectedAccount(null);
-        }}
         categoryId={selectedCategoryId}
         planningId={planningId}
         onSuccess={handleDataChange}

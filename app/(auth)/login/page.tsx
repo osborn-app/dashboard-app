@@ -12,7 +12,7 @@ import { ArrowLeft, Crown, Car, DollarSign, Monitor, Wrench, User, Eye, EyeOff }
 import LoadingMascot from "@/components/ui/loading-mascot";
 
 const roleIcons = {
-  super_admin: Crown,
+  super_admin: Crown, //re
   owner: Car,
   finance: DollarSign,
   admin: Monitor,

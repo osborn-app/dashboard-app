@@ -258,7 +258,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="bg-blue-600 text-white p-4 -m-6 mb-4">
             {editingData ? 'Edit Rencana' : 'Tambah Rencana'}
@@ -270,7 +270,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nama</Label>
               <Input
@@ -306,8 +306,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
               <CardTitle className="text-lg">Jurnal Umum</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 font-medium text-sm">
+              {/* Table Header - Hidden on mobile */}
+              <div className="hidden sm:grid grid-cols-12 gap-4 font-medium text-sm">
                 <div className="col-span-3">Akun Debit</div>
                 <div className="col-span-3">Akun Credit</div>
                 <div className="col-span-2">Debit</div>
@@ -317,9 +317,10 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
 
               {/* Account Rows */}
               {formData.accounts.map((account, index) => (
-                <div key={account.id} className="grid grid-cols-12 gap-4 items-center">
+                <div key={account.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
                   {/* Debit Account Dropdown */}
-                  <div className="col-span-3">
+                  <div className="col-span-1 sm:col-span-3">
+                    <Label className="text-xs font-medium text-gray-600 sm:hidden mb-1 block">Akun Debit</Label>
                     <Popover open={openDebitCombo} onOpenChange={setOpenDebitCombo}>
                       <PopoverTrigger asChild>
                         <Button
@@ -346,7 +347,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                           <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                      <PopoverContent className="p-0 w-80 sm:w-[--radix-popover-trigger-width]">
                         <Command shouldFilter={false}>
                           <CommandInput
                             placeholder="Cari akun debit..."
@@ -397,7 +398,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                   </div>
 
                   {/* Credit Account Dropdown */}
-                  <div className="col-span-3">
+                  <div className="col-span-1 sm:col-span-3">
+                    <Label className="text-xs font-medium text-gray-600 sm:hidden mb-1 block">Akun Credit</Label>
                     <Popover open={openCreditCombo} onOpenChange={setOpenCreditCombo}>
                       <PopoverTrigger asChild>
                         <Button
@@ -424,7 +426,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                           <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                      <PopoverContent className="p-0 w-80 sm:w-[--radix-popover-trigger-width]">
                         <Command shouldFilter={false}>
                           <CommandInput
                             placeholder="Cari akun credit..."
@@ -474,7 +476,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                     </Popover>
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="col-span-1 sm:col-span-2">
+                    <Label className="text-xs font-medium text-gray-600 sm:hidden mb-1 block">Debit</Label>
                     <Input
                       type="number"
                       placeholder="0"
@@ -486,7 +489,8 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                       }}
                     />
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-1 sm:col-span-2">
+                    <Label className="text-xs font-medium text-gray-600 sm:hidden mb-1 block">Kredit</Label>
                     <Input
                       type="number"
                       placeholder="0"
@@ -498,7 +502,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
                       }}
                     />
                   </div>
-                  <div className="col-span-1">
+                  <div className="col-span-1 sm:col-span-1">
                     {formData.accounts.length > 1 && (
                       <Button
                         type="button"
@@ -526,24 +530,24 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
               </Button>
 
               {/* Totals */}
-              <div className="grid grid-cols-12 gap-4 pt-4 border-t">
-                <div className="col-span-5"></div>
-                <div className="col-span-3">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 pt-4 border-t">
+                <div className="col-span-1 sm:col-span-5"></div>
+                <div className="col-span-1 sm:col-span-3">
                   <div className="bg-purple-100 p-2 rounded text-sm">
                     <span className="font-medium">Total Debit : {formatRupiah(totalDebit)}</span>
                   </div>
                 </div>
-                <div className="col-span-3">
+                <div className="col-span-1 sm:col-span-3">
                   <div className="bg-purple-100 p-2 rounded text-sm">
                     <span className="font-medium">Total Kredit : {formatRupiah(totalCredit)}</span>
                   </div>
                 </div>
-                <div className="col-span-1"></div>
+                <div className="col-span-1 sm:col-span-1"></div>
               </div>
             </CardContent>
           </Card>
 
-          <DialogFooter className="flex gap-2">
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             {editingData && (
             <Button
               type="button"

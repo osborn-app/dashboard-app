@@ -51,7 +51,6 @@ export default function NeracaPage() {
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
   const [isEditCategoryModalOpen, setIsEditCategoryModalOpen] = useState(false);
   const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] = useState(false);
-  const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
   
   // State untuk export
   const [isExporting, setIsExporting] = useState(false);
@@ -62,7 +61,6 @@ export default function NeracaPage() {
     description: string;
     type: string;
   } | null>(null);
-  const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
   // Sinkronisasi calendar month dengan tanggal yang dipilih
@@ -98,7 +96,7 @@ export default function NeracaPage() {
   const { data: neracaData, isLoading, error } = useGetNeracaReport(planningId, {
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: '1', // Default template ID
+    template_id: 'template_neraca', // Template ID untuk neraca
   });
 
   // Hook untuk API categories
@@ -307,10 +305,6 @@ export default function NeracaPage() {
     setIsAddAccountModalOpen(true);
   };
 
-  const handleEditAccount = (accountId: string) => {
-    setSelectedAccount({ id: accountId });
-    setIsEditAccountModalOpen(true);
-  };
 
   const handleDeleteAccount = async (accountId: string) => {
     try {
@@ -910,7 +904,6 @@ export default function NeracaPage() {
                               categoryId={category.id}
                               planningId={planningId}
                               onAddAccount={() => handleAddAccount(category.id)}
-                              onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
                             />
                           </div>
@@ -983,7 +976,6 @@ export default function NeracaPage() {
                               categoryId={category.id}
                               planningId={planningId}
                               onAddAccount={() => handleAddAccount(category.id)}
-                              onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
                             />
                           </div>
@@ -1040,17 +1032,6 @@ export default function NeracaPage() {
       <AccountForm 
         isOpen={isAddAccountModalOpen}
         onClose={() => setIsAddAccountModalOpen(false)}
-        categoryId={selectedCategoryId}
-        planningId={planningId}
-        onSuccess={handleDataChange}
-      />
-      
-      <AccountForm
-        isOpen={isEditAccountModalOpen}
-        onClose={() => {
-          setIsEditAccountModalOpen(false);
-          setSelectedAccount(null);
-        }}
         categoryId={selectedCategoryId}
         planningId={planningId}
         onSuccess={handleDataChange}

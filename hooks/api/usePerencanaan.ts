@@ -200,7 +200,7 @@ export const useGetLabaRugiReport = (planningId: string | number, params?: any) 
     const requestParams = {
       ...params,
       planning_id: planningId, // Required planning_id parameter
-      template_id: params?.template_id || '1', // Default template ID
+      template_id: params?.template_id || 'template_laba_rugi', // Default template ID
     };
     
     const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/reports/laba-rugi`, {
@@ -224,7 +224,7 @@ export const useGetNeracaReport = (planningId: string | number, params?: any) =>
     const requestParams = {
       ...params,
       planning_id: planningId, // Required planning_id parameter
-      template_id: params?.template_id || '1', // Default template ID
+      template_id: params?.template_id || 'template_neraca', // Default template ID
     };
     
     const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/reports/neraca`, {
@@ -248,7 +248,7 @@ export const useGetArusKasReport = (planningId: string | number, params?: any) =
     const requestParams = {
       ...params,
       planning_id: planningId, // Required planning_id parameter
-      template_id: params?.template_id || '1', // Default template ID
+      template_id: params?.template_id || 'template_arus_kas', // Default template ID
     };
     
     const { data } = await axiosAuth.get(`${baseEndpoint}/${planningId}/reports/arus-kas`, {
