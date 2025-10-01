@@ -395,6 +395,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           address: data.start_request.address,
           distance: +data.start_request.distance,
         }),
+        ...(data.start_request.status && { status: data.start_request.status }),
       },
       end_request: {
         is_self_pickup: data.end_request.is_self_pickup,
@@ -403,6 +404,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           distance: +data.end_request.distance,
           address: data.end_request.address,
         }),
+        ...(data.end_request.status && { status: data.end_request.status }),
       },
       customer_id: +data.customer,
       fleet_id: +data.fleet,
@@ -2155,7 +2157,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                   <FormLabel className="relative">
                     Penanggung Jawab
                   </FormLabel>
-                  <div className="flex">
+                  <div className="flex gap-2">
                     <FormControl>
                       <AntdSelect
                         defaultValue={
@@ -2165,13 +2167,19 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                         }
                         showSearch
                         placeholder="Pilih Penanggung Jawab"
-                        className={cn("mr-2 w-full")}
+                        className={cn("w-full")}
                         style={{
                           // width: `${isMinimized ? "385px" : "267px"}`,
                           height: "40px",
                         }}
                         onSearch={setSearchDriverTerm}
-                        onChange={field.onChange}
+                        onChange={(value) => {
+                          field.onChange(value);
+                          // Auto set status to pending when driver is selected
+                          if (value) {
+                            form.setValue(`${type}_request.status`, "pending");
+                          }
+                        }}
                         onPopupScroll={handleScrollDrivers}
                         filterOption={false}
                         notFoundContent={
@@ -2217,6 +2225,22 @@ const DetailSection: React.FC<DetailSectionProps> = ({
                         )}
                       </AntdSelect>
                     </FormControl>
+                    {!isEmpty(field.value) && (
+                      <Button
+                        className={cn(
+                          buttonVariants({ variant: "outline" }),
+                          "h-[40px] px-3 border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600",
+                        )}
+                        type="button"
+                        disabled={switchValue}
+                        onClick={() => {
+                          field.onChange("");
+                          form.setValue(`${type}_request.status`, "belum_diatur");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
                     <Button
                       className={cn(
                         buttonVariants({ variant: "main" }),
@@ -2280,6 +2304,61 @@ const DetailSection: React.FC<DetailSectionProps> = ({
             </FormItem>
           )}
         </div>
+        
+        {/* Status Request */}
+        {isEdit && (
+          <div className="space-y-2">
+            <FormField
+              name={`${type}_request.status`}
+              control={form.control}
+              render={({ field }) => {
+                // Get current driver value
+                const currentDriverId = form.getValues(`${type}_request.driver_id`);
+                const hasDriver = currentDriverId && currentDriverId !== "";
+                
+                return (
+                  <FormItem>
+                    <FormLabel className="relative">
+                      Status Request
+                    </FormLabel>
+                    <Select
+                      disabled={!isEdit || loading || switchValue || hasDriver}
+                      onValueChange={field.onChange}
+                      value={field.value || typeRequest?.status || "belum_diatur"}
+                    >
+                      <FormControl className="disabled:opacity-100 h-[40px]">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Status Request" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="belum_diatur">Belum Diatur</SelectItem>
+                        <SelectItem 
+                          value="pending" 
+                          disabled={!hasDriver}
+                        >
+                          PIC Driver {!hasDriver && "(Pilih driver terlebih dahulu)"}
+                        </SelectItem>
+                        <SelectItem value="extend">Extend</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    {hasDriver && (
+                      <p className="text-sm text-muted-foreground">
+                        Lepas driver terlebih dahulu untuk mengubah status
+                      </p>
+                    )}
+                    {detailMessages?.status && (
+                      <FormMessage className="text-main">
+                        {detailMessages?.status}
+                      </FormMessage>
+                    )}
+                  </FormItem>
+                );
+              }}
+            />
+          </div>
+        )}
         {!form.getValues(`${type}_request.is_self_pickup`) && (
           <div className={cn("flex gap-2 items-end")}>
             <FormField
