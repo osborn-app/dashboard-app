@@ -874,7 +874,7 @@ export default function ArusKasPage() {
       <ArusKasCategoryForm 
         isOpen={isAddCategoryModalOpen}
         onClose={() => setIsAddCategoryModalOpen(false)}
-        categoryType="OPERASI"
+        planningId={planningId}
         onDataChange={handleDataChange}
       />
       
@@ -884,7 +884,7 @@ export default function ArusKasPage() {
           setIsEditCategoryModalOpen(false);
           setSelectedCategory(null);
         }}
-        categoryType={selectedCategory?.type as 'OPERASI' | 'INVESTASI' | 'PENDANAAN' || 'OPERASI'}
+        planningId={planningId}
         editData={selectedCategory}
         onDataChange={handleDataChange}
       />

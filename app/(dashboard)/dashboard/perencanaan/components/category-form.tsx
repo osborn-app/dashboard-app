@@ -149,17 +149,6 @@ export const CategoryForm = ({
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Template ID</label>
-            <Input 
-              placeholder="template_default" 
-              value={formData.template_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, template_id: e.target.value }))}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Template untuk grouping kategori (contoh: template_retail, template_manufacturing)
-            </p>
-          </div>
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={handleClose}>
               Batal

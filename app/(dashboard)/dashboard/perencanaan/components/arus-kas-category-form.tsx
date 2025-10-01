@@ -4,16 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { usePostPlanningCategories, useUpdatePlanningCategory } from '@/hooks/api/usePerencanaan';
 
 interface ArusKasCategoryFormProps {
   isOpen: boolean;
   onClose: () => void;
-  categoryType: 'OPERASI' | 'INVESTASI' | 'PENDANAAN';
+  planningId: string | number;
   onSuccess?: () => void;
   editData?: {
     id: string;
     name: string;
-    description: string;
+    description?: string;
     type: string;
   } | null;
   onDataChange?: () => void;
@@ -22,7 +23,7 @@ interface ArusKasCategoryFormProps {
 export const ArusKasCategoryForm = ({ 
   isOpen, 
   onClose, 
-  categoryType, 
+  planningId,
   onSuccess,
   editData,
   onDataChange 
@@ -31,26 +32,29 @@ export const ArusKasCategoryForm = ({
   const isEditMode = !!editData;
   
   const [formData, setFormData] = useState({
+    planning_id: planningId,
     name: editData?.name || '',
     description: editData?.description || '',
-    type: editData?.type || categoryType,
-    sort_order: 1
+    type: 'LAINNYA',
+    sort_order: 1,
+    template_id: 'template_arus_kas'
   });
 
   React.useEffect(() => {
     if (editData) {
       setFormData({
-        name: editData.name,
-        description: editData.description,
-        type: editData.type,
-        sort_order: 1
+        planning_id: planningId,
+        name: editData.name || '',
+        description: editData.description || '',
+        type: 'LAINNYA',
+        sort_order: 1,
+        template_id: 'template_arus_kas'
       });
     }
-  }, [editData]);
+  }, [editData, planningId]);
 
-  // TODO: Integrate with API hooks when ready
-  // const createCategoryMutation = usePostPlanningCategories(formData);
-  // const updateCategoryMutation = useUpdatePlanningCategory(editData?.id || '');
+  const createCategoryMutation = usePostPlanningCategories(planningId, formData);
+  const updateCategoryMutation = useUpdatePlanningCategory(editData?.id || 0);
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -59,12 +63,11 @@ export const ArusKasCategoryForm = ({
     }
 
     try {
-      // TODO: Replace with real API calls
       if (isEditMode) {
-        // await updateCategoryMutation.mutateAsync(formData);
+        await updateCategoryMutation.mutateAsync(formData);
         toast({ title: 'Success', description: 'Kategori berhasil diperbarui' });
       } else {
-        // await createCategoryMutation.mutateAsync();
+        await createCategoryMutation.mutateAsync();
         toast({ title: 'Success', description: 'Kategori berhasil ditambahkan' });
       }
       onClose();
@@ -76,7 +79,14 @@ export const ArusKasCategoryForm = ({
   };
 
   const handleClose = () => {
-    setFormData({ name: '', description: '', type: categoryType, sort_order: 1 });
+    setFormData({ 
+      planning_id: planningId,
+      name: '', 
+      description: '', 
+      type: 'LAINNYA', 
+      sort_order: 1,
+      template_id: 'template_arus_kas'
+    });
     onClose();
   };
 
@@ -84,7 +94,7 @@ export const ArusKasCategoryForm = ({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit Kategori' : `Tambah Kategori ${categoryType}`}</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Kategori' : 'Tambah Kategori ARUS KAS'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -97,8 +107,14 @@ export const ArusKasCategoryForm = ({
           </div>
           <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={handleClose}>Batal</Button>
-            <Button onClick={handleSubmit}>
-              {isEditMode ? 'Perbarui' : 'Simpan'}
+            <Button 
+              onClick={handleSubmit}
+              disabled={isEditMode ? updateCategoryMutation.isPending : createCategoryMutation.isPending}
+            >
+              {isEditMode 
+                ? (updateCategoryMutation.isPending ? 'Memperbarui...' : 'Perbarui')
+                : (createCategoryMutation.isPending ? 'Menyimpan...' : 'Simpan')
+              }
             </Button>
           </div>
         </div>
