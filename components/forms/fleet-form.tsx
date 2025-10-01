@@ -99,6 +99,11 @@ const formSchema = z.object({
   location_id: z.string().min(1, { message: "Tolong pilih lokasi" }),
   owner_id: z.number().nullable(),
   status: z.string().min(1, { message: "status is required" }),
+  lapentor_url: z
+    .string()
+    .url({ message: "URL Lapentor tidak valid" })
+    .optional()
+    .nullable(),
   commission: z
     .object({
       transgo: z.number(),
@@ -141,6 +146,11 @@ const editFormSchema = z.object({
   }),
   location_id: z.string().min(1, { message: "Tolong pilih lokasi" }),
   owner_id: z.number().nullable(),
+  lapentor_url: z
+    .string()
+    .url({ message: "URL Lapentor tidak valid" })
+    .optional()
+    .nullable(),
   commission: z
     .object({
       transgo: z.number(),
@@ -228,6 +238,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
         owner_id: initialData?.owner?.id,
         commission: initialData?.commission,
         status: initialData?.status,
+        lapentor_url: initialData?.lapentor_url,
       }
     : {
         name: "",
@@ -240,6 +251,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
         owner_id: null,
         commission: { transgo: 0, owner: 0, partner: 0 },
         status: "available",
+        lapentor_url: "",
       };
 
   const form = useForm<CustomerFormValues>({
@@ -945,6 +957,31 @@ export const FleetForm: React.FC<FleetFormProps> = ({
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="lapentor_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Link Lapentor (Virtual Tour 3D)</FormLabel>
+                <FormControl className="disabled:opacity-100">
+                  <Input
+                    disabled={!isEdit || loading}
+                    placeholder="https://lapentor.com/sphere/your-project-id"
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      e.target.value = e.target.value.trimStart();
+                      field.onChange(e.target.value);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+                <p className="text-sm text-muted-foreground">
+                  Masukkan link Lapentor untuk virtual tour 3D kendaraan (opsional)
+                </p>
               </FormItem>
             )}
           />
