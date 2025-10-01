@@ -38,12 +38,14 @@ export const productOrderSchema = z.object({
     driver_id: z.string().optional(),
     distance: z.union([z.string(), z.number()]).optional(),
     address: z.string().optional(),
+    status: z.string().optional(),
   }),
   end_request: z.object({
     is_self_pickup: z.boolean(),
     driver_id: z.string().optional(),
     distance: z.union([z.string(), z.number()]).optional(),
     address: z.string().optional(),
+    status: z.string().optional(),
   }),
   additionals: z.array(z.object({
     name: z.string().min(1, "deskripsi layanan"),

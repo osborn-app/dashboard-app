@@ -135,72 +135,50 @@ const RequestTableWrapper = () => {
     },
   ];
 
+  // Update URL when date range changes
   useEffect(() => {
+    const params: Record<string, string | number | null | undefined> = {
+      status: defaultTab,
+      request_type: requestTypeFilter,
+    };
+
     if (dateRange && dateRange.from && dateRange.to) {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          start_date: dayjs(dateRange?.from).locale("id").format("YYYY-MM-DDT00:00:00Z"),
-          end_date: dayjs(dateRange?.to).locale("id").format("YYYY-MM-DDT23:00:00Z"),
-          request_type: requestTypeFilter,
-        })}`,
-      );
+      params.start_date = dayjs(dateRange.from).locale("id").format("YYYY-MM-DDT00:00:00Z");
+      params.end_date = dayjs(dateRange.to).locale("id").format("YYYY-MM-DDT23:00:00Z");
     } else {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          start_date: null,
-          end_date: null,
-          request_type: requestTypeFilter,
-        })}`,
-      );
+      params.start_date = null;
+      params.end_date = null;
     }
-  }, [dateRange, requestTypeFilter]);
 
+    router.push(`${pathname}?${createQueryString(params)}`);
+  }, [dateRange, requestTypeFilter, defaultTab, pathname, createQueryString, router]);
+
+  // Update URL when search query changes
   useEffect(() => {
-    if (
-      searchDebounce !== undefined ||
-      searchDebounce !== "" ||
-      searchDebounce
-    ) {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          q: searchDebounce,
-          start_date: null,
-          end_date: null,
-          page: null,
-          limit: pageLimit,
-          request_type: requestTypeFilter,
-        })}`,
-      );
+    const params: Record<string, string | number | null | undefined> = {
+      status: defaultTab,
+      request_type: requestTypeFilter,
+      page: null,
+      limit: pageLimit,
+    };
+
+    if (searchDebounce && searchDebounce.trim() !== "") {
+      params.q = searchDebounce;
     } else {
-      router.push(
-        `${pathname}?${createQueryString({
-          status: defaultTab,
-          q: null,
-          page: null,
-          limit: null,
-          request_type: requestTypeFilter,
-        })}`,
-      );
+      params.q = null;
     }
-  }, [searchDebounce, requestTypeFilter]);
 
-  useEffect(() => {
-    handleClearDate()
-    router.push(
-      `${pathname}?${createQueryString({
-        status: defaultTab,
-        q: null,
-        start_date: null,
-        end_date: null,
-        page: null,
-        limit: null,
-        request_type: requestTypeFilter,
-      })}`,
-    );
-  }, [defaultTab, requestTypeFilter]);
+    // Preserve date range if it exists
+    if (dateRange && dateRange.from && dateRange.to) {
+      params.start_date = dayjs(dateRange.from).locale("id").format("YYYY-MM-DDT00:00:00Z");
+      params.end_date = dayjs(dateRange.to).locale("id").format("YYYY-MM-DDT23:00:00Z");
+    } else {
+      params.start_date = null;
+      params.end_date = null;
+    }
+
+    router.push(`${pathname}?${createQueryString(params)}`);
+  }, [searchDebounce, requestTypeFilter, defaultTab, pathname, createQueryString, router, pageLimit, dateRange]);
 
   return (
     <>
