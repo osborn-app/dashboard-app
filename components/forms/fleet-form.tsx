@@ -104,6 +104,10 @@ const formSchema = z.object({
     .url({ message: "URL Lapentor tidak valid" })
     .optional()
     .nullable(),
+  brand: z
+    .string()
+    .optional()
+    .nullable(),
   commission: z
     .object({
       transgo: z.number(),
@@ -149,6 +153,10 @@ const editFormSchema = z.object({
   lapentor_url: z
     .string()
     .url({ message: "URL Lapentor tidak valid" })
+    .optional()
+    .nullable(),
+  brand: z
+    .string()
     .optional()
     .nullable(),
   commission: z
@@ -239,6 +247,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
         commission: initialData?.commission,
         status: initialData?.status,
         lapentor_url: initialData?.lapentor_url,
+        brand: initialData?.brand,
       }
     : {
         name: "",
@@ -252,6 +261,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
         commission: { transgo: 0, owner: 0, partner: 0 },
         status: "available",
         lapentor_url: "",
+        brand: "",
       };
 
   const form = useForm<CustomerFormValues>({
@@ -961,30 +971,53 @@ export const FleetForm: React.FC<FleetFormProps> = ({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="lapentor_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Link Lapentor (Virtual Tour 3D)</FormLabel>
-                <FormControl className="disabled:opacity-100">
-                  <Input
-                    disabled={!isEdit || loading}
-                    placeholder="https://lapentor.com/sphere/your-project-id"
-                    value={field.value ?? ""}
-                    onChange={(e) => {
-                      e.target.value = e.target.value.trimStart();
-                      field.onChange(e.target.value);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-                <p className="text-sm text-muted-foreground">
-                  Masukkan link Lapentor untuk virtual tour 3D kendaraan (opsional)
-                </p>
-              </FormItem>
-            )}
-          />
+          <div className="md:grid md:grid-cols-2 gap-8">
+            <FormField
+              control={form.control}
+              name="brand"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Merk</FormLabel>
+                  <FormControl className="disabled:opacity-100">
+                    <Input
+                      disabled={!isEdit || loading}
+                      placeholder="Merk kendaraan"
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        e.target.value = e.target.value.trimStart();
+                        field.onChange(e.target.value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lapentor_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Link Lapentor (Virtual Tour 3D)</FormLabel>
+                  <FormControl className="disabled:opacity-100">
+                    <Input
+                      disabled={!isEdit || loading}
+                      placeholder="https://lapentor.com/sphere/your-project-id"
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        e.target.value = e.target.value.trimStart();
+                        field.onChange(e.target.value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-sm text-muted-foreground">
+                    Masukkan link Lapentor untuk virtual tour 3D kendaraan (opsional)
+                  </p>
+                </FormItem>
+              )}
+            />
+          </div>
           {isEdit && (
             <Button
               disabled={loading}
