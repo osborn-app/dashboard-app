@@ -96,7 +96,7 @@ export default function NeracaPage() {
   const { data: neracaData, isLoading, error } = useGetNeracaReport(planningId, {
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: '1', // Default template ID
+    template_id: 'template_neraca', // Template ID untuk neraca
   });
 
   // Hook untuk API categories

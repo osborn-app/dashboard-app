@@ -101,7 +101,7 @@ export default function LabaRugiPage() {
   const { data: labaRugiData, isLoading, error } = useGetLabaRugiReport(planningId, {
     date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: '1', // Default template ID
+    template_id: 'template_laba_rugi', // Template ID untuk laba rugi
   });
 
   // Helper function untuk generate filename
