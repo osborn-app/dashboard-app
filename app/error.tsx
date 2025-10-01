@@ -9,7 +9,7 @@ export default function ErrorPage({
   error: Error & { digest?: string };
 }) {
   useEffect(() => { //redeploy rollback
-    // Log the error to Sentry
+    
     Sentry.captureException(error);
   }, [error]);
 
