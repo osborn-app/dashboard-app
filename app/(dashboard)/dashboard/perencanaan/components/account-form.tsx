@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -64,12 +64,10 @@ export function AccountForm({
   const { toast } = useToast();
   const assignAccountsMutation = useAssignAccountsToCategory(planningId, categoryId);
 
-  // OPTIONAL: simple debounce biar gak nge-hit API tiap karakter
-  const debouncedSearch = useDebounce(search, 250);
-  
-  // Get all planning accounts (server-side filter)
+  // Get all planning accounts (fetch all data, filter client-side)
   const { data: accountsData, isLoading: isLoadingAccounts } = useGetPlanningAccounts({
-    search: debouncedSearch,
+    page: 1,
+    limit: 1000,
   });
 
   // Client-side filter tambahan (aman kalau API belum support search)
@@ -252,14 +250,3 @@ export function AccountForm({
   );
 }
 
-/** =========================
- *  util: simple debounce hook
- *  ========================= */
-function useDebounce<T>(value: T, delay = 250) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-}
