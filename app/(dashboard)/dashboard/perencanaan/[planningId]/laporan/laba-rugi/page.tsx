@@ -264,13 +264,6 @@ export default function LabaRugiPage() {
     setIsAddAccountModalOpen(true);
   };
 
-  // Handler untuk edit akun
-  const handleEditAccount = (accountId: string) => {
-    toast({
-      title: 'Edit Account',
-      description: `Edit account dengan ID: ${accountId}`,
-    });
-  };
 
   // Handler untuk delete akun
   const handleDeleteAccount = async (accountId: string) => {
@@ -831,7 +824,6 @@ export default function LabaRugiPage() {
                               category={category}
                               planningId={planningId}
                               onAddAccount={handleAddAccount}
-                              onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
                             />
                           </div>
@@ -905,7 +897,6 @@ export default function LabaRugiPage() {
                               category={category}
                               planningId={planningId}
                               onAddAccount={handleAddAccount}
-                              onEditAccount={handleEditAccount}
                               onDeleteAccount={handleDeleteAccount}
                             />
                           </div>

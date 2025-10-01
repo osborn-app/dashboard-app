@@ -19,11 +19,7 @@ import { createPerencanaanColumns, PerencanaanItem } from '@/components/tables/p
 import { Perencanaan, CreatePerencanaanData } from '@/types/perencanaan';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-interface PerencanaanTableWrapperProps {
-  userRole: string;
-}
-
-const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => {
+const PerencanaanTableWrapper = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -184,24 +180,22 @@ const PerencanaanTableWrapper = ({ userRole }: PerencanaanTableWrapperProps) => 
             className="pl-10"
           />
         </div>
-        {userRole !== "owner" && (
-          <Button 
-            onClick={() => setShowCreateDialog(true)}
-            disabled={createMutation.isPending}
-          >
-            {createMutation.isPending ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Membuat...
-              </>
-            ) : (
-              <>
-                <Plus className="mr-2 h-4 w-4" />
-                Tambah Perencanaan
-              </>
-            )}
-          </Button>
-        )}
+        <Button 
+          onClick={() => setShowCreateDialog(true)}
+          disabled={createMutation.isPending}
+        >
+          {createMutation.isPending ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Membuat...
+            </>
+          ) : (
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Perencanaan
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Perencanaan Table */}

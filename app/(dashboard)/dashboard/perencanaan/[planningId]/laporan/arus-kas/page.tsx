@@ -56,7 +56,6 @@ export default function ArusKasPage() {
   // State untuk export
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingCSV, setIsExportingCSV] = useState(false);
-  const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
@@ -270,10 +269,6 @@ export default function ArusKasPage() {
     setIsAddAccountModalOpen(true);
   };
 
-  const handleEditAccount = (accountId: string) => {
-    setSelectedAccount({ id: accountId });
-    setIsEditAccountModalOpen(true);
-  };
 
   const handleDeleteAccount = async (accountId: string) => {
     try {
@@ -834,7 +829,6 @@ export default function ArusKasPage() {
                             categoryId={category.id}
                             planningId={planningId}
                             onAddAccount={() => handleAddAccount(category.id)}
-                            onEditAccount={handleEditAccount}
                             onDeleteAccount={handleDeleteAccount}
                           />
                         </div>
@@ -909,17 +903,6 @@ export default function ArusKasPage() {
       <ArusKasAccountForm
         isOpen={isAddAccountModalOpen}
         onClose={() => setIsAddAccountModalOpen(false)}
-        categoryId={selectedCategoryId}
-        planningId={planningId}
-        onSuccess={handleDataChange}
-      />
-      
-      <ArusKasAccountForm
-        isOpen={isEditAccountModalOpen}
-        onClose={() => {
-          setIsEditAccountModalOpen(false);
-          setSelectedAccount(null);
-        }}
         categoryId={selectedCategoryId}
         planningId={planningId}
         onSuccess={handleDataChange}
