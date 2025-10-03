@@ -38,6 +38,7 @@ import { useDebounce } from "use-debounce";
 import { Select as AntdSelect, Space } from "antd";
 import { NumericFormat } from "react-number-format";
 import { useGetDetailOwner, useGetInfinityOwners } from "@/hooks/api/useOwner";
+import { useGetBrandsList } from "@/hooks/api/useBrand";
 import OwnerDetail from "./section/owner-detail";
 import { useUser } from "@/context/UserContext";
 
@@ -104,8 +105,8 @@ const formSchema = z.object({
     .url({ message: "URL Lapentor tidak valid" })
     .optional()
     .nullable(),
-  brand: z
-    .string()
+  brand_id: z
+    .number()
     .optional()
     .nullable(),
   commission: z
@@ -155,8 +156,8 @@ const editFormSchema = z.object({
     .url({ message: "URL Lapentor tidak valid" })
     .optional()
     .nullable(),
-  brand: z
-    .string()
+  brand_id: z
+    .number()
     .optional()
     .nullable(),
   commission: z
@@ -219,8 +220,10 @@ export const FleetForm: React.FC<FleetFormProps> = ({
   const axiosAuth = useAxiosAuth();
   const [searchLocation, setSearchLocation] = useState("");
   const [searchOwner, setSearchOwner] = useState("");
+  const [searchBrand, setSearchBrand] = useState("");
   const [searchLocationDebounce] = useDebounce(searchLocation, 500);
   const [searchOwnerDebounce] = useDebounce(searchOwner, 500);
+  const [searchBrandDebounce] = useDebounce(searchBrand, 500);
 
   const {
     data: locations,
@@ -233,6 +236,8 @@ export const FleetForm: React.FC<FleetFormProps> = ({
     fetchNextPage: fetchNextOwners,
     isFetchingNextPage: isFetchingNextOwners,
   } = useGetInfinityOwners(searchOwnerDebounce);
+
+  const { data: brands } = useGetBrandsList();
 
   const defaultValues = initialData
     ? {
@@ -247,7 +252,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
         commission: initialData?.commission,
         status: initialData?.status,
         lapentor_url: initialData?.lapentor_url,
-        brand: initialData?.brand,
+        brand_id: initialData?.brand?.id || initialData?.brand_id,
       }
     : {
         name: "",
@@ -261,7 +266,7 @@ export const FleetForm: React.FC<FleetFormProps> = ({
         commission: { transgo: 0, owner: 0, partner: 0 },
         status: "available",
         lapentor_url: "",
-        brand: "",
+        brand_id: null,
       };
 
   const form = useForm<CustomerFormValues>({
@@ -974,20 +979,36 @@ export const FleetForm: React.FC<FleetFormProps> = ({
           <div className="md:grid md:grid-cols-2 gap-8">
             <FormField
               control={form.control}
-              name="brand"
+              name="brand_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Merk</FormLabel>
                   <FormControl className="disabled:opacity-100">
-                    <Input
-                      disabled={!isEdit || loading}
-                      placeholder="Merk kendaraan"
-                      value={field.value ?? ""}
-                      onChange={(e) => {
-                        e.target.value = e.target.value.trimStart();
-                        field.onChange(e.target.value);
+                    <AntdSelect
+                      showSearch
+                      value={field.value}
+                      placeholder="Pilih Merk"
+                      style={{ width: "100%" }}
+                      onSearch={setSearchBrand}
+                      onChange={(value) => {
+                        if (value === undefined) {
+                          field.onChange(null);
+                        } else {
+                          field.onChange(value);
+                        }
                       }}
-                    />
+                      allowClear
+                      filterOption={(input, option) =>
+                        String(option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                      }
+                      disabled={!isEdit || loading}
+                    >
+                      {brands?.map((brand: any) => (
+                        <Option key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </Option>
+                      ))}
+                    </AntdSelect>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

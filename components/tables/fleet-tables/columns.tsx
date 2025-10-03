@@ -51,6 +51,11 @@ export const columns: ColumnDef<any>[] = [
     cell: ({ row }) => <span>{row.original.color ?? "-"}</span>,
   },
   {
+    accessorKey: "brand",
+    header: "Merk",
+    cell: ({ row }) => <span>{row.original.brand ?? "-"}</span>,
+  },
+  {
     id: "actions",
     cell: ({ row }) => <CellAction data={row.original} />,
   },

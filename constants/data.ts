@@ -266,6 +266,13 @@ export const navItems: NavItem[] = [
         label: "Discount",
         roles: ["admin"],
       },
+      {
+        title: "Brand",
+        href: "/dashboard/brand",
+        icon: "car",
+        label: "Brand",
+        roles: ["admin"],
+      }
     ],
   },
   {
