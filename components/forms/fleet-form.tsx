@@ -220,10 +220,8 @@ export const FleetForm: React.FC<FleetFormProps> = ({
   const axiosAuth = useAxiosAuth();
   const [searchLocation, setSearchLocation] = useState("");
   const [searchOwner, setSearchOwner] = useState("");
-  const [searchBrand, setSearchBrand] = useState("");
   const [searchLocationDebounce] = useDebounce(searchLocation, 500);
   const [searchOwnerDebounce] = useDebounce(searchOwner, 500);
-  const [searchBrandDebounce] = useDebounce(searchBrand, 500);
 
   const {
     data: locations,
@@ -989,7 +987,6 @@ export const FleetForm: React.FC<FleetFormProps> = ({
                       value={field.value}
                       placeholder="Pilih Merk"
                       style={{ width: "100%" }}
-                      onSearch={setSearchBrand}
                       onChange={(value) => {
                         if (value === undefined) {
                           field.onChange(null);
@@ -998,9 +995,13 @@ export const FleetForm: React.FC<FleetFormProps> = ({
                         }
                       }}
                       allowClear
-                      filterOption={(input, option) =>
-                        String(option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-                      }
+                      filterOption={(input, option) => {
+                        const label = String(option?.children ?? "");
+                        const searchTerm = input.toLowerCase();
+                        const result = label.toLowerCase().includes(searchTerm);
+                        console.log('Filter debug:', { input, label, searchTerm, result });
+                        return result;
+                      }}
                       disabled={!isEdit || loading}
                     >
                       {brands?.map((brand: any) => (

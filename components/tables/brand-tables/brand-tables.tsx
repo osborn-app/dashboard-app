@@ -80,14 +80,12 @@ export default function BrandTables({ onEdit, onDelete }: BrandTablesProps) {
     columns(
       (brand) => {
         setEditingBrand(brand);
-        onEdit?.(brand);
       },
       (brand) => {
         setDeletingBrand(brand);
-        onDelete?.(brand);
       }
     ), 
-    [onEdit, onDelete]
+    []
   );
 
   // React Table setup
