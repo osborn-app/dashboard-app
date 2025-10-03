@@ -51,9 +51,9 @@ export const columns: ColumnDef<any>[] = [
     cell: ({ row }) => <span>{row.original.color ?? "-"}</span>,
   },
   {
-    accessorKey: "brand",
+    accessorKey: "brandRelation",
     header: "Merk",
-    cell: ({ row }) => <span>{row.original.brand ?? "-"}</span>,
+    cell: ({ row }) => <span>{row.original.brandRelation?.name ?? "-"}</span>,
   },
   {
     id: "actions",
