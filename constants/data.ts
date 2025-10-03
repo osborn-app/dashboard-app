@@ -269,7 +269,7 @@ export const navItems: NavItem[] = [
       {
         title: "Brand",
         href: "/dashboard/brand",
-        icon: "car",
+        icon: "tags",
         label: "Brand",
         roles: ["admin"],
       }
