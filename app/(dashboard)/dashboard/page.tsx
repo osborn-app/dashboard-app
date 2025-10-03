@@ -23,7 +23,7 @@ export default function Page() {
 
         {user?.role !== "driver" && (
           <>
-            {user?.role === "admin" || user?.role === "super_admin" && (
+            {(user?.role === "admin" || user?.role === "super_admin") && (
               <>
                 <h3 className="text-2xl font-bold tracking-tight">
                   Request Task
