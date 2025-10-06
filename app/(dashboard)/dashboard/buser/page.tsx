@@ -3,7 +3,7 @@ import BreadCrumb from "@/components/breadcrumb";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { Tabs } from "@/components/ui/tabs";
-import BuserTableWrapper from "./buser-table-wrapper";
+import BuserTableWrapper from "./buser-table-wrapper"; //redeploy
 import { useSearchParams } from "next/navigation";
 
 const breadcrumbItems = [{ title: "Buser", link: "/dashboard/buser" }]; //trigger deploy
@@ -27,3 +27,4 @@ export default function BuserPage() {
 }
 
 // trigger deploy dev.dashboard.transgo.id
+
