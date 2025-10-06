@@ -14,6 +14,7 @@ export type ReimburseFormValues = z.infer<
   noRekening: string;
   driver: number;
   fleet: number;
+  product?: number;
   location: number;
   date: Date;
   description: string;

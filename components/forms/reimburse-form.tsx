@@ -51,6 +51,7 @@ import { editSchema, formSchema } from "./validation/reimburseSchema";
 import ImagePreview from "../imagePreview";
 import UploadFile from "../uploud-file";
 import { useGetInfinityFleets } from "@/hooks/api/useFleet";
+import { useGetInfinityProducts } from "@/hooks/api/useProduct";
 import DriverReimburseDetail from "./section/driverReimburse-detail";
 // import "@uploadthing/react/styles.css";
 
@@ -98,9 +99,11 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const [searchLocation, setSearchLocation] = useState("");
   const [searchDriverTerm, setSearchDriverTerm] = useState("");
   const [searchFleetTerm, setSearchFleetTerm] = useState("");
+  const [searchProductTerm, setSearchProductTerm] = useState("");
   // const [searchLocationTerm, setSearchLocationTerm] = useState("");
   const [searchDriverDebounce] = useDebounce(searchDriverTerm, 500);
   const [searchFleetDebounce] = useDebounce(searchFleetTerm, 500);
+  const [searchProductDebounce] = useDebounce(searchProductTerm, 500);
   const [searchLocationDebounce] = useDebounce(searchLocation, 500);
   // const [detail, setDetail] = useState<DriverDetail | null>(null);
   const [openApprovalModal, setOpenApprovalModal] = useState<boolean>(false);
@@ -141,7 +144,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const defaultValues = initialData
     ? {
         driver: initialData?.driver?.id?.toString(), // Mengambil nama driver
-        fleet: initialData?.fleet?.id?.toString(), // Mengambil nama driver
+        fleet: initialData?.fleet?.id?.toString() || "", // Mengambil nama driver
+        product: initialData?.product?.id?.toString() || "", // Mengambil product
         nominal: initialData?.nominal?.toString() || "", // Nominal reimburse
         bank: initialData?.bank || "", // Nama bank
         location: initialData?.location?.id?.toString(), // Lokasi reimburse
@@ -156,6 +160,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     : {
         driver: "", // Nama driver kosong
         fleet: "", // Nama fleet kosong
+        product: "", // Product kosong
         nominal: "", // Nominal default 0
         bank: "", // Nama bank kosong
         location: "", // Lokasi kosong
@@ -175,6 +180,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   // Reimburse Fields
   const driverNameField = form.watch("driver"); // Nama driver
   const fleetField = form.watch("fleet"); // Nama driver
+  const productField = form.watch("product" as any); // Product
   const nominalField = form.watch("nominal"); // Nominal/jumlah reimburse
   const bankNameField = form.watch("bank"); // Nama bank
   const locationField = form.watch("location"); // Lokasi reimburse
@@ -215,6 +221,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       const basedPayload = {
         driver_id: data.driver, // Menggunakan nama driver
         fleet_id: data.fleet, // Menggunakan nama driver
+        product_id: (data as any).product, // Menggunakan product
         nominal: data.nominal, // Mengubah nominal ke number, menghapus koma jika ada
         bank: data.bank, // Nama bank
         location_id: data.location, // Lokasi reimburse
@@ -309,6 +316,12 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     hasNextPage: hasNextFleets,
     isFetchingNextPage: isFetchingNextFleets,
   } = useGetInfinityFleets(searchFleetDebounce);
+  const {
+    data: products,
+    fetchNextPage: fetchNextProducts,
+    hasNextPage: hasNextProducts,
+    isFetchingNextPage: isFetchingNextProducts,
+  } = useGetInfinityProducts(searchProductDebounce);
 
   const handleScrollDrivers = (event: React.UIEvent<HTMLDivElement>) => {
     const target = event.target as HTMLDivElement;
@@ -320,6 +333,12 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     const target = event.target as HTMLDivElement;
     if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
       fetchNextFleets();
+    }
+  };
+  const handleScrollProducts = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLDivElement;
+    if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
+      fetchNextProducts();
     }
   };
 
@@ -337,6 +356,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     const payload = {
       driver_id: driverNameField, // Nama driver
       fleet_id: fleetField, // Nama fleet
+      product_id: productField, // Product
       nominal: isString(nominalField) // Nominal/jumlah reimburse
         ? +nominalField
         : nominalField,
@@ -352,6 +372,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     };
   }, [
     fleetField,
+    productField,
     transferProofUrlField,
     transactionProofUrlField,
     driverNameField,
@@ -427,6 +448,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     const newMessages = {
       driver: generateMessage(driverNameField, defaultValues?.driver), // Nama Driver
       fleet: generateMessage(fleetField, defaultValues?.fleet), // Nama Driver
+      product: generateMessage(productField, defaultValues?.product), // Product
       nominal: generateMessage(nominalField, defaultValues?.nominal), // Nominal/Jumlah Reimburse
       location: generateMessage(locationField, defaultValues?.location), // Lokasi Reimburse
       transaction_proof_url: generateMessage(
@@ -456,6 +478,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     }
   }, [
     fleetField,
+    productField,
     transferProofUrlField,
     transactionProofUrlField,
     driverNameField,
@@ -852,8 +875,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                       render={({ field }) => {
                         return (
                           <div className="space-y-2 w-full">
-                            <FormLabel className="relative label-required">
-                              Pilih Unit
+                            <FormLabel>
+                              Pilih Unit (Fleet)
                             </FormLabel>
                             <div className="flex">
                               <FormControl>
@@ -864,8 +887,15 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   style={{
                                     height: "40px",
                                   }}
+                                  disabled={!isEmpty(productField)}
                                   onSearch={setSearchFleetTerm}
-                                  onChange={field.onChange}
+                                  onChange={(value) => {
+                                    field.onChange(value);
+                                    // Clear product field when fleet is selected
+                                    if (value) {
+                                      form.setValue("product" as any, "");
+                                    }
+                                  }}
                                   onPopupScroll={handleScrollFleets}
                                   filterOption={false}
                                   notFoundContent={
@@ -923,7 +953,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             : "",
                         )}
                       >
-                        Pilih Unit
+                        Pilih Unit (Fleet)
                       </FormLabel>
                       <div className="flex">
                         {" "}
@@ -934,7 +964,111 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                               height: "40px",
                             }}
                             disabled
-                            value={initialData?.fleet.name ?? "-"}
+                            value={initialData?.fleet?.name ?? "-"}
+                          />
+                        </FormControl>
+                      </div>
+                    </FormItem>
+                  )}
+                </div>
+                <div className="flex items-end">
+                  {lastPath !== "preview" && isEdit ? (
+                    <FormField
+                      name="product"
+                      control={form.control}
+                      render={({ field }) => {
+                        return (
+                          <div className="space-y-2 w-full">
+                            <FormLabel>
+                              Pilih Product
+                            </FormLabel>
+                            <div className="flex">
+                              <FormControl>
+                                <AntdSelect
+                                  className={cn("mr-2 w-full")}
+                                  showSearch
+                                  placeholder="Pilih product..."
+                                  style={{
+                                    height: "40px",
+                                  }}
+                                  disabled={!isEmpty(fleetField)}
+                                  onSearch={setSearchProductTerm}
+                                  onChange={(value) => {
+                                    field.onChange(value);
+                                    // Clear fleet field when product is selected
+                                    if (value) {
+                                      form.setValue("fleet" as any, "");
+                                    }
+                                  }}
+                                  onPopupScroll={handleScrollProducts}
+                                  filterOption={false}
+                                  notFoundContent={
+                                    isFetchingNextProducts ? (
+                                      <p className="px-3 text-sm">loading</p>
+                                    ) : null
+                                  }
+                                  // append value attribute when field is not  empty
+                                  {...(!isEmpty(field.value) && {
+                                    value: field.value,
+                                  })}
+                                >
+                                  {lastPath !== "create" && isEdit && (
+                                    <Option
+                                      value={initialData?.product?.id?.toString()}
+                                    >
+                                      {initialData?.product?.name}
+                                    </Option>
+                                  )}
+                                  {products?.pages.map(
+                                    (page: any, pageIndex: any) =>
+                                      page.data.items.map(
+                                        (item: any, itemIndex: any) => {
+                                          return (
+                                            <Option
+                                              key={item.id}
+                                              value={item.id.toString()}
+                                            >
+                                              {item.name}
+                                            </Option>
+                                          );
+                                        },
+                                      ),
+                                  )}
+
+                                  {isFetchingNextProducts && (
+                                    <Option disabled>
+                                      <p className="px-3 text-sm">loading</p>
+                                    </Option>
+                                  )}
+                                </AntdSelect>
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </div>
+                        );
+                      }}
+                    />
+                  ) : (
+                    <FormItem>
+                      <FormLabel
+                        className={cn(
+                          initialData?.product?.status === "pending"
+                            ? "text-destructive"
+                            : "",
+                        )}
+                      >
+                        Pilih Product
+                      </FormLabel>
+                      <div className="flex">
+                        {" "}
+                        <FormControl className="disabled:opacity-100">
+                          <Input
+                            className={cn("mr-2")}
+                            style={{
+                              height: "40px",
+                            }}
+                            disabled
+                            value={initialData?.product?.name ?? "-"}
                           />
                         </FormControl>
                       </div>
@@ -1216,6 +1350,8 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                     </FormItem>
                   )}
                 </div>
+              </div>
+              <div className={cn("lg:grid grid-cols-2 gap-[10px] items-start")}>
                 <div className="flex items-end">
                   {isEdit ? (
                     <FormField
@@ -1259,23 +1395,16 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                   ) : (
                     <FormItem>
                       <FormLabel>Kategori</FormLabel>
-                      <div className="flex">
-                        <FormControl className="disabled:opacity-100">
-                          <Input
-                            className={cn("mr-2")}
-                            style={{
-                              height: "40px",
-                            }}
-                            disabled
-                            value={initialData?.category ?? "-"}
-                          />
-                        </FormControl>
-                      </div>
+                      <FormControl className="disabled:opacity-100">
+                        <Input
+                          disabled
+                          value={initialData?.category ?? "-"}
+                        />
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 </div>
-              </div>
-              <div className={cn("lg:grid grid-cols-1 gap-[10px] items-start")}>
                 <div className="flex items-end">
                   {isEdit ? (
                     <FormField
