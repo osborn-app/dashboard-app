@@ -30,6 +30,7 @@ const page = async ({ searchParams }: paramsProps) => {
   const pageLimit = Number(searchParams.limit) || 10;
   const q = searchParams.q || null;
   const status = searchParams.status || null;
+  const brand = searchParams.brand || null;
 
   return (
     <>

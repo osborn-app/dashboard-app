@@ -39,7 +39,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useUser } from "@/context/UserContext";
 import { useFleetTableData } from "@/hooks/api/useFleet";
+import { useGetBrandsList } from "@/hooks/api/useBrand";
 import Spinner from "@/components/spinner";
+import { Select as AntdSelect } from "antd";
+const { Option } = AntdSelect;
 
 interface DataTableProps<TData, TValue> {
   data: TData[];
@@ -68,6 +71,7 @@ export function FleetTable<TData, TValue>({
   const page = searchParams?.get("page") ?? "1";
   const q = searchParams?.get("q");
   const status = searchParams?.get("status");
+  const brand = searchParams?.get("brand");
   const pageAsNumber = Number(page);
   const fallbackPage =
     isNaN(pageAsNumber) || pageAsNumber < 1 ? 1 : pageAsNumber;
@@ -82,8 +86,13 @@ export function FleetTable<TData, TValue>({
   const [statusFilter, setStatusFilter] = React.useState<string | undefined>(
     status ?? "",
   );
+  const [brandFilter, setBrandFilter] = React.useState<string | undefined>(
+    brand ?? "",
+  );
+  const [brandSearchTerm, setBrandSearchTerm] = React.useState<string>("");
   const [searchDebounce] = useDebounce(searchQuery, 500);
   const [statusDebounce] = useDebounce(statusFilter, 300);
+  const [brandDebounce] = useDebounce(brandFilter, 300);
 
   // Build query parameters for API call
   const queryParams = {
@@ -91,10 +100,23 @@ export function FleetTable<TData, TValue>({
     limit: fallbackPerPage,
     ...(searchDebounce && { q: searchDebounce }),
     ...(statusDebounce && { status: statusDebounce }),
+    ...(brandDebounce && { brand: brandDebounce }),
   };
 
   // Use the hook to fetch data with network visibility
   const { data: fleetData, isLoading, error } = useFleetTableData(queryParams);
+  
+  // Get brands list for filter dropdown
+  const { data: brandsList } = useGetBrandsList();
+
+  // Filter brands based on search term
+  const filteredBrands = React.useMemo(() => {
+    if (!brandsList || !brandSearchTerm) return brandsList || [];
+    
+    return brandsList.filter((brand: any) =>
+      brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
+    );
+  }, [brandsList, brandSearchTerm]);
 
   // Use fetched data or fallback to props data
   const tableData = fleetData?.items || data || [];
@@ -141,13 +163,14 @@ export function FleetTable<TData, TValue>({
         limit: pageSize,
         q: searchDebounce || undefined,
         status: statusDebounce || undefined,
+        brand: brandDebounce || undefined,
       })}`,
       {
         scroll: false,
       },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageIndex, pageSize, searchDebounce, statusDebounce]);
+  }, [pageIndex, pageSize, searchDebounce, statusDebounce, brandDebounce]);
 
   const table = useReactTable({
     data: tableData,
@@ -177,6 +200,16 @@ export function FleetTable<TData, TValue>({
     setStatusFilter(value === "all" ? "" : value);
   };
 
+  // Handle brand filter change
+  const handleBrandFilterChange = (value: string) => {
+    setBrandFilter(value === "all" ? "" : value);
+  };
+
+  // Handle brand search
+  const handleBrandSearch = (value: string) => {
+    setBrandSearchTerm(value);
+  };
+
   React.useEffect(() => {
     if (searchDebounce !== undefined) {
       router.push(
@@ -185,6 +218,7 @@ export function FleetTable<TData, TValue>({
           limit: null,
           q: searchDebounce,
           status: statusDebounce || undefined,
+          brand: brandDebounce || undefined,
         })}`,
         {
           scroll: false,
@@ -201,6 +235,7 @@ export function FleetTable<TData, TValue>({
             limit: null,
             q: null,
             status: statusDebounce || undefined,
+            brand: brandDebounce || undefined,
           })}`,
           {
             scroll: false,
@@ -220,6 +255,7 @@ export function FleetTable<TData, TValue>({
         limit: null,
         q: searchDebounce || undefined,
         status: statusDebounce || undefined,
+        brand: brandDebounce || undefined,
       })}`,
       {
         scroll: false,
@@ -228,6 +264,24 @@ export function FleetTable<TData, TValue>({
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusDebounce]);
+
+  // Handle brand filter changes
+  React.useEffect(() => {
+    router.push(
+      `${pathname}?${createQueryString({
+        page: null,
+        limit: null,
+        q: searchDebounce || undefined,
+        status: statusDebounce || undefined,
+        brand: brandDebounce || undefined,
+      })}`,
+      {
+        scroll: false,
+      },
+    );
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandDebounce]);
 
   // Reset search query when URL q parameter is null or undefined
   React.useEffect(() => {
@@ -242,6 +296,14 @@ export function FleetTable<TData, TValue>({
       setStatusFilter("");
     }
   }, [status]);
+
+  // Reset brand filter when URL brand parameter is null or undefined
+  React.useEffect(() => {
+    if (!brand) {
+      setBrandFilter("");
+      setBrandSearchTerm("");
+    }
+  }, [brand]);
 
   // Show loading state
   if (isLoading) {
@@ -269,19 +331,39 @@ export function FleetTable<TData, TValue>({
           onChange={handleSearchInputChange}
           className="w-full md:max-w-sm"
         />
-        <Select
-          value={statusFilter || "all"}
-          onValueChange={handleStatusFilterChange}
-        >
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Filter Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Semua Status</SelectItem>
-            <SelectItem value="available">Tidak Disewa</SelectItem>
-            <SelectItem value="ordered">Sedang Disewa</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-2 md:flex-row md:gap-4">
+          <Select
+            value={statusFilter || "all"}
+            onValueChange={handleStatusFilterChange}
+          >
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Filter Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              <SelectItem value="available">Tidak Disewa</SelectItem>
+              <SelectItem value="ordered">Sedang Disewa</SelectItem>
+            </SelectContent>
+          </Select>
+          <AntdSelect
+            showSearch
+            value={brandFilter || "all"}
+            onChange={handleBrandFilterChange}
+            onSearch={handleBrandSearch}
+            placeholder="Filter Brand"
+            style={{ width: "100%", minWidth: "180px" }}
+            filterOption={false}
+            allowClear
+            className="w-full md:w-[180px]"
+          >
+            <Option value="all">Semua Brand</Option>
+            {filteredBrands?.map((brand: any) => (
+              <Option key={brand.id} value={brand.id.toString()}>
+                {brand.name}
+              </Option>
+            ))}
+          </AntdSelect>
+        </div>
       </div>
       <ScrollArea className="rounded-md border h-[calc(80vh-220px)]">
         <Table className="relative">
