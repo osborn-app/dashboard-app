@@ -358,7 +358,7 @@ export function FleetTable<TData, TValue>({
           >
             <Option value="all">Semua Brand</Option>
             {filteredBrands?.map((brand: any) => (
-              <Option key={brand.id} value={brand.id.toString()}>
+              <Option key={brand.id} value={brand.name}>
                 {brand.name}
               </Option>
             ))}
