@@ -42,9 +42,17 @@ export const pendingColumns: ColumnDef<any>[] = [
   {
     accessorKey: "fleet",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Nama Fleet</span>
+      <span className="text-sm font-semibold text-neutral-700">Nama Unit</span>
     ),
-    cell: ({ row }) => <span>{row.original?.fleet?.name}</span>,
+    cell: ({ row }) => {
+      const { fleet_id, product_id, fleet, product } = row.original || {};
+      const name = fleet_id && fleet?.name
+        ? fleet.name
+        : product_id && product?.name
+        ? product.name
+        : fleet?.name || product?.name || "-";
+      return <span>{name}</span>;
+    },
     enableSorting: false,
   },
   {
@@ -156,9 +164,17 @@ export const rejectedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "fleet",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Nama Fleet</span>
+      <span className="text-sm font-semibold text-neutral-700">Nama Unit</span>
     ),
-    cell: ({ row }) => <span>{row.original?.fleet?.name}</span>,
+    cell: ({ row }) => {
+      const { fleet_id, product_id, fleet, product } = row.original || {};
+      const name = fleet_id && fleet?.name
+        ? fleet.name
+        : product_id && product?.name
+        ? product.name
+        : fleet?.name || product?.name || "-";
+      return <span>{name}</span>;
+    },
     enableSorting: false,
   },
   {
@@ -289,9 +305,17 @@ export const confirmedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "fleet",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Nama Fleet</span>
+      <span className="text-sm font-semibold text-neutral-700">Nama Unit</span>
     ),
-    cell: ({ row }) => <span>{row.original?.fleet?.name}</span>,
+    cell: ({ row }) => {
+      const { fleet_id, product_id, fleet, product } = row.original || {};
+      const name = fleet_id && fleet?.name
+        ? fleet.name
+        : product_id && product?.name
+        ? product.name
+        : fleet?.name || product?.name || "-";
+      return <span>{name}</span>;
+    },
     enableSorting: false,
   },
   {
@@ -397,9 +421,17 @@ export const completedColumns: ColumnDef<any>[] = [
   {
     accessorKey: "fleet",
     header: () => (
-      <span className="text-sm font-semibold text-neutral-700">Nama Fleet</span>
+      <span className="text-sm font-semibold text-neutral-700">Nama Unit</span>
     ),
-    cell: ({ row }) => <span>{row.original?.fleet?.name}</span>,
+    cell: ({ row }) => {
+      const { fleet_id, product_id, fleet, product } = row.original || {};
+      const name = fleet_id && fleet?.name
+        ? fleet.name
+        : product_id && product?.name
+        ? product.name
+        : fleet?.name || product?.name || "-";
+      return <span>{name}</span>;
+    },
     enableSorting: false,
   },
   {
