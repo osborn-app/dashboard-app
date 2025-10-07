@@ -15,7 +15,7 @@ import useCMSService from "@/hooks/api/useCMS";
 
 const breadcrumbItems = [{ title: "Content Management", link: "/dashboard/cms" }];
 
-export default function Page() {
+export default function Page() { //re
   const router = useRouter();
   const searchParams = useSearchParams();
   const cmsService = useCMSService(); 

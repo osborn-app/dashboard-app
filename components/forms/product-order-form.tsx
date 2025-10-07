@@ -2178,6 +2178,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
     "start_request.driver_id",
     "start_request.distance",
     "start_request.address",
+    "start_request.status",
     "end_request.is_self_pickup",
     "end_request.driver_id",
     "end_request.distance",
@@ -2191,6 +2192,7 @@ const DetailSection: React.FC<DetailSectionProps> = ({
       form.setValue("end_request.driver_id", watchedFields[1]);
       form.setValue("end_request.distance", watchedFields[2]);
       form.setValue("end_request.address", watchedFields[3]);
+      form.setValue("end_request.status", watchedFields[4]);
     }
   }, [...watchedFields, switchValue]);
 
