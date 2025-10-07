@@ -21,7 +21,7 @@ export type ReimburseFormValues = z.infer<
   transaction_proof_url?: string | null;
   transfer_proof_url?: string | null;
   quantity?: number;
-  category: string;
+  category: number;
 };
 
 export interface ReimburseFormProps {
@@ -42,5 +42,5 @@ export type Messages = {
   date: Date;
   description: string;
   quantity?: number;
-  category: string;
+  category: number;
 };

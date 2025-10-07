@@ -24,6 +24,7 @@ import {
   usePostReimburse,
   useRejectReimburse,
 } from "@/hooks/api/useReimburse";
+import { useGetActiveTransactionCategories } from "@/hooks/api/useRealization";
 import { useSidebar } from "@/hooks/useSidebar";
 import { cn, makeUrlsClickable } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -96,6 +97,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const { mutate: editReimburse } = useEditReimburse(reimburseid as string);
   const { mutate: acceptReimburse } = useAcceptReimburse(reimburseid as string);
   const { mutate: rejectReimburse } = useRejectReimburse();
+  const { data: transactionCategoriesData, isFetching: isFetchingCategories } = useGetActiveTransactionCategories();
   const [searchLocation, setSearchLocation] = useState("");
   const [searchDriverTerm, setSearchDriverTerm] = useState("");
   const [searchFleetTerm, setSearchFleetTerm] = useState("");
@@ -155,7 +157,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         transaction_proof_url: initialData?.transactionProofUrl || null,
         transfer_proof_url: initialData?.transferProofUrl || null,
         quantity: initialData?.quantity || 1, // Quantity default 1
-        category: initialData?.category || "", // Category required
+        category: initialData?.category || 0, // Category required
       }
     : {
         driver: "", // Nama driver kosong
@@ -170,10 +172,10 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         transaction_proof_url: null,
         transfer_proof_url: null,
         quantity: 1, // Quantity default 1
-        category: "", // Category required
+        category: 0, // Category required
       };
 
-  const form = useForm<ReimburseFormValues>({
+  const form = useForm({
     resolver: zodResolver(!initialData ? formSchema : editSchema),
     defaultValues,
   });
@@ -205,12 +207,14 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     setEnd(end);
   }, [now]);
 
-  // Auto-set quantity to 1 when category is "driver"
+  // Auto-set quantity to 1 when category is driver-related
   useEffect(() => {
-    if (categoryField === "driver") {
+    // Check if the selected category is driver-related by checking the category name
+    const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === categoryField);
+    if (selectedCategory?.name?.toLowerCase().includes("driver")) {
       form.setValue("quantity", 1);
     }
-  }, [categoryField, form]);
+  }, [categoryField, form, transactionCategoriesData]);
 
   // , form.getValues("duration")
 
@@ -228,7 +232,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         noRekening: data.noRekening, // Nomor rekening
         date: data.date, // Format tanggal (YYYY-MM-DD)
         quantity: data.quantity || 1, // Quantity with default 1
-        category: data.category || "", // Category with default empty
+        category: data.category || 0, // Category with default 0
         description: data.description || "", // Keterangan opsional
       };
 
@@ -471,7 +475,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         defaultValues?.description,
       ), // Keterangan Tambahan
       quantity: generateMessage(quantityField || 1, defaultValues?.quantity), // Quantity with default 1
-      category: generateMessage(categoryField || "", defaultValues?.category), // Category with default empty
+      category: generateMessage(categoryField || 0, defaultValues?.category), // Category with default 0
     };
     if (lastPath !== "create") {
       setMessages(newMessages);
@@ -1375,13 +1379,11 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   disabled={lastPath === "preview"}
                                   value={field.value || initialData?.category}
                                   onChange={field.onChange}
+                                  loading={isFetchingCategories}
                                 >
-                                  {[
-                                    { value: "driver", label: "Keperluan Driver" },
-                                    { value: "asset", label: "Keperluan Asset" },
-                                  ].map((category) => (
-                                    <Option key={category.value} value={category.value}>
-                                      {category.label}
+                                  {transactionCategoriesData?.data?.map((category: any) => (
+                                    <Option key={category.id} value={category.id}>
+                                      {category.name}
                                     </Option>
                                   ))}
                                 </AntdSelect>
@@ -1398,7 +1400,11 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                       <FormControl className="disabled:opacity-100">
                         <Input
                           disabled
-                          value={initialData?.category ?? "-"}
+                          value={(() => {
+                            if (!initialData?.category) return "-";
+                            const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === initialData.category);
+                            return selectedCategory?.name || initialData.category;
+                          })()}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1417,7 +1423,10 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                           </FormLabel>
                           <FormControl>
                             <NumericFormat
-                              disabled={lastPath === "preview" || categoryField === "driver"}
+                              disabled={lastPath === "preview" || (() => {
+                                const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === categoryField);
+                                return selectedCategory?.name?.toLowerCase().includes("driver");
+                              })()}
                               customInput={Input}
                               type="text"
                               allowLeadingZeros
