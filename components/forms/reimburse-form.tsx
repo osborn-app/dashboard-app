@@ -232,7 +232,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         noRekening: data.noRekening, // Nomor rekening
         date: data.date, // Format tanggal (YYYY-MM-DD)
         quantity: data.quantity || 1, // Quantity with default 1
-        category: data.category || 0, // Category with default 0
+        transaction_category_id: data.category || 0, // Category with default 0
         description: data.description || "", // Keterangan opsional
       };
 
@@ -372,7 +372,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       date: dateField, // Tanggal reimburse (format: YYYY-MM-DD)
       description: descriptionField || "",
       quantity: quantityField || 1, // Quantity with default 1
-      category: categoryField || "", // Category with default empty
+      transaction_category_id: categoryField || "", // Category with default empty
     };
   }, [
     fleetField,
