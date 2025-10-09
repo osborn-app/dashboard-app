@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useGetPlanningAccounts, useDeletePlanningEntry } from '@/hooks/api/usePerencanaan';
+import { useGetPlanningAccounts, useDeletePlanningEntry, useUpdatePlanningEntryStatus } from '@/hooks/api/usePerencanaan';
 import { Plus, Trash2, Check, ChevronsUpDown } from 'lucide-react';
 import { formatRupiah } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -52,6 +52,7 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   const [errors, setErrors] = useState<Partial<Record<keyof CreateRencanaFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [debitAccountSearch, setDebitAccountSearch] = useState('');
   const [creditAccountSearch, setCreditAccountSearch] = useState('');
   const [openDebitCombo, setOpenDebitCombo] = useState(false);
@@ -63,6 +64,9 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
   
   // Delete mutation hook
   const deleteMutation = useDeletePlanningEntry(planningId || '', entryId || '');
+
+  // Update status mutation hook
+  const updateStatusMutation = useUpdatePlanningEntryStatus(planningId || '', entryId || '');
   
   // Use all accounts like in table rencana
   const allAccounts = useMemo(() => {
@@ -203,6 +207,36 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
       });
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus: string) => {
+    if (!planningId || !entryId) {
+      toast({
+        title: 'Error',
+        description: 'ID perencanaan atau entri tidak ditemukan',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setIsUpdatingStatus(true);
+    try {
+      await updateStatusMutation.mutateAsync({ status: newStatus });
+      toast({
+        title: 'Success',
+        description: `Status berhasil diubah menjadi ${newStatus === 'terealisasi' ? 'Terealisasi' : 'Belum Terealisasi'}`,
+      });
+      onDelete?.(); // Refresh data
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal mengubah status',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -553,8 +587,17 @@ export function CreateRencanaDialog({ open, onOpenChange, onSubmit, editingData,
               type="button"
               variant="outline"
               className="bg-green-500 text-white hover:bg-green-600"
+              onClick={() => handleUpdateStatus('terealisasi')}
+              disabled={isUpdatingStatus || isSubmitting || isDeleting}
             >
-              Telah Terealisasi
+              {isUpdatingStatus ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Mengubah Status...
+                </>
+              ) : (
+                'Telah Terealisasi'
+              )}
             </Button>
             )}
             {editingData && planningId && entryId && (

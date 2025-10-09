@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Edit, Trash2, Eye } from "lucide-react";
 import {
   DropdownMenu,
@@ -79,10 +80,32 @@ export const createRencanaColumns = ({
     header: "STATUS",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
+      const getStatusVariant = (status: string) => {
+        switch (status) {
+          case "terealisasi":
+            return "default";
+          case "belum_terealisasi":
+            return "secondary";
+          default:
+            return "outline";
+        }
+      };
+      
+      const getStatusText = (status: string) => {
+        switch (status) {
+          case "terealisasi":
+            return "Terealisasi";
+          case "belum_terealisasi":
+            return "Belum Terealisasi";
+          default:
+            return status;
+        }
+      };
+      
       return (
-        <div className="text-sm">
-          {status}
-        </div>
+        <Badge variant={getStatusVariant(status)} className="text-xs">
+          {getStatusText(status)}
+        </Badge>
       );
     },
   },
@@ -197,15 +220,39 @@ export const createRencanaRowColumns = ({
       
       if (!isFirstRow) return null; // Hide cell for subsequent rows
       
+      const getStatusVariant = (status: string) => {
+        switch (status) {
+          case "terealisasi":
+            return "default";
+          case "belum_terealisasi":
+            return "secondary";
+          default:
+            return "outline";
+        }
+      };
+      
+      const getStatusText = (status: string) => {
+        switch (status) {
+          case "terealisasi":
+            return "Terealisasi";
+          case "belum_terealisasi":
+            return "Belum Terealisasi";
+          default:
+            return status;
+        }
+      };
+      
       return (
         <div 
-          className="text-sm flex items-center justify-center"
+          className="flex items-center justify-center"
           style={{ 
             height: `${row.original.rows.length * 40}px`,
             verticalAlign: 'middle'
           }}
         >
-          {status}
+          <Badge variant={getStatusVariant(status)} className="text-xs">
+            {getStatusText(status)}
+          </Badge>
         </div>
       );
     },
