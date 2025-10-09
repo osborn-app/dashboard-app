@@ -44,7 +44,7 @@ const convertApiResponseToRencanaItem = (apiItem: any, accountMap: Map<string, {
     return {
       id: '0',
       tanggal: '',
-      status: 'Belum Terealisasi',
+      status: 'belum_terealisasi',
       keterangan: '',
       planningId: '0',
       rencanaId: '0',
@@ -96,7 +96,7 @@ const convertApiResponseToRencanaRowItem = (apiItem: any, accountMap: Map<string
     return {
       id: '0',
       tanggal: '',
-      status: 'Belum Terealisasi',
+      status: 'belum_terealisasi',
       keterangan: '',
       planningId: '0',
       rencanaId: '0',
@@ -135,8 +135,8 @@ const convertApiResponseToRencanaRowItem = (apiItem: any, accountMap: Map<string
   
   return {
     id: apiItem.id?.toString() || '0',
-    tanggal: apiItem.date || '',
-    status: 'Belum Terealisasi',
+    tanggal: apiItem.date || '-',
+    status: apiItem.status || '-',
     keterangan: apiItem.note || '',
     planningId: apiItem.planning_id?.toString() || '0',
     rencanaId: apiItem.id?.toString() || '0',
@@ -439,7 +439,7 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
         return {
           'No': index + 1,
           'Tanggal': item.tanggal ? format(new Date(item.tanggal), 'dd/MM/yyyy', { locale: id }) : '',
-          'Status': item.status || 'Belum Terealisasi',
+          'Status': item.status === 'terealisasi' ? 'Terealisasi' : 'Belum Terealisasi',
           'Keterangan': item.keterangan || '',
           'Akun Debit': debitRow?.namaAkun || '',
           'Debit': debitRow?.debit || 0,
@@ -518,7 +518,7 @@ export function PerencanaanRencanaTab({ planningId }: RencanaTabProps) {
         return {
           'No': index + 1,
           'Tanggal': item.tanggal ? format(new Date(item.tanggal), 'dd/MM/yyyy', { locale: id }) : '',
-          'Status': item.status || 'Belum Terealisasi',
+          'Status': item.status === 'terealisasi' ? 'Terealisasi' : 'Belum Terealisasi',
           'Keterangan': item.keterangan || '',
           'Akun Debit': debitRow?.namaAkun || '',
           'Debit': debitRow?.debit || 0,

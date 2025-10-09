@@ -155,6 +155,23 @@ export const useUpdatePlanningEntry = (planningId: string | number, entryId: str
   });
 };
 
+// ===== UPDATE Planning Entry Status =====
+export const useUpdatePlanningEntryStatus = (planningId: string | number, entryId: string | number) => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const updatePlanningEntryStatus = (body: { status: string }) => {
+    return axiosAuth.patch(`${baseEndpoint}/${planningId}/entries/${entryId}/status`, body);
+  };
+
+  return useMutation({
+    mutationFn: updatePlanningEntryStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["planning-entries", planningId] });
+    },
+  });
+};
+
 // ===== DELETE Planning Entry =====
 export const useDeletePlanningEntry = (planningId: string | number, entryId: string | number) => {
   const axiosAuth = useAxiosAuth();
