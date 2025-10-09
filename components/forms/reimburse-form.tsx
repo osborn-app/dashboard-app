@@ -880,12 +880,12 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                         return (
                           <div className="space-y-2 w-full">
                             <FormLabel>
-                              Pilih Unit (Fleet)
+                              Pilih Fleet
                             </FormLabel>
-                            <div className="flex">
+                            <div className="flex gap-2">
                               <FormControl>
                                 <AntdSelect
-                                  className={cn("mr-2 w-full")}
+                                  className={cn("flex-1")}
                                   showSearch
                                   placeholder="Pilih kendaraan anda..."
                                   style={{
@@ -907,6 +907,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                       <p className="px-3 text-sm">loading</p>
                                     ) : null
                                   }
+                                  allowClear
                                   // append value attribute when field is not  empty
                                   {...(!isEmpty(field.value) && {
                                     value: field.value,
@@ -942,6 +943,21 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   )}
                                 </AntdSelect>
                               </FormControl>
+                              {!isEmpty(field.value) && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    field.onChange("");
+                                    form.setValue("fleet", "");
+                                  }}
+                                  className="px-3"
+                                  title="Batalkan pilihan Fleet"
+                                >
+                                  ✕
+                                </Button>
+                              )}
                             </div>
                             <FormMessage />
                           </div>
@@ -986,10 +1002,10 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             <FormLabel>
                               Pilih Product
                             </FormLabel>
-                            <div className="flex">
+                            <div className="flex gap-2">
                               <FormControl>
                                 <AntdSelect
-                                  className={cn("mr-2 w-full")}
+                                  className={cn("flex-1")}
                                   showSearch
                                   placeholder="Pilih product..."
                                   style={{
@@ -1011,6 +1027,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                       <p className="px-3 text-sm">loading</p>
                                     ) : null
                                   }
+                                  allowClear
                                   // append value attribute when field is not  empty
                                   {...(!isEmpty(field.value) && {
                                     value: field.value,
@@ -1046,6 +1063,21 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   )}
                                 </AntdSelect>
                               </FormControl>
+                              {!isEmpty(field.value) && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    field.onChange("");
+                                    form.setValue("product" as any, "");
+                                  }}
+                                  className="px-3"
+                                  title="Batalkan pilihan Product"
+                                >
+                                  ✕
+                                </Button>
+                              )}
                             </div>
                             <FormMessage />
                           </div>
