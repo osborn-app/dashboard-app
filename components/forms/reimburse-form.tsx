@@ -809,7 +809,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   showSearch
                                   mode="tags" // Aktifkan kembali mode tags untuk input manual
                                   maxTagCount={1} // Batasi hanya 1 tag yang ditampilkan
-                                  disabled={lastPath === "preview"}
+                                  disabled={false}
                                   value={field.value || initialData?.bank}
                                   placeholder="Nama Bank..."
                                   onChange={(value) => {
@@ -1226,7 +1226,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                           <FormLabel>No. Rekening / No. Pembayaran</FormLabel>
                           <FormControl className="disabled:opacity-100">
                             <Input
-                              disabled={lastPath === "preview"}
+                              disabled={false}
                               placeholder="Masukan no rekening / no pembayaran"
                               value={field.value ?? ""}
                               onChange={(e) => {
@@ -1276,7 +1276,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                               placeholder="Isi keterangan anda dengan lengkap..."
                               className="col-span-4"
                               rows={6}
-                              disabled={lastPath === "preview"}
+                              disabled={false}
                               value={field.value ?? ""}
                               onChange={(e) => {
                                 e.target.value = e.target.value.trimStart();
@@ -1408,7 +1408,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   style={{
                                     height: "40px",
                                   }}
-                                  disabled={lastPath === "preview"}
+                                  disabled={false}
                                   value={field.value || initialData?.transaction_category_id}
                                   onChange={field.onChange}
                                   loading={isFetchingCategories}
