@@ -239,10 +239,10 @@ const ReimburseTableWrapper = () => {
         {!isFetchingPendingData && pendingData && (
           <ReimburseTable
             columns={pendingColumns}
-            data={pendingData.data || []}
+            data={pendingData.items || []}
             searchKey="name"
-            totalUsers={pendingData.meta?.total}
-            pageCount={Math.ceil(pendingData.meta?.total / pageLimit)}
+            totalUsers={pendingData.meta?.total_items}
+            pageCount={Math.ceil(pendingData.meta?.total_items / pageLimit)}
             pageNo={page}
             searchQuery={searchQuery}
             sorting={sorting}
@@ -258,10 +258,10 @@ const ReimburseTableWrapper = () => {
             columns={rejectedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={rejectedData.data || []}
+            data={rejectedData.items || []}
             searchKey="name"
-            totalUsers={rejectedData.meta?.total}
-            pageCount={Math.ceil(rejectedData.meta?.total / pageLimit)}
+            totalUsers={rejectedData.meta?.total_items}
+            pageCount={Math.ceil(rejectedData.meta?.total_items / pageLimit)}
             pageNo={page}
             searchQuery={searchQuery}
           />
@@ -274,10 +274,10 @@ const ReimburseTableWrapper = () => {
             columns={confirmedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={confirmedData.data || []}
+            data={confirmedData.items || []}
             searchKey="name"
-            totalUsers={confirmedData.meta?.total}
-            pageCount={Math.ceil(confirmedData.meta?.total / pageLimit)}
+            totalUsers={confirmedData.meta?.total_items}
+            pageCount={Math.ceil(confirmedData.meta?.total_items / pageLimit)}
             pageNo={page}
             searchQuery={searchQuery}
           />
@@ -290,10 +290,10 @@ const ReimburseTableWrapper = () => {
             columns={completedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={doneData.data || []}
+            data={doneData.items || []}
             searchKey="name"
-            totalUsers={doneData.meta?.total}
-            pageCount={Math.ceil(doneData.meta?.total / pageLimit)}
+            totalUsers={doneData.meta?.total_items}
+            pageCount={Math.ceil(doneData.meta?.total_items / pageLimit)}
             pageNo={page}
             searchQuery={searchQuery}
           />
