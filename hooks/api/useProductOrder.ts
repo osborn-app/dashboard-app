@@ -102,10 +102,10 @@ export const useProductOrderCalculate = () => {
 export const useProductOrdersStatusCount = () => {
   const { user } = useUser();
   const axiosAuth = useAxiosAuth();
-  const getStatusCountFn = () => {
-    return axiosAuth.get(`${baseEndpoint}/status/count`);
+  const getStatusCountFn = (): Promise<any> => {
+    return axiosAuth.get(`${baseEndpoint}/status/count/products`);
   };
-  return useQuery({
+  return useQuery<any, Error>({
     queryKey: ["orders", "product"],
     queryFn: getStatusCountFn,
     enabled: user?.role !== "owner",

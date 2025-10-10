@@ -102,10 +102,10 @@ export const useOrderCalculate = () => {
 export const useOrdersStatusCount = () => {
   const { user } = useUser();
   const axiosAuth = useAxiosAuth();
-  const getStatusCountFn = () => {
-    return axiosAuth.get(`${baseEndpoint}/status/count`);
+  const getStatusCountFn = (): Promise<any> => {
+    return axiosAuth.get(`${baseEndpoint}/status/count/fleets`);
   };
-  return useQuery({
+  return useQuery<any, Error>({
     queryKey: ["orders", "vehicle"],
     queryFn: getStatusCountFn,
     enabled: user?.role !== "owner",  
