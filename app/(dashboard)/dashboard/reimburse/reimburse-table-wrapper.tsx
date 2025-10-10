@@ -234,7 +234,7 @@ const ReimburseTableWrapper = () => {
           <SearchInput
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
-            placeholder="Cari Reimburse"
+            placeholder="Cari Nama/nominal/Rekening/Pembayaran/Keterangan"
           />
         </div>
       </div>
