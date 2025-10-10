@@ -157,7 +157,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         transaction_proof_url: initialData?.transactionProofUrl || null,
         transfer_proof_url: initialData?.transferProofUrl || null,
         quantity: initialData?.quantity || 1, // Quantity default 1
-        category: initialData?.category || 0, // Category required
+        category: initialData?.transaction_category_id || 0, // Category required
       }
     : {
         driver: "", // Nama driver kosong
@@ -372,7 +372,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       date: dateField, // Tanggal reimburse (format: YYYY-MM-DD)
       description: descriptionField || "",
       quantity: quantityField || 1, // Quantity with default 1
-      transaction_category_id: categoryField || "", // Category with default empty
+      transaction_category_id: categoryField || 0, // Category with default 0
     };
   }, [
     fleetField,
@@ -1409,7 +1409,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                     height: "40px",
                                   }}
                                   disabled={lastPath === "preview"}
-                                  value={field.value || initialData?.category}
+                                  value={field.value || initialData?.transaction_category_id}
                                   onChange={field.onChange}
                                   loading={isFetchingCategories}
                                 >
@@ -1433,9 +1433,9 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                         <Input
                           disabled
                           value={(() => {
-                            if (!initialData?.category) return "-";
-                            const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === initialData.category);
-                            return selectedCategory?.name || initialData.category;
+                            if (!initialData?.transaction_category_id) return "-";
+                            const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === initialData.transaction_category_id);
+                            return selectedCategory?.name || initialData.transaction_category_id;
                           })()}
                         />
                       </FormControl>
