@@ -187,6 +187,8 @@ export const useUpdateReimburse = (id: string | number) => {
   const queryClient = useQueryClient();
 
   const updateReimburse = (body: UpdateReimburseBody) => {
+    console.log("Update payload:", body);
+    console.log("Update URL:", `${baseEndpoint}/${id}`);
     return axiosAuth.patch(`${baseEndpoint}/${id}`, body);
   };
 

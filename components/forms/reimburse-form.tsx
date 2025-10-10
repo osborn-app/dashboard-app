@@ -163,7 +163,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         transaction_proof_url: initialData?.transactionProofUrl || null,
         transfer_proof_url: initialData?.transferProofUrl || null,
         quantity: initialData?.quantity || 1, // Quantity default 1
-        category: initialData?.category || 0, // Category required
+        category: initialData?.transaction_category_id || 0, // Category required
       }
     : {
         driver: "", // Nama driver kosong
@@ -255,22 +255,53 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         if (hasDataChanged(currentData, lastSavedData)) {
           setIsAutoSaving(true);
           
-          const payload = {
-            nominal: currentData.nominal,
-            noRekening: currentData.noRekening,
-            bank: currentData.bank,
-            location_id: currentData.location,
-            date: currentData.date,
-            description: currentData.description,
-            transaction_proof_url: currentData.transaction_proof_url,
-            fleet_id: currentData.fleet || null,
-            product_id: currentData.product || null,
-            transaction_category_id: currentData.category,
-            quantity: currentData.quantity,
-          };
+          // Filter out undefined/null values and ensure proper types
+          const payload: any = {};
+          
+          if (currentData.nominal !== undefined && currentData.nominal !== null) {
+            payload.nominal = Number(currentData.nominal);
+          }
+          if (currentData.noRekening !== undefined && currentData.noRekening !== null && currentData.noRekening !== "") {
+            payload.noRekening = String(currentData.noRekening);
+          }
+          if (currentData.bank !== undefined && currentData.bank !== null && currentData.bank !== "") {
+            payload.bank = String(currentData.bank);
+          }
+          if (currentData.location !== undefined && currentData.location !== null) {
+            payload.location_id = Number(currentData.location);
+          }
+          if (currentData.date !== undefined && currentData.date !== null) {
+            payload.date = currentData.date;
+          }
+          if (currentData.description !== undefined && currentData.description !== null && currentData.description !== "") {
+            payload.description = String(currentData.description);
+          }
+          if (currentData.transaction_proof_url !== undefined && currentData.transaction_proof_url !== null && currentData.transaction_proof_url !== "") {
+            payload.transaction_proof_url = String(currentData.transaction_proof_url);
+          }
+          if (currentData.fleet !== undefined && currentData.fleet !== null && currentData.fleet !== "") {
+            payload.fleet_id = Number(currentData.fleet);
+          } else if (currentData.fleet === null || currentData.fleet === "") {
+            payload.fleet_id = null;
+          }
+          if (currentData.product !== undefined && currentData.product !== null && currentData.product !== "") {
+            payload.product_id = Number(currentData.product);
+          } else if (currentData.product === null || currentData.product === "") {
+            payload.product_id = null;
+          }
+          if (currentData.category !== undefined && currentData.category !== null) {
+            payload.transaction_category_id = Number(currentData.category);
+          }
+          if (currentData.quantity !== undefined && currentData.quantity !== null) {
+            payload.quantity = Number(currentData.quantity);
+          }
+
+          console.log("Auto-save payload:", payload);
+          console.log("Current form data:", currentData);
 
           updateReimburse(payload, {
-            onSuccess: () => {
+            onSuccess: (response) => {
+              console.log("Auto-save success:", response);
               setLastSavedData(currentData); // Update last saved data
               toast({
                 variant: "success",
@@ -279,6 +310,9 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
               });
             },
             onError: (error: any) => {
+              console.error("Auto-save error:", error);
+              console.error("Error response:", error?.response?.data);
+              console.error("Error status:", error?.response?.status);
               toast({
                 variant: "destructive",
                 title: "Gagal menyimpan perubahan",
@@ -481,7 +515,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       date: dateField, // Tanggal reimburse (format: YYYY-MM-DD)
       description: descriptionField || "",
       quantity: quantityField || 1, // Quantity with default 1
-      transaction_category_id: categoryField || "", // Category with default empty
+      transaction_category_id: categoryField || 0, // Category with default 0
     };
   }, [
     fleetField,
@@ -846,6 +880,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             }}
                             disabled={false}
                             value={initialData?.driver?.name ?? "-"}
+                            readOnly
                           />
                         </FormControl>
                       </div>
@@ -900,6 +935,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             className="pl-9 disabled:opacity-90"
                             allowLeadingZeros
                             value={initialData?.nominal ?? "-"}
+                            readOnly
                             // thousandSeparator=","
                           />
                         </div>
@@ -980,6 +1016,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             }}
                             // disabled
                             value={initialData?.bank}
+                            readOnly
                           />
                         </FormControl>
                       </div>
@@ -1102,6 +1139,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             }}
                             disabled
                             value={initialData?.fleet?.name ?? "-"}
+                            readOnly
                           />
                         </FormControl>
                       </div>
@@ -1222,6 +1260,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             }}
                             disabled
                             value={initialData?.product?.name ?? "-"}
+                            readOnly
                           />
                         </FormControl>
                       </div>
@@ -1330,6 +1369,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                         <Input
                           disabled={false}
                           value={initialData?.noRekening ?? "-"}
+                          readOnly
                         />
                       </FormControl>
                       <FormMessage />
@@ -1497,6 +1537,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             }}
                             disabled={false}
                             value={initialData?.location?.name ?? "-"}
+                            readOnly
                           />
                         </FormControl>
                       </div>
@@ -1526,7 +1567,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                     height: "40px",
                                   }}
                                   disabled={false}
-                                  value={field.value || initialData?.category}
+                                  value={field.value || initialData?.transaction_category_id}
                                   onChange={field.onChange}
                                   loading={isFetchingCategories}
                                 >
@@ -1550,9 +1591,9 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                         <Input
                           disabled={false}
                           value={(() => {
-                            if (!initialData?.category) return "-";
-                            const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === initialData.category);
-                            return selectedCategory?.name || initialData.category;
+                            if (!initialData?.transaction_category_id) return "-";
+                            const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === initialData.transaction_category_id);
+                            return selectedCategory?.name || initialData.transaction_category_id;
                           })()}
                         />
                       </FormControl>
@@ -1600,6 +1641,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                         <Input
                           disabled={false}
                           value={initialData?.quantity?.toString() || "-"}
+                          readOnly
                         />
                       </FormControl>
                       <FormMessage />
