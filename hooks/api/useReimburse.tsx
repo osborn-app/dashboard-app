@@ -167,3 +167,37 @@ export const useRejectReimburse = () => {
     },
   });
 };
+
+interface UpdateReimburseBody {
+  nominal?: number;
+  noRekening?: string;
+  bank?: string;
+  location_id?: number;
+  date?: Date;
+  description?: string;
+  transaction_proof_url?: string;
+  fleet_id?: number | null;
+  product_id?: number | null;
+  transaction_category_id?: number;
+  quantity?: number;
+}
+
+export const useUpdateReimburse = (id: string | number) => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const updateReimburse = (body: UpdateReimburseBody) => {
+    return axiosAuth.patch(`${baseEndpoint}/${id}`, body);
+  };
+
+  return useMutation({
+    mutationFn: updateReimburse,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["reimburse"] });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reimburse"] });
+      queryClient.invalidateQueries({ queryKey: ["reimburse", id] });
+    },
+  });
+};

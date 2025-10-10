@@ -23,6 +23,7 @@ import {
   useEditReimburse,
   usePostReimburse,
   useRejectReimburse,
+  useUpdateReimburse,
 } from "@/hooks/api/useReimburse";
 import { useGetActiveTransactionCategories } from "@/hooks/api/useRealization";
 import { useSidebar } from "@/hooks/useSidebar";
@@ -97,6 +98,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const { mutate: editReimburse } = useEditReimburse(reimburseid as string);
   const { mutate: acceptReimburse } = useAcceptReimburse(reimburseid as string);
   const { mutate: rejectReimburse } = useRejectReimburse();
+  const { mutate: updateReimburse, isPending: isUpdating } = useUpdateReimburse(reimburseid as string);
   const { data: transactionCategoriesData, isFetching: isFetchingCategories } = useGetActiveTransactionCategories();
   const [searchLocation, setSearchLocation] = useState("");
   const [searchDriverTerm, setSearchDriverTerm] = useState("");
@@ -114,6 +116,10 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
   const [type, setType] = useState<string>("");
   const [schema, setSchema] = useState(() => generateSchema(true, true));
   const [messages, setMessages] = useState<any>({});
+  
+  // Auto-save states
+  const [lastSavedData, setLastSavedData] = useState<any>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
   const detailRef = React.useRef<HTMLDivElement>(null);
   // const [banks, setBanks] = useState(["BRI", "BCA", "Mandiri", "BNI", "DKI"]);
 
@@ -197,6 +203,108 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
     form.getValues("driver"),
   );
 
+  // Function to check if data has changed
+  const hasDataChanged = (currentData: any, lastSaved: any) => {
+    if (!lastSaved) return true;
+    
+    const fieldsToCompare = [
+      'nominal', 'noRekening', 'bank', 'location', 'date', 
+      'description', 'transaction_proof_url', 'fleet', 'product', 
+      'category', 'quantity'
+    ];
+    
+    return fieldsToCompare.some(field => {
+      const current = currentData[field];
+      const last = lastSaved[field];
+      
+      // Handle null/undefined comparison
+      if (current === null || current === undefined) {
+        return last !== null && last !== undefined;
+      }
+      if (last === null || last === undefined) {
+        return current !== null && current !== undefined;
+      }
+      
+      // Handle date comparison
+      if (field === 'date') {
+        return new Date(current).getTime() !== new Date(last).getTime();
+      }
+      
+      // Handle number comparison
+      if (field === 'nominal' || field === 'quantity') {
+        return Number(current) !== Number(last);
+      }
+      
+      // Handle string comparison
+      return String(current) !== String(last);
+    });
+  };
+
+  // Auto-save with proper debounce and change detection
+  useEffect(() => {
+    if (lastPath !== "preview" || initialData?.status !== "pending") {
+      return;
+    }
+
+    // Set timer for debounce
+    const timer = setTimeout(() => {
+      if (!isAutoSaving) {
+        const currentData = form.getValues();
+        
+        // Only save if data has actually changed
+        if (hasDataChanged(currentData, lastSavedData)) {
+          setIsAutoSaving(true);
+          
+          const payload = {
+            nominal: currentData.nominal,
+            noRekening: currentData.noRekening,
+            bank: currentData.bank,
+            location_id: currentData.location,
+            date: currentData.date,
+            description: currentData.description,
+            transaction_proof_url: currentData.transaction_proof_url,
+            fleet_id: currentData.fleet || null,
+            product_id: currentData.product || null,
+            transaction_category_id: currentData.category,
+            quantity: currentData.quantity,
+          };
+
+          updateReimburse(payload, {
+            onSuccess: () => {
+              setLastSavedData(currentData); // Update last saved data
+              toast({
+                variant: "success",
+                title: "Perubahan tersimpan otomatis",
+                description: "Data reimburse telah diperbarui",
+              });
+            },
+            onError: (error: any) => {
+              toast({
+                variant: "destructive",
+                title: "Gagal menyimpan perubahan",
+                description: error?.response?.data?.message || "Terjadi kesalahan",
+              });
+            },
+            onSettled: () => {
+              setIsAutoSaving(false);
+            },
+          });
+        }
+      }
+    }, 2000); // 2 seconds debounce
+
+    // Cleanup timer
+    return () => clearTimeout(timer);
+  }, [driverNameField, fleetField, productField, nominalField, bankNameField, locationField, accountNumberField, dateField, descriptionField, quantityField, categoryField, lastPath, initialData?.status, isAutoSaving, lastSavedData, updateReimburse, toast]);
+
+  // Initialize lastSavedData with initial form data
+  useEffect(() => {
+    if (lastPath === "preview" && initialData?.status === "pending" && !lastSavedData) {
+      const initialFormData = form.getValues();
+      setLastSavedData(initialFormData);
+    }
+  }, [lastPath, initialData?.status, lastSavedData, form]);
+
   const [end, setEnd] = useState("");
   const now = dayjs(form.getValues("date"));
   useEffect(() => {
@@ -215,6 +323,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
       form.setValue("quantity", 1);
     }
   }, [categoryField, form, transactionCategoriesData]);
+
 
   // , form.getValues("duration")
 
@@ -525,7 +634,15 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
         className={cn("flex items-center justify-between py-3 gap-2 flex-wrap")}
         id="header"
       >
-        <Heading title={title} description={description} />
+        <div className="flex items-center gap-2">
+          <Heading title={title} description={description} />
+          {lastPath === "preview" && initialData?.status === "pending" && (isUpdating || isAutoSaving) && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Spinner />
+              <span>Menyimpan...</span>
+            </div>
+          )}
+        </div>
         {initialData?.status !== "pending" &&
           initialData?.status === "pending" &&
           lastPath !== "pending" && (
@@ -727,7 +844,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             style={{
                               height: "40px",
                             }}
-                            disabled
+                            disabled={false}
                             value={initialData?.driver?.name ?? "-"}
                           />
                         </FormControl>
@@ -751,7 +868,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                 Rp.
                               </span>
                               <NumericFormat
-                                disabled={!isEdit || loading}
+                                disabled={false}
                                 customInput={Input}
                                 type="text"
                                 className="pl-9 disabled:opacity-90"
@@ -777,7 +894,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                           </span>
 
                           <NumericFormat
-                            disabled={isEdit || loading}
+                            disabled={false}
                             customInput={Input}
                             type="text"
                             className="pl-9 disabled:opacity-90"
@@ -809,7 +926,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   showSearch
                                   mode="tags" // Aktifkan kembali mode tags untuk input manual
                                   maxTagCount={1} // Batasi hanya 1 tag yang ditampilkan
-                                  disabled={lastPath === "preview"}
+                                  disabled={false}
                                   value={field.value || initialData?.bank}
                                   placeholder="Nama Bank..."
                                   onChange={(value) => {
@@ -891,7 +1008,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   style={{
                                     height: "40px",
                                   }}
-                                  disabled={!isEmpty(productField)}
+                                  disabled={false}
                                   onSearch={setSearchFleetTerm}
                                   onChange={(value) => {
                                     field.onChange(value);
@@ -1011,7 +1128,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   style={{
                                     height: "40px",
                                   }}
-                                  disabled={!isEmpty(fleetField)}
+                                  disabled={false}
                                   onSearch={setSearchProductTerm}
                                   onChange={(value) => {
                                     field.onChange(value);
@@ -1130,7 +1247,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             <FormControl>
                               <DatePicker
                                 disabledDate={disabledDate}
-                                disabled={lastPath === "preview"}
+                                disabled={false}
                                 className={cn("p h-[40px] w-full")}
                                 style={
                                   {
@@ -1176,7 +1293,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             <FormControl>
                               <DatePicker
                                 disabledDate={disabledDate}
-                                disabled={loading}
+                                disabled={false}
                                 className={cn("p h-[40px] w-full")}
                                 style={
                                   {
@@ -1211,7 +1328,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                       <FormLabel>No. Rekening</FormLabel>
                       <FormControl className="disabled:opacity-100">
                         <Input
-                          disabled={!isEdit || loading}
+                          disabled={false}
                           value={initialData?.noRekening ?? "-"}
                         />
                       </FormControl>
@@ -1226,7 +1343,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                           <FormLabel>No. Rekening / No. Pembayaran</FormLabel>
                           <FormControl className="disabled:opacity-100">
                             <Input
-                              disabled={lastPath === "preview"}
+                              disabled={false}
                               placeholder="Masukan no rekening / no pembayaran"
                               value={field.value ?? ""}
                               onChange={(e) => {
@@ -1276,7 +1393,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                               placeholder="Isi keterangan anda dengan lengkap..."
                               className="col-span-4"
                               rows={6}
-                              disabled={lastPath === "preview"}
+                              disabled={false}
                               value={field.value ?? ""}
                               onChange={(e) => {
                                 e.target.value = e.target.value.trimStart();
@@ -1378,7 +1495,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                             style={{
                               height: "40px",
                             }}
-                            disabled
+                            disabled={false}
                             value={initialData?.location?.name ?? "-"}
                           />
                         </FormControl>
@@ -1408,7 +1525,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                                   style={{
                                     height: "40px",
                                   }}
-                                  disabled={lastPath === "preview"}
+                                  disabled={false}
                                   value={field.value || initialData?.category}
                                   onChange={field.onChange}
                                   loading={isFetchingCategories}
@@ -1431,7 +1548,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                       <FormLabel>Kategori</FormLabel>
                       <FormControl className="disabled:opacity-100">
                         <Input
-                          disabled
+                          disabled={false}
                           value={(() => {
                             if (!initialData?.category) return "-";
                             const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === initialData.category);
@@ -1455,7 +1572,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                           </FormLabel>
                           <FormControl>
                             <NumericFormat
-                              disabled={lastPath === "preview" || (() => {
+                              disabled={(() => {
                                 const selectedCategory = transactionCategoriesData?.data?.find((cat: any) => cat.id === categoryField);
                                 return selectedCategory?.name?.toLowerCase().includes("driver");
                               })()}
@@ -1481,7 +1598,7 @@ export const ReimburseForm: React.FC<ReimburseFormProps> = ({
                       <FormLabel>Quantity</FormLabel>
                       <FormControl className="disabled:opacity-100">
                         <Input
-                          disabled
+                          disabled={false}
                           value={initialData?.quantity?.toString() || "-"}
                         />
                       </FormControl>
