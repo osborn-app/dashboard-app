@@ -194,7 +194,7 @@ interface LabaRugiCategoryAccountsProps {
     account_count: number;
   };
   planningId: string | number;
-  onAddAccount: (categoryId: string) => void;
+  onAddAccount: (categoryId: string, categoryType?: 'PENDAPATAN' | 'BEBAN') => void;
   onDeleteAccount: (accountId: string) => void;
 }
 
@@ -246,7 +246,7 @@ export function LabaRugiCategoryAccounts({
             
             {/* Add Account Button - sama seperti Neraca */}
             <div 
-              onClick={() => onAddAccount(category.id)}
+              onClick={() => onAddAccount(category.id, category.type as 'PENDAPATAN' | 'BEBAN')}
               className="bg-gray-50 rounded-lg p-3 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <div className="w-1 h-6 bg-green-500 rounded-full"></div>
@@ -261,7 +261,7 @@ export function LabaRugiCategoryAccounts({
             
             {/* Add Account Button - sama seperti Neraca */}
             <div 
-              onClick={() => onAddAccount(category.id)}
+              onClick={() => onAddAccount(category.id, category.type as 'PENDAPATAN' | 'BEBAN')}
               className="bg-gray-50 rounded-lg p-3 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <div className="w-1 h-6 bg-green-500 rounded-full"></div>
