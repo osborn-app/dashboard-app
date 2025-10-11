@@ -47,7 +47,7 @@ interface AccountFormProps {
   onClose: () => void;
   categoryId: string;
   planningId: string | number;
-  categoryType?: 'PENDAPATAN' | 'BEBAN'; // Tambahkan parameter untuk filter type
+  categoryType?: 'PENDAPATAN' | 'BEBAN' | 'AKTIVA' | 'PASIVA';
   onSuccess?: () => void;
 }
 
@@ -76,10 +76,14 @@ export function AccountForm({
   const items = useMemo(() => {
     let list = accountsData?.items ?? [];
     
-    // Filter berdasarkan categoryType (REVENUE untuk PENDAPATAN, EXPENSE untuk BEBAN)
+    // Filter berdasarkan categoryType
     if (categoryType) {
-      const accountType = categoryType === 'PENDAPATAN' ? 'REVENUE' : 'EXPENSE';
-      list = list.filter((account: any) => account.type === accountType);
+      let allowedTypes: string[] = [];
+      if (categoryType === 'PENDAPATAN') allowedTypes = ['REVENUE'];
+      else if (categoryType === 'BEBAN') allowedTypes = ['EXPENSE'];
+      else if (categoryType === 'AKTIVA') allowedTypes = ['ASSETS'];
+      else if (categoryType === 'PASIVA') allowedTypes = ['LIABILITIES', 'EQUITY'];
+      list = list.filter((account: any) => allowedTypes.includes(account.type));
     }
     
     // Filter berdasarkan search query
