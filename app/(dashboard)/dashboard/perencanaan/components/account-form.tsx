@@ -47,6 +47,7 @@ interface AccountFormProps {
   onClose: () => void;
   categoryId: string;
   planningId: string | number;
+  categoryType?: 'PENDAPATAN' | 'BEBAN'; // Tambahkan parameter untuk filter type
   onSuccess?: () => void;
 }
 
@@ -55,6 +56,7 @@ export function AccountForm({
   onClose,
   categoryId,
   planningId,
+  categoryType,
   onSuccess,
 }: AccountFormProps) {
   const [loading, setLoading] = useState(false);
@@ -70,16 +72,27 @@ export function AccountForm({
     limit: 1000,
   });
 
-  // Client-side filter tambahan (aman kalau API belum support search)
+  // Client-side filter berdasarkan type dan search
   const items = useMemo(() => {
-    const list = accountsData?.items ?? [];
+    let list = accountsData?.items ?? [];
+    
+    // Filter berdasarkan categoryType (REVENUE untuk PENDAPATAN, EXPENSE untuk BEBAN)
+    if (categoryType) {
+      const accountType = categoryType === 'PENDAPATAN' ? 'REVENUE' : 'EXPENSE';
+      list = list.filter((account: any) => account.type === accountType);
+    }
+    
+    // Filter berdasarkan search query
     const q = search.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter(
-      (a: any) =>
-        a.name?.toLowerCase().includes(q) || a.code?.toLowerCase().includes(q)
-    );
-  }, [accountsData?.items, search]);
+    if (q) {
+      list = list.filter(
+        (a: any) =>
+          a.name?.toLowerCase().includes(q) || a.code?.toLowerCase().includes(q)
+      );
+    }
+    
+    return list;
+  }, [accountsData?.items, search, categoryType]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

@@ -53,6 +53,7 @@ export default function LabaRugiPage() {
   const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedCategoryType, setSelectedCategoryType] = useState<string>('');
+  const [selectedCategoryTypeForAccount, setSelectedCategoryTypeForAccount] = useState<'PENDAPATAN' | 'BEBAN' | undefined>(undefined);
   const [selectedCategory, setSelectedCategory] = useState<{
     id: number;
     name: string;
@@ -259,8 +260,9 @@ export default function LabaRugiPage() {
   };
 
   // Handler untuk tambah akun
-  const handleAddAccount = (categoryId: string) => {
+  const handleAddAccount = (categoryId: string, categoryType?: 'PENDAPATAN' | 'BEBAN') => {
     setSelectedCategoryId(categoryId);
+    setSelectedCategoryTypeForAccount(categoryType);
     setIsAddAccountModalOpen(true);
   };
 
@@ -959,6 +961,7 @@ export default function LabaRugiPage() {
         onClose={() => setIsAddAccountModalOpen(false)}
         categoryId={selectedCategoryId}
         planningId={planningId}
+        categoryType={selectedCategoryTypeForAccount}
         onSuccess={handleDataChange}
       />
 

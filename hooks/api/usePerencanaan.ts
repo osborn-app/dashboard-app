@@ -519,6 +519,7 @@ export const useBulkUpdateAccountCategory = (planningId: string | number) => {
     mutationFn: bulkUpdateAccountCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["planning-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["planning-category-accounts"] });
     },
   });
 };
@@ -536,6 +537,7 @@ export const useCategoriesRemoveAccount = (planningId: string | number) => {
     mutationFn: categoriesRemoveAccount,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["planning-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["planning-category-accounts"] });
     },
   });
 };
