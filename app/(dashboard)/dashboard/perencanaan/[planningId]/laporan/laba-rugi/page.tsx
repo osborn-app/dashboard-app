@@ -14,13 +14,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CalendarIcon, Search, Plus, Trash2, Edit, Download, MoreVertical } from 'lucide-react';
+import { CalendarIcon, Search, Plus, Trash2, Edit, Download, MoreVertical, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useGetLabaRugiReport, useGetPlanningCategoriesSelect, useGetPlanningCategoryAccounts, useGetDetailPerencanaan, useCategoriesRemoveAccount } from '@/hooks/api/usePerencanaan';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
 import { AccountForm } from '@/app/(dashboard)/dashboard/perencanaan/components/account-form';
 import { CategoryForm } from '@/app/(dashboard)/dashboard/perencanaan/components/category-form';
 import { LabaRugiCategoryAccounts } from '@/app/(dashboard)/dashboard/perencanaan/components/display-components';
@@ -41,6 +42,9 @@ export default function LabaRugiPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [accountTypeFilter, setAccountTypeFilter] = useState<'ALL' | 'REVENUE' | 'EXPENSE'>('ALL');
+  const [hideZero, setHideZero] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
   
   // State untuk mengontrol month yang ditampilkan di kalender
   const [calendarFromMonth, setCalendarFromMonth] = useState<Date>(new Date());
@@ -98,12 +102,31 @@ export default function LabaRugiPage() {
     [categoriesData]
   );
 
+  // Build request params (biarkan backend default ke periode planning jika tanggal tidak dipilih)
+  const reportParams = useMemo(() => {
+    const params: Record<string, any> = { template_id: 'template_laba_rugi' };
+    if (dateFrom) params.date_from = dateFrom.toISOString().split('T')[0];
+    if (dateTo) params.date_to = dateTo.toISOString().split('T')[0];
+    if (searchQuery && searchQuery.trim().length > 0) params.q = searchQuery.trim();
+    if (accountTypeFilter && accountTypeFilter !== 'ALL') params.account_type = accountTypeFilter;
+    if (hideZero) params.hide_zero = 'true';
+    if (useFallback) params.fallback = 'true';
+    return params;
+  }, [dateFrom, dateTo, searchQuery, accountTypeFilter, hideZero, useFallback]);
+
   // Fetch data dari API
-  const { data: labaRugiData, isLoading, error } = useGetLabaRugiReport(planningId, {
-    date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: 'template_laba_rugi', // Template ID untuk laba rugi
-  });
+  const { data: labaRugiData, isLoading, error, refetch } = useGetLabaRugiReport(planningId, reportParams);
+
+  // Client-side filter untuk tampilan cepat di tabel
+  const filteredRows = useMemo(() => {
+    const rows: any[] = Array.isArray(labaRugiData?.data) ? labaRugiData!.data : [];
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((r: any) =>
+      (r.account_name || '').toLowerCase().includes(q) ||
+      (r.account_code || '').toLowerCase().includes(q)
+    );
+  }, [labaRugiData, searchQuery]);
 
   // Helper function untuk generate filename
   const generateFilename = (format: 'csv' | 'xlsx') => {
@@ -126,7 +149,7 @@ export default function LabaRugiPage() {
 
     setIsExportingCSV(true);
     try {
-      const exportData = labaRugiData.data.map((item: any, index: number) => ({
+      const bodyRows = labaRugiData.data.map((item: any, index: number) => ({
         No: index + 1,
         'Kode Akun': item.account_code || '',
         'Nama Akun': item.account_name || '',
@@ -135,6 +158,14 @@ export default function LabaRugiPage() {
         'Saldo': item.running_balance || 0,
         'Tipe': item.type || '',
       }));
+
+      const summaryRows = [
+        { No: '', 'Kode Akun': '', 'Nama Akun': 'TOTAL PENDAPATAN', 'Debit': '', 'Kredit': '', 'Saldo': labaRugiData.summary?.total_income || 0, 'Tipe': '' },
+        { No: '', 'Kode Akun': '', 'Nama Akun': 'TOTAL BEBAN', 'Debit': '', 'Kredit': '', 'Saldo': labaRugiData.summary?.total_expense || 0, 'Tipe': '' },
+        { No: '', 'Kode Akun': '', 'Nama Akun': 'LABA BERSIH', 'Debit': '', 'Kredit': '', 'Saldo': labaRugiData.summary?.net_income || 0, 'Tipe': '' },
+      ];
+
+      const exportData = [...bodyRows, ...summaryRows];
 
       const headers = ['No', 'Kode Akun', 'Nama Akun', 'Debit', 'Kredit', 'Saldo', 'Tipe'] as const;
       const csvContent = [
@@ -189,7 +220,7 @@ export default function LabaRugiPage() {
 
     setIsExporting(true);
     try {
-      const exportData = labaRugiData.data.map((item: any, index: number) => ({
+      const bodyRows = labaRugiData.data.map((item: any, index: number) => ({
         No: index + 1,
         'Kode Akun': item.account_code || '',
         'Nama Akun': item.account_name || '',
@@ -198,6 +229,14 @@ export default function LabaRugiPage() {
         'Saldo': item.running_balance || 0,
         'Tipe': item.type || '',
       }));
+
+      const summaryRows = [
+        { No: '', 'Kode Akun': '', 'Nama Akun': 'TOTAL PENDAPATAN', 'Debit': '', 'Kredit': '', 'Saldo': labaRugiData.summary?.total_income || 0, 'Tipe': '' },
+        { No: '', 'Kode Akun': '', 'Nama Akun': 'TOTAL BEBAN', 'Debit': '', 'Kredit': '', 'Saldo': labaRugiData.summary?.total_expense || 0, 'Tipe': '' },
+        { No: '', 'Kode Akun': '', 'Nama Akun': 'LABA BERSIH', 'Debit': '', 'Kredit': '', 'Saldo': labaRugiData.summary?.net_income || 0, 'Tipe': '' },
+      ];
+
+      const exportData = [...bodyRows, ...summaryRows];
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
@@ -357,6 +396,17 @@ export default function LabaRugiPage() {
                   
                   {/* Action Buttons - Responsive Grid */}
                   <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        refetch();
+                      }}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Refresh
+                    </Button>
                     <Button 
                       variant="outline"
                       size="sm"
@@ -581,6 +631,33 @@ export default function LabaRugiPage() {
                 </div>
               </div>
 
+              {/* Additional Filters */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Account Type Filter */}
+                <div>
+                  <Select value={accountTypeFilter} onValueChange={(val) => setAccountTypeFilter(val as any)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Filter Tipe Akun" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Semua Tipe</SelectItem>
+                      <SelectItem value="REVENUE">Pendapatan</SelectItem>
+                      <SelectItem value="EXPENSE">Beban</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Hide Zero Toggle */}
+                <div className="flex items-center justify-between sm:justify-start sm:space-x-3 p-2 border rounded-md">
+                  <span className="text-sm">Sembunyikan Saldo 0</span>
+                  <Switch checked={hideZero} onCheckedChange={setHideZero} />
+                </div>
+                {/* Fallback Toggle */}
+                <div className="flex items-center justify-between sm:justify-start sm:space-x-3 p-2 border rounded-md">
+                  <span className="text-sm">Gunakan Fallback Template</span>
+                  <Switch checked={useFallback} onCheckedChange={setUseFallback} />
+                </div>
+              </div>
+
               {/* Table Laba Rugi - Responsive */}
               <div className="border rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
@@ -623,8 +700,8 @@ export default function LabaRugiPage() {
                         </tr>
                         
                         {/* Data PENDAPATAN (putih) */}
-                        {labaRugiData.data?.filter((item: any) => item.account_code?.startsWith('4')).length > 0 ? (
-                          labaRugiData.data.filter((item: any) => item.account_code?.startsWith('4')).map((item: any, index: number) => (
+                        {filteredRows.filter((item: any) => item.type === 'REVENUE').length > 0 ? (
+                          filteredRows.filter((item: any) => item.type === 'REVENUE').map((item: any, index: number) => (
                             <tr key={`income-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
                           <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                             {item.account_code || '-'}
@@ -633,7 +710,7 @@ export default function LabaRugiPage() {
                             {item.account_name || '-'}
                           </td>
                           <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right border-r border-gray-300">
-                                {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
+                                {typeof item.amount === 'number' ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
                               </td>
                               <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">
                                 -
@@ -666,8 +743,8 @@ export default function LabaRugiPage() {
                         </tr>
                         
                         {/* Data BEBAN (putih) */}
-                        {labaRugiData.data?.filter((item: any) => item.account_code?.startsWith('5')).length > 0 ? (
-                          labaRugiData.data.filter((item: any) => item.account_code?.startsWith('5')).map((item: any, index: number) => (
+                        {filteredRows.filter((item: any) => item.type === 'EXPENSE').length > 0 ? (
+                          filteredRows.filter((item: any) => item.type === 'EXPENSE').map((item: any, index: number) => (
                             <tr key={`expense-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
                               <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
                                 {item.account_code || '-'}
@@ -676,7 +753,7 @@ export default function LabaRugiPage() {
                                 {item.account_name || '-'}
                               </td>
                               <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right border-r border-gray-300">
-                                {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
+                                {typeof item.amount === 'number' ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
                           </td>
                           <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">
                                 -
