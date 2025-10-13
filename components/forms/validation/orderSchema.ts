@@ -50,6 +50,8 @@ const formSchema = z.object({
   discount: z.coerce.string().min(1, { message: "tolong masukkan diskon" }),
   insurance_id: z.string().min(1, { message: "tolong pilih asuransi" }),
   additionals: z.array(additionalSchema),
+  // Optional voucher code
+  voucher_code: z.string().optional().nullable(),
 });
 
 const generateSchema = (startSelfPickUp?: boolean, endSelfPickup?: boolean) => {

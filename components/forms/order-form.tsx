@@ -281,6 +281,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const descriptionField = form.watch("description");
   const serviceField = form.watch("service_price");
   const additionalField = form.watch("additionals");
+  const voucherCodeField = form.watch("voucher_code");
 
   const watchServicePrice = !(startSelfPickUpField && endSelfPickUpField);
   const servicePrice = serviceField ?? 0;
@@ -448,6 +449,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           return validAddons.length > 0 ? validAddons : undefined;
         })(),
       }),
+      ...(data?.voucher_code ? { voucher_code: data.voucher_code } : {}),
     });
 
     const handleSuccess = () => {
@@ -574,6 +576,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           ? +serviceField.replace(/,/g, "")
           : serviceField,
       }),
+      ...(voucherCodeField ? { voucher_code: voucherCodeField } : {}),
       ...(additionalField && additionalField.length !== 0 && {
         additional_services: additionalField.map((field: any) => {
           return {
@@ -635,6 +638,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     descriptionField,
     showServicePrice,
     servicePrice,
+    voucherCodeField,
     JSON.stringify(additionalField),
   ]);
 
