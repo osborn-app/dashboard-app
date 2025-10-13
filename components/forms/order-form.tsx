@@ -225,6 +225,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           name: service.name,
           price: service.price?.toString() || "",
         })) || [],
+        voucher_code: initialData?.applied_voucher_code || "",
       }
     : {
         start_request: {
@@ -250,6 +251,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         insurance_id: "0",
         service_price: "",
         additionals: [],
+        voucher_code: "",
       };
 
   const form = useForm<OrderFormValues>({
