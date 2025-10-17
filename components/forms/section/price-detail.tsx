@@ -156,19 +156,21 @@ const ProductPriceDetail: React.FC<PriceDetailProps> = ({
                 <Input
                   placeholder="Masukkan kode voucher"
                   disabled={!isEdit}
+                  className="uppercase"
                   value={form.getValues("voucher_code") || ""}
                   onChange={(e) => {
-                    form.setValue("voucher_code", e.target.value);
+                    const upperValue = e.target.value.toUpperCase();
+                    form.setValue("voucher_code", upperValue);
                   }}
                 />
                 {/* Applied voucher info */}
-                {detail?.applied_voucher_code && detail?.voucher_discount > 0 && (
+                {detail?.applied_voucher_code && detail?.voucher_discount < 0 && (
                   <div className="flex justify-between mt-2">
                     <p className="font-medium text-sm text-neutral-700">
                       Potongan Voucher ({detail?.applied_voucher_code})
                     </p>
-                    <p className="font-semibold text-base text-blue-600">
-                      -{formatRupiah(detail?.voucher_discount)}
+                    <p className="font-semibold text-base text-green-600">
+                      {formatRupiah(detail?.voucher_discount)}
                     </p>
                   </div>
                 )}
