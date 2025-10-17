@@ -70,6 +70,8 @@ export const productOrderSchema = z.object({
         return num;
       }),
   })).optional(),
+  // Optional voucher code
+  voucher_code: z.string().optional().nullable(),
 
 }).refine((data) => {
   // Additional validation for required fields when creating

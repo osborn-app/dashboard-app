@@ -308,6 +308,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
           name: service.name,
           price: service.price?.toString() || "",
         })) || [],
+        voucher_code: initialData?.applied_voucher_code || "",
       }
     : {
         start_request: {
@@ -339,6 +340,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
         },
         selected_price_type: "daily",
         additionals: [],
+        voucher_code: "",
       };
 
   const form = useForm<ProductOrderFormValues>({
@@ -374,6 +376,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
   const additionalField = form.watch("additionals");
   const rentalTypeField = form.watch("rental_type");
   const selectedPriceTypeField = form.watch("selected_price_type");
+  const voucherCodeField = form.watch("voucher_code");
 
 
 
@@ -530,6 +533,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
         return validAddons.length > 0 ? validAddons : undefined;
       })(),
     }),
+    ...(data.voucher_code ? { voucher_code: data.voucher_code } : {}),
    }
   };
 
@@ -741,10 +745,11 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
               return null;
             })
             .filter(Boolean); // Remove null values
-          
+            
           return validAddons.length > 0 ? validAddons : undefined;
         })(),
       }),
+      ...(voucherCodeField ? { voucher_code: voucherCodeField } : {}),
     };
 
     // Calculate price for product orders
@@ -783,6 +788,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
     servicePrice,
     rentalTypeField,
     selectedPriceTypeField,
+    voucherCodeField,
     JSON.stringify(additionalField),
     JSON.stringify(selectedAddOns),
   ]);
