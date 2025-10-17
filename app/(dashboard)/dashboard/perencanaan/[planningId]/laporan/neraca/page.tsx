@@ -13,11 +13,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CalendarIcon, Search, Plus, Trash2, MoreVertical, Edit, Download } from 'lucide-react';
+import { CalendarIcon, Search, Plus, Trash2, MoreVertical, Edit, Download, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useGetNeracaReport, useGetPlanningCategoriesSelect, useGetDetailPerencanaan, useCategoriesRemoveAccount } from '@/hooks/api/usePerencanaan';
+import { Switch } from '@/components/ui/switch';
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -41,6 +42,9 @@ export default function NeracaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [hideZero, setHideZero] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
+  const [groupPasiva, setGroupPasiva] = useState(true);
   
   // State untuk mengontrol month yang ditampilkan di kalender
   const [calendarFromMonth, setCalendarFromMonth] = useState<Date>(new Date());
@@ -92,12 +96,85 @@ export default function NeracaPage() {
     accounts: Array<{id: string, name: string, code: string}>
   }>>([]);
 
+  // Build request params: biarkan backend default ke periode planning jika tanggal kosong
+  const reportParams = React.useMemo(() => {
+    const params: Record<string, any> = { template_id: 'template_neraca' };
+    if (dateFrom) params.date_from = dateFrom.toISOString().split('T')[0];
+    if (dateTo) params.date_to = dateTo.toISOString().split('T')[0];
+    if (searchQuery.trim()) params.q = searchQuery.trim();
+    if (hideZero) params.hide_zero = 'true';
+    if (useFallback) params.fallback = 'true';
+    if (groupPasiva) params.group_pasiva = 'true';
+    // Minta backend kirim groups per kategori agar rendering akurat per kategori
+    params.include_categories = 'true';
+    return params;
+  }, [dateFrom, dateTo, searchQuery, hideZero, useFallback, groupPasiva]);
+
   // Fetch data dari API
-  const { data: neracaData, isLoading, error } = useGetNeracaReport(planningId, {
-    date_from: dateFrom ? dateFrom.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    date_to: dateTo ? dateTo.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    template_id: 'template_neraca', // Template ID untuk neraca
-  });
+  const { data: neracaData, isLoading, error, refetch } = useGetNeracaReport(planningId, reportParams);
+
+  // Groups dari backend (lebih akurat dibanding mencoba memetakan sendiri dari kategori)
+  const assetGroups = React.useMemo(() => {
+    const groups = neracaData?.categories?.assets || [];
+    console.log('🔍 Asset Groups:', groups);
+    
+    // Fallback: jika categories tidak ada, buat group dari assets langsung
+    if (groups.length === 0 && neracaData?.assets?.length > 0) {
+      console.log('🔍 Using fallback for assets');
+      return [{
+        id: 'fallback-assets',
+        name: 'Assets',
+        items: neracaData.assets,
+        total: neracaData.assets.reduce((sum: number, item: any) => sum + (item.amount || 0), 0)
+      }];
+    }
+    
+    return groups;
+  }, [neracaData]);
+  
+  const liabilityGroups = React.useMemo(() => {
+    const groups = neracaData?.categories?.liabilities || [];
+    console.log('🔍 Liability Groups:', groups);
+    
+    // Fallback: jika categories tidak ada, buat group dari liabilities langsung
+    if (groups.length === 0 && neracaData?.liabilities?.length > 0) {
+      console.log('🔍 Using fallback for liabilities');
+      return [{
+        id: 'fallback-liabilities',
+        name: 'Liabilities',
+        items: neracaData.liabilities,
+        total: neracaData.liabilities.reduce((sum: number, item: any) => sum + (item.amount || 0), 0)
+      }];
+    }
+    
+    return groups;
+  }, [neracaData]);
+  
+  const equityGroups = React.useMemo(() => {
+    const groups = neracaData?.categories?.equity || [];
+    console.log('🔍 Equity Groups:', groups);
+    
+    // Fallback: jika categories tidak ada, buat group dari equity langsung
+    if (groups.length === 0 && neracaData?.equity?.length > 0) {
+      console.log('🔍 Using fallback for equity');
+      return [{
+        id: 'fallback-equity',
+        name: 'Equity',
+        items: neracaData.equity,
+        total: neracaData.equity.reduce((sum: number, item: any) => sum + (item.amount || 0), 0)
+      }];
+    }
+    
+    return groups;
+  }, [neracaData]);
+
+  // Debug: Log full response
+  React.useEffect(() => {
+    if (neracaData) {
+      console.log('🔍 Full Neraca Data:', neracaData);
+      console.log('🔍 Categories:', neracaData.categories);
+    }
+  }, [neracaData]);
 
   // Hook untuk API categories
   const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useGetPlanningCategoriesSelect(planningId, 'template_neraca');
@@ -168,7 +245,7 @@ export default function NeracaPage() {
 
     setIsExportingCSV(true);
     try {
-      const exportData = neracaData.data.map((item: any, index: number) => ({
+      const exportData = neracaData.data?.map((item: any, index: number) => ({
         No: index + 1,
         'Kode Akun': item.account_code || '',
         'Nama Akun': item.account_name || '',
@@ -176,7 +253,21 @@ export default function NeracaPage() {
         'Kredit': item.credit_balance || 0,
         'Saldo': item.running_balance || 0,
         'Tipe': item.type || '',
-      }));
+      })) || [];
+
+      // Summary rows
+      const totalAssets = neracaData.summary?.total_assets || 0;
+      const totalLiabilities = neracaData.summary?.total_liabilities || 0;
+      const totalEquity = neracaData.summary?.total_equity || 0;
+      const totalPasiva = totalLiabilities + totalEquity;
+
+      exportData.push(
+        { No: '', 'Kode Akun': '', 'Nama Akun': 'TOTAL AKTIVA', 'Debit': '', 'Kredit': '', 'Saldo': totalAssets, 'Tipe': '' },
+        { No: '', 'Kode Akun': '', 'Nama Akun': groupPasiva ? 'TOTAL PASIVA' : 'TOTAL LIABILITAS', 'Debit': '', 'Kredit': '', 'Saldo': groupPasiva ? totalPasiva : totalLiabilities, 'Tipe': '' }
+      );
+      if (!groupPasiva) {
+        exportData.push({ No: '', 'Kode Akun': '', 'Nama Akun': 'TOTAL EKUITAS', 'Debit': '', 'Kredit': '', 'Saldo': totalEquity, 'Tipe': '' });
+      }
 
       const headers = ['No', 'Kode Akun', 'Nama Akun', 'Debit', 'Kredit', 'Saldo', 'Tipe'] as const;
       const csvContent = [
@@ -231,7 +322,7 @@ export default function NeracaPage() {
 
     setIsExporting(true);
     try {
-      const exportData = neracaData.data.map((item: any, index: number) => ({
+      const exportData = neracaData.data?.map((item: any, index: number) => ({
         No: index + 1,
         'Kode Akun': item.account_code || '',
         'Nama Akun': item.account_name || '',
@@ -239,7 +330,21 @@ export default function NeracaPage() {
         'Kredit': item.credit_balance || 0,
         'Saldo': item.running_balance || 0,
         'Tipe': item.type || '',
-      }));
+      })) || [];
+
+      // Summary rows
+      const totalAssets = neracaData.summary?.total_assets || 0;
+      const totalLiabilities = neracaData.summary?.total_liabilities || 0;
+      const totalEquity = neracaData.summary?.total_equity || 0;
+      const totalPasiva = totalLiabilities + totalEquity;
+
+      exportData.push(
+        { No: '', 'Kode Akun': '', 'Nama Akun': 'TOTAL AKTIVA', 'Debit': '', 'Kredit': '', 'Saldo': totalAssets, 'Tipe': '' },
+        { No: '', 'Kode Akun': '', 'Nama Akun': groupPasiva ? 'TOTAL PASIVA' : 'TOTAL LIABILITAS', 'Debit': '', 'Kredit': '', 'Saldo': groupPasiva ? totalPasiva : totalLiabilities, 'Tipe': '' }
+      );
+      if (!groupPasiva) {
+        exportData.push({ No: '', 'Kode Akun': '', 'Nama Akun': 'TOTAL EKUITAS', 'Debit': '', 'Kredit': '', 'Saldo': totalEquity, 'Tipe': '' });
+      }
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
@@ -395,6 +500,15 @@ export default function NeracaPage() {
                     
                     {/* Action Buttons - Responsive Grid */}
                     <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => refetch()}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Refresh
+                      </Button>
                       <Button 
                         variant="outline"
                         size="sm"
@@ -618,6 +732,21 @@ export default function NeracaPage() {
                     </Popover>
                     </div>
                   </div>
+                  {/* Additional Filters */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="flex items-center justify-between sm:justify-start sm:space-x-3 p-2 border rounded-md">
+                      <span className="text-sm">Sembunyikan Saldo 0</span>
+                      <Switch checked={hideZero} onCheckedChange={setHideZero} />
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-start sm:space-x-3 p-2 border rounded-md">
+                      <span className="text-sm">Gunakan Fallback Template</span>
+                      <Switch checked={useFallback} onCheckedChange={setUseFallback} />
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-start sm:space-x-3 p-2 border rounded-md">
+                      <span className="text-sm">Gabungkan PASIVA (Liabilitas + Ekuitas)</span>
+                      <Switch checked={groupPasiva} onCheckedChange={setGroupPasiva} />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Table Neraca - Responsive */}
@@ -661,62 +790,40 @@ export default function NeracaPage() {
                             </td>
                           </tr>
                           
-                          {/* Dynamic AKTIVA Categories */}
-                          {aktivaCategories.map((category) => {
-                            // Filter data berdasarkan kategori
-                            const categoryData = neracaData?.assets?.filter((item: any) => 
-                              item.category_id === category.id || item.category_name === category.name
-                            ) || [];
-                            
-                            return (
-                              <React.Fragment key={`aktiva-category-${category.id}`}>
-                                {/* Kategori Header */}
-                                <tr className="bg-gray-100 border-b border-gray-200">
-                                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800 text-center" colSpan={4}>
-                                    {category.name}
-                                  </td>
-                                </tr>
-                                
-                                {/* Data Akun dalam Kategori */}
-                                {categoryData.length > 0 ? (
-                                  categoryData.map((item: any, index: number) => (
-                                    <tr key={`aktiva-${category.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
-                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
-                                        {item.account_code || '-'}
-                                      </td>
-                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
-                                        {item.account_name || '-'}
-                                      </td>
-                                      <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
-                                        {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
-                                      </td>
-                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">
-                                        -
-                                      </td>
-                                    </tr>
-                                  ))
-                                ) : (
-                                  <tr className="bg-white border-b border-gray-200">
-                                    <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
-                                      Belum ada data untuk kategori {category.name}
-                                    </td>
+                          {/* Dynamic AKTIVA Categories - gunakan groups dari backend */}
+                          {assetGroups.map((group: any, gIdx: number) => (
+                            <React.Fragment key={`aktiva-group-${group.id || gIdx}`}>
+                              <tr className="bg-gray-100 border-b border-gray-200">
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800 text-center" colSpan={4}>
+                                  {group.name}
+                                </td>
+                              </tr>
+                              {(group.items || []).length > 0 ? (
+                                group.items.map((item: any, index: number) => (
+                                  <tr key={`aktiva-${group.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
+                                    <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_code || '-'}</td>
+                                    <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_name || '-'}</td>
+                                    <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">{item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}</td>
+                                    <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">-</td>
                                   </tr>
-                                )}
-                                
-                                {/* Total Kategori */}
-                                <tr className="bg-gray-100 border-b border-gray-200">
-                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
-                                    TOTAL {category.name.toUpperCase()}
-                                  </td>
-                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
-                                    {categoryData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0) > 0 ? 
-                                      `Rp. ${new Intl.NumberFormat('id-ID').format(categoryData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0))}` : 
-                                      'Rp. 0'}
+                                ))
+                              ) : (
+                                <tr className="bg-white border-b border-gray-200">
+                                  <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                                    Belum ada data untuk kategori {group.name}
                                   </td>
                                 </tr>
-                              </React.Fragment>
-                            );
-                          })}
+                              )}
+                              <tr className="bg-gray-100 border-b border-gray-200">
+                                <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
+                                  TOTAL {String(group.name || '').toUpperCase()}
+                                </td>
+                                <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
+                                  {`Rp. ${new Intl.NumberFormat('id-ID').format(group.total || 0)}`}
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          ))}
                           
                           {/* TOTAL AKTIVA - Header (abu-abu) */}
                           <tr className="bg-gray-100 border-t-2 border-gray-400 border-b border-gray-200">
@@ -734,73 +841,184 @@ export default function NeracaPage() {
                               PASIVA
                             </td>
                           </tr>
-                          
-                          {/* Dynamic PASIVA Categories */}
-                          {pasivaCategories.map((category) => {
-                            // Filter data berdasarkan kategori
-                            const categoryData = neracaData?.liabilities?.filter((item: any) => 
-                              item.category_id === category.id || item.category_name === category.name
-                            ) || [];
-                            
-                            return (
-                              <React.Fragment key={`pasiva-category-${category.id}`}>
-                                {/* Kategori Header */}
-                                <tr className="bg-gray-100 border-b border-gray-200">
-                                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800 text-center" colSpan={4}>
-                                    {category.name}
-                                  </td>
-                                </tr>
-                                
-                                {/* Data Akun dalam Kategori */}
-                                {categoryData.length > 0 ? (
-                                  categoryData.map((item: any, index: number) => (
-                                    <tr key={`pasiva-${category.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
-                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
-                                        {item.account_code || '-'}
-                                      </td>
-                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">
-                                        {item.account_name || '-'}
-                                      </td>
-                                      <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">
-                                        -
-                                      </td>
-                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">
-                                        {item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}
-                                      </td>
-                                    </tr>
-                                  ))
-                                ) : (
-                                  <tr className="bg-white border-b border-gray-200">
-                                    <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
-                                      Belum ada data untuk kategori {category.name}
+                          {/* Dynamic PASIVA (Liabilitas + Ekuitas jika groupPasiva) */}
+                          {groupPasiva ? (
+                            <>
+                              {/* Render LIABILITAS per kategori */}
+                              {liabilityGroups.map((group: any, gIdx: number) => (
+                                <React.Fragment key={`liability-group-${group.id || `l-${gIdx}`}`}>
+                                  <tr className="bg-gray-100 border-b border-gray-200">
+                                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800 text-center" colSpan={4}>
+                                      {group.name}
                                     </td>
                                   </tr>
-                                )}
-                                
-                                {/* Total Kategori */}
-                                <tr className="bg-gray-100 border-b border-gray-200">
-                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
-                                    TOTAL {category.name.toUpperCase()}
-                                  </td>
-                                  <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
-                                    {categoryData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0) > 0 ? 
-                                      `Rp. ${new Intl.NumberFormat('id-ID').format(categoryData.reduce((sum: number, item: any) => sum + (item.amount || 0), 0))}` : 
-                                      'Rp. 0'}
-                                  </td>
-                                </tr>
-                              </React.Fragment>
-                            );
-                          })}
-                          
-                          {/* TOTAL PASIVA - Header (abu-abu) */}
-                          <tr className="bg-gray-100 border-t-2 border-gray-400 border-b border-gray-200">
-                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
-                              TOTAL PASIVA
-                            </td>
-                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-right">
-                              {neracaData.summary?.total_liabilities ? `Rp. ${new Intl.NumberFormat('id-ID').format(neracaData.summary.total_liabilities)}` : 'Rp. 0'}
-                            </td>
-                          </tr>
+                                  {(group.items || []).length > 0 ? (
+                                    group.items.map((item: any, index: number) => (
+                                      <tr key={`liability-${group.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_code || '-'}</td>
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_name || '-'}</td>
+                                        <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">-</td>
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">{item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}</td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr className="bg-white border-b border-gray-200">
+                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                                        Belum ada data untuk kategori {group.name}
+                                      </td>
+                                    </tr>
+                                  )}
+                                  <tr className="bg-gray-100 border-b border-gray-200">
+                                    <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>TOTAL {String(group.name || '').toUpperCase()}</td>
+                                    <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">{`Rp. ${new Intl.NumberFormat('id-ID').format(group.total || 0)}`}</td>
+                                  </tr>
+                                </React.Fragment>
+                              ))}
+                              {/* Render EKUITAS per kategori */}
+                              {equityGroups.map((group: any, gIdx: number) => (
+                                <React.Fragment key={`equity-group-${group.id || `e-${gIdx}`}`}>
+                                  <tr className="bg-gray-100 border-b border-gray-200">
+                                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800 text-center" colSpan={4}>
+                                      {group.name}
+                                    </td>
+                                  </tr>
+                                  {(group.items || []).length > 0 ? (
+                                    group.items.map((item: any, index: number) => (
+                                      <tr key={`equity-${group.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_code || '-'}</td>
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_name || '-'}</td>
+                                        <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">-</td>
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">{item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}</td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr className="bg-white border-b border-gray-200">
+                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                                        Belum ada data untuk kategori {group.name}
+                                      </td>
+                                    </tr>
+                                  )}
+                                  <tr className="bg-gray-100 border-b border-gray-200">
+                                    <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>TOTAL {String(group.name || '').toUpperCase()}</td>
+                                    <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">{`Rp. ${new Intl.NumberFormat('id-ID').format(group.total || 0)}`}</td>
+                                  </tr>
+                                </React.Fragment>
+                              ))}
+                              {/* Balance Indicator */}
+                              <tr className="bg-gray-50 border-t border-gray-200">
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800" colSpan={3}>
+                                  Status Balance
+                                </td>
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-right">
+                                  {(() => {
+                                    const a = neracaData.summary?.total_assets || 0;
+                                    const l = neracaData.summary?.total_liabilities || 0;
+                                    const e = neracaData.summary?.total_equity || 0;
+                                    const balanced = a === (l + e);
+                                    return balanced ? 'Balanced ✅' : 'Tidak Balance ❌';
+                                  })()}
+                                </td>
+                              </tr>
+                              {/* TOTAL PASIVA - gabungan */}
+                              <tr className="bg-gray-100 border-t-2 border-gray-400 border-b border-gray-200">
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>
+                                  TOTAL PASIVA
+                                </td>
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-right">
+                                  {(() => {
+                                    const total = (neracaData.summary?.total_liabilities || 0) + (neracaData.summary?.total_equity || 0);
+                                    return `Rp. ${new Intl.NumberFormat('id-ID').format(total)}`;
+                                  })()}
+                                </td>
+                              </tr>
+                            </>
+                          ) : (
+                            <>
+                              {/* LIABILITIES by categories */}
+                              {liabilityGroups.map((group: any, gIdx: number) => (
+                                <React.Fragment key={`liability-group-sep-${group.id || `ls-${gIdx}`}`}>
+                                  <tr className="bg-gray-100 border-b border-gray-200">
+                                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800 text-center" colSpan={4}>
+                                      {group.name}
+                                    </td>
+                                  </tr>
+                                  {(group.items || []).length > 0 ? (
+                                    group.items.map((item: any, index: number) => (
+                                      <tr key={`liability-sep-${group.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_code || '-'}</td>
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_name || '-'}</td>
+                                        <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">-</td>
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">{item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}</td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr className="bg-white border-b border-gray-200">
+                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                                        Belum ada data untuk kategori {group.name}
+                                      </td>
+                                    </tr>
+                                  )}
+                                  <tr className="bg-gray-100 border-b border-gray-200">
+                                    <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>TOTAL {String(group.name || '').toUpperCase()}</td>
+                                    <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">{`Rp. ${new Intl.NumberFormat('id-ID').format(group.total || 0)}`}</td>
+                                  </tr>
+                                </React.Fragment>
+                              ))}
+                              <tr className="bg-gray-100 border-b border-gray-200">
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>TOTAL LIABILITAS</td>
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-right">{`Rp. ${new Intl.NumberFormat('id-ID').format(neracaData.summary?.total_liabilities || 0)}`}</td>
+                              </tr>
+                              {/* EKUITAS by categories */}
+                              {equityGroups.map((group: any, gIdx: number) => (
+                                <React.Fragment key={`equity-group-sep-${group.id || `es-${gIdx}`}`}>
+                                  <tr className="bg-gray-100 border-b border-gray-200">
+                                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800 text-center" colSpan={4}>
+                                      {group.name}
+                                    </td>
+                                  </tr>
+                                  {(group.items || []).length > 0 ? (
+                                    group.items.map((item: any, index: number) => (
+                                      <tr key={`equity-sep-${group.id}-${index}`} className="bg-white hover:bg-gray-50 border-b border-gray-200">
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_code || '-'}</td>
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 border-r border-gray-300">{item.account_name || '-'}</td>
+                                        <td className="py-2 px-4 text-sm text-gray-700 text-right border-r border-gray-300">-</td>
+                                        <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-700 text-right">{item.amount ? `Rp. ${new Intl.NumberFormat('id-ID').format(item.amount)}` : ''}</td>
+                                      </tr>
+                                    ))
+                                  ) : (
+                                    <tr className="bg-white border-b border-gray-200">
+                                      <td className="py-1 sm:py-2 px-2 sm:px-4 text-xs sm:text-sm text-gray-500 italic border-r border-gray-300" colSpan={4}>
+                                        Belum ada data untuk kategori {group.name}
+                                      </td>
+                                    </tr>
+                                  )}
+                                  <tr className="bg-gray-100 border-b border-gray-200">
+                                    <td className="py-3 px-4 text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>TOTAL {String(group.name || '').toUpperCase()}</td>
+                                    <td className="py-3 px-4 text-sm font-semibold text-gray-900 text-right">{`Rp. ${new Intl.NumberFormat('id-ID').format(group.total || 0)}`}</td>
+                                  </tr>
+                                </React.Fragment>
+                              ))}
+                              {/* Balance Indicator */}
+                              <tr className="bg-gray-50 border-t border-gray-200">
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800" colSpan={3}>
+                                  Status Balance
+                                </td>
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-right">
+                                  {(() => {
+                                    const a = neracaData.summary?.total_assets || 0;
+                                    const l = neracaData.summary?.total_liabilities || 0;
+                                    const e = neracaData.summary?.total_equity || 0;
+                                    const balanced = a === (l + e);
+                                    return balanced ? 'Balanced ✅' : 'Tidak Balance ❌';
+                                  })()}
+                                </td>
+                              </tr>
+                              <tr className="bg-gray-100 border-t-2 border-gray-400 border-b border-gray-200">
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 border-r border-gray-300" colSpan={3}>TOTAL EKUITAS</td>
+                                <td className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm font-semibold text-gray-900 text-right">{`Rp. ${new Intl.NumberFormat('id-ID').format(neracaData.summary?.total_equity || 0)}`}</td>
+                              </tr>
+                            </>
+                          )}
                         </>
                       ) : (
                         <tr>
@@ -1034,6 +1252,7 @@ export default function NeracaPage() {
         onClose={() => setIsAddAccountModalOpen(false)}
         categoryId={selectedCategoryId}
         planningId={planningId}
+        categoryType={activeSubTab === 'aktiva' ? 'AKTIVA' : 'PASIVA'}
         onSuccess={handleDataChange}
       />
     </div>

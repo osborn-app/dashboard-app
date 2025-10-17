@@ -62,6 +62,10 @@ export interface DetailPrice {
   total_weekend_price: number;
   weekend_days: any[];
   weekend_price: number;
+  // Voucher fields from backend calculation
+  applied_voucher_code?: string;
+  applied_voucher_amount?: number;
+  voucher_discount?: number;
 }
 
 export type Messages = {

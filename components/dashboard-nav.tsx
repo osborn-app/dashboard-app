@@ -13,6 +13,7 @@ import { ChevronFirst, ChevronLast } from "lucide-react";
 import { useOrdersStatusCount } from "@/hooks/api/useOrder";
 import { useReimburseStatusCount } from "@/hooks/api/useReimburse";
 import { customerVerificationStatusCount, useCustomersStatusCount } from "@/hooks/api/useCustomer";
+import { useProductOrdersStatusCount } from "@/hooks/api/useProductOrder";
 
 interface DashboardNavProps {
   items: NavItem[];
@@ -29,18 +30,22 @@ export function DashboardNav({
   const { isMinimized, toggle } = useSidebar();
   // Sidebar groups are always expanded; no dropdown state
 
-  const { data: orderStatusCount, isFetching: isFetchingOrderStatus } =
-    useOrdersStatusCount();
+  const orderStatusResult: any = useOrdersStatusCount();
+  const orderStatusCount: any = orderStatusResult.data;
+  const isFetchingOrderStatus: boolean = orderStatusResult.isFetching;
   const { data: reimburseStatusCount, isFetching: isFetchingReimburseStatus } =
     useReimburseStatusCount();
   const { data: customerStatusCount, isFetching: isFetchingCustomerStatus } =
     useCustomersStatusCount();
   const { data: customerVerificationCount, isFetching: isFetchingVerificationStatus } =
   customerVerificationStatusCount();
+  const { data: productOrderStatusCount, isFetching: isFetchingProductOrderStatus } =
+    useProductOrdersStatusCount();
   const orderCount = orderStatusCount?.data;
   const customerCount = customerStatusCount?.data;
   const reimburseCount = reimburseStatusCount?.data;
   const verificationCount = customerVerificationCount?.data;
+  const productOrderCount = productOrderStatusCount?.data;
 
 
 
@@ -168,6 +173,11 @@ export function DashboardNav({
                               {subItem.title === "Pesanan Kendaraan" && !isFetchingOrderStatus && (
                                 <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
                                   {orderCount?.[0]?.count ?? 0}
+                                </div>
+                              )}
+                              {subItem.title === "Pesanan Produk" && !isFetchingProductOrderStatus && (
+                                <div className="bg-red-500 text-sm font-medium min-w-[24px] h-[24px] text-center flex items-center justify-center rounded-lg text-white">
+                                  {productOrderCount?.[0]?.count ?? 0}
                                 </div>
                               )}
                               {subItem.title === "Customers" && !isFetchingCustomerStatus && (

@@ -162,11 +162,7 @@ const ReimburseTableWrapper = () => {
   }, [dateRange]);
 
   useEffect(() => {
-    if (
-      searchDebounce !== undefined ||
-      searchDebounce !== "" ||
-      searchDebounce
-    ) {
+    if (searchDebounce && searchDebounce.trim() !== "") {
       router.push(
         `${pathname}?${createQueryString({
           status: defaultTab,
@@ -181,7 +177,7 @@ const ReimburseTableWrapper = () => {
           status: defaultTab,
           q: null,
           page: null,
-          limit: null,
+          limit: pageLimit,
         })}`,
       );
     }
@@ -234,7 +230,7 @@ const ReimburseTableWrapper = () => {
           <SearchInput
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
-            placeholder="Cari Reimburse"
+            placeholder="Cari Nama/nominal/Rekening/Pembayaran/Keterangan"
           />
         </div>
       </div>
@@ -243,7 +239,7 @@ const ReimburseTableWrapper = () => {
         {!isFetchingPendingData && pendingData && (
           <ReimburseTable
             columns={pendingColumns}
-            data={pendingData}
+            data={pendingData.items || []}
             searchKey="name"
             totalUsers={pendingData.meta?.total_items}
             pageCount={Math.ceil(pendingData.meta?.total_items / pageLimit)}
@@ -262,7 +258,7 @@ const ReimburseTableWrapper = () => {
             columns={rejectedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={rejectedData}
+            data={rejectedData.items || []}
             searchKey="name"
             totalUsers={rejectedData.meta?.total_items}
             pageCount={Math.ceil(rejectedData.meta?.total_items / pageLimit)}
@@ -278,7 +274,7 @@ const ReimburseTableWrapper = () => {
             columns={confirmedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={confirmedData}
+            data={confirmedData.items || []}
             searchKey="name"
             totalUsers={confirmedData.meta?.total_items}
             pageCount={Math.ceil(confirmedData.meta?.total_items / pageLimit)}
@@ -294,7 +290,7 @@ const ReimburseTableWrapper = () => {
             columns={completedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={doneData}
+            data={doneData.items || []}
             searchKey="name"
             totalUsers={doneData.meta?.total_items}
             pageCount={Math.ceil(doneData.meta?.total_items / pageLimit)}
