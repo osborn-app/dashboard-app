@@ -170,6 +170,9 @@ export function ReimburseTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
   });
 
+  console.log('ReimburseTable - data:', data);
+  console.log('ReimburseTable - table.getRowModel().rows:', table.getRowModel().rows);
+
   // React.useEffect(() => {
   //   if (searchDebounce !== undefined) {
   //     router.push(

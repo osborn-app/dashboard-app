@@ -28,7 +28,7 @@ export const pendingColumns: ColumnDef<any>[] = [
         Nama Driver
       </span>
     ),
-    cell: ({ row }) => <span>{row.original?.driver?.name}</span>,
+    cell: ({ row }) => <span>{row.original?.driver?.name || `Driver ID: ${row.original?.driver_id || '-'}`}</span>,
     enableSorting: false,
   },
   {
@@ -60,7 +60,7 @@ export const pendingColumns: ColumnDef<any>[] = [
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">Lokasi</span>
     ),
-    cell: ({ row }) => <span>{row.original?.location?.name}</span>,
+    cell: ({ row }) => <span>{row.original?.location?.name || `Location ID: ${row.original?.location_id || '-'}`}</span>,
     enableSorting: false,
   },
   {
