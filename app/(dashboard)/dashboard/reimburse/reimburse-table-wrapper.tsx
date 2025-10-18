@@ -239,7 +239,7 @@ const ReimburseTableWrapper = () => {
         {!isFetchingPendingData && pendingData && (
           <ReimburseTable
             columns={pendingColumns}
-            data={pendingData.items || []}
+            data={pendingData.data || []}
             searchKey="name"
             totalUsers={pendingData.meta?.total_items}
             pageCount={Math.ceil(pendingData.meta?.total_items / pageLimit)}
@@ -258,7 +258,7 @@ const ReimburseTableWrapper = () => {
             columns={rejectedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={rejectedData.items || []}
+            data={rejectedData.data || []}
             searchKey="name"
             totalUsers={rejectedData.meta?.total_items}
             pageCount={Math.ceil(rejectedData.meta?.total_items / pageLimit)}
@@ -274,7 +274,7 @@ const ReimburseTableWrapper = () => {
             columns={confirmedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={confirmedData.items || []}
+            data={confirmedData.data || []}
             searchKey="name"
             totalUsers={confirmedData.meta?.total_items}
             pageCount={Math.ceil(confirmedData.meta?.total_items / pageLimit)}
@@ -290,7 +290,7 @@ const ReimburseTableWrapper = () => {
             columns={completedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={doneData.items || []}
+            data={doneData.data || []}
             searchKey="name"
             totalUsers={doneData.meta?.total_items}
             pageCount={Math.ceil(doneData.meta?.total_items / pageLimit)}
