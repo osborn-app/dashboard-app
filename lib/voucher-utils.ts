@@ -10,9 +10,23 @@ export interface VoucherInfo {
 
 // Helper untuk mendapatkan detail jarak dari benefit voucher
 export const getBenefitDistance = (reason: string): string => {
+  // Pattern dengan underscore
   if (reason.includes('_10km')) return '10km';
   if (reason.includes('_15km')) return '15km';
   if (reason.includes('_20km')) return '20km';
+  
+  // Pattern tanpa underscore (untuk voucher code seperti BPICKUPC961S6)
+  if (reason.includes('10km')) return '10km';
+  if (reason.includes('15km')) return '15km';
+  if (reason.includes('20km')) return '20km';
+  
+  // Pattern dengan angka saja (untuk voucher code yang mungkin menggunakan format berbeda)
+  if (reason.includes('10')) return '10km';
+  if (reason.includes('15')) return '15km';
+  if (reason.includes('20')) return '20km';
+  
+  // Untuk voucher benefit yang tidak memiliki info KM spesifik, return default
+  // Ini akan menampilkan "sesuai ketentuan" di UI
   return '';
 };
 
@@ -35,19 +49,19 @@ export const parseVoucherCode = (code: string): VoucherInfo => {
       return {
         type: 'Benefit Voucher',
         benefit: distance ? `Gratis Pickup ${distance}` : 'Gratis Pickup',
-        description: distance ? `Voucher untuk gratis penjemputan kendaraan (${distance})` : 'Voucher untuk gratis penjemputan kendaraan',
+        description: distance ? `Voucher untuk gratis penjemputan kendaraan (${distance})` : 'Voucher untuk gratis penjemputan kendaraan (jarak sesuai ketentuan)',
         icon: '📦',
         color: 'purple',
-        distance: distance
+        distance: distance || 'sesuai ketentuan'
       };
     } else if (code.includes('DELIV')) {
       return {
         type: 'Benefit Voucher',
         benefit: distance ? `Gratis Antar ${distance}` : 'Gratis Antar',
-        description: distance ? `Voucher untuk gratis pengantaran kendaraan (${distance})` : 'Voucher untuk gratis pengantaran kendaraan',
+        description: distance ? `Voucher untuk gratis pengantaran kendaraan (${distance})` : 'Voucher untuk gratis pengantaran kendaraan (jarak sesuai ketentuan)',
         icon: '🚚',
         color: 'blue',
-        distance: distance
+        distance: distance || 'sesuai ketentuan'
       };
     } else if (code.includes('DRIVER')) {
       return {
