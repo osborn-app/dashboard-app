@@ -5,7 +5,16 @@ export interface VoucherInfo {
   description: string;
   icon: string;
   color: string;
+  distance?: string; // Tambahkan field untuk info KM
 }
+
+// Helper untuk mendapatkan detail jarak dari benefit voucher
+export const getBenefitDistance = (reason: string): string => {
+  if (reason.includes('_10km')) return '10km';
+  if (reason.includes('_15km')) return '15km';
+  if (reason.includes('_20km')) return '20km';
+  return '';
+};
 
 export const parseVoucherCode = (code: string): VoucherInfo => {
   if (!code) {
@@ -20,21 +29,25 @@ export const parseVoucherCode = (code: string): VoucherInfo => {
 
   // Benefit vouchers (dimulai dengan B)
   if (code.startsWith('B')) {
+    const distance = getBenefitDistance(code);
+    
     if (code.includes('PICKUP')) {
       return {
         type: 'Benefit Voucher',
-        benefit: 'Gratis Pickup',
-        description: 'Voucher untuk gratis penjemputan kendaraan',
+        benefit: distance ? `Gratis Pickup ${distance}` : 'Gratis Pickup',
+        description: distance ? `Voucher untuk gratis penjemputan kendaraan (${distance})` : 'Voucher untuk gratis penjemputan kendaraan',
         icon: '📦',
-        color: 'purple'
+        color: 'purple',
+        distance: distance
       };
     } else if (code.includes('DELIV')) {
       return {
         type: 'Benefit Voucher',
-        benefit: 'Gratis Antar',
-        description: 'Voucher untuk gratis pengantaran kendaraan',
+        benefit: distance ? `Gratis Antar ${distance}` : 'Gratis Antar',
+        description: distance ? `Voucher untuk gratis pengantaran kendaraan (${distance})` : 'Voucher untuk gratis pengantaran kendaraan',
         icon: '🚚',
-        color: 'blue'
+        color: 'blue',
+        distance: distance
       };
     } else if (code.includes('DRIVER')) {
       return {

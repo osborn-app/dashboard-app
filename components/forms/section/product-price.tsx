@@ -368,6 +368,14 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                                 {detail?.applied_voucher_code ? 'Digunakan' : 'Belum Diterapkan'}
                               </span>
                             </div>
+                            {/* Tampilkan info KM jika ada */}
+                            {voucherInfo.distance && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-xs bg-white bg-opacity-50 px-2 py-1 rounded-full">
+                                  📍 {voucherInfo.distance} gratis
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
