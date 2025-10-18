@@ -237,20 +237,17 @@ const ReimburseTableWrapper = () => {
       <TabsContent value={ReimburseStatus.PENDING} className="space-y-4">
         {isFetchingPendingData && <Spinner />}
         {!isFetchingPendingData && pendingData && (
-          <>
-            {console.log('Pending Data:', pendingData)}
-            <ReimburseTable
-              columns={pendingColumns}
-              data={Array.isArray(pendingData) ? pendingData : (pendingData.data || [])}
-              searchKey="name"
-              totalUsers={Array.isArray(pendingData) ? pendingData.length : (pendingData.meta?.total_items || 0)}
-              pageCount={Array.isArray(pendingData) ? 1 : Math.ceil((pendingData.meta?.total_items || 0) / pageLimit)}
-              pageNo={page}
-              searchQuery={searchQuery}
-              sorting={sorting}
-              setSorting={setSorting}
-            />
-          </>
+          <ReimburseTable
+            columns={pendingColumns}
+            data={pendingData.items || []}
+            searchKey="name"
+            totalUsers={pendingData.meta?.total_items}
+            pageCount={Math.ceil(pendingData.meta?.total_items / pageLimit)}
+            pageNo={page}
+            searchQuery={searchQuery}
+            sorting={sorting}
+            setSorting={setSorting}
+          />
         )}
       </TabsContent>
 
@@ -261,7 +258,7 @@ const ReimburseTableWrapper = () => {
             columns={rejectedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={Array.isArray(rejectedData) ? rejectedData : (rejectedData.data || [])}
+            data={rejectedData.items || []}
             searchKey="name"
             totalUsers={Array.isArray(rejectedData) ? rejectedData.length : (rejectedData.meta?.total_items || 0)}
             pageCount={Array.isArray(rejectedData) ? 1 : Math.ceil((rejectedData.meta?.total_items || 0) / pageLimit)}
@@ -277,7 +274,7 @@ const ReimburseTableWrapper = () => {
             columns={confirmedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={Array.isArray(confirmedData) ? confirmedData : (confirmedData.data || [])}
+            data={confirmedData.items || []}
             searchKey="name"
             totalUsers={Array.isArray(confirmedData) ? confirmedData.length : (confirmedData.meta?.total_items || 0)}
             pageCount={Array.isArray(confirmedData) ? 1 : Math.ceil((confirmedData.meta?.total_items || 0) / pageLimit)}
@@ -293,7 +290,7 @@ const ReimburseTableWrapper = () => {
             columns={completedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={Array.isArray(doneData) ? doneData : (doneData.data || [])}
+            data={doneData.items || []}
             searchKey="name"
             totalUsers={Array.isArray(doneData) ? doneData.length : (doneData.meta?.total_items || 0)}
             pageCount={Array.isArray(doneData) ? 1 : Math.ceil((doneData.meta?.total_items || 0) / pageLimit)}

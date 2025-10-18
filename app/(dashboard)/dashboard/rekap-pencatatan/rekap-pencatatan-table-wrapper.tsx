@@ -221,8 +221,6 @@ const RekapPencatatanTableWrapper = () => {
       // Extract items from response (handle different shapes)
       if (activeTab === "inventaris") {
         currentData = response?.data?.data || response?.data?.items || response?.data || [];
-      } else if (activeTab === "reimburse") {
-        currentData = response?.data || [];
       } else {
         currentData = response?.items || [];
       }
@@ -612,7 +610,7 @@ const RekapPencatatanTableWrapper = () => {
         {!isFetchingReimburse && reimburseData && (
           <RekapPencatatanTable
             columns={columnsReimburse}
-            data={reimburseData.data}
+            data={reimburseData.items}
             type="reimburse"
             searchKey="driver.name"
             totalUsers={reimburseData.meta?.total_items}
