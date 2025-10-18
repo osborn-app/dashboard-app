@@ -274,7 +274,7 @@ const ReimburseTableWrapper = () => {
             columns={confirmedColumns}
             sorting={sorting}
             setSorting={setSorting}
-            data={confirmedData.items || []}
+            data={confirmedData.items || []} //redeploy
             searchKey="name"
             totalUsers={confirmedData.meta?.total_items}
             pageCount={Math.ceil(confirmedData.meta?.total_items / pageLimit)}
