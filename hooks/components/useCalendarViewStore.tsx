@@ -127,14 +127,39 @@ const useCalendarViewStore = (filter?: any) => {
               };
             }
 
-            // Calculate actual end date based on end_request status
+            // Calculate actual end date based on request status
             let actualEndDate = order?.end_date ? dayjs(order.end_date).tz("Asia/Jakarta") : dayjs();
+            
+            // Debug: Log order data to understand structure
+            if (order?.customer?.name === 'Adhitya Dafa Rizqullah') {
+              console.log('Debug Adhitya order:', {
+                order_id: order.id,
+                end_date: order.end_date,
+                end_request_status: order?.end_request?.status,
+                end_request_logs: order?.end_request?.logs,
+                start_request_status: order?.start_request?.status,
+                start_request_logs: order?.start_request?.logs
+              });
+            }
             
             // If end_request is DONE, use the actual completion date from logs
             if (order?.end_request?.status === 'done' && order?.end_request?.logs) {
               const endLog = order.end_request.logs.find((log: any) => log.type === 'end');
               if (endLog && endLog.created_at) {
                 actualEndDate = dayjs(endLog.created_at).tz("Asia/Jakarta");
+                console.log('Using actual end date from logs:', actualEndDate.format('YYYY-MM-DD HH:mm:ss'));
+              }
+            }
+            
+            // If start_request is also DONE, ensure we don't extend beyond actual usage
+            if (order?.start_request?.status === 'done' && order?.start_request?.logs) {
+              const startLog = order.start_request.logs.find((log: any) => log.type === 'start');
+              if (startLog && startLog.created_at) {
+                const actualStartDate = dayjs(startLog.created_at).tz("Asia/Jakarta");
+                // If actual end is before actual start (shouldn't happen but safety check)
+                if (actualEndDate.isBefore(actualStartDate)) {
+                  actualEndDate = actualStartDate;
+                }
               }
             }
 
