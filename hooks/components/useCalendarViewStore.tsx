@@ -127,10 +127,21 @@ const useCalendarViewStore = (filter?: any) => {
               };
             }
 
+            // Calculate actual end date based on end_request status
+            let actualEndDate = order?.end_date ? dayjs(order.end_date).tz("Asia/Jakarta") : dayjs();
+            
+            // If end_request is DONE, use the actual completion date from logs
+            if (order?.end_request?.status === 'done' && order?.end_request?.logs) {
+              const endLog = order.end_request.logs.find((log: any) => log.type === 'end');
+              if (endLog && endLog.created_at) {
+                actualEndDate = dayjs(endLog.created_at).tz("Asia/Jakarta");
+              }
+            }
+
             return {
               id: order?.id || "",
               start: order?.start_date ? dayjs(order.start_date).tz("Asia/Jakarta") : dayjs(),
-              end: order?.end_date ? dayjs(order.end_date).tz("Asia/Jakarta") : dayjs(),
+              end: actualEndDate,
               startDriver: order?.start_request?.driver?.name || "-",
               endDriver: order?.end_request?.driver?.name || "-",
               duration: (order?.duration || 0) + " hari",
