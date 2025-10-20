@@ -123,6 +123,18 @@ export const parseVoucherCode = (code: string): VoucherInfo => {
     };
   }
   
+  // Discount vouchers (kode yang tidak memiliki prefix standar tapi memberikan diskon)
+  // Ini untuk menangani voucher discount seperti WIDI8ZYALV
+  if (code.length >= 8 && /^[A-Z0-9]+$/.test(code)) {
+    return {
+      type: 'Discount Voucher',
+      benefit: 'Diskon Khusus',
+      description: 'Voucher diskon khusus yang memberikan potongan harga',
+      icon: '💰',
+      color: 'green'
+    };
+  }
+  
   // Default untuk kode yang tidak dikenali
   return {
     type: 'Unknown Voucher',

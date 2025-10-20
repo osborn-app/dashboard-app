@@ -321,7 +321,7 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                 {detail?.applied_voucher_code && detail?.voucher_discount < 0 && (
                   <div className="flex justify-between mt-2">
                     <p className="font-medium text-sm text-neutral-700">
-                      Potongan Voucher ({detail?.applied_voucher_code})
+                      Potongan Voucher
                     </p>
                     <p className="font-semibold text-base text-green-600">
                       {formatRupiah(detail?.voucher_discount)}
@@ -359,24 +359,16 @@ const PriceDetail: React.FC<PriceDetailProps> = ({
                             </div>
                           </div>
                           
-                          <div className="mt-2 pt-2 border-t border-current border-opacity-20">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-mono bg-white bg-opacity-50 px-2 py-1 rounded">
-                                {voucherCode}
-                              </span>
-                              <span className="text-xs opacity-70">
-                                {detail?.applied_voucher_code ? 'Digunakan' : 'Belum Diterapkan'}
-                              </span>
-                            </div>
-                            {/* Tampilkan info KM untuk benefit vouchers */}
-                            {voucherInfo.type === 'Benefit Voucher' && voucherInfo.distance && (
-                              <div className="mt-2 flex items-center gap-2">
+                          {/* Tampilkan info KM untuk benefit vouchers */}
+                          {voucherInfo.type === 'Benefit Voucher' && voucherInfo.distance && (
+                            <div className="mt-2 pt-2 border-t border-current border-opacity-20">
+                              <div className="flex items-center gap-2">
                                 <span className="text-xs bg-white bg-opacity-50 px-2 py-1 rounded-full">
                                   📍 {voucherInfo.distance} gratis
                                 </span>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
