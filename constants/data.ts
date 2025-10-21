@@ -294,6 +294,13 @@ export const navItems: NavItem[] = [
         label: "Driver Mitra",
         roles: ["admin"],
       },
+      {
+        title: "Driver Shift",
+        href: "/dashboard/driver-shift",
+        icon: "profile",
+        label: "driver-shift",
+        roles: ["admin"],
+      },
     ],
   },
   {
