@@ -272,7 +272,14 @@ export const navItems: NavItem[] = [
         icon: "tags",
         label: "Brand",
         roles: ["admin"],
-      }
+      },
+      {
+        title: "Out of Town Rates",
+        href: "/dashboard/out-of-town-rates",
+        icon: "car",
+        label: "out-of-town-rates",
+        roles: ["admin"],
+      },
     ],
   },
   {
