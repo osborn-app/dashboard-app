@@ -112,12 +112,12 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
             {isEdit ? "Edit Tarif Luar Kota" : "Tambah Tarif Luar Kota"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             {isEdit 
               ? "Perbarui informasi tarif luar kota" 
               : "Tambahkan tarif luar kota baru ke sistem"
@@ -132,10 +132,11 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
               name="region_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nama Wilayah</FormLabel>
+                  <FormLabel className="text-sm font-medium">Nama Wilayah</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Masukkan nama wilayah"
+                      className="h-10 text-sm"
                       {...field}
                       disabled={isLoading}
                     />
@@ -150,11 +151,12 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
               name="daily_rate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tarif Harian</FormLabel>
+                  <FormLabel className="text-sm font-medium">Tarif Harian</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       placeholder="Masukkan tarif harian"
+                      className="h-10 text-sm"
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                       disabled={isLoading}
@@ -170,10 +172,11 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Deskripsi</FormLabel>
+                  <FormLabel className="text-sm font-medium">Deskripsi</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Masukkan deskripsi (opsional)"
+                      className="h-10 text-sm"
                       {...field}
                       disabled={isLoading}
                     />
@@ -187,10 +190,10 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
               control={form.control}
               name="is_active"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Status Aktif</FormLabel>
-                    <div className="text-sm text-muted-foreground">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 sm:p-4">
+                  <div className="space-y-0.5 flex-1">
+                    <FormLabel className="text-sm sm:text-base font-medium">Status Aktif</FormLabel>
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       Aktifkan atau nonaktifkan tarif ini
                     </div>
                   </div>
@@ -205,16 +208,21 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
               )}
             />
 
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClose}
                 disabled={isLoading}
+                className="w-full sm:w-auto h-10 text-sm"
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full sm:w-auto h-10 text-sm"
+              >
                 {isLoading ? "Menyimpan..." : isEdit ? "Perbarui" : "Simpan"}
               </Button>
             </DialogFooter>

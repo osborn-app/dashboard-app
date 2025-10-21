@@ -99,15 +99,17 @@ const OutOfTownRatesTableWrapper = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-4 flex-wrap">
-          <SearchInput
-            searchQuery={searchQuery}
-            onSearchChange={handleSearchChange}
-            placeholder="Cari tarif luar kota"
-          />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+          <div className="w-full sm:w-auto">
+            <SearchInput
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              placeholder="Cari tarif luar kota"
+            />
+          </div>
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filter Status" />
             </SelectTrigger>
             <SelectContent>
@@ -119,7 +121,7 @@ const OutOfTownRatesTableWrapper = () => {
         </div>
         <Button
           onClick={handleCreate}
-          className={cn(buttonVariants({ variant: "main" }))}
+          className={cn(buttonVariants({ variant: "main" }), "w-full sm:w-auto")}
         >
           <Plus className="mr-2 h-4 w-4" /> Tambah Tarif
         </Button>
