@@ -1,6 +1,5 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { dummyJenisShift, dummyCabang, dummyJamShift } from "@/app/(dashboard)/dashboard/driver-shift/dummy-data";
@@ -66,25 +65,6 @@ const CellAction: React.FC<{ data: DriverShift; onDelete: (id: string) => void }
 
 export const createDriverShiftColumns = ({ isEditMode, onUpdateShift, onDeleteShift }: ColumnProps): ColumnDef<DriverShift>[] => {
   const baseColumns: ColumnDef<DriverShift>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
     {
       accessorKey: "namaDriver",
       header: "Nama Driver",
@@ -186,24 +166,6 @@ export const createDriverShiftColumns = ({ isEditMode, onUpdateShift, onDeleteSh
           );
         }
         return <span>{row.original.cabang}</span>;
-      },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
-        const status = row.original.status;
-        const statusColors = {
-          active: "bg-green-100 text-green-800",
-          completed: "bg-blue-100 text-blue-800",
-          cancelled: "bg-red-100 text-red-800",
-        };
-        
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status]}`}>
-            {status === 'active' ? 'Aktif' : status === 'completed' ? 'Selesai' : 'Dibatalkan'}
-          </span>
-        );
       },
     },
   ];

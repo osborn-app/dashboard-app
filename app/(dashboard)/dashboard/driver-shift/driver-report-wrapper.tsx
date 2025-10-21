@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { DataTable, createDriverReportColumns } from "@/components/tables/driver-report-tables";
+import { DriverReportDataTable, createDriverReportColumns } from "@/components/tables/driver-report-tables";
 import { dummyDriverReports, DriverReport } from "./dummy-data";
 
 export default function DriverReportWrapper() {
@@ -40,12 +40,9 @@ export default function DriverReportWrapper() {
       </div>
 
       {/* Data Table */}
-      <DataTable
+      <DriverReportDataTable
         columns={columns}
         data={filteredData}
-        isEditMode={false}
-        onUpdateShift={() => {}}
-        onDeleteShift={() => {}}
       />
     </div>
   );

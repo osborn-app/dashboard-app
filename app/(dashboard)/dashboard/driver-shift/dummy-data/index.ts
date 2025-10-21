@@ -19,7 +19,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '07.00',
     jamSelesai: '15.00',
     cabang: 'Pancoran',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV001',
     shiftId: 'SHIFT001'
@@ -31,7 +31,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '11.00',
     jamSelesai: '19.00',
     cabang: 'Matraman',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV002',
     shiftId: 'SHIFT002'
@@ -43,7 +43,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '15.00',
     jamSelesai: '23.00',
     cabang: 'Cengkareng',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV003',
     shiftId: 'SHIFT003'
@@ -55,7 +55,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '07.00',
     jamSelesai: '23.00',
     cabang: 'Semanggi',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV004',
     shiftId: 'SHIFT004'
@@ -67,7 +67,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '-',
     jamSelesai: '-',
     cabang: '-',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV005',
     shiftId: 'SHIFT005'
@@ -79,7 +79,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '15.00',
     jamSelesai: '23.00',
     cabang: 'Tanjung Duren',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV006',
     shiftId: 'SHIFT006'
@@ -91,7 +91,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '07.00',
     jamSelesai: '15.00',
     cabang: 'Semanggi',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV007',
     shiftId: 'SHIFT007'
@@ -103,7 +103,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '11.00',
     jamSelesai: '19.00',
     cabang: 'Pancoran',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'completed',
     driverId: 'DRV008',
     shiftId: 'SHIFT008'
@@ -115,7 +115,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '07.00',
     jamSelesai: '23.00',
     cabang: 'Matraman',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV009',
     shiftId: 'SHIFT009'
@@ -127,7 +127,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '-',
     jamSelesai: '-',
     cabang: '-',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV010',
     shiftId: 'SHIFT010'
@@ -139,7 +139,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '07.00',
     jamSelesai: '15.00',
     cabang: 'Cengkareng',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV011',
     shiftId: 'SHIFT011'
@@ -151,7 +151,7 @@ export const dummyDriverShifts: DriverShift[] = [
     jamMulai: '15.00',
     jamSelesai: '23.00',
     cabang: 'Semanggi',
-    tanggal: '2025-01-20',
+    tanggal: '2025-10-21',
     status: 'active',
     driverId: 'DRV012',
     shiftId: 'SHIFT012'

@@ -9,7 +9,7 @@ import { CalendarIcon, Edit3, Save, X } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { DataTable, createDriverShiftColumns } from "@/components/tables/driver-shift-tables";
+import { DriverShiftDataTable, createDriverShiftColumns } from "@/components/tables/driver-shift-tables";
 import { dummyDriverShifts, DriverShift } from "./dummy-data";
 import { toast } from "@/components/ui/use-toast";
 
@@ -165,7 +165,7 @@ export default function DriverShiftTableWrapper() {
       </div>
 
       {/* Data Table */}
-      <DataTable
+      <DriverShiftDataTable
         columns={columns}
         data={filteredData}
         isEditMode={isEditMode}

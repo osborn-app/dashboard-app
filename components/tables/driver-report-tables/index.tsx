@@ -1,2 +1,2 @@
 export { createDriverReportColumns } from "./column";
-export { DataTable } from "../driver-shift-tables/data-table";
+export { DriverReportDataTable } from "./driver-report-data-table";
