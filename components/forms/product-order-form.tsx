@@ -1180,7 +1180,7 @@ export const ProductOrderForm: React.FC<ProductOrderFormProps> = ({
             {lastPath !== "edit" && (
               <div className="flex gap-2">
                 <Link
-                  href={`/dashboard/orders/${finalOrderId}/edit`}
+                  href={`/dashboard/product-orders/${finalOrderId}/edit`}
                   className={cn(
                     buttonVariants({ variant: "outline" }),
                     "text-black",
