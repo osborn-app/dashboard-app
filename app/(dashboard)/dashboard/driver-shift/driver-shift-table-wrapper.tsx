@@ -8,6 +8,18 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {getDriverShiftColumns, columnsDriverReports} from "@/components/tables/driver-shift-tables/columns";
+
+// Function to get default time based on shift type
+const getDefaultShiftTime = (shiftType: string): { start: string; end: string } => {
+  const defaultTimes: Record<string, { start: string; end: string }> = {
+    'libur': { start: '00:00', end: '00:00' },
+    'shift_pagi': { start: '07:00', end: '15:00' },
+    'shift_middle': { start: '11:00', end: '19:00' },
+    'shift_sore': { start: '15:00', end: '23:00' },
+    'full_shift': { start: '07:00', end: '23:00' },
+  };
+  return defaultTimes[shiftType] || { start: '07:00', end: '15:00' };
+};
 import { DriverShiftTable } from "@/components/tables/driver-shift-tables/driver-shift-table";
 import { useQueryClient } from "@tanstack/react-query";
 import SearchInput from "@/components/search-input";
@@ -81,6 +93,20 @@ const DriverShiftTableWrapper = () => {
             [rowId]: {
                 ...prev[rowId],
                 [field]: value
+            }
+        }));
+    };
+
+    // Handle shift type change - auto update start/end time
+    const handleShiftTypeChange = (rowId: number, shiftType: string) => {
+        const defaultTime = getDefaultShiftTime(shiftType);
+        setEditingData(prev => ({
+            ...prev,
+            [rowId]: {
+                ...prev[rowId],
+                shift_type: shiftType,
+                custom_start_time: defaultTime.start,
+                custom_end_time: defaultTime.end
             }
         }));
     };
@@ -323,7 +349,8 @@ const DriverShiftTableWrapper = () => {
                                 handleDataChange,
                                 editingData,
                                 locationsData || [], // locations data
-                                ["shift_pagi", "shift_middle", "shift_sore", "full_shift", "libur"]
+                                ["shift_pagi", "shift_middle", "shift_sore", "full_shift", "libur"],
+                                handleShiftTypeChange
                             )}
                             data={driverShiftData.items}
                             searchKey="name"
