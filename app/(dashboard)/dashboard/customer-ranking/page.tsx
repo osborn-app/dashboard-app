@@ -12,6 +12,7 @@ import { useCustomerRanking, type CustomerRanking } from "@/hooks/api/use-custom
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CustomerActionModal } from "@/components/modal/customer-action-modal";
 
 const breadcrumbItems = [
   { title: "Dashboard", link: "/dashboard" },
@@ -46,6 +47,8 @@ const formatNumber = (num: number) => {
 export default function CustomerRankingPage() {
   const [limit, setLimit] = useState(20);
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerRanking | null>(null);
   const { data: response, isLoading, error, refetch } = useCustomerRanking(limit, selectedDate);
 
   const handleRefresh = () => {
@@ -62,6 +65,16 @@ export default function CustomerRankingPage() {
 
   const clearDateFilter = () => {
     setSelectedDate("");
+  };
+
+  const handleCustomerClick = (customer: CustomerRanking) => {
+    setSelectedCustomer(customer);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCustomer(null);
   };
 
   // Get today's date in YYYY-MM-DD format for max date
@@ -272,7 +285,8 @@ export default function CustomerRankingPage() {
               {rankingData.map((customer: CustomerRanking, index: number) => (
                 <div
                   key={customer.customer_id || index}
-                  className={`flex flex-col sm:flex-row sm:items-center sm:space-x-4 p-4 border rounded-lg transition-all hover:shadow-md gap-2 ${
+                  onClick={() => handleCustomerClick(customer)}
+                  className={`flex flex-col sm:flex-row sm:items-center sm:space-x-4 p-4 border rounded-lg transition-all hover:shadow-md gap-2 cursor-pointer hover:bg-accent/50 ${
                     customer.rank <= 3 ? "bg-gradient-to-r from-primary/5 to-primary/10" : ""
                   }`}
                 >
@@ -321,6 +335,13 @@ export default function CustomerRankingPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Customer Action Modal */}
+      <CustomerActionModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        customer={selectedCustomer}
+      />
     </div>
   );
 }
