@@ -1,5 +1,6 @@
 "use client";
 
+import "./styles.css";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,10 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Select as AntdSelect, ConfigProvider, DatePicker } from "antd";
-import locale from "antd/locale/id_ID";
-import dayjs from "dayjs";
-import "dayjs/locale/id";
+import { Select as AntdSelect } from "antd";
 import { isEmpty } from "lodash";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -28,6 +26,7 @@ import Spinner from "@/components/spinner";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import UploadFile from "@/components/uploud-file";
+import CustomDateTimePicker from "@/components/custom-datetime-picker";
 
 const { Option } = AntdSelect;
 
@@ -267,12 +266,15 @@ export default function DriverReimbursePage() {
 
       toast({
         variant: "success",
-        title: "Berhasil!",
+        title: "✓ Berhasil!",
         description: "Reimburse berhasil dibuat",
       });
 
       // Reset form
       form.reset();
+
+      // Smooth scroll to top after success
+      window.scrollTo({ top: 0, behavior: "smooth" });
 
       // Navigate to dashboard or list page
       // router.push('/dashboard/reimburse');
@@ -280,7 +282,7 @@ export default function DriverReimbursePage() {
       console.error("Submit error:", error);
       toast({
         variant: "destructive",
-        title: "Error!",
+        title: "❌ Error!",
         description: error.response?.data?.message || "Gagal membuat reimburse",
       });
     } finally {
@@ -288,33 +290,75 @@ export default function DriverReimbursePage() {
     }
   };
 
-  const disabledDate = (current: any): boolean => {
-    return current && current < dayjs().startOf("day");
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100 p-5">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <Heading
-            title="Reimburse Driver"
-            description="Form pengajuan reimburse untuk driver Transgo"
-          />
+    <>
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm mx-4 text-center animate-in fade-in zoom-in duration-300">
+            <div className="relative mb-6">
+              <div className="w-20 h-20 mx-auto">
+                <svg className="animate-spin" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              </div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="w-12 h-12 bg-blue-600 rounded-full animate-pulse" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              Mengirim Data...
+            </h3>
+            <p className="text-sm text-gray-600">
+              Mohon tunggu, sedang memproses reimburse Anda
+            </p>
+            <div className="mt-4 flex justify-center gap-1">
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+          </div>
         </div>
+      )}
 
-        <Form {...form}>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-5 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-6 sm:mb-8">
+            <div className="bg-white rounded-xl shadow-md p-6 sm:p-8 border-t-4 border-blue-600">
+              <Heading
+                title="📝 Reimburse Driver"
+                description="Form pengajuan reimburse untuk driver Transgo"
+              />
+            </div>
+          </div>
+
+          <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4"
+            className="space-y-3 sm:space-y-4"
           >
             {/* Driver */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               name="driver"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="relative label-required">
+                  <FormLabel className="relative label-required text-base font-semibold text-gray-700">
                     Nama Pengemudi
                   </FormLabel>
                   <FormControl>
@@ -322,7 +366,8 @@ export default function DriverReimbursePage() {
                       className="w-full"
                       showSearch
                       placeholder="Pilih pengemudi..."
-                      style={{ height: "40px" }}
+                      style={{ height: "48px" }}
+                      size="large"
                       onSearch={setSearchDriverTerm}
                       onChange={field.onChange}
                       filterOption={false}
@@ -343,24 +388,24 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Nominal */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               control={form.control}
               name="nominal"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="relative label-required">
+                  <FormLabel className="relative label-required text-base font-semibold text-gray-700">
                     Nominal
                   </FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 z-10 -translate-y-1/2">
+                      <span className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-500 font-medium">
                         Rp.
                       </span>
                       <NumericFormat
                         customInput={Input}
                         type="text"
-                        className="pl-9"
+                        className="pl-9 h-12 text-base"
                         allowLeadingZeros
                         thousandSeparator=","
                         allowNegative={false}
@@ -380,13 +425,13 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Bank */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               name="bank"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="relative label-required">
+                  <FormLabel className="relative label-required text-base font-semibold text-gray-700">
                     Nama Bank / Pembayaran
                   </FormLabel>
                   <FormControl>
@@ -395,6 +440,7 @@ export default function DriverReimbursePage() {
                       showSearch
                       mode="tags"
                       maxTagCount={1}
+                      size="large"
                       value={field.value}
                       placeholder="Pilih bank..."
                       onChange={(value) => {
@@ -403,7 +449,7 @@ export default function DriverReimbursePage() {
                           : value;
                         field.onChange(lastValue);
                       }}
-                      style={{ height: "40px" }}
+                      style={{ height: "48px" }}
                     >
                       {[
                         { value: "BCA", label: "BCA" },
@@ -425,19 +471,20 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Fleet */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               name="fleet"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Pilih Fleet (Opsional)</FormLabel>
+                  <FormLabel className="text-base font-semibold text-gray-700">Pilih Fleet (Opsional)</FormLabel>
                   <FormControl>
                     <AntdSelect
                       className="w-full"
                       showSearch
                       placeholder="Pilih fleet..."
-                      style={{ height: "40px" }}
+                      style={{ height: "48px" }}
+                      size="large"
                       disabled={!!productField}
                       onSearch={setSearchFleetTerm}
                       onChange={(value) => {
@@ -465,19 +512,20 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Product */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               name="product"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Pilih Product (Opsional)</FormLabel>
+                  <FormLabel className="text-base font-semibold text-gray-700">Pilih Product (Opsional)</FormLabel>
                   <FormControl>
                     <AntdSelect
                       className="w-full"
                       showSearch
                       placeholder="Pilih product..."
-                      style={{ height: "40px" }}
+                      style={{ height: "48px" }}
+                      size="large"
                       disabled={!!fleetField}
                       onSearch={setSearchProductTerm}
                       onChange={(value) => {
@@ -505,51 +553,44 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Date */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               control={form.control}
               name="date"
               render={({ field }) => (
-                <ConfigProvider locale={locale}>
-                  <FormItem>
-                    <FormLabel className="relative label-required">
-                      Tanggal
-                    </FormLabel>
-                    <FormControl>
-                      <DatePicker
-                        disabledDate={disabledDate}
-                        className="w-full h-[40px]"
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        value={field.value ? dayjs(field.value).locale("id") : undefined}
-                        format={"HH:mm:ss - dddd, DD MMMM (YYYY)"}
-                        showTime
-                        placeholder="Pilih tanggal dan waktu"
-                        showNow={false}
-                        inputReadOnly
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </ConfigProvider>
+                <FormItem>
+                  <FormLabel className="relative label-required text-base font-semibold text-gray-700 mb-2 block">
+                    Tanggal & Waktu
+                  </FormLabel>
+                  <FormControl>
+                    <CustomDateTimePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Pilih tanggal dan waktu"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
             />
             </div>
 
             {/* Location */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               name="location"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="relative label-required">Lokasi</FormLabel>
+                  <FormLabel className="relative label-required text-base font-semibold text-gray-700">Lokasi</FormLabel>
                   <FormControl>
                     <AntdSelect
                       showSearch
                       value={field.value}
                       placeholder="Pilih Lokasi..."
                       className="w-full"
+                      style={{ height: "48px" }}
+                      size="large"
                       onSearch={setSearchLocationTerm}
                       onChange={field.onChange}
                       filterOption={false}
@@ -570,15 +611,16 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* No Rekening */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               control={form.control}
               name="noRekening"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>No. Rekening / No. Pembayaran</FormLabel>
+                  <FormLabel className="text-base font-semibold text-gray-700">No. Rekening / No. Pembayaran</FormLabel>
                   <FormControl>
                     <Input
+                      className="h-12 text-base"
                       placeholder="Masukan no rekening / no pembayaran"
                       {...field}
                       value={field.value ?? ""}
@@ -595,13 +637,13 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Category */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               name="category"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="relative label-required">
+                  <FormLabel className="relative label-required text-base font-semibold text-gray-700">
                     Kategori
                   </FormLabel>
                   <FormControl>
@@ -609,7 +651,8 @@ export default function DriverReimbursePage() {
                       className="w-full"
                       showSearch
                       placeholder="Pilih kategori..."
-                      style={{ height: "40px" }}
+                      style={{ height: "48px" }}
+                      size="large"
                       value={field.value || undefined}
                       onChange={field.onChange}
                       loading={loadingCategories}
@@ -628,13 +671,13 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Quantity */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               control={form.control}
               name="quantity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Quantity</FormLabel>
+                  <FormLabel className="text-base font-semibold text-gray-700">Quantity</FormLabel>
                   <FormControl>
                     <NumericFormat
                       disabled={(() => {
@@ -645,6 +688,7 @@ export default function DriverReimbursePage() {
                       })()}
                       customInput={Input}
                       type="text"
+                      className="h-12 text-base"
                       allowLeadingZeros
                       thousandSeparator
                       allowNegative={false}
@@ -663,17 +707,18 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="relative label-required">
+                    <FormLabel className="relative label-required text-base font-semibold text-gray-700">
                       Keterangan
                     </FormLabel>
                     <FormControl>
                       <Textarea
+                        className="text-base min-h-[120px]"
                         placeholder="Isi keterangan anda dengan lengkap..."
                         rows={4}
                         {...field}
@@ -691,13 +736,13 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* File Upload */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
                 control={form.control}
                 name="transaction_proof_url"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="relative label-required">
+                    <FormLabel className="relative label-required text-base font-semibold text-gray-700">
                       Bukti Transaksi
                     </FormLabel>
                     <FormControl>
@@ -715,15 +760,20 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Submit Button */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <Button type="submit" disabled={loading} className="w-full">
-              {loading ? <Spinner className="h-4 w-4 mr-2" /> : null}
-              {loading ? "Mengirim..." : "Submit Reimburse"}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg hover:shadow-xl transition-all p-4 sm:p-6">
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full h-14 text-base sm:text-lg font-bold bg-white text-blue-600 hover:bg-gray-50"
+              >
+                {loading ? <Spinner className="h-5 w-5 mr-2" /> : null}
+                {loading ? "Mengirim..." : "✓ Submit Reimburse"}
               </Button>
             </div>
           </form>
         </Form>
       </div>
     </div>
+    </>
   );
 }
