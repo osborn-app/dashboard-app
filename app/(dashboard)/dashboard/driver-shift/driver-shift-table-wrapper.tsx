@@ -1,5 +1,5 @@
 "use client";
-import { useGetDriverShifts, useGetDriverShiftReport, useEditDriverShift, useGetDriverShiftLocations, type ApiResponse, type DriverShift, type DriverShiftReport, type Location } from "@/hooks/api/useDrivershift";
+import { useGetDriverShifts, useGetDriverShiftReport, useGetDriverShiftLocations, type ApiResponse, type DriverShift, type DriverShiftReport, type Location } from "@/hooks/api/useDrivershift";
 import useAxiosAuth from "@/hooks/axios/use-axios-auth";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
@@ -25,13 +25,20 @@ const DriverShiftTableWrapper = () => {
     const [activeTab, setActiveTab] = React.useState<string>("driver-shift");
     const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
     const [editingData, setEditingData] = React.useState<Record<number, any>>({});
+    
+    // Date filter state - default to today
+    const today = new Date().toISOString().split('T')[0];
+    const [singleDate, setSingleDate] = React.useState<string>(today);
     const queryClient = useQueryClient();
     const axiosAuth = useAxiosAuth();
+    
+    // No mutations needed - only PATCH via axiosAuth
 
     const { data: driverShiftData, isFetching: isFetchingDriverShift, refetch: refetchDriverShift } = useGetDriverShifts({
         limit: pageLimit,
         page: page,
         q: searchDebounce,
+        date: singleDate,
     }, {
         enabled: false, // Disable automatic fetching
     });
@@ -45,12 +52,10 @@ const DriverShiftTableWrapper = () => {
     });
 
     // Hook untuk get locations
-    const { data: locationsData } = useGetDriverShiftLocations();
+    const { data: locationsData } = useGetDriverShiftLocations({
+        enabled: true, // Enable automatic fetching
+    });
     
-    // Debug locations data
-    React.useEffect(() => {
-        console.log("Locations data:", locationsData);
-    }, [locationsData]);
 
     const createQueryString = React.useCallback(
         (params: Record<string, string | number | null | undefined>) => {
@@ -82,21 +87,35 @@ const DriverShiftTableWrapper = () => {
 
     // Toggle edit mode
     const toggleEditMode = () => {
+        console.log("toggleEditMode called, isEditMode:", isEditMode);
         if (isEditMode) {
             // Save changes
+            console.log("Calling saveChanges from toggleEditMode");
             saveChanges();
         } else {
             // Enter edit mode
+            console.log("Entering edit mode");
             setIsEditMode(true);
             // Initialize editing data with current data
             const initialData: Record<number, any> = {};
             driverShiftData?.items?.forEach((item: any) => {
                 if (item.shifts?.[0]) {
+                    const shift = item.shifts[0];
                     initialData[item.id] = {
-                        shift_type: item.shifts[0].shift_type,
-                        custom_start_time: item.shifts[0].custom_start_time,
-                        custom_end_time: item.shifts[0].custom_end_time,
-                        location_id: item.shifts[0].location_id,
+                        shift_type: shift.shift_type,
+                        custom_start_time: shift.custom_start_time,
+                        custom_end_time: shift.custom_end_time,
+                        location_id: shift.location_id ? shift.location_id.toString() : "0", // Default to "Semua Cabang Transgo" (id: 0)
+                        notes: shift.notes || ""
+                    };
+                } else {
+                    // Driver without shift - initialize with default values
+                    initialData[item.id] = {
+                        shift_type: "shift_pagi",
+                        custom_start_time: "07:00",
+                        custom_end_time: "15:00",
+                        location_id: "0", // Default to "Semua Cabang Transgo" (id: 0)
+                        notes: ""
                     };
                 }
             });
@@ -104,26 +123,68 @@ const DriverShiftTableWrapper = () => {
         }
     };
 
-    // Save changes
+    // Save changes - only PATCH existing shifts, no POST/DELETE
     const saveChanges = async () => {
+        console.log("saveChanges called");
         try {
-            console.log("Saving changes:", editingData);
+            let hasChanges = false;
+            let driversWithoutShift = 0;
             
             // Save each modified row
             for (const [rowId, changes] of Object.entries(editingData)) {
-                console.log(`Processing row ${rowId}:`, changes);
-                
-                // Find the shift ID for this driver
+                // Find the driver
                 const driver = driverShiftData?.items?.find((item: any) => item.id === parseInt(rowId));
                 const shiftId = driver?.shifts?.[0]?.id;
                 
-                console.log(`Driver found:`, driver, `Shift ID:`, shiftId);
-                
-                if (shiftId && changes) {
-                    // Use axios directly to update the shift
-                    console.log(`Patching shift ${shiftId} with data:`, changes);
-                    await axiosAuth.patch(`/driver-shifts/${shiftId}`, changes);
+                // Only process if driver has existing shift (shiftId exists)
+                if (!shiftId) {
+                    driversWithoutShift++;
+                    continue;
                 }
+                
+                // Check if there are actual changes by comparing with original data
+                const originalShift = driver.shifts[0];
+                const hasActualChanges = (
+                    changes.shift_type !== originalShift.shift_type ||
+                    changes.location_id !== originalShift.location_id?.toString() ||
+                    changes.custom_start_time !== originalShift.custom_start_time ||
+                    changes.custom_end_time !== originalShift.custom_end_time ||
+                    changes.notes !== (originalShift.notes || "")
+                );
+                
+                if (!hasActualChanges) {
+                    continue;
+                }
+                
+                // Check if location_id is valid
+                if (!changes.location_id || changes.location_id === 'undefined') {
+                    continue;
+                }
+                
+                // Prepare payload according to backend format
+                const payload = {
+                    shift_type: changes.shift_type,
+                    location_id: parseInt(changes.location_id),
+                    custom_start_time: changes.custom_start_time,
+                    custom_end_time: changes.custom_end_time,
+                    notes: changes.notes || ""
+                };
+                
+                // PATCH existing shift
+                try {
+                    await axiosAuth.patch(`/driver-shifts/${shiftId}`, payload);
+                    hasChanges = true;
+                } catch (patchError) {
+                    console.error(`Error updating shift ${shiftId}:`, patchError);
+                    throw patchError;
+                }
+            }
+            
+            if (!hasChanges) {
+                console.log(`No changes to save. ${driversWithoutShift} drivers without existing shifts were skipped.`);
+                setIsEditMode(false);
+                setEditingData({});
+                return;
             }
             
             // Reset edit mode
@@ -131,10 +192,12 @@ const DriverShiftTableWrapper = () => {
             setEditingData({});
             
             // Refetch data
-            refetchDriverShift();
+            await refetchDriverShift();
             
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error saving changes:", error);
+            const errorMessage = error?.response?.data?.message || error?.message || "Unknown error";
+            alert("Error saving changes: " + errorMessage);
         }
     };
 
@@ -147,14 +210,14 @@ const DriverShiftTableWrapper = () => {
         }
     }, [activeTab, refetchDriverShift, refetchDriverReport]);
 
-    // Fetch data when search query changes
+    // Fetch data when search query or date filter changes
     React.useEffect(() => {
         if (activeTab === "driver-shift") {
             refetchDriverShift();
         } else if (activeTab === "driver-reports") {
             refetchDriverReport();
         }
-    }, [searchDebounce, refetchDriverShift, refetchDriverReport]);
+    }, [searchDebounce, singleDate, refetchDriverShift, refetchDriverReport]);
 
     // Initial fetch
     React.useEffect(() => {
@@ -183,6 +246,7 @@ const DriverShiftTableWrapper = () => {
     return (
         <>
             <Tabs value={activeTab} onValueChange={handleTabChange}>
+                <div className="flex items-end justify-between gap-4 flex-wrap mt-4">
                 <TabsList>
                     {lists.map((list) => (
                         <TabsTrigger key={list.value} value={list.value}>
@@ -190,21 +254,63 @@ const DriverShiftTableWrapper = () => {
                         </TabsTrigger>
                     ))}
                 </TabsList>
-                <div className="flex items-center justify-between gap-4 flex-wrap mt-4">
-                    <div className="flex items-center justify-between gap-4 flex-wrap w-full lg:!w-auto">
+                    
+                    <div className="flex items-end gap-4 flex-wrap">
                         <SearchInput
                             searchQuery={searchQuery}
                             onSearchChange={handleSearchChange}
                             placeholder="Cari Driver Shift"
                         />
+                        
+                        {/* Single Date Filter */}
+                        <div className="flex flex-col gap-1">
+                            <label htmlFor="date-filter" className="text-sm font-medium text-gray-700">Tanggal</label>
+                            <input
+                                id="date-filter"
+                                name="date-filter"
+                                type="date"
+                                value={singleDate}
+                                onChange={(e) => setSingleDate(e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                        
+                        {/* Edit Button */}
                         {activeTab === "driver-shift" && (
+                            <div className="flex gap-2">
+                                {isEditMode && (
+                                    <Button 
+                                        onClick={() => {
+                                            setIsEditMode(false);
+                                            setEditingData({});
+                                        }}
+                                        variant="outline"
+                                        className="bg-red-600 hover:bg-red-700 text-white border-red-600"
+                                    >
+                                        ✕ Cancel
+                                    </Button>
+                                )}
                             <Button 
-                                onClick={toggleEditMode}
+                                    onClick={() => {
+                                        console.log("Button clicked, isEditMode:", isEditMode);
+                                        if (isEditMode) {
+                                            console.log("Calling saveChanges");
+                                            saveChanges();
+                                        } else {
+                                            console.log("Calling toggleEditMode");
+                                            toggleEditMode();
+                                        }
+                                    }}
                                 variant={isEditMode ? "default" : "outline"}
-                                className="ml-4"
+                                    className={`${
+                                        isEditMode 
+                                            ? "bg-green-600 hover:bg-green-700 text-white" 
+                                            : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                                    }`}
                             >
                                 {isEditMode ? "Simpan" : "Edit Data"}
                             </Button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -217,7 +323,7 @@ const DriverShiftTableWrapper = () => {
                                 handleDataChange,
                                 editingData,
                                 locationsData || [], // locations data
-                                ["SHIFT_PAGI", "SHIFT_SIANG", "SHIFT_MALAM"]
+                                ["shift_pagi", "shift_middle", "shift_sore", "full_shift", "libur"]
                             )}
                             data={driverShiftData.items}
                             searchKey="name"

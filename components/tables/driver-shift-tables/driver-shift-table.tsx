@@ -146,8 +146,8 @@ export function DriverShiftTable<TData, TValue>({
   return (
     <>
     <div className="space-y-4">
-      <div className="rounded-md border">
-        <ScrollArea className="h-[600px] w-full">
+      <div>
+        <ScrollArea className="rounded-md border h-[calc(80vh-220px)] w-full">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

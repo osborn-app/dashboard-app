@@ -91,6 +91,7 @@ export const useEditDriverShift = (id: string) => {
     });
 };
 
+
 export const useGetDriverShiftReport = (params: any, options?: any) => {
     const axiosAuth = useAxiosAuth();
 
@@ -111,7 +112,7 @@ export const useGetDriverShiftLocations = (options?: any) => {
 
     const getDriverShiftLocations = async (): Promise<Location[]> => {
         const { data } = await axiosAuth.get("/locations");
-        return data;
+        return data.items || []; // Extract items from response
     };
 
     return useQuery<Location[]>({

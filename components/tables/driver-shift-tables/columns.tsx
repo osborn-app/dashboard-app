@@ -3,13 +3,25 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
+// Function to get shift label based on backend enum
+const getShiftLabel = (shiftType: string): string => {
+  const labels: Record<string, string> = {
+    'libur': 'Libur',
+    'shift_pagi': 'Shift Pagi',
+    'shift_middle': 'Shift Middle',
+    'shift_sore': 'Shift Sore',
+    'full_shift': 'Full Shift',
+  };
+  return labels[shiftType] || shiftType;
+};
+
 // Function to generate columns with edit mode support
 export const getDriverShiftColumns = (
   isEditMode: boolean,
   onDataChange: (rowId: number, field: string, value: string) => void,
   editingData: Record<number, any> = {},
   locations: Array<{id: number, name: string}> = [],
-  shiftTypes: string[] = ["SHIFT_PAGI", "SHIFT_SIANG", "SHIFT_MALAM"]
+  shiftTypes: string[] = ["shift_pagi", "shift_middle", "shift_sore", "full_shift", "libur"]
 ): ColumnDef<any>[] => [
   {
     accessorKey: "nama_driver",
@@ -33,14 +45,14 @@ export const getDriverShiftColumns = (
             <SelectContent>
               {shiftTypes.map((type) => (
                 <SelectItem key={type} value={type}>
-                  {type.replace("SHIFT_", "").toUpperCase()}
+                  {getShiftLabel(type)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         );
       }
-      return <span>{row.original.shifts?.[0]?.shift_type ?? "-"}</span>;
+      return <span>{getShiftLabel(row.original.shifts?.[0]?.shift_type) ?? "-"}</span>;
     },
   },
   {
@@ -85,7 +97,7 @@ export const getDriverShiftColumns = (
     cell: ({ row }) => {
       if (isEditMode) {
         const currentValue = editingData[row.original.id]?.location_id ?? row.original.shifts?.[0]?.location_id ?? "";
-        console.log("Locations in column:", locations, "Type:", typeof locations, "IsArray:", Array.isArray(locations));
+        
         return (
           <Select
             value={currentValue?.toString() ?? ""}
@@ -95,11 +107,17 @@ export const getDriverShiftColumns = (
               <SelectValue placeholder="Pilih cabang" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(locations) && locations.map((location) => (
-                <SelectItem key={location.id} value={location.id.toString()}>
-                  {location.name}
+              {Array.isArray(locations) && locations.length > 0 ? (
+                locations.map((location) => (
+                  <SelectItem key={location.id} value={location.id.toString()}>
+                    {location.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="" disabled>
+                  Tidak ada lokasi tersedia
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         );
