@@ -83,7 +83,11 @@ export const getDriverShiftColumns = (
           <Input
             type="time"
             value={currentValue}
-            onChange={(e) => onDataChange(row.original.id, "custom_start_time", e.target.value)}
+            onChange={(e) => {
+              // Ensure the time is in HH:MM format
+              const timeValue = e.target.value;
+              onDataChange(row.original.id, "custom_start_time", timeValue);
+            }}
             className="w-[120px]"
           />
         );
@@ -101,7 +105,11 @@ export const getDriverShiftColumns = (
           <Input
             type="time"
             value={currentValue}
-            onChange={(e) => onDataChange(row.original.id, "custom_end_time", e.target.value)}
+            onChange={(e) => {
+              // Ensure the time is in HH:MM format
+              const timeValue = e.target.value;
+              onDataChange(row.original.id, "custom_end_time", timeValue);
+            }}
             className="w-[120px]"
           />
         );

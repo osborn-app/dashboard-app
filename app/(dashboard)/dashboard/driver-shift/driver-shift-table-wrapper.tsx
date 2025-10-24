@@ -8,6 +8,7 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {getDriverShiftColumns, columnsDriverReports} from "@/components/tables/driver-shift-tables/columns";
+import { useToast } from "@/hooks/use-toast";
 
 // Function to get default time based on shift type
 const getDefaultShiftTime = (shiftType: string): { start: string; end: string } => {
@@ -43,6 +44,7 @@ const DriverShiftTableWrapper = () => {
     const [singleDate, setSingleDate] = React.useState<string>(today);
     const queryClient = useQueryClient();
     const axiosAuth = useAxiosAuth();
+    const { toast } = useToast();
     
     // No mutations needed - only PATCH via axiosAuth
 
@@ -113,14 +115,11 @@ const DriverShiftTableWrapper = () => {
 
     // Toggle edit mode
     const toggleEditMode = () => {
-        console.log("toggleEditMode called, isEditMode:", isEditMode);
         if (isEditMode) {
             // Save changes
-            console.log("Calling saveChanges from toggleEditMode");
             saveChanges();
         } else {
             // Enter edit mode
-            console.log("Entering edit mode");
             setIsEditMode(true);
             // Initialize editing data with current data
             const initialData: Record<number, any> = {};
@@ -151,7 +150,6 @@ const DriverShiftTableWrapper = () => {
 
     // Save changes - only PATCH existing shifts, no POST/DELETE
     const saveChanges = async () => {
-        console.log("saveChanges called");
         try {
             let hasChanges = false;
             let driversWithoutShift = 0;
@@ -188,11 +186,25 @@ const DriverShiftTableWrapper = () => {
                 }
                 
                 // Prepare payload according to backend format
+                // Ensure time format is HH:MM (24-hour format)
+                const formatTime = (time: string) => {
+                    if (!time) return null;
+                    // If time is already in HH:MM format, return as is
+                    if (/^([01]\d|2[0-3]):([0-5]\d)$/.test(time)) {
+                        return time;
+                    }
+                    // If time is in HH:MM:SS format, remove seconds
+                    if (/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/.test(time)) {
+                        return time.substring(0, 5);
+                    }
+                    return null;
+                };
+                
                 const payload = {
                     shift_type: changes.shift_type,
                     location_id: parseInt(changes.location_id),
-                    custom_start_time: changes.custom_start_time,
-                    custom_end_time: changes.custom_end_time,
+                    custom_start_time: formatTime(changes.custom_start_time),
+                    custom_end_time: formatTime(changes.custom_end_time),
                     notes: changes.notes || ""
                 };
                 
@@ -201,13 +213,11 @@ const DriverShiftTableWrapper = () => {
                     await axiosAuth.patch(`/driver-shifts/${shiftId}`, payload);
                     hasChanges = true;
                 } catch (patchError) {
-                    console.error(`Error updating shift ${shiftId}:`, patchError);
                     throw patchError;
                 }
             }
             
             if (!hasChanges) {
-                console.log(`No changes to save. ${driversWithoutShift} drivers without existing shifts were skipped.`);
                 setIsEditMode(false);
                 setEditingData({});
                 return;
@@ -217,13 +227,23 @@ const DriverShiftTableWrapper = () => {
             setIsEditMode(false);
             setEditingData({});
             
+            // Show success message
+            toast({
+                title: "Berhasil",
+                description: "Perubahan jadwal shift berhasil disimpan",
+                variant: "default"
+            });
+            
             // Refetch data
             await refetchDriverShift();
             
         } catch (error: any) {
-            console.error("Error saving changes:", error);
             const errorMessage = error?.response?.data?.message || error?.message || "Unknown error";
-            alert("Error saving changes: " + errorMessage);
+            toast({
+                title: "Error",
+                description: `Gagal menyimpan perubahan: ${errorMessage}`,
+                variant: "destructive"
+            });
         }
     };
 
@@ -318,12 +338,9 @@ const DriverShiftTableWrapper = () => {
                                 )}
                             <Button 
                                     onClick={() => {
-                                        console.log("Button clicked, isEditMode:", isEditMode);
                                         if (isEditMode) {
-                                            console.log("Calling saveChanges");
                                             saveChanges();
                                         } else {
-                                            console.log("Calling toggleEditMode");
                                             toggleEditMode();
                                         }
                                     }}
