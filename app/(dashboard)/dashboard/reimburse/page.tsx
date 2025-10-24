@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-query";
 import { getReimburse } from "@/client/reimburseClient";
 import ReimburseTableWrapper from "./reimburse-table-wrapper";
+import DriverReimburseUrlCard from "./driver-reimburse-url-card";
 
 const breadcrumbItems = [{ title: "Reimburse", link: "/dashboard/reimburse" }];
 type paramsProps = {
@@ -56,6 +57,11 @@ const page = async ({ searchParams }: paramsProps) => {
             Tambah Reimburse
           </Link>
         </div>
+        <Separator />
+        
+        {/* Driver Reimburse URL Card */}
+        <DriverReimburseUrlCard />
+        
         <Separator />
         <Tabs defaultValue={defaultTab} className="space-y-4">
           <HydrationBoundary state={dehydrate(queryClient)}>
