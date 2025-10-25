@@ -41,7 +41,7 @@ export const CustomerActionModal: React.FC<CustomerActionModalProps> = ({
 
   const handleViewDetails = () => {
     if (customer?.customer_id) {
-      router.push(`/dashboard/customers/${customer.customer_id}`);
+      router.push(`/dashboard/customers/${customer.customer_id}/detail`);
     }
     onClose();
   };

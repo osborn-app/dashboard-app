@@ -8,7 +8,7 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {getDriverShiftColumns, columnsDriverReports} from "@/components/tables/driver-shift-tables/columns";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 // Function to get default time based on shift type
 const getDefaultShiftTime = (shiftType: string): { start: string; end: string } => {
