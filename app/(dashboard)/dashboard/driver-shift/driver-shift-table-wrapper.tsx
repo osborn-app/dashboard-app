@@ -61,6 +61,7 @@ const DriverShiftTableWrapper = () => {
         limit: pageLimit,
         page: page,
         q: searchDebounce,
+        date: singleDate,
     }, {
         enabled: false, // Disable automatic fetching
     });
