@@ -8,7 +8,7 @@ const getShiftLabel = (shiftType: string): string => {
   const labels: Record<string, string> = {
     'libur': 'Libur',
     'shift_pagi': 'Shift Pagi',
-    'shift_middle': 'Shift Middle',
+    'shift_middle': 'Shift Siang',
     'shift_sore': 'Shift Sore',
     'full_shift': 'Full Shift',
   };
@@ -163,14 +163,24 @@ export const columnsDriverReports: ColumnDef<any>[] = [
     cell: ({ row }) => <span>{row.original.driver_name ?? "-"}</span>,
   },
   {
-    accessorKey: "pengantaran",
+    accessorKey: "Pengantaran",
     header: "Pengantaran",
     cell: ({ row }) => <span>{row.original.total_pengantaran ?? "-"}</span>,
   },
   {
-    accessorKey: "penjemputan",
+    accessorKey: "Penjemputan",
     header: "Penjemputan",
     cell: ({ row }) => <span>{row.original.total_penjemputan ?? "-"}</span>,
+  },
+  {
+    accessorKey: "Pengambilan",
+    header: "Pengambilan",
+    cell: ({ row }) => <span>{row.original.total_pengambilan ?? "-"}</span>,
+  },
+  {
+    accessorKey: "Pengembalian",
+    header: "Pengembalian",
+    cell: ({ row }) => <span>{row.original.total_pengembalian ?? "-"}</span>,
   },
   {
     accessorKey: "task_diluar_jam_kerja",
