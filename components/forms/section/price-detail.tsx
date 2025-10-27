@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { formatRupiah } from "@/lib/utils";
 import { DropdownMenu } from "@radix-ui/react-dropdown-menu";
 import dayjs from "dayjs";
+import { useEffect } from "react";
 import { ChevronDown, EyeIcon, Info, Link2 } from "lucide-react";
 import { parseVoucherCode, getVoucherColorClass } from "@/lib/voucher-utils";
 
@@ -53,6 +54,14 @@ const ProductPriceDetail: React.FC<PriceDetailProps> = ({
 }) => {
   // Watch discount field for real-time updates
   const discountValue = form.watch("discount");
+
+  // Ensure region_id is sent as part of payload without explicit input
+  useEffect(() => {
+    const regionId = detail?.region_id ?? initialData?.region_id;
+    if (regionId !== undefined && regionId !== null && regionId !== "") {
+      form.setValue("region_id", String(regionId));
+    }
+  }, [detail?.region_id, initialData?.region_id, form]);
   return (
     <div
       className="p-5 top-10 border rounded-md w-full basis-1/3"
@@ -218,6 +227,23 @@ const ProductPriceDetail: React.FC<PriceDetailProps> = ({
                         </div>
                       );
                     })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Region Display (auto payload only, no input) */}
+              {(detail?.region_name || detail?.region_id || form.getValues("region_id")) && (
+                <div className="mb-2">
+                  <p className="font-medium text-sm text-neutral-700 mb-1">
+                    Wilayah
+                  </p>
+                  <div className="flex justify-between">
+                    <p className="font-medium text-sm text-neutral-700">
+                      {detail?.region_name || "-"}
+                    </p>
+                    <p className="font-semibold text-base">
+                      {detail?.region_id ?? form.getValues("region_id")}
+                    </p>
                   </div>
                 </div>
               )}

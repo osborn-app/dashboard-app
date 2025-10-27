@@ -52,6 +52,7 @@ const formSchema = z.object({
   additionals: z.array(additionalSchema),
   // Optional voucher code
   voucher_code: z.string().optional().nullable(),
+  region_id: z.string().optional().nullable(),
 });
 
 const generateSchema = (startSelfPickUp?: boolean, endSelfPickup?: boolean) => {

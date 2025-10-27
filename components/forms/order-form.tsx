@@ -226,6 +226,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           price: service.price?.toString() || "",
         })) || [],
         voucher_code: initialData?.applied_voucher_code || "",
+        region_id: (initialData as any)?.region_id ? String((initialData as any)?.region_id) : "",
       }
     : {
         start_request: {
@@ -252,6 +253,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         service_price: "",
         additionals: [],
         voucher_code: "",
+        region_id: "",
       };
 
   const form = useForm<OrderFormValues>({
@@ -284,6 +286,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const serviceField = form.watch("service_price");
   const additionalField = form.watch("additionals");
   const voucherCodeField = form.watch("voucher_code");
+  const regionIdField = form.watch("region_id");
 
   const watchServicePrice = !(startSelfPickUpField && endSelfPickUpField);
   const servicePrice = serviceField ?? 0;
@@ -418,6 +421,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       duration: +data.duration,
       discount: +data.discount,
       insurance_id: +data.insurance_id === 0 ? null : +data.insurance_id,
+      ...(data?.region_id ? { region_id: Number(data.region_id) } : {}),
       ...(showServicePrice &&
         data?.service_price && {
           service_price: +data.service_price.replace(/,/g, ""),
@@ -551,6 +555,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       is_out_of_town: isOutOfTownField,
       is_with_driver: isWithDriverField,
       insurance_id: +(insuranceField ?? 0),
+      region_id: regionIdField ? Number(regionIdField) : null,
       start_request: {
         is_self_pickup: startSelfPickUpField,
         driver_id: +(startDriverField ?? 0),
