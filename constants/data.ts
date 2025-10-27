@@ -276,7 +276,7 @@ export const navItems: NavItem[] = [
       {
         title: "Tarif Luar Kota",
         href: "/dashboard/out-of-town-rates",
-        icon: "car",
+        icon: "mapPinPlus",
         label: "out-of-town-rates",
         roles: ["admin"],
       },
@@ -304,7 +304,7 @@ export const navItems: NavItem[] = [
       {
         title: "Driver Shift",
         href: "/dashboard/driver-shift",
-        icon: "profile",
+        icon: "clipboardClock",
         label: "driver-shift",
         roles: ["admin"],
       },

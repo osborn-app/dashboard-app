@@ -50,7 +50,9 @@ import {
   Album,
   Archive,
   Files,
-  Tags
+  Tags,
+  MapPin,
+  Clock
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -173,6 +175,8 @@ export const Icons = {
   archive: Archive,
   files: Files,
   tags: Tags,
+  mapPinPlus: MapPin,
+  clipboardClock: Clock,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
