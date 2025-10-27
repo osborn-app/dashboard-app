@@ -75,7 +75,7 @@ export const getDriverShiftColumns = (
   },
   {
     accessorKey: "jam mulai",
-    header: "jam mulai",
+    header: "jam Mulai",
     cell: ({ row }) => {
       if (isEditMode) {
         const currentValue = editingData[row.original.id]?.custom_start_time ?? row.original.shifts?.[0]?.custom_start_time ?? "";
@@ -97,7 +97,7 @@ export const getDriverShiftColumns = (
   },
   {
     accessorKey: "jam selesai",
-    header: "jam selesai",
+    header: "jam Selesai",
     cell: ({ row }) => {
       if (isEditMode) {
         const currentValue = editingData[row.original.id]?.custom_end_time ?? row.original.shifts?.[0]?.custom_end_time ?? "";
@@ -119,7 +119,7 @@ export const getDriverShiftColumns = (
   },
   {
     accessorKey: "cabang",
-    header: "cabang",
+    header: "Cabang",
     cell: ({ row }) => {
       if (isEditMode) {
         const currentValue = editingData[row.original.id]?.location_id ?? row.original.shifts?.[0]?.location_id ?? "";
@@ -184,7 +184,7 @@ export const columnsDriverReports: ColumnDef<any>[] = [
   },
   {
     accessorKey: "task_diluar_jam_kerja",
-    header: "task diluar jam kerja",
+    header: "Task Diluar Jam Kerja",
     cell: ({ row }) => <span>{row.original.total_luar_jam_kerja ?? "-"}</span>,
   },
 ]

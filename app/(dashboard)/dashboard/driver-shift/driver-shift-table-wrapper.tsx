@@ -38,6 +38,7 @@ const DriverShiftTableWrapper = () => {
     const [activeTab, setActiveTab] = React.useState<string>("driver-shift");
     const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
     const [editingData, setEditingData] = React.useState<Record<number, any>>({});
+    const [isSaving, setIsSaving] = React.useState<boolean>(false);
     
     // Date filter state - default to today
     const today = new Date().toISOString().split('T')[0];
@@ -151,6 +152,7 @@ const DriverShiftTableWrapper = () => {
 
     // Save changes - only PATCH existing shifts, no POST/DELETE
     const saveChanges = async () => {
+        setIsSaving(true);
         try {
             let hasChanges = false;
             let driversWithoutShift = 0;
@@ -245,6 +247,8 @@ const DriverShiftTableWrapper = () => {
                 description: `Gagal menyimpan perubahan: ${errorMessage}`,
                 variant: "destructive"
             });
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -257,14 +261,14 @@ const DriverShiftTableWrapper = () => {
         }
     }, [activeTab, refetchDriverShift, refetchDriverReport]);
 
-    // Fetch data when search query or date filter changes
+    // Fetch data when search query, date filter, or pagination changes
     React.useEffect(() => {
         if (activeTab === "driver-shift") {
             refetchDriverShift();
         } else if (activeTab === "driver-reports") {
             refetchDriverReport();
         }
-    }, [searchDebounce, singleDate, refetchDriverShift, refetchDriverReport]);
+    }, [searchDebounce, singleDate, page, pageLimit, refetchDriverShift, refetchDriverReport]);
 
     // Initial fetch
     React.useEffect(() => {
@@ -346,13 +350,14 @@ const DriverShiftTableWrapper = () => {
                                         }
                                     }}
                                 variant={isEditMode ? "default" : "outline"}
+                                    disabled={isSaving}
                                     className={`${
                                         isEditMode 
                                             ? "bg-green-600 hover:bg-green-700 text-white" 
                                             : "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                                    }`}
+                                    } ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
                             >
-                                {isEditMode ? "Simpan" : "Edit Data"}
+                                {isSaving ? "Menyimpan..." : (isEditMode ? "Simpan" : "Edit Data")}
                             </Button>
                             </div>
                         )}
