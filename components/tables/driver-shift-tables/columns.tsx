@@ -129,13 +129,17 @@ export const getDriverShiftColumns = (
             value={currentValue?.toString() ?? ""}
             onValueChange={(value) => onDataChange(row.original.id, "location_id", value)}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[200px] min-w-[180px] max-w-[300px]">
               <SelectValue placeholder="Pilih cabang" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-w-[400px]">
               {Array.isArray(locations) && locations.length > 0 ? (
                 locations.map((location) => (
-                  <SelectItem key={location.id} value={location.id.toString()}>
+                  <SelectItem 
+                    key={location.id} 
+                    value={location.id.toString()}
+                    className="whitespace-normal break-words"
+                  >
                     {location.name}
                   </SelectItem>
                 ))
@@ -148,7 +152,7 @@ export const getDriverShiftColumns = (
           </Select>
         );
       }
-      return <span>{row.original.shifts?.[0]?.location?.name ?? "-"}</span>;
+      return <span className="break-words max-w-[200px] inline-block">{row.original.shifts?.[0]?.location?.name ?? "-"}</span>;
     }
   },
 ];
