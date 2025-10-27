@@ -127,10 +127,33 @@ const useCalendarViewStore = (filter?: any) => {
               };
             }
 
+            // Calculate actual end date based on request status
+            let actualEndDate = order?.end_date ? dayjs(order.end_date).tz("Asia/Jakarta") : dayjs();
+            
+            // If end_request is DONE, use the actual completion date from logs
+            if (order?.end_request?.status === 'done' && order?.end_request?.logs) {
+              const endLog = order.end_request.logs.find((log: any) => log.type === 'end');
+              if (endLog && endLog.created_at) {
+                actualEndDate = dayjs(endLog.created_at).tz("Asia/Jakarta");
+              }
+            }
+            
+            // If start_request is also DONE, ensure we don't extend beyond actual usage
+            if (order?.start_request?.status === 'done' && order?.start_request?.logs) {
+              const startLog = order.start_request.logs.find((log: any) => log.type === 'start');
+              if (startLog && startLog.created_at) {
+                const actualStartDate = dayjs(startLog.created_at).tz("Asia/Jakarta");
+                // If actual end is before actual start (shouldn't happen but safety check)
+                if (actualEndDate.isBefore(actualStartDate)) {
+                  actualEndDate = actualStartDate;
+                }
+              }
+            }
+
             return {
               id: order?.id || "",
               start: order?.start_date ? dayjs(order.start_date).tz("Asia/Jakarta") : dayjs(),
-              end: order?.end_date ? dayjs(order.end_date).tz("Asia/Jakarta") : dayjs(),
+              end: actualEndDate,
               startDriver: order?.start_request?.driver?.name || "-",
               endDriver: order?.end_request?.driver?.name || "-",
               duration: (order?.duration || 0) + " hari",

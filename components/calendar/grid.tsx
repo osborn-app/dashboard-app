@@ -30,7 +30,8 @@ const Grid = ({
     const start = startTime;
     const end = endTime;
     const totalHours = end.diff(start, "hour", true);
-    return totalHours;
+    // Ensure minimum 1 hour for same-day returns
+    return Math.max(totalHours, 1);
   };
 
   const handleOrderClick = (orderStatus: string, orderId: string | number, inspectionsId?: string | number, needsId?: string | number) => {
@@ -74,7 +75,9 @@ const Grid = ({
       const hoursInCurrentMonth = endTime.diff(startOfMonth, "hour", true);
       return (hoursInCurrentMonth / 24) * DAY_WIDTH;
     } else {
-      return (totalHours / 24) * DAY_WIDTH;
+      // Ensure minimum width for same-day returns
+      const calculatedWidth = (totalHours / 24) * DAY_WIDTH;
+      return Math.max(calculatedWidth, DAY_WIDTH * 0.1); // Minimum 10% of day width
     }
   };
 
