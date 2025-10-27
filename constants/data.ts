@@ -274,7 +274,7 @@ export const navItems: NavItem[] = [
         roles: ["admin"],
       },
       {
-        title: "Out of Town Rates",
+        title: "Tarif Luar Kota",
         href: "/dashboard/out-of-town-rates",
         icon: "car",
         label: "out-of-town-rates",
