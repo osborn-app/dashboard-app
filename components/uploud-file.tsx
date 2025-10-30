@@ -18,6 +18,7 @@ interface UploadFileProps {
 const UploadFile = ({ form, name, initialData, lastPath }: UploadFileProps) => {
   const [isUploaded, setIsUploaded] = useState("");
   const [isCompressing, setIsCompressing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState(null);
 
@@ -96,11 +97,20 @@ const UploadFile = ({ form, name, initialData, lastPath }: UploadFileProps) => {
               <Image className="mx-auto text-gray-600 size-16 -mt-5" />
               {isCompressing ? (
                 <div className="mt-2">Compressing image...</div>
+              ) : isUploading ? (
+                <div className="mt-2 flex flex-col items-center gap-2">
+                  <svg className="animate-spin h-6 w-6 text-gray-600" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span className="text-sm text-gray-600">Mengunggah gambar...</span>
+                </div>
               ) : (
                 <UploadButton
                   className="mt-2"
                   endpoint="imageUploader"
                   onBeforeUploadBegin={async (files) => {
+                    // Begin upload flow right after compression
                     const compressedFiles = await Promise.all(
                       files.map(async (file) => {
                         if (file.type.startsWith("image/")) {
@@ -109,12 +119,17 @@ const UploadFile = ({ form, name, initialData, lastPath }: UploadFileProps) => {
                         return file;
                       }),
                     );
+                    setIsUploading(true);
                     return compressedFiles;
                   }}
                   onClientUploadComplete={(res) => {
                     setIsUploaded(res[0].ufsUrl);
                     const uploadedUrl = res[0].ufsUrl;
                     form.setValue(name, uploadedUrl);
+                    setIsUploading(false);
+                  }}
+                  onUploadError={() => {
+                    setIsUploading(false);
                   }}
                 />
               )}
