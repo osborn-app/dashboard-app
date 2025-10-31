@@ -46,6 +46,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "../ui/label";
 import { useGetInsurances } from "@/hooks/api/useInsurance";
 import { useGetFleetAddons } from "@/hooks/api/useAddons";
+import { useGetOutOfTownRates } from "@/hooks/api/useOutOfTownRates";
 import {
   useAcceptOrder,
   useEditOrder,
@@ -166,6 +167,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   } = useGetInfinityFleets(searchFleetDebounce);
 
   const { data: insurances } = useGetInsurances();
+  const { data: outOfTownRatesData } = useGetOutOfTownRates(
+    {
+      limit: 100,
+      page: 1,
+      is_active: true,
+    },
+    {},
+    "active"
+  );
   
   // Addons state and API
   const [selectedAddOns, setSelectedAddOns] = useState<Array<{addonId: number, quantity: number}>>([]);
@@ -646,8 +656,16 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     showServicePrice,
     servicePrice,
     voucherCodeField,
+    regionIdField,
     JSON.stringify(additionalField),
   ]);
+
+  // Reset region_id when is_out_of_town changes to false
+  useEffect(() => {
+    if (!isOutOfTownField && regionIdField) {
+      form.setValue("region_id", "");
+    }
+  }, [isOutOfTownField, regionIdField, form]);
 
   // disable date for past dates
   const disabledDate = (current: Dayjs | null): boolean => {
@@ -729,6 +747,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         defaultValues.is_with_driver,
       ),
       insurance_id: generateMessage(insuranceField, defaultValues.insurance_id),
+      region_id: generateMessage(regionIdField, defaultValues.region_id),
       start_request: {
         is_self_pickup: generateMessage(
           startSelfPickUpField,
@@ -1557,6 +1576,81 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     );
                   }}
                 />
+                {isOutOfTownField && (
+                  <FormField
+                    control={form.control}
+                    name="region_id"
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel className="relative">
+                            Wilayah Luar Kota
+                          </FormLabel>
+                          <Select
+                            disabled={!isEdit || loading}
+                            onValueChange={field.onChange}
+                            value={field.value || ""}
+                          >
+                            <FormControl className="disabled:opacity-100 h-auto min-h-[40px]">
+                              <SelectTrigger className="h-auto py-2">
+                                <SelectValue placeholder="Pilih wilayah" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="max-w-full sm:max-w-lg [&>div]:max-h-[400px] [&>div]:overflow-y-auto [&>div]:overflow-x-hidden">
+                              <SelectItem value="">Tidak ada</SelectItem>
+                              {(outOfTownRatesData?.items || [])
+                                ?.filter((rate: any) => rate.is_active)
+                                ?.map((rate: any) => (
+                                  <SelectItem
+                                    key={rate.id}
+                                    value={rate.id.toString()}
+                                    className="py-3 pr-8"
+                                  >
+                                    <div className="flex flex-col gap-1.5 w-full min-w-0">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-medium text-sm sm:text-base truncate">
+                                            {rate.region_name}
+                                          </div>
+                                          {rate.description && (
+                                            <div className="text-xs sm:text-sm text-gray-500 line-clamp-2 mt-0.5 break-words">
+                                              {rate.description}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-wrap gap-2 sm:gap-3 mt-1 text-xs sm:text-sm">
+                                        <div className="flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded-md">
+                                          <span className="text-gray-700 font-medium">Mobil:</span>
+                                          <span className="font-semibold text-green-600 whitespace-nowrap">
+                                            {formatRupiah(Number(rate.daily_rate || 0))}
+                                          </span>
+                                        </div>
+                                        {rate.motorcycle_daily_rate && (
+                                          <div className="flex items-center gap-1.5 bg-purple-50 px-2 py-1 rounded-md">
+                                            <span className="text-gray-700 font-medium">Motor:</span>
+                                            <span className="font-semibold text-green-600 whitespace-nowrap">
+                                              {formatRupiah(Number(rate.motorcycle_daily_rate))}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                          {messages.region_id && (
+                            <FormMessage className="text-main">
+                              {messages.region_id}
+                            </FormMessage>
+                          )}
+                        </FormItem>
+                      );
+                    }}
+                  />
+                )}
                 <FormField
                   control={form.control}
                   name="insurance_id"
