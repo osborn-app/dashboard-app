@@ -28,10 +28,25 @@ export const createColumns = ({ onEdit }: ColumnsProps): ColumnDef<OutOfTownRate
   },
   {
     accessorKey: "daily_rate",
-    header: "Tarif Harian",
+    header: "Tarif Mobil",
     cell: ({ row }) => (
       <span className="font-semibold text-green-600">
-        {formatRupiah(Number(row.original.daily_rate))}
+        {row.original.daily_rate 
+          ? formatRupiah(Number(row.original.daily_rate))
+          : "-"
+        }
+      </span>
+    ),
+  },
+  {
+    accessorKey: "motorcycle_daily_rate",
+    header: "Tarif Motor",
+    cell: ({ row }) => (
+      <span className="font-semibold text-green-600">
+        {row.original.motorcycle_daily_rate 
+          ? formatRupiah(Number(row.original.motorcycle_daily_rate))
+          : "-"
+        }
       </span>
     ),
   },

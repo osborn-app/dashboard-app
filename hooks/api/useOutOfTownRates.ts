@@ -11,7 +11,8 @@ import { useUser } from "@/context/UserContext";
 export interface OutOfTownRate {
   id: number;
   region_name: string;
-  daily_rate: string; // Harga harian (string dari backend)
+  daily_rate: string; // Harga harian mobil (string dari backend)
+  motorcycle_daily_rate?: string | null; // Harga harian motor (string dari backend)
   description?: string | null; // Deskripsi (ada di response)
   is_active: boolean;
   created_at: string;
@@ -26,6 +27,7 @@ export interface OutOfTownRate {
 export interface CreateOutOfTownRateData {
   region_name: string;
   daily_rate: number;
+  motorcycle_daily_rate?: number;
   description?: string;
   is_active?: boolean;
   // Missing fields that should be added when backend entity is updated
@@ -38,6 +40,7 @@ export interface CreateOutOfTownRateData {
 export interface UpdateOutOfTownRateData {
   region_name?: string;
   daily_rate?: number;
+  motorcycle_daily_rate?: number;
   description?: string;
   is_active?: boolean;
   // Missing fields that should be added when backend entity is updated
@@ -69,6 +72,7 @@ export interface OutOfTownRateStatusCount {
 export interface OutOfTownRateFormData {
   region_name: string;
   daily_rate: number;
+  motorcycle_daily_rate?: number;
   description?: string;
   is_active?: boolean;
 }

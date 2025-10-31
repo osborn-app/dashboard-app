@@ -29,6 +29,7 @@ import { useEffect } from "react";
 const formSchema = z.object({
   region_name: z.string().min(1, "Nama wilayah harus diisi"),
   daily_rate: z.number().min(0, "Tarif harian tidak boleh kurang dari 0"),
+  motorcycle_daily_rate: z.number().min(0, "Tarif harian motor tidak boleh kurang dari 0").optional(),
   description: z.string().optional(),
   is_active: z.boolean().optional(),
 });
@@ -54,6 +55,7 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
     defaultValues: {
       region_name: "",
       daily_rate: 0,
+      motorcycle_daily_rate: 0,
       description: "",
       is_active: true,
     },
@@ -64,6 +66,7 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
       form.reset({
         region_name: data.region_name,
         daily_rate: Number(data.daily_rate),
+        motorcycle_daily_rate: data.motorcycle_daily_rate ? Number(data.motorcycle_daily_rate) : 0,
         description: data.description || "",
         is_active: data.is_active,
       });
@@ -71,6 +74,7 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
       form.reset({
         region_name: "",
         daily_rate: 0,
+        motorcycle_daily_rate: 0,
         description: "",
         is_active: true,
       });
@@ -151,13 +155,35 @@ export const CreateEditModal: React.FC<CreateEditModalProps> = ({
               name="daily_rate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">Tarif Harian</FormLabel>
+                  <FormLabel className="text-sm font-medium">Tarif Harian Mobil</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
-                      placeholder="Masukkan tarif harian"
+                      placeholder="Masukkan tarif harian mobil"
                       className="h-10 text-sm"
                       {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="motorcycle_daily_rate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">Tarif Harian Motor</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Masukkan tarif harian motor"
+                      className="h-10 text-sm"
+                      {...field}
+                      value={field.value ?? 0}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                       disabled={isLoading}
                     />
