@@ -1,0 +1,49 @@
+/* SweetAlert Z-Index Override for Modal Compatibility */
+
+/* Ensure SweetAlert is above modals (modals typically use z-50 or 9998) */
+.swal2-container {
+  z-index: 99999 !important;
+}
+
+.swal2-popup {
+  z-index: 100000 !important;
+}
+
+.swal2-backdrop {
+  z-index: 99998 !important;
+}
+
+/* Fix for button clickability */
+.swal2-actions {
+  z-index: 100001 !important;
+  position: relative !important;
+}
+
+.swal2-confirm,
+.swal2-cancel,
+.swal2-deny {
+  z-index: 100002 !important;
+  position: relative !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Ensure all buttons are clickable */
+.swal2-confirm.swal2-styled,
+.swal2-cancel.swal2-styled,
+.swal2-deny.swal2-styled {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Fix for input fields in alerts */
+.swal2-input,
+.swal2-file,
+.swal2-textarea,
+.swal2-select,
+.swal2-radio,
+.swal2-checkbox {
+  z-index: 100001 !important;
+  position: relative !important;
+}
+

@@ -353,6 +353,34 @@ export const navItems: NavItem[] = [
     ],
   },
   {
+    title: "PENGATURAN SISTEM",
+    label: "Settings",
+    roles: ["admin"],
+    items: [
+      {
+        title: "System Settings",
+        href: "/dashboard/system-settings",
+        icon: "settings",
+        label: "system-settings",
+        roles: ["admin"],
+      },
+      {
+        title: "Paper Credentials",
+        href: "/dashboard/paper-credentials",
+        icon: "files",
+        label: "paper-credentials",
+        roles: ["admin"],
+      },
+      {
+        title: "Qontak Credentials",
+        href: "/dashboard/qontak-credentials",
+        icon: "archive",
+        label: "qontak-credentials",
+        roles: ["admin"],
+      },
+    ],
+  },
+  {
     title: "FITUR TAMBAHAN",
     label: "extra",
     roles: ["admin", "driver", "finance", "operation"],
@@ -433,6 +461,27 @@ export const navItems: NavItem[] = [
         icon: "contentImage",
         label: "Kategori CMS",
         roles: [""]
+      },
+    ],
+  },
+  {
+    title: "Web Editor",
+    label: "web-editor",
+    roles: ["admin"],
+    items: [
+      {
+        title: "Pages",
+        href: "/dashboard/web-editor/pages",
+        icon: "page",
+        label: "pages",
+        roles: ["admin"],
+      },
+      {
+        title: "Edit Section",
+        href: "/dashboard/web-editor/edit-section",
+        icon: "post",
+        label: "edit-section",
+        roles: ["admin"],
       },
     ],
   },

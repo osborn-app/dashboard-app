@@ -1,0 +1,455 @@
+'use client';
+
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Plus, RefreshCw } from 'lucide-react';
+import Alert from '@/lib/sweetalert';
+import {
+  useGetPageBySlug,
+  useGetSectionsByPage,
+  useCreateWebSection,
+  useUpdateWebSection,
+  useDeleteWebSection,
+  useToggleVisibilitySection,
+  useDuplicateWebSection,
+  useReorderWebSections,
+  useCreateWebPage,
+} from '@/hooks/api/useWebContent';
+import SectionsAccordion from './SectionsAccordion';
+import AddSectionDialog from './AddSectionDialog';
+import Swal from 'sweetalert2';
+
+interface SectionEditorProps {
+  pageSlug: string;
+  pageTitle: string;
+}
+
+interface Section {
+  id: number;
+  type: string;
+  name: string;
+  content: any;
+  order: number;
+  is_visible: boolean;
+}
+
+export default function SectionEditor({
+  pageSlug,
+  pageTitle,
+}: SectionEditorProps) {
+  // API Hooks
+  const {
+    data: pageData,
+    isLoading: isLoadingPage,
+    isError: isPageError,
+  } = useGetPageBySlug(pageSlug);
+
+  const {
+    data: sectionsData,
+    isLoading: isLoadingSections,
+    refetch: refetchSections,
+  } = useGetSectionsByPage(pageData?.id || 0);
+
+  const { mutateAsync: createSection } = useCreateWebSection();
+  const { mutateAsync: updateSection } = useUpdateWebSection();
+  const { mutateAsync: deleteSection } = useDeleteWebSection();
+  const { mutateAsync: toggleVisibility } = useToggleVisibilitySection();
+  const { mutateAsync: duplicateSection } = useDuplicateWebSection();
+  const { mutateAsync: reorderSections } = useReorderWebSections();
+  const { mutateAsync: createPage } = useCreateWebPage();
+
+  // UI States
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isCreatingPage, setIsCreatingPage] = useState(false);
+
+  // Handlers
+  const handleCreatePage = async () => {
+    setIsCreatingPage(true);
+    try {
+      const pagePayload = {
+        slug: pageSlug,
+        title: pageTitle,
+        description: `${pageTitle} page`,
+        is_published: true,
+        seo_meta: {
+          title: `${pageTitle} - Transgo`,
+          description: `${pageTitle} page of Transgo website`,
+          keywords: pageSlug,
+        },
+      };
+
+      await createPage(pagePayload);
+
+      Alert.success('Berhasil', `Page "${pageTitle}" berhasil dibuat!`);
+
+      // Reload page
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Create page error:', error);
+      Alert.error(
+        'Gagal',
+        error?.response?.data?.message || 'Gagal membuat page.'
+      );
+    } finally {
+      setIsCreatingPage(false);
+    }
+  };
+
+  const handleAddSection = async (type: string, name: string) => {
+    if (!pageData?.id) {
+      Alert.error('Error', 'Page data tidak ditemukan');
+      return;
+    }
+
+    try {
+      // Get default content based on type
+      const defaultContent = getDefaultContent(type);
+
+      // Get next order number
+      const nextOrder = sectionsData ? sectionsData.length + 1 : 1;
+
+      const payload = {
+        page_id: pageData.id,
+        type: type as any, // Type will be validated by backend
+        name,
+        content: defaultContent,
+        order: nextOrder,
+        is_visible: true,
+      };
+
+      await createSection(payload);
+      await refetchSections();
+
+      Alert.success('Berhasil', 'Section berhasil ditambahkan!');
+    } catch (error: any) {
+      console.error('Add section error:', error);
+      Alert.error(
+        'Gagal',
+        error?.response?.data?.message || 'Gagal menambahkan section.'
+      );
+      throw error;
+    }
+  };
+
+  const handleSaveSection = async (sectionId: number, content: any) => {
+    try {
+      await updateSection({
+        id: sectionId,
+        data: { content },
+      });
+      await refetchSections();
+      Alert.success('Berhasil', 'Section berhasil diperbarui!');
+    } catch (error: any) {
+      console.error('Save section error:', error);
+      Alert.error(
+        'Gagal',
+        error?.response?.data?.message || 'Gagal menyimpan section.'
+      );
+      throw error;
+    }
+  };
+
+  const handleUpdateName = async (sectionId: number, name: string) => {
+    try {
+      await updateSection({
+        id: sectionId,
+        data: { name },
+      });
+      await refetchSections();
+      Alert.success('Berhasil', 'Nama section berhasil diubah!');
+    } catch (error: any) {
+      console.error('Update name error:', error);
+      Alert.error(
+        'Gagal',
+        error?.response?.data?.message || 'Gagal mengubah nama section.'
+      );
+      throw error;
+    }
+  };
+
+  const handleDeleteSection = async (id: number) => {
+    const result = await Alert.confirm({
+      title: 'Hapus Section?',
+      text: 'Section ini akan dihapus permanen!',
+      icon: 'warning',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteSection(id);
+        await refetchSections();
+        Alert.success('Berhasil', 'Section berhasil dihapus!');
+      } catch (error: any) {
+        console.error('Delete error:', error);
+        Alert.error(
+          'Gagal',
+          error?.response?.data?.message || 'Gagal menghapus section.'
+        );
+      }
+    }
+  };
+
+  const handleDuplicate = async (id: number) => {
+    try {
+      await duplicateSection(id);
+      await refetchSections();
+      Alert.success('Berhasil', 'Section berhasil diduplikasi!');
+    } catch (error: any) {
+      console.error('Duplicate error:', error);
+      Alert.error(
+        'Gagal',
+        error?.response?.data?.message || 'Gagal menduplikasi section.'
+      );
+    }
+  };
+
+  const handleToggleVisibility = async (id: number) => {
+    try {
+      await toggleVisibility(id);
+      await refetchSections();
+    } catch (error: any) {
+      console.error('Toggle visibility error:', error);
+      Alert.error(
+        'Gagal',
+        error?.response?.data?.message || 'Gagal mengubah visibility.'
+      );
+    }
+  };
+
+  const handleMoveUp = async (section: Section) => {
+    if (!sectionsData || !pageData?.id) return;
+
+    const sortedSections = [...sectionsData].sort((a, b) => a.order - b.order);
+    const currentIndex = sortedSections.findIndex((s) => s.id === section.id);
+
+    if (currentIndex <= 0) return; // Already at top
+
+    // Swap order
+    const newOrder = [...sortedSections];
+    [newOrder[currentIndex], newOrder[currentIndex - 1]] = [
+      newOrder[currentIndex - 1],
+      newOrder[currentIndex],
+    ];
+
+    try {
+      await reorderSections({
+        pageId: pageData.id,
+        section_ids: newOrder.map((s) => s.id),
+      });
+      await refetchSections();
+    } catch (error: any) {
+      console.error('Reorder error:', error);
+      Alert.error(
+        'Gagal',
+        error?.response?.data?.message || 'Gagal mengubah urutan.'
+      );
+    }
+  };
+
+  const handleMoveDown = async (section: Section) => {
+    if (!sectionsData || !pageData?.id) return;
+
+    const sortedSections = [...sectionsData].sort((a, b) => a.order - b.order);
+    const currentIndex = sortedSections.findIndex((s) => s.id === section.id);
+
+    if (currentIndex >= sortedSections.length - 1) return; // Already at bottom
+
+    // Swap order
+    const newOrder = [...sortedSections];
+    [newOrder[currentIndex], newOrder[currentIndex + 1]] = [
+      newOrder[currentIndex + 1],
+      newOrder[currentIndex],
+    ];
+
+    try {
+      await reorderSections({
+        pageId: pageData.id,
+        section_ids: newOrder.map((s) => s.id),
+      });
+      await refetchSections();
+    } catch (error: any) {
+      console.error('Reorder error:', error);
+      Alert.error(
+        'Gagal',
+        error?.response?.data?.message || 'Gagal mengubah urutan.'
+      );
+    }
+  };
+
+  const handleRefresh = async () => {
+    await refetchSections();
+    Alert.success('Berhasil', 'Data berhasil di-refresh!');
+  };
+
+  // Show error if page not found (404)
+  if (isPageError && !isLoadingPage && !pageData) {
+    return (
+      <div className="flex h-96 flex-col items-center justify-center rounded-lg border bg-white">
+        <div className="max-w-md space-y-4 text-center">
+          <div className="text-6xl">📄</div>
+          <h3 className="text-xl font-semibold text-gray-900">
+            Page "{pageTitle}" Belum Ada
+          </h3>
+          <p className="text-gray-600">
+            Page dengan slug{' '}
+            <code className="rounded bg-gray-100 px-2 py-1">{pageSlug}</code>{' '}
+            belum dibuat. Klik tombol di bawah untuk membuat page ini terlebih
+            dahulu.
+          </p>
+          <Button
+            onClick={handleCreatePage}
+            disabled={isCreatingPage}
+            size="lg"
+            className="mt-4"
+          >
+            {isCreatingPage ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Page...
+              </>
+            ) : (
+              <>Create "{pageTitle}" Page</>
+            )}
+          </Button>
+          <p className="mt-2 text-xs text-gray-400">
+            Setelah page dibuat, Anda bisa mulai menambahkan sections.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (isLoadingPage || isLoadingSections) {
+    return (
+      <div className="flex h-96 items-center justify-center rounded-lg border bg-white">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-gray-400" />
+          <p className="mt-4 text-gray-600">Loading {pageTitle}...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border bg-white">
+      {/* Header */}
+      <div className="border-b p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-bold">{pageTitle}</h2>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Section
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        <SectionsAccordion
+          sections={(sectionsData || []) as Section[]}
+          onSave={handleSaveSection}
+          onUpdateName={handleUpdateName}
+          onDelete={handleDeleteSection}
+          onDuplicate={handleDuplicate}
+          onToggleVisibility={handleToggleVisibility}
+          onMoveUp={handleMoveUp}
+          onMoveDown={handleMoveDown}
+        />
+      </div>
+
+      {/* Add Section Dialog */}
+      <AddSectionDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onAdd={handleAddSection}
+      />
+    </div>
+  );
+}
+
+// Helper function to get default content based on section type
+function getDefaultContent(type: string): any {
+  switch (type) {
+    case 'hero':
+      return {
+        background_image: '',
+        main_title: '<p>Your Title Here</p>',
+        description: '<p>Your description here</p>',
+      };
+    case 'promo_grid':
+      return {
+        title: 'Our Promos',
+        promos: [],
+      };
+    case 'steps':
+      return {
+        title: 'How It Works',
+        steps: [],
+      };
+    case 'features':
+      return {
+        title: 'Our Features',
+        features: [],
+      };
+    case 'testimonials':
+      return {
+        title: 'What Our Customers Say',
+        testimonials: [],
+      };
+    case 'faq':
+      return {
+        title: 'Frequently Asked Questions',
+        faqs: [],
+      };
+    case 'cta':
+      return {
+        title: 'Ready to get started?',
+        description: 'Join us today',
+        button_text: 'Get Started',
+        button_url: '#',
+      };
+    case 'custom_html':
+      return {
+        html: '<div class="p-8 text-center">\n  <h2 class="text-3xl font-bold">Your Custom HTML</h2>\n  <p class="mt-4 text-gray-600">Supports Tailwind CSS!</p>\n</div>',
+        css: '',
+      };
+    case 'why_choose_us':
+      return {
+        section_title: 'Why Transgo',
+        main_title: 'Kenapa Harus Transgo Buat Sewa Mobil dan Motor?',
+        description: 'Kami hadir dengan layanan sewa mobil dan motor di Jakarta yang cepat, mudah, dan pastinya terpercaya. Armada kami selalu terawat, harga transparan, dan pelayanannya profesional.',
+        image: '',
+        why_items: [
+          {
+            id: 'why-1',
+            title: 'Bisa Sewa Kapan Aja',
+            description: 'Kami menyediakan layanan sewa mobil dan motor Jakarta yang dapat diakses kapan saja, memberikan kemudahan bagi Anda yang memiliki jadwal fleksibel.'
+          },
+          {
+            id: 'why-2',
+            title: 'Tanpa DP atau Deposit',
+            description: 'Tidak perlu khawatir dengan biaya tambahan di awal.'
+          },
+          {
+            id: 'why-3',
+            title: 'Unit Terlindungi & Gak Perlu Survey',
+            description: 'Semua unit kami diasuransikan dan tidak memerlukan survei rumit.'
+          },
+          {
+            id: 'why-4',
+            title: 'Harga Mulai dari 40K per Hari',
+            description: 'Harga terjangkau mulai dari 40 ribu per hari.'
+          },
+        ],
+      };
+    default:
+      return {};
+  }
+}

@@ -15,8 +15,9 @@ export default function Header() {
             {/* <Logo /> */}
             <img
               alt="logo"
-              src="/image 3.svg"
+              src="/logo-osborn-scaled-252x71.webp"
               style={{ marginBottom: "10px" }}
+              className="w-24 ml-6 h-auto"
             />
           </Link>
         </div>

@@ -10,6 +10,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { ourFileRouter } from "./api/uploadthing/core";
 import 'sweetalert2/dist/sweetalert2.min.css';
+import './sweetalert-override.css';
 
 const inter = Inter({ subsets: ["latin"] });
 
