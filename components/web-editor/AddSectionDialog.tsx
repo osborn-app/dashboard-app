@@ -24,6 +24,7 @@ interface AddSectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (type: string, name: string) => Promise<void>;
+  allowedTypes?: string[];
 }
 
 const SECTION_TYPES = [
@@ -81,16 +82,43 @@ const SECTION_TYPES = [
     icon: '🔧',
     description: 'Custom HTML/Content bebas (Supports Tailwind CSS)',
   },
+  {
+    value: 'media_mentions',
+    label: 'Media Mentions',
+    icon: '📰',
+    description: 'Deretan logo media yang pernah meliput',
+  },
+  {
+    value: 'footer',
+    label: 'Global Footer',
+    icon: '🧭',
+    description: 'Konten footer global dengan informasi perusahaan',
+  },
 ];
 
 export default function AddSectionDialog({
   open,
   onOpenChange,
   onAdd,
+  allowedTypes,
 }: AddSectionDialogProps) {
   const [selectedType, setSelectedType] = useState<string>('');
   const [name, setName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+
+  const availableSectionTypes = React.useMemo(() => {
+    if (!allowedTypes || allowedTypes.length === 0) {
+      return SECTION_TYPES;
+    }
+    return SECTION_TYPES.filter((type) => allowedTypes.includes(type.value));
+  }, [allowedTypes]);
+
+  React.useEffect(() => {
+    if (!selectedType) return;
+    if (!availableSectionTypes.find((type) => type.value === selectedType)) {
+      setSelectedType('');
+    }
+  }, [availableSectionTypes, selectedType]);
 
   const handleAdd = async () => {
     if (!selectedType || !name.trim()) return;
@@ -130,7 +158,7 @@ export default function AddSectionDialog({
                 <SelectValue placeholder="Pilih tipe section..." />
               </SelectTrigger>
               <SelectContent>
-                {SECTION_TYPES.map((type) => (
+                {availableSectionTypes.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     <div className="flex items-center gap-2">
                       <span>{type.icon}</span>
@@ -168,7 +196,7 @@ export default function AddSectionDialog({
             <div className="rounded-lg border bg-gray-50 p-6">
               <h3 className="mb-3 font-semibold">Available Section Types:</h3>
               <div className="grid grid-cols-2 gap-3">
-                {SECTION_TYPES.map((type) => (
+                {availableSectionTypes.map((type) => (
                   <button
                     key={type.value}
                     onClick={() => setSelectedType(type.value)}

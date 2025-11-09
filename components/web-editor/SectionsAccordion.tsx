@@ -30,6 +30,8 @@ import {
   Code,
   CheckCircle2,
   Edit2,
+  Newspaper,
+  LayoutTemplate,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 const LoadingFallback = () => (
@@ -71,6 +73,14 @@ const CustomHtmlForm = dynamic(() => import('./section-forms/CustomHtmlForm'), {
   loading: LoadingFallback,
 });
 const WhyChooseUsForm = dynamic(() => import('./section-forms/WhyChooseUsForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const MediaMentionsForm = dynamic(() => import('./section-forms/MediaMentionsForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const FooterForm = dynamic(() => import('./section-forms/FooterForm'), {
   ssr: false,
   loading: LoadingFallback,
 });
@@ -189,6 +199,10 @@ export default function SectionsAccordion({
         return <Code {...iconProps} />;
       case 'why_choose_us':
         return <CheckCircle2 {...iconProps} />;
+      case 'media_mentions':
+        return <Newspaper {...iconProps} />;
+      case 'footer':
+        return <LayoutTemplate {...iconProps} />;
       default:
         return <Code {...iconProps} />;
     }
@@ -257,6 +271,20 @@ export default function SectionsAccordion({
       case 'why_choose_us':
         return (
           <WhyChooseUsForm
+            initialData={initialData}
+            onDataChange={(data) => handleDataChange(section.id, data)}
+          />
+        );
+      case 'media_mentions':
+        return (
+          <MediaMentionsForm
+            initialData={initialData}
+            onDataChange={(data) => handleDataChange(section.id, data)}
+          />
+        );
+      case 'footer':
+        return (
+          <FooterForm
             initialData={initialData}
             onDataChange={(data) => handleDataChange(section.id, data)}
           />
