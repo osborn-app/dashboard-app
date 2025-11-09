@@ -8,6 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import dynamic from 'next/dynamic';
 import {
   ChevronDown,
   ChevronUp,
@@ -31,15 +32,48 @@ import {
   Edit2,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import HeroSectionForm from './section-forms/HeroSectionForm';
-import PromoGridForm from './section-forms/PromoGridForm';
-import StepsForm from './section-forms/StepsForm';
-import FeaturesForm from './section-forms/FeaturesForm';
-import TestimonialsForm from './section-forms/TestimonialsForm';
-import FaqForm from './section-forms/FaqForm';
-import CtaForm from './section-forms/CtaForm';
-import CustomHtmlForm from './section-forms/CustomHtmlForm';
-import WhyChooseUsForm from './section-forms/WhyChooseUsForm';
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center rounded border border-dashed border-gray-200 bg-white/50 p-6 text-sm text-gray-500">
+    Loading editor...
+  </div>
+);
+
+const HeroSectionForm = dynamic(() => import('./section-forms/HeroSectionForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const PromoGridForm = dynamic(() => import('./section-forms/PromoGridForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const StepsForm = dynamic(() => import('./section-forms/StepsForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const FeaturesForm = dynamic(() => import('./section-forms/FeaturesForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const TestimonialsForm = dynamic(() => import('./section-forms/TestimonialsForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const FaqForm = dynamic(() => import('./section-forms/FaqForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const CtaForm = dynamic(() => import('./section-forms/CtaForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const CustomHtmlForm = dynamic(() => import('./section-forms/CustomHtmlForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
+const WhyChooseUsForm = dynamic(() => import('./section-forms/WhyChooseUsForm'), {
+  ssr: false,
+  loading: LoadingFallback,
+});
 
 interface Section {
   id: number;
@@ -76,6 +110,16 @@ export default function SectionsAccordion({
   const [sectionData, setSectionData] = useState<{ [key: number]: any }>({});
   const [editingName, setEditingName] = useState<number | null>(null);
   const [sectionNames, setSectionNames] = useState<{ [key: number]: string }>({});
+  const [renderedSections, setRenderedSections] = useState<Set<number>>(new Set());
+
+  const ensureRendered = (id: number) => {
+    setRenderedSections((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
 
   const toggleSection = (id: number) => {
     const newOpen = new Set(openSections);
@@ -83,9 +127,29 @@ export default function SectionsAccordion({
       newOpen.delete(id);
     } else {
       newOpen.add(id);
+      ensureRendered(id);
     }
     setOpenSections(newOpen);
   };
+
+  // Ensure we clean up rendered sections if the list changes
+  React.useEffect(() => {
+    const currentIds = new Set(sections.map((section) => section.id));
+    setRenderedSections((prev) => {
+      const next = new Set<number>();
+      prev.forEach((id) => {
+        if (currentIds.has(id)) {
+          next.add(id);
+        }
+      });
+      return next;
+    });
+
+    // Auto-render the first section to reduce initial wait when user opens it
+    if (sections.length > 0) {
+      ensureRendered(sections[0].id);
+    }
+  }, [sections]);
 
   const handleSave = async (sectionId: number) => {
     const data = sectionData[sectionId];
@@ -219,6 +283,8 @@ export default function SectionsAccordion({
       {sortedSections.map((section, index) => {
         const isOpen = openSections.has(section.id);
         const isSaving = savingSection === section.id;
+        const shouldRenderContent =
+          renderedSections.has(section.id) || isOpen;
 
         return (
           <Collapsible
@@ -392,29 +458,35 @@ export default function SectionsAccordion({
 
               {/* Content */}
               <CollapsibleContent>
-                <div className="border-t bg-gray-50 p-6">
-                  {renderForm(section)}
+                {shouldRenderContent ? (
+                  <div className="border-t bg-gray-50 p-6">
+                    {renderForm(section)}
 
-                  {/* Save Button */}
-                  <div className="mt-6 flex justify-end">
-                    <Button
-                      onClick={() => handleSave(section.id)}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" />
-                          Save Section
-                        </>
-                      )}
-                    </Button>
+                    {/* Save Button */}
+                    <div className="mt-6 flex justify-end">
+                      <Button
+                        onClick={() => handleSave(section.id)}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="mr-2 h-4 w-4" />
+                            Save Section
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="border-t bg-gray-50 p-6">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin text-gray-400" />
+                  </div>
+                )}
               </CollapsibleContent>
             </div>
           </Collapsible>
