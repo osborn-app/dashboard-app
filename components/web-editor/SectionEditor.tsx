@@ -411,7 +411,8 @@ function getDefaultContent(type: string): any {
       };
     case 'steps':
       return {
-        title: 'How It Works',
+        title: 'Cara Mudah Sewa Mobil',
+        subtitle: 'Ikuti langkah-langkah berikut',
         steps: [],
       };
     case 'features':
@@ -469,6 +470,11 @@ function getDefaultContent(type: string): any {
             description: 'Harga terjangkau mulai dari 40 ribu per hari.'
           },
         ],
+        client_section_title: 'Klien yang Udah Bareng Kami',
+        client_section_description: 'Transgo dipercaya berbagai perusahaan dan brand untuk kebutuhan sewa kendaraan.',
+        client_button_text: '+ 10.000 klien lainnya',
+        client_button_link: '#',
+        client_logos: [],
       };
     case 'media_mentions':
       return {
