@@ -17,6 +17,10 @@ function EditSectionContent() {
   const pageSlug = searchParams.get('page') || 'home';
   const [activeTab, setActiveTab] = useState(pageSlug);
 
+  useEffect(() => {
+    setActiveTab(pageSlug);
+  }, [pageSlug]);
+
   return (
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
       <BreadCrumb items={breadcrumbItems} />
@@ -29,24 +33,30 @@ function EditSectionContent() {
         </TabsList>
 
         <TabsContent value="global" className="space-y-4">
-          <SectionEditor 
-            pageSlug="global" 
-            pageTitle="GLOBAL LAYOUT"
-          />
+          {activeTab === 'global' ? (
+            <SectionEditor
+              pageSlug="global"
+              pageTitle="GLOBAL LAYOUT"
+            />
+          ) : null}
         </TabsContent>
 
         <TabsContent value="home" className="space-y-4">
-          <SectionEditor 
-            pageSlug="home" 
-            pageTitle="HOME PAGE"
-          />
+          {activeTab === 'home' ? (
+            <SectionEditor
+              pageSlug="home"
+              pageTitle="HOME PAGE"
+            />
+          ) : null}
         </TabsContent>
 
         <TabsContent value="orders" className="space-y-4">
-          <SectionEditor 
-            pageSlug="orders" 
-            pageTitle="DETAIL ORDERS"
-          />
+          {activeTab === 'orders' ? (
+            <SectionEditor
+              pageSlug="orders"
+              pageTitle="DETAIL ORDERS"
+            />
+          ) : null}
         </TabsContent>
       </Tabs>
     </div>

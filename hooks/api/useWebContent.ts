@@ -3,6 +3,7 @@ import useAxiosAuth from '../axios/use-axios-auth';
 
 const baseEndpoint = '/web-content/pages';
 const sectionsEndpoint = '/web-content/sections';
+const mediaAssetsEndpoint = '/web-content/media-assets';
 
 export interface WebPage {
   id: number;
@@ -24,11 +25,36 @@ export interface WebPage {
 export interface WebSection {
   id: number;
   page_id: number;
-  type: 'hero' | 'promo_grid' | 'steps' | 'features' | 'testimonials' | 'faq' | 'cta' | 'custom_html';
+  type:
+    | 'hero'
+    | 'promo_grid'
+    | 'steps'
+    | 'features'
+    | 'testimonials'
+    | 'faq'
+    | 'cta'
+    | 'custom_html'
+    | 'why_choose_us'
+    | 'media_mentions'
+    | 'footer';
   name?: string;
   content: any;
   order: number;
   is_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type MediaAssetType = 'company_logo' | 'media_logo' | 'partner_logo' | 'other';
+
+export interface MediaAsset {
+  id: number;
+  type: MediaAssetType;
+  name: string;
+  fileUrl: string;
+  altText?: string;
+  metadata?: Record<string, any> | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -317,4 +343,55 @@ export const useDeleteWebSection = () => {
 export const useToggleVisibilitySection = useToggleSectionVisibility;
 export const useReorderWebSections = useReorderSections;
 export const useDuplicateWebSection = useDuplicateSection;
+
+// Media Assets Hooks
+export const useGetMediaAssets = (type?: MediaAssetType) => {
+  const axiosAuth = useAxiosAuth();
+
+  const getAssets = async (): Promise<MediaAsset[]> => {
+    const { data } = await axiosAuth.get(mediaAssetsEndpoint, {
+      params: type ? { type } : undefined,
+    });
+    return data;
+  };
+
+  return useQuery({
+    queryKey: ['media-assets', type ?? 'all'],
+    queryFn: getAssets,
+  });
+};
+
+export const useCreateMediaAsset = () => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const create = async (payload: Partial<MediaAsset>) => {
+    const { data } = await axiosAuth.post(mediaAssetsEndpoint, payload);
+    return data;
+  };
+
+  return useMutation({
+    mutationFn: create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['media-assets'] });
+    },
+  });
+};
+
+export const useDeleteMediaAsset = () => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+
+  const remove = async (id: number) => {
+    const { data } = await axiosAuth.delete(`${mediaAssetsEndpoint}/${id}`);
+    return data;
+  };
+
+  return useMutation({
+    mutationFn: remove,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['media-assets'] });
+    },
+  });
+};
 

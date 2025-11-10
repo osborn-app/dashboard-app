@@ -13,54 +13,68 @@ const defaultOptions: SweetAlertOptions = {
   allowOutsideClick: true,
 };
 
+const mergeOptions = (options: SweetAlertOptions = {} as SweetAlertOptions): SweetAlertOptions => {
+  const { customClass, ...rest } = options;
+
+  return {
+    ...defaultOptions,
+    ...rest,
+    customClass: {
+      ...(defaultOptions.customClass ?? {}),
+      ...(customClass ?? {}),
+    },
+  } as SweetAlertOptions;
+};
+
 /**
  * SweetAlert with proper z-index configuration
  */
 export const Alert = {
   fire: (options: SweetAlertOptions) => {
-    return Swal.fire({
-      ...defaultOptions,
-      ...options,
-    });
+    return Swal.fire(mergeOptions(options));
   },
 
   success: (title: string, text?: string) => {
-    return Swal.fire({
-      ...defaultOptions,
-      icon: 'success',
-      title,
-      text,
-    });
+    return Swal.fire(
+      mergeOptions({
+        icon: 'success',
+        title,
+        text,
+      }),
+    );
   },
 
   error: (title: string, text?: string) => {
-    return Swal.fire({
-      ...defaultOptions,
-      icon: 'error',
-      title,
-      text,
-    });
+    return Swal.fire(
+      mergeOptions({
+        icon: 'error',
+        title,
+        text,
+      }),
+    );
   },
 
   warning: (title: string, text?: string) => {
-    return Swal.fire({
-      ...defaultOptions,
-      icon: 'warning',
-      title,
-      text,
-    });
+    return Swal.fire(
+      mergeOptions({
+        icon: 'warning',
+        title,
+        text,
+      }),
+    );
   },
 
   confirm: (options: SweetAlertOptions) => {
-    return Swal.fire({
-      ...defaultOptions,
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Ya',
-      cancelButtonText: 'Batal',
-      ...options,
-    });
+    return Swal.fire(
+      mergeOptions({
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Batal',
+        ...options,
+      }),
+    );
   },
 };
 

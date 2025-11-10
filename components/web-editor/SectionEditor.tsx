@@ -62,6 +62,26 @@ export default function SectionEditor({
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isCreatingPage, setIsCreatingPage] = useState(false);
 
+  const allowedSectionTypes = React.useMemo(() => {
+    const allTypes = [
+      'hero',
+      'why_choose_us',
+      'promo_grid',
+      'steps',
+      'features',
+      'testimonials',
+      'faq',
+      'cta',
+      'custom_html',
+      'media_mentions',
+      'footer',
+    ];
+    if (pageSlug === 'global') {
+      return allTypes;
+    }
+    return allTypes.filter((type) => !['media_mentions', 'footer'].includes(type));
+  }, [pageSlug]);
+
   // Handlers
   const handleCreatePage = async () => {
     setIsCreatingPage(true);
@@ -369,6 +389,7 @@ export default function SectionEditor({
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAdd={handleAddSection}
+        allowedTypes={allowedSectionTypes}
       />
     </div>
   );
@@ -448,6 +469,24 @@ function getDefaultContent(type: string): any {
             description: 'Harga terjangkau mulai dari 40 ribu per hari.'
           },
         ],
+      };
+    case 'media_mentions':
+      return {
+        title: 'Diliput di Berbagai Media',
+        subtitle:
+          'Transgo udah dipercaya banyak pengguna, dan juga pernah diliput oleh beberapa media keren berikut. Yuk, intip siapa aja yang udah bahas layanan sewa mobil & motor terdekat dari Transgo!',
+        logos: [],
+      };
+    case 'footer':
+      return {
+        company_logo: null,
+        copyright_text: '© 2025 - PT MARIFAH CIPTA BANGSA',
+        powered_by_text: 'Powered by Transgo Sewa Mobil Motor Jakarta',
+        social_links: [],
+        support_links: [],
+        locations_title: 'Kamu bisa sewa di lokasi mana aja?',
+        locations: [],
+        app_badges: [],
       };
     default:
       return {};
