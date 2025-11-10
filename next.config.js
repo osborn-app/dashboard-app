@@ -2,6 +2,7 @@
 const { withSentryConfig } = require("@sentry/nextjs");
 
 const nextConfig = {
+  output: "standalone",
   images: {
     remotePatterns: [
       {
