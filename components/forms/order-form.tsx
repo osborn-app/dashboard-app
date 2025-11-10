@@ -54,6 +54,7 @@ import {
   usePostOrder,
   useRejectOrder,
 } from "@/hooks/api/useOrder";
+import { useGetSystemSettings } from "@/hooks/api/useSystemSettings";
 import { ApprovalModal } from "../modal/approval-modal";
 import { NumericFormat } from "react-number-format";
 import "dayjs/locale/id";
@@ -342,6 +343,18 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       : form.getValues("end_request.driver_id") || "",
   );
 
+  // Get system settings for duration_hours_per_unit
+  const { data: systemSettings } = useGetSystemSettings();
+  const durationHoursPerUnit = useMemo(() => {
+    if (systemSettings && Array.isArray(systemSettings)) {
+      const durationSetting = systemSettings.find(
+        (s) => s.key === "duration_hours_per_unit"
+      );
+      return durationSetting ? Number(durationSetting.value) : 24; // Default to 24 hours
+    }
+    return 24; // Default to 24 hours if settings not loaded
+  }, [systemSettings]);
+
   // Get fleet type for addons filtering
   const fleetType = useMemo(() => {
     if (fleetData?.data?.type) {
@@ -391,14 +404,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   }, [initialData?.addons, addOns]);
 
   const [end, setEnd] = useState("");
-  const now = dayjs(form.getValues("date"));
+  const now = dayjs(dateField);
+  
   useEffect(() => {
-    const end = now
-      .add(+form.getValues("duration"), "day")
-      .locale("id")
-      .format("HH:mm:ss - dddd, DD MMMM (YYYY)");
-    setEnd(end);
-  }, [now, form.getValues("duration")]);
+    if (now && durationField && durationHoursPerUnit) {
+      // Calculate end date: start date + (duration * duration_hours_per_unit) hours
+      const end = now
+        .add(+durationField * durationHoursPerUnit, "hour")
+        .locale("id")
+        .format("HH:mm:ss - dddd, DD MMMM (YYYY)");
+      setEnd(end);
+    } else {
+      setEnd("");
+    }
+  }, [now, durationField, durationHoursPerUnit, dateField]);
 
   const onSubmit = async (data: OrderFormValues) => {
     setLoading(true);
