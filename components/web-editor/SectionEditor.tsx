@@ -417,7 +417,8 @@ function getDefaultContent(type: string): any {
       };
     case 'features':
       return {
-        title: 'Our Features',
+        title: 'Keunggulan Kami',
+        subtitle: 'Mengapa memilih kami?',
         features: [],
       };
     case 'testimonials':
