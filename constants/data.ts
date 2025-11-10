@@ -175,13 +175,13 @@ export const navItems: NavItem[] = [
         label: "fleet-orders",
         roles: ["admin", "finance"],
       },
-      {
-        title: "Pesanan Produk",
-        href: "/dashboard/product-orders",
-        icon: "package",
-        label: "product-orders",
-        roles: ["admin", "finance"],
-      },
+      // {
+      //   title: "Pesanan Produk",
+      //   href: "/dashboard/product-orders",
+      //   icon: "package",
+      //   label: "product-orders",
+      //   roles: ["admin", "finance"],
+      // },
     ],
   },
   {
@@ -231,13 +231,13 @@ export const navItems: NavItem[] = [
         label: "Fleet",
         roles: ["admin", "owner"],
       },
-      {
-        title: "Produk",
-        href: "/dashboard/products",
-        icon: "package",
-        label: "products",
-        roles: ["admin", "owner"],
-      },
+      // {
+      //   title: "Produk",
+      //   href: "/dashboard/products",
+      //   icon: "package",
+      //   label: "products",
+      //   roles: ["admin", "owner"],
+      // },
       {
         title: "Add-ons",
         href: "/dashboard/add-ons",
@@ -245,13 +245,13 @@ export const navItems: NavItem[] = [
         label: "add-ons",
         roles: ["admin"],
       },
-      {
-        title: "Fleets Mitra Ojol",
-        href: "/dashboard/partner-fleets",
-        icon: "carpartner",
-        label: "Fleet Mitra",
-        roles: ["admin"],
-      },
+      // {
+      //   title: "Fleets Mitra Ojol",
+      //   href: "/dashboard/partner-fleets",
+      //   icon: "carpartner",
+      //   label: "Fleet Mitra",
+      //   roles: ["admin"],
+      // },
       {
         title: "Lokasi",
         href: "/dashboard/location",
@@ -294,13 +294,13 @@ export const navItems: NavItem[] = [
         label: "profile",
         roles: ["admin"],
       },
-      {
-        title: "Driver Mitra Ojol",
-        href: "/dashboard/mitra-drivers",
-        icon: "usersicon",
-        label: "Driver Mitra",
-        roles: ["admin"],
-      },
+      // {
+      //   title: "Driver Mitra Ojol",
+      //   href: "/dashboard/mitra-drivers",
+      //   icon: "usersicon",
+      //   label: "Driver Mitra",
+      //   roles: ["admin"],
+      // },
       {
         title: "Driver Shift",
         href: "/dashboard/driver-shift",
@@ -380,34 +380,34 @@ export const navItems: NavItem[] = [
       },
     ],
   },
-  {
-    title: "FITUR TAMBAHAN",
-    label: "extra",
-    roles: ["admin", "driver", "finance", "operation"],
-    items: [
-      {
-        title: "Reimburse",
-        href: "/dashboard/reimburse",
-        icon: "hand",
-        label: "reimburse",
-        roles: ["admin", "finance", "driver"],
-      },
-      {
-        title: "Buru Sergap",
-        href: "/dashboard/buser",
-        icon: "footprints",
-        label: "Buru Sergap",
-        roles: ["admin", "operation"],
-      },
-      {
-        title: "Template Pesan Fleet",
-        href: "/dashboard/wa-blas-partner",
-        icon: "phonecall",
-        label: "Template Pesan Fleet",
-        roles: ["admin"],
-      },
-    ],
-  },
+  // {
+  //   title: "FITUR TAMBAHAN",
+  //   label: "extra",
+  //   roles: ["admin", "driver", "finance", "operation"],
+  //   items: [
+  //     {
+  //       title: "Reimburse",
+  //       href: "/dashboard/reimburse",
+  //       icon: "hand",
+  //       label: "reimburse",
+  //       roles: ["admin", "finance", "driver"],
+  //     },
+  //     {
+  //       title: "Buru Sergap",
+  //       href: "/dashboard/buser",
+  //       icon: "footprints",
+  //       label: "Buru Sergap",
+  //       roles: ["admin", "operation"],
+  //     },
+  //     {
+  //       title: "Template Pesan Fleet",
+  //       href: "/dashboard/wa-blas-partner",
+  //       icon: "phonecall",
+  //       label: "Template Pesan Fleet",
+  //       roles: ["admin"],
+  //     },
+  //   ],
+  // },
   {
     title: "KEUANGAN",
     label: "keuangan",
@@ -443,30 +443,30 @@ export const navItems: NavItem[] = [
       },
     ],
   },
+  // {
+  //   title: "Content Management System",
+  //   label: "extra",
+  //   roles: [""],
+  //   items: [
+  //     {
+  //       title: "Content Management",
+  //       href: "/dashboard/cms",
+  //       icon: "contentImage",
+  //       label: "Content Management",
+  //       roles: [""]
+  //     },
+  //     {
+  //       title: "Kategori CMS",
+  //       href: "/dashboard/category-cms",
+  //       icon: "contentImage",
+  //       label: "Kategori CMS",
+  //       roles: [""]
+  //     },
+  //   ],
+  // },
   {
     title: "Content Management System",
     label: "extra",
-    roles: [""],
-    items: [
-      {
-        title: "Content Management",
-        href: "/dashboard/cms",
-        icon: "contentImage",
-        label: "Content Management",
-        roles: [""]
-      },
-      {
-        title: "Kategori CMS",
-        href: "/dashboard/category-cms",
-        icon: "contentImage",
-        label: "Kategori CMS",
-        roles: [""]
-      },
-    ],
-  },
-  {
-    title: "Web Editor",
-    label: "web-editor",
     roles: ["admin"],
     items: [
       {
