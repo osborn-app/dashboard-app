@@ -559,7 +559,7 @@ export default function SectionsAccordion({
                     {renderForm(section)}
 
                     {/* Save Button */}
-                    <div className="mt-6 flex justify-end">
+                    <div className="mt-6 flex justify-end relative z-10">
                       <Button
                         onClick={() => handleSave(section.id)}
                         disabled={isSaving}

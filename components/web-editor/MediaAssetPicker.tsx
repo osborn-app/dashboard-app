@@ -6,12 +6,13 @@ import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Upload, Loader2, RefreshCw } from 'lucide-react';
+import { Upload, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import {
   MediaAsset,
   MediaAssetType,
   useCreateMediaAsset,
   useGetMediaAssets,
+  useDeleteMediaAsset,
 } from '@/hooks/api/useWebContent';
 import useAxiosAuth from '@/hooks/axios/use-axios-auth';
 import Alert from '@/lib/sweetalert';
@@ -47,6 +48,7 @@ const MediaAssetPicker: React.FC<MediaAssetPickerProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const { data: assets = [], isLoading, refetch, isFetching } = useGetMediaAssets(type);
   const createAsset = useCreateMediaAsset();
+  const deleteAsset = useDeleteMediaAsset();
 
   const handleUploadClick = () => {
     inputRef.current?.click();
@@ -112,6 +114,35 @@ const MediaAssetPicker: React.FC<MediaAssetPickerProps> = ({
     onAdd(asset);
   };
 
+  const handleDeleteAsset = async (
+    event: React.MouseEvent<HTMLButtonElement>,
+    asset: MediaAsset,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const confirm = await Alert.confirm({
+      title: 'Hapus Asset?',
+      text: `Asset "${asset.name}" akan dihapus permanen.`,
+      icon: 'warning',
+    });
+
+    if (!confirm.isConfirmed) {
+      return;
+    }
+
+    try {
+      await deleteAsset.mutateAsync(asset.id);
+      Alert.success('Berhasil', 'Asset berhasil dihapus.');
+      await refetch();
+    } catch (error: any) {
+      Alert.error(
+        'Gagal menghapus',
+        error?.response?.data?.message || error?.message || 'Terjadi kesalahan saat menghapus aset.',
+      );
+    }
+  };
+
   return (
     <div className="rounded-lg border bg-white">
       <div className="flex items-center justify-between border-b px-4 py-3">
@@ -160,8 +191,8 @@ const MediaAssetPicker: React.FC<MediaAssetPickerProps> = ({
         </div>
       </div>
 
-      <ScrollArea className="max-h-80">
-        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:grid-cols-4">
+      <ScrollArea className="h-auto">
+        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {isLoading ? (
             <div className="col-span-full flex items-center justify-center py-8 text-sm text-muted-foreground">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -180,21 +211,29 @@ const MediaAssetPicker: React.FC<MediaAssetPickerProps> = ({
                   type="button"
                   onClick={() => handleAssetClick(asset)}
                   className={cn(
-                    'group flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors',
+                    'group relative flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors',
                     isSelected
                       ? 'border-primary/80 bg-primary/10'
                       : 'border-muted hover:border-primary/50 hover:bg-muted/40',
                   )}
                 >
-                  <div className="relative h-20 w-full overflow-hidden rounded-md bg-muted">
+                  <div className="relative h-16 w-full overflow-hidden rounded-md bg-muted sm:h-20">
                     <Image
                       src={asset.fileUrl}
                       alt={asset.altText || asset.name}
                       fill
-                      className="object-contain"
+                      className="object-contain p-2"
                     />
+                    <button
+                      type="button"
+                      onClick={(event) => handleDeleteAsset(event, asset)}
+                      className="absolute right-1 top-1 hidden rounded-full bg-white/80 p-1 text-muted-foreground shadow-sm transition hover:bg-destructive hover:text-destructive-foreground group-hover:flex"
+                      title="Hapus asset"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </div>
-                  <span className="line-clamp-2 text-center text-xs font-medium text-muted-foreground group-hover:text-foreground">
+                  <span className="line-clamp-3 text-center text-xs font-medium text-muted-foreground group-hover:text-foreground">
                     {asset.name}
                   </span>
                   {isSelected ? (

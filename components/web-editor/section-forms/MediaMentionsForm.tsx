@@ -185,8 +185,13 @@ export default function MediaMentionsForm({ initialData, onDataChange }: MediaMe
             {logos.map((logo, index) => (
               <Card key={logo.tempId}>
                 <CardContent className="flex gap-4 py-4">
-                  <div className="relative h-20 w-32 overflow-hidden rounded-md border bg-muted">
-                    <Image src={logo.file_url} alt={logo.alt_text || logo.name} fill className="object-contain" />
+                  <div className="relative h-16 w-28 overflow-hidden rounded-md border bg-muted sm:h-20 sm:w-32">
+                    <Image
+                      src={logo.file_url}
+                      alt={logo.alt_text || logo.name}
+                      fill
+                      className="object-contain p-2"
+                    />
                   </div>
                   <div className="flex-1 space-y-2">
                     <div className="flex items-start justify-between gap-2">

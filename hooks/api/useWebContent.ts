@@ -373,7 +373,7 @@ export const useCreateMediaAsset = () => {
   return useMutation({
     mutationFn: create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['media-assets'] });
+      queryClient.invalidateQueries({ queryKey: ['media-assets'], exact: false });
     },
   });
 };
@@ -390,7 +390,7 @@ export const useDeleteMediaAsset = () => {
   return useMutation({
     mutationFn: remove,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['media-assets'] });
+      queryClient.invalidateQueries({ queryKey: ['media-assets'], exact: false });
     },
   });
 };
