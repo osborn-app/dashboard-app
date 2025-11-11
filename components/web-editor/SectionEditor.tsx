@@ -63,7 +63,7 @@ export default function SectionEditor({
   const [isCreatingPage, setIsCreatingPage] = useState(false);
 
   const allowedSectionTypes = React.useMemo(() => {
-    const allTypes = [
+    const sharedTypes = [
       'hero',
       'why_choose_us',
       'promo_grid',
@@ -73,13 +73,34 @@ export default function SectionEditor({
       'faq',
       'cta',
       'custom_html',
-      'media_mentions',
-      'footer',
     ];
+
+    const globalTypes = [
+      'footer',
+      'media_mentions',
+    ]
+
+    const orderSpecificTypes = [
+      'order_must_read',
+      'order_delivery_policy',
+      'order_payment_info',
+      'order_form_guide',
+    ];
+
+    const removeNonGlobal = (types: string[]) =>
+      types.filter((type) => !['media_mentions', 'footer'].includes(type));
+
     if (pageSlug === 'global') {
-      return allTypes;
+      return Array.from(new Set([...globalTypes]));
     }
-    return allTypes.filter((type) => !['media_mentions', 'footer'].includes(type));
+
+    if (pageSlug === 'orders') {
+      return Array.from(
+        new Set([...orderSpecificTypes]),
+      );
+    }
+
+    return removeNonGlobal(sharedTypes);
   }, [pageSlug]);
 
   // Handlers
@@ -357,7 +378,7 @@ export default function SectionEditor({
       <div className="border-b p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold">{pageTitle}</h2>
+            <h2 className="text-lg font-bold">{pageTitle}</h2>
             <Button variant="outline" size="sm" onClick={handleRefresh}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
@@ -494,6 +515,123 @@ function getDefaultContent(type: string): any {
         locations_title: 'Kamu bisa sewa di lokasi mana aja?',
         locations: [],
         app_badges: [],
+      };
+    case 'order_must_read':
+      return {
+        title: 'Wajib Dibaca Sebelum Lanjut',
+        subtitle:
+          'Sebelum kamu booking, yuk luangin waktu sebentar buat baca info penting ini.',
+        items: [
+          {
+            id: 'order-guideline-1',
+            title: 'Peraturan Sebelum Melakukan Pemesanan Sewa Mobil dan Motor',
+            content:
+              '<p>Masukkan peraturan sewa kendaraan kamu di sini agar pelanggan memahami ketentuannya.</p>',
+          },
+          {
+            id: 'order-guideline-2',
+            title: 'Biaya Overtime',
+            content:
+              '<p>Jelaskan detail biaya overtime jika pelanggan mengembalikan kendaraan melebihi durasi sewa.</p>',
+          },
+          {
+            id: 'order-guideline-3',
+            title: 'Biaya Kerugian',
+            content:
+              '<p>Sertakan informasi mengenai tanggung jawab kerugian atau biaya penggantian.</p>',
+          },
+        ],
+      };
+    case 'order_delivery_policy':
+      return {
+        title: 'Ketentuan Antar–Jemput',
+        subtitle:
+          'Berikut ini biaya antar-jemput kendaraan per unit kalau dilakukan di luar jam operasional.',
+        time_slots: [
+          { id: 'slot-1', time_range: '06:30 – 21:00', additional_fee: 0 },
+          { id: 'slot-2', time_range: '21:01 – 21:29', additional_fee: 20000 },
+          { id: 'slot-3', time_range: '21:30 – 22:29', additional_fee: 40000 },
+          { id: 'slot-4', time_range: '22:30 – 05:29', additional_fee: 50000 },
+          { id: 'slot-5', time_range: '05:30 – 05:59', additional_fee: 40000 },
+          { id: 'slot-6', time_range: '06:00 – 06:29', additional_fee: 20000 },
+        ],
+        notes: [
+          'Diambil/dikembalikan ke pool Transgo di luar jam kerja akan dikenakan charge setengah dari biaya di atas.',
+          'Mohon dikonfirmasi terlebih dahulu apakah kami bisa melayani di jam tersebut atau tidak.',
+          'Serah terima unit di luar jam kerja akan dikenakan biaya tambahan sesuai ketentuan di atas.',
+        ],
+      };
+    case 'order_payment_info':
+      return {
+        title: 'Pembayaran',
+        subtitle: 'Kamu bisa melakukan pembayaran lewat metode resmi berikut ini:',
+        methods: [
+          {
+            id: 'payment-1',
+            bank_name: 'Paper',
+            account_name: 'PT MARIFAH CIPTA BANGSA',
+            account_number: '',
+            icon_url: '',
+          },
+          {
+            id: 'payment-2',
+            bank_name: 'Mandiri',
+            account_name: 'PT MARIFAH CIPTA BANGSA',
+            account_number: '',
+            icon_url: '',
+          },
+          {
+            id: 'payment-3',
+            bank_name: 'BCA',
+            account_name: 'PT MARIFAH CIPTA BANGSA',
+            account_number: '',
+            icon_url: '',
+          },
+        ],
+        disclaimer:
+          'Jika transfer di luar metode pembayaran di atas, kami tidak bertanggung jawab atas kerugian yang dialami.',
+      };
+    case 'order_form_guide':
+      return {
+        title: 'Form Sewa Section',
+        sections: [
+          {
+            id: 'form-guide-1',
+            label: 'Lokasi Kendaraan',
+            description:
+              'Penjemputan dan pengantaran di luar kantor rental tersedia dengan biaya tambahan. Biaya tersebut tergantung pada jarak antara kantor rental dan lokasi yang Anda inginkan.',
+          },
+          {
+            id: 'form-guide-2',
+            label: 'Pemakaian',
+            description:
+              'Untuk ke luar kota akan dikenakan biaya tambahan harian. Jelaskan detail tarif tambahan sesuai area agar pelanggan memahami ketentuannya.',
+          },
+          {
+            id: 'form-guide-3',
+            label: 'Lokasi Pengambilan',
+            description:
+              'Pilih lokasi kendaraan bakal kamu ambil di hari pertama sewa, ya!',
+          },
+          {
+            id: 'form-guide-4',
+            label: 'Lokasi Pengembalian',
+            description:
+              'Pilih lokasi tempat kamu bakal balikin kendaraan di hari terakhir sewa, ya!',
+          },
+          {
+            id: 'form-guide-5',
+            label: 'Asuransi',
+            description:
+              'Pilih perlindungan yang paling pas biar perjalanan makin aman dan tenang, ya!',
+          },
+          {
+            id: 'form-guide-6',
+            label: 'Permintaan Khusus',
+            description:
+              'Tulis kebutuhan sewa kamu di sini, biar serasa pakai kendaraan sendiri!',
+          },
+        ],
       };
     default:
       return {};

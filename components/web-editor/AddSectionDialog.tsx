@@ -94,6 +94,30 @@ const SECTION_TYPES = [
     icon: '🧭',
     description: 'Konten footer global dengan informasi perusahaan',
   },
+  {
+    value: 'order_must_read',
+    label: 'Order – Wajib Dibaca',
+    icon: '📘',
+    description: 'Daftar informasi penting sebelum pelanggan melanjutkan pesanan',
+  },
+  {
+    value: 'order_delivery_policy',
+    label: 'Order – Ketentuan Antar Jemput',
+    icon: '🚗',
+    description: 'Aturan dan biaya tambahan untuk antar-jemput kendaraan',
+  },
+  {
+    value: 'order_payment_info',
+    label: 'Order – Info Pembayaran',
+    icon: '💳',
+    description: 'Informasi rekening resmi dan pengingat pembayaran',
+  },
+  {
+    value: 'order_form_guide',
+    label: 'Order – Panduan Form Sewa',
+    icon: '📝',
+    description: 'Penjelasan singkat tiap field dalam form detail order',
+  },
 ];
 
 export default function AddSectionDialog({

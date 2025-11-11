@@ -32,6 +32,10 @@ import {
   Edit2,
   Newspaper,
   LayoutTemplate,
+  BookOpen,
+  Truck,
+  CreditCard,
+  ClipboardList,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 const LoadingFallback = () => (
@@ -84,6 +88,34 @@ const FooterForm = dynamic(() => import('./section-forms/FooterForm'), {
   ssr: false,
   loading: LoadingFallback,
 });
+const OrderMustReadForm = dynamic(
+  () => import('./section-forms/OrderMustReadForm'),
+  {
+    ssr: false,
+    loading: LoadingFallback,
+  },
+);
+const OrderDeliveryPolicyForm = dynamic(
+  () => import('./section-forms/OrderDeliveryPolicyForm'),
+  {
+    ssr: false,
+    loading: LoadingFallback,
+  },
+);
+const OrderPaymentInfoForm = dynamic(
+  () => import('./section-forms/OrderPaymentInfoForm'),
+  {
+    ssr: false,
+    loading: LoadingFallback,
+  },
+);
+const OrderFormGuideForm = dynamic(
+  () => import('./section-forms/OrderFormGuideForm'),
+  {
+    ssr: false,
+    loading: LoadingFallback,
+  },
+);
 
 interface Section {
   id: number;
@@ -203,6 +235,14 @@ export default function SectionsAccordion({
         return <Newspaper {...iconProps} />;
       case 'footer':
         return <LayoutTemplate {...iconProps} />;
+      case 'order_must_read':
+        return <BookOpen {...iconProps} />;
+      case 'order_delivery_policy':
+        return <Truck {...iconProps} />;
+      case 'order_payment_info':
+        return <CreditCard {...iconProps} />;
+      case 'order_form_guide':
+        return <ClipboardList {...iconProps} />;
       default:
         return <Code {...iconProps} />;
     }
@@ -285,6 +325,34 @@ export default function SectionsAccordion({
       case 'footer':
         return (
           <FooterForm
+            initialData={initialData}
+            onDataChange={(data) => handleDataChange(section.id, data)}
+          />
+        );
+      case 'order_must_read':
+        return (
+          <OrderMustReadForm
+            initialData={initialData}
+            onDataChange={(data) => handleDataChange(section.id, data)}
+          />
+        );
+      case 'order_delivery_policy':
+        return (
+          <OrderDeliveryPolicyForm
+            initialData={initialData}
+            onDataChange={(data) => handleDataChange(section.id, data)}
+          />
+        );
+      case 'order_payment_info':
+        return (
+          <OrderPaymentInfoForm
+            initialData={initialData}
+            onDataChange={(data) => handleDataChange(section.id, data)}
+          />
+        );
+      case 'order_form_guide':
+        return (
+          <OrderFormGuideForm
             initialData={initialData}
             onDataChange={(data) => handleDataChange(section.id, data)}
           />
