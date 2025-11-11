@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2 } from 'lucide-react';
+import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor';
 
 interface OrderMustReadItem {
   id: string;
@@ -144,16 +144,12 @@ export default function OrderMustReadForm({
 
                 <div className="grid gap-2">
                   <Label>Deskripsi</Label>
-                  <Textarea
-                    rows={4}
-                    value={item.content}
-                    onChange={(e) =>
-                      handleItemChange(index, 'content', e.target.value)
-                    }
-                    placeholder="Tuliskan detail informasinya..."
+                  <SimpleEditor
+                    initialContent={item.content}
+                    onChange={(value) => handleItemChange(index, 'content', value)}
                   />
                   <p className="text-xs text-gray-500">
-                    Konten mendukung HTML sederhana. Gunakan &lt;p&gt;...&lt;/p&gt; untuk paragraf.
+                    Gunakan editor di atas untuk format teks (bold, italic, list, dll).
                   </p>
                 </div>
 
