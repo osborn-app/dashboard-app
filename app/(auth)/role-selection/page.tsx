@@ -104,7 +104,7 @@ export default function RoleSelectionPage() {
         {/* Welcome Text */}
         <div className="text-center mb-6 animate-fade-in-delay">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            Selamat Datang di Dashboard Transgo
+            Selamat Datang di Dashboard Osborn
           </h1>
           <p className="text-lg text-gray-600">
             Pilih role untuk melanjutkan ke dashboard
