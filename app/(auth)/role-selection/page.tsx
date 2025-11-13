@@ -93,8 +93,8 @@ export default function RoleSelectionPage() {
         {/* Logo */}
         <div className="mb-2 animate-fade-in text-center">
           <Image
-            alt="Transgo Logo"
-            src="/image 3.svg"
+            alt="Osborn Logo"
+            src="/logo-osborn-scaled-252x71.webp"
             width={220}
             height={110}
             className="mx-auto"
