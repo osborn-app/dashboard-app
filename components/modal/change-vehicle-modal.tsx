@@ -77,11 +77,70 @@ export const ChangeVehicleModal: React.FC<ChangeVehicleModalProps> = ({
 
     setLoading(true);
 
-    // Only update fleet_id
-    editOrder(
-      {
-        fleet_id: Number(selectedFleetId),
+    // Create full payload like edit order, only changing fleet_id
+    const payload: any = {
+      start_request: {
+        is_self_pickup: orderData?.start_request?.is_self_pickup ?? true,
+        ...((orderData?.start_request?.driver_id || orderData?.start_request?.driver?.id) && { 
+          driver_id: Number(orderData.start_request.driver_id || orderData.start_request.driver?.id) 
+        }),
+        ...(!orderData?.start_request?.is_self_pickup && {
+          address: orderData?.start_request?.address || "",
+          distance: Number(orderData?.start_request?.distance || 0),
+        }),
+        ...(orderData?.start_request?.status && { 
+          status: orderData.start_request.status 
+        }),
       },
+      end_request: {
+        is_self_pickup: orderData?.end_request?.is_self_pickup ?? true,
+        ...((orderData?.end_request?.driver_id || orderData?.end_request?.driver?.id) && { 
+          driver_id: Number(orderData.end_request.driver_id || orderData.end_request.driver?.id) 
+        }),
+        ...(!orderData?.end_request?.is_self_pickup && {
+          address: orderData?.end_request?.address || "",
+          distance: Number(orderData?.end_request?.distance || 0),
+        }),
+        ...(orderData?.end_request?.status && { 
+          status: orderData.end_request.status 
+        }),
+      },
+      customer_id: Number(orderData?.customer_id || orderData?.customer?.id),
+      fleet_id: Number(selectedFleetId), // Only this changes
+      description: orderData?.description || "",
+      is_with_driver: orderData?.is_with_driver ?? false,
+      is_out_of_town: orderData?.is_out_of_town ?? false,
+      date: orderData?.start_date ? new Date(orderData.start_date).toISOString() : new Date().toISOString(),
+      duration: Number(orderData?.duration || 1),
+      discount: Number(orderData?.discount || 0),
+      insurance_id: orderData?.insurance_id 
+        ? (Number(orderData.insurance_id) === 0 ? null : Number(orderData.insurance_id))
+        : (orderData?.insurance?.id ? Number(orderData.insurance.id) : null),
+      ...(orderData?.region_id && { region_id: Number(orderData.region_id) }),
+      ...(orderData?.service_price && {
+        service_price: Number(orderData.service_price),
+      }),
+      ...(orderData?.additional_services && orderData.additional_services.length > 0 && {
+        additional_services: orderData.additional_services.map((service: any) => ({
+          name: service.name,
+          price: Number(service.price || 0),
+        })),
+      }),
+      ...(orderData?.addons && orderData.addons.length > 0 && {
+        addons: orderData.addons.map((addon: any) => ({
+          addon_id: Number(addon.addon_id || addon.id),
+          name: addon.name || "",
+          price: Number(addon.price || 0),
+          quantity: Number(addon.quantity || 1),
+        })),
+      }),
+      ...(orderData?.applied_voucher_code && { 
+        voucher_code: orderData.applied_voucher_code 
+      }),
+    };
+
+    editOrder(
+      payload,
       {
         onSuccess: () => {
           toast({
