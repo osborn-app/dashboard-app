@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/ui/use-toast";
-import { User } from "@/constants/data";
 import { useDeleteOrder } from "@/hooks/api/useOrder";
 import { useQueryClient } from "@tanstack/react-query";
 import { Edit, MoreHorizontal, Trash, Eye, Car } from "lucide-react";
@@ -19,7 +18,7 @@ import { useState } from "react";
 import { useUser } from "@/context/UserContext";
 
 interface CellActionProps {
-  data: User;
+  data: any; // Order data type
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
