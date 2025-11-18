@@ -1,5 +1,6 @@
 "use client";
 import { AlertForceModal } from "@/components/modal/alertforce-modal";
+import { ChangeVehicleModal } from "@/components/modal/change-vehicle-modal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,7 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import { User } from "@/constants/data";
 import { useDeleteOrder } from "@/hooks/api/useOrder";
 import { useQueryClient } from "@tanstack/react-query";
-import { Edit, MoreHorizontal, Trash, Eye } from "lucide-react";
+import { Edit, MoreHorizontal, Trash, Eye, Car } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useUser } from "@/context/UserContext";
@@ -24,6 +25,7 @@ interface CellActionProps {
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openChangeVehicle, setOpenChangeVehicle] = useState(false);
 
   const [force, setForce] = useState(false);
 
@@ -72,6 +74,11 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         checked={force}
         setChecked={setForce}
       />
+      <ChangeVehicleModal
+        isOpen={openChangeVehicle}
+        onClose={() => setOpenChangeVehicle(false)}
+        orderData={data}
+      />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -102,6 +109,17 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
               >
                 <Edit className="mr-2 h-4 w-4" /> Edit
               </DropdownMenuItem>
+              {/* Only show "Ganti Kendaraan" for fleet orders */}
+              {data?.fleet && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenChangeVehicle(true);
+                  }}
+                >
+                  <Car className="mr-2 h-4 w-4" /> Ganti Kendaraan
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 className="text-red-500"
                 onClick={(e) => {

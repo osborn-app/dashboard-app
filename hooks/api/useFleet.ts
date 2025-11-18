@@ -159,3 +159,34 @@ export const useFleetTableData = (params: any) => {
     refetchOnWindowFocus: false,
   });
 };
+
+// Hook for getting available fleets (for order change vehicle)
+export const useGetAvailableFleets = (
+  date?: string,
+  duration?: number,
+  type?: string,
+  locationId?: number,
+  query?: string
+) => {
+  const axiosAuth = useAxiosAuth();
+
+  const getAvailableFleets = () => {
+    return axiosAuth.get(`${baseEndpoint}/available`, {
+      params: {
+        ...(date && { date }),
+        ...(duration && { duration }),
+        ...(type && type !== 'all' && { type }),
+        ...(locationId && { location_id: locationId }),
+        ...(query && { q: query }),
+        limit: 100,
+        page: 1,
+      },
+    });
+  };
+
+  return useQuery({
+    queryKey: ["fleets", "available", date, duration, type, locationId, query],
+    queryFn: getAvailableFleets,
+    enabled: !!(date && duration), // Only fetch when date and duration are provided
+  });
+};
