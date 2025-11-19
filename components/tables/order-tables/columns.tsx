@@ -117,6 +117,16 @@ export const pendingColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "deposit_amount",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Deposit
+      </span>
+    ),
+    cell: ({ row }) => <span>{formatRupiah(row.original?.deposit_amount)}</span>,
+    enableSorting: false,
+  },
+  {
     accessorKey: "total_price",
     header: () => (
       <span className="text-sm font-semibold text-neutral-700">

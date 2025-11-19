@@ -378,6 +378,20 @@ export const navItems: NavItem[] = [
         label: "qontak-credentials",
         roles: ["admin"],
       },
+      {
+        title: "Pages",
+        href: "/dashboard/web-editor/pages",
+        icon: "page",
+        label: "pages",
+        roles: ["admin"],
+      },
+      {
+        title: "Edit Section",
+        href: "/dashboard/web-editor/edit-section",
+        icon: "post",
+        label: "edit-section",
+        roles: ["admin"],
+      },
     ],
   },
   // {
@@ -464,26 +478,5 @@ export const navItems: NavItem[] = [
   //     },
   //   ],
   // },
-  {
-    title: "Content Management System",
-    label: "extra",
-    roles: ["admin"],
-    items: [
-      {
-        title: "Pages",
-        href: "/dashboard/web-editor/pages",
-        icon: "page",
-        label: "pages",
-        roles: ["admin"],
-      },
-      {
-        title: "Edit Section",
-        href: "/dashboard/web-editor/edit-section",
-        icon: "post",
-        label: "edit-section",
-        roles: ["admin"],
-      },
-    ],
-  },
 ];
 
