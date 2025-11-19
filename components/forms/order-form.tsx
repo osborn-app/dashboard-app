@@ -209,31 +209,31 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const defaultValues = initialData
     ? {
         start_request: {
-          is_self_pickup: initialData?.start_request?.is_self_pickup,
-          address: initialData?.start_request?.address,
+          is_self_pickup: initialData?.start_request?.is_self_pickup ?? true,
+          address: initialData?.start_request?.address ?? "",
           distance: initialData?.start_request?.distance ?? 0,
-          driver_id: initialData?.start_request?.driver?.id?.toString(),
+          driver_id: initialData?.start_request?.driver?.id?.toString() ?? "",
         },
         end_request: {
-          is_self_pickup: initialData?.end_request?.is_self_pickup,
-          address: initialData?.end_request?.address,
+          is_self_pickup: initialData?.end_request?.is_self_pickup ?? true,
+          address: initialData?.end_request?.address ?? "",
           distance: initialData?.end_request?.distance ?? 0,
-          driver_id: initialData?.end_request?.driver?.id?.toString(),
+          driver_id: initialData?.end_request?.driver?.id?.toString() ?? "",
         },
-        customer: initialData?.customer?.id?.toString(),
-        fleet: initialData?.fleet?.id?.toString(),
-        description: initialData?.description,
-        is_with_driver: initialData?.is_with_driver,
-        is_out_of_town: initialData?.is_out_of_town,
-        date: initialData?.start_date,
-        duration: initialData?.duration?.toString(),
-        discount: initialData?.discount?.toString(),
+        customer: initialData?.customer?.id?.toString() ?? "",
+        fleet: initialData?.fleet?.id?.toString() ?? "",
+        description: initialData?.description ?? "",
+        is_with_driver: initialData?.is_with_driver ?? false,
+        is_out_of_town: initialData?.is_out_of_town ?? false,
+        date: initialData?.start_date ?? "",
+        duration: initialData?.duration?.toString() ?? "1",
+        discount: initialData?.discount?.toString() ?? "0",
         insurance_id: initialData?.insurance
           ? initialData?.insurance?.id.toString()
           : "0",
-        service_price: initialData?.service_price.toString(),
+        service_price: initialData?.service_price?.toString() ?? "",
         additionals: initialData?.additional_services?.map((service: any) => ({
-          name: service.name,
+          name: service.name ?? "",
           price: service.price?.toString() || "",
         })) || [],
         voucher_code: initialData?.applied_voucher_code || "",
@@ -427,8 +427,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         is_self_pickup: data.start_request.is_self_pickup,
         ...(data.start_request.driver_id && { driver_id: +data.start_request.driver_id }),
         ...(!startSelfPickUpField && {
-          address: data.start_request.address,
-          distance: +data.start_request.distance,
+          ...(data.start_request.address && { address: data.start_request.address }),
+          distance: +(data.start_request.distance ?? 0),
         }),
         ...(data.start_request.status && { status: data.start_request.status }),
       },
@@ -436,14 +436,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         is_self_pickup: data.end_request.is_self_pickup,
         ...(data.end_request.driver_id && { driver_id: +data.end_request.driver_id }),
         ...(!endSelfPickUpField && {
-          distance: +data.end_request.distance,
-          address: data.end_request.address,
+          ...(data.end_request.address && { address: data.end_request.address }),
+          distance: +(data.end_request.distance ?? 0),
         }),
         ...(data.end_request.status && { status: data.end_request.status }),
       },
       customer_id: +data.customer,
       fleet_id: +data.fleet,
-      description: data.description,
+      ...(data.description && { description: data.description }),
       is_with_driver: data.is_with_driver,
       is_out_of_town: data.is_out_of_town,
       date: data.date.toISOString(),
@@ -453,28 +453,34 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       ...(data?.region_id ? { region_id: Number(data.region_id) } : {}),
       ...(showServicePrice &&
         data?.service_price && {
-          service_price: +data.service_price.replace(/,/g, ""),
+          service_price: typeof data.service_price === "string" 
+            ? +data.service_price.replace(/,/g, "") 
+            : +(data.service_price ?? 0),
         }),
       ...(additionalField && additionalField.length !== 0 && {
-        additional_services: additionalField.map((field: any) => {
-          return {
-            name: field.name,
-            price: typeof field.price === "string" ? Number(field.price.replace(/,/g, "")) : Number(field.price),
-          };
-        }),
+        additional_services: additionalField
+          .filter((field: any) => field.name && field.price !== undefined && field.price !== null)
+          .map((field: any) => {
+            return {
+              name: String(field.name),
+              price: typeof field.price === "string" 
+                ? Number(field.price.replace(/,/g, "")) || 0
+                : Number(field.price) || 0,
+            };
+          }),
       }),
       ...(selectedAddOns && selectedAddOns.length !== 0 && addOns && addOns.length > 0 && {
         addons: (() => {
           const validAddons = selectedAddOns
             .map((selection: any) => {
               const addon = addOns.find((a: any) => a.id === selection.addonId);
-              // Only include addon if it exists and has valid dat
+              // Only include addon if it exists and has valid data
               if (addon && addon.id && addon.name && addon.price !== undefined && addon.price !== null) {
                 return {
                   addon_id: Number(addon.id),
                   name: String(addon.name),
                   price: Number(addon.price),
-                  quantity: Number(selection.quantity),
+                  quantity: Number(selection.quantity ?? 1),
                 };
               }
               return null;
@@ -590,7 +596,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         driver_id: +(startDriverField ?? 0),
         ...(!startSelfPickUpField && {
           distance: +(startDistanceField ?? 0),
-          address: startAddressField,
+          ...(startAddressField && { address: startAddressField }),
         }),
       },
       end_request: {
@@ -598,10 +604,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         driver_id: +(endDriverField ?? 0),
         ...(!endSelfPickUpField && {
           distance: +(endDistanceField ?? 0),
-          address: endAddressField,
+          ...(endAddressField && { address: endAddressField }),
         }),
       },
-      description: descriptionField,
+      ...(descriptionField && { description: descriptionField }),
       ...(!isEmpty(dateField) && {
         date: dateField,
         duration: +(durationField ?? 1),
@@ -610,16 +616,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       ...(watchServicePrice && {
         service_price: isString(serviceField)
           ? +serviceField.replace(/,/g, "")
-          : serviceField,
+          : +(serviceField ?? 0),
       }),
       ...(voucherCodeField ? { voucher_code: voucherCodeField } : {}),
       ...(additionalField && additionalField.length !== 0 && {
-        additional_services: additionalField.map((field: any) => {
-          return {
-            name: field.name,
-            price: typeof field.price === "string" ? Number(field.price.replace(/,/g, "")) : Number(field.price),
-          };
-        }),
+        additional_services: additionalField
+          .filter((field: any) => field.name && field.price !== undefined && field.price !== null)
+          .map((field: any) => {
+            return {
+              name: String(field.name),
+              price: typeof field.price === "string" 
+                ? Number(field.price.replace(/,/g, "")) || 0
+                : Number(field.price) || 0,
+            };
+          }),
       }),
       ...(selectedAddOns && selectedAddOns.length !== 0 && addOns && addOns.length > 0 && {
         addons: (() => {
@@ -629,10 +639,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               // Only include addon if it exists and has valid data
               if (addon && addon.id && addon.name && addon.price !== undefined && addon.price !== null) {
                 return {
-                  addon_id: addon.id,
-                  name: addon.name,
-                  price: addon.price,
-                  quantity: selection.quantity,
+                  addon_id: Number(addon.id),
+                  name: String(addon.name),
+                  price: Number(addon.price),
+                  quantity: Number(selection.quantity ?? 1),
                 };
               }
               return null;
