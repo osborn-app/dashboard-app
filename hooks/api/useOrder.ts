@@ -164,3 +164,33 @@ export const useRejectOrder = () => {
     },
   });
 };
+
+export const useGetDepositSettings = () => {
+  const axiosAuth = useAxiosAuth();
+  const getDepositSettings = async () => {
+    const { data } = await axiosAuth.get(`${baseEndpoint}/deposit-settings`);
+    return data;
+  };
+  return useQuery({
+    queryKey: ["deposit-settings"],
+    queryFn: getDepositSettings,
+  });
+};
+
+export const useUpdateDepositSettings = () => {
+  const axiosAuth = useAxiosAuth();
+  const queryClient = useQueryClient();
+  const updateDepositSettings = async (body: any) => {
+    const { data } = await axiosAuth.patch(`${baseEndpoint}/deposit-settings`, body);
+    return data;
+  };
+  return useMutation({
+    mutationFn: updateDepositSettings,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["deposit-settings"] });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deposit-settings"] });
+    },
+  });
+};

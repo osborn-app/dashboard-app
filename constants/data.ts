@@ -379,6 +379,13 @@ export const navItems: NavItem[] = [
         roles: ["admin"],
       },
       {
+        title: "Deposit Settings",
+        href: "/dashboard/deposit-settings",
+        icon: "billing",
+        label: "deposit-settings",
+        roles: ["admin"],
+      },
+      {
         title: "Pages",
         href: "/dashboard/web-editor/pages",
         icon: "page",
