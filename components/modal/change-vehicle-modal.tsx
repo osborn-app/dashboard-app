@@ -176,41 +176,6 @@ export const ChangeVehicleModal: React.FC<ChangeVehicleModalProps> = ({
       onClose={onClose}
     >
       <div className="grid gap-4 py-4">
-        {/* Read-only information */}
-        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-sm text-gray-700 mb-3">Informasi Pesanan</h3>
-          
-          <div className="grid gap-2">
-            <Label className="text-xs text-gray-600">Nama Pelanggan</Label>
-            <div className="text-sm font-medium text-gray-900">
-              {orderData?.customer?.name || "-"}
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-xs text-gray-600">Waktu Pengambilan</Label>
-            <div className="text-sm font-medium text-gray-900">
-              {orderDate
-                ? dayjs(orderDate).locale("id").format("dddd, DD MMMM YYYY [Jam] HH:mm")
-                : "-"}
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-xs text-gray-600">Durasi Sewa</Label>
-            <div className="text-sm font-medium text-gray-900">
-              {orderDuration ? `${orderDuration} Hari` : "-"}
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-xs text-gray-600">Kendaraan Saat Ini</Label>
-            <div className="text-sm font-medium text-gray-900">
-              {orderData?.fleet?.name || "-"}
-            </div>
-          </div>
-        </div>
-
         {/* Fleet selection */}
         <div className="grid gap-2">
           <Label htmlFor="fleet-select" className="text-sm font-semibold">
@@ -250,6 +215,41 @@ export const ChangeVehicleModal: React.FC<ChangeVehicleModalProps> = ({
               Tidak ada kendaraan tersedia untuk tanggal dan durasi yang dipilih.
             </p>
           )}
+        </div>
+
+        {/* Read-only information */}
+        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-semibold text-sm text-gray-700 mb-3">Informasi Pesanan</h3>
+          
+          <div className="grid gap-2">
+            <Label className="text-xs text-gray-600">Nama Pelanggan</Label>
+            <div className="text-sm font-medium text-gray-900">
+              {orderData?.customer?.name || "-"}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-xs text-gray-600">Waktu Pengambilan</Label>
+            <div className="text-sm font-medium text-gray-900">
+              {orderDate
+                ? dayjs(orderDate).locale("id").format("dddd, DD MMMM YYYY [Jam] HH:mm")
+                : "-"}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-xs text-gray-600">Durasi Sewa</Label>
+            <div className="text-sm font-medium text-gray-900">
+              {orderDuration ? `${orderDuration} Hari` : "-"}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-xs text-gray-600">Kendaraan Saat Ini</Label>
+            <div className="text-sm font-medium text-gray-900">
+              {orderData?.fleet?.name || "-"}
+            </div>
+          </div>
         </div>
       </div>
 
