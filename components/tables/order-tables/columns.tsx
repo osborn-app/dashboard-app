@@ -244,6 +244,16 @@ export const confirmedColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "deposit_amount",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Deposit
+      </span>
+    ),
+    cell: ({ row }) => <span>{formatRupiah(row.original?.deposit_amount)}</span>,
+    enableSorting: false,
+  },
+  {
     accessorKey: "pic",
     header: () => (
       <HoverCard>
@@ -397,6 +407,16 @@ export const onProgressColumns: ColumnDef<any>[] = [
     enableSorting: false,
   },
   {
+    accessorKey: "deposit_amount",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Deposit
+      </span>
+    ),
+    cell: ({ row }) => <span>{formatRupiah(row.original?.deposit_amount)}</span>,
+    enableSorting: false,
+  },
+  {
     accessorKey: "pic",
     header: () => (
       <HoverCard>
@@ -547,6 +567,16 @@ export const completedColumns: ColumnDef<any>[] = [
         {row.original.invoice_number}
       </span>
     ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: "deposit_amount",
+    header: () => (
+      <span className="text-sm font-semibold text-neutral-700">
+        Deposit
+      </span>
+    ),
+    cell: ({ row }) => <span>{formatRupiah(row.original?.deposit_amount)}</span>,
     enableSorting: false,
   },
   {
