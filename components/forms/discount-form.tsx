@@ -76,14 +76,6 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
         // Fleet Types
         { id: "car", name: "Mobil", category: "fleet" },
         { id: "motorcycle", name: "Motor", category: "fleet" },
-        // Product Categories
-        { id: "iphone", name: "iPhone", category: "product" },
-        { id: "camera", name: "Camera", category: "product" },
-        { id: "outdoor", name: "Outdoor", category: "product" },
-        { id: "starlink", name: "Starlink", category: "product" },
-        // All options
-        { id: "all_fleets", name: "Semua Kendaraan", category: "fleet" },
-        { id: "all_products", name: "Semua Produk", category: "product" },
     ];
 
     const defaultValues = initialData
@@ -99,7 +91,7 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
             start_date: "",
             end_date: "",
             location_id: undefined,
-            type: "all_fleets",
+            type: "car",
         }
 
 
@@ -134,8 +126,8 @@ export const DiscountForm: React.FC<DiscountFormProps> = ({
             start_date: new Date(data?.range_date[0]).toISOString(),
             end_date: new Date(data?.range_date[1]).toISOString(),
             location_id: data?.location_id,
-            fleet_type: isFleetType ? (data?.type === "all_fleets" ? "all" : data?.type as string) : undefined,
-            product_category: isProductCategory ? (data?.type === "all_products" ? "all" : data?.type as string) : undefined
+            fleet_type: isFleetType ? (data?.type as string) : undefined,
+            product_category: isProductCategory ? (data?.type as string) : undefined
         }
 
         if (initialData) {
