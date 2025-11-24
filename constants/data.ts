@@ -365,24 +365,10 @@ export const navItems: NavItem[] = [
         roles: ["admin"],
       },
       {
-        title: "Paper Credentials",
-        href: "/dashboard/paper-credentials",
+        title: "Credentials",
+        href: "/dashboard/credentials",
         icon: "files",
-        label: "paper-credentials",
-        roles: ["admin"],
-      },
-      {
-        title: "Qontak Credentials",
-        href: "/dashboard/qontak-credentials",
-        icon: "archive",
-        label: "qontak-credentials",
-        roles: ["admin"],
-      },
-      {
-        title: "Deposit Settings",
-        href: "/dashboard/deposit-settings",
-        icon: "billing",
-        label: "deposit-settings",
+        label: "credentials",
         roles: ["admin"],
       },
       {
