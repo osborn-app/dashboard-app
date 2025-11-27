@@ -35,6 +35,7 @@ const breadcrumbItems = [
 ];
 
 const DURATION_KEY = "duration_hours_per_unit";
+const WEB_APP_COLORS_KEY = "web_app_colors";
 
 export default function SystemSettingsPage() {
   const { data: settings, isLoading: isLoadingSettings } = useGetSystemSettings();
@@ -55,6 +56,13 @@ export default function SystemSettingsPage() {
   const [percentage, setPercentage] = useState(25);
   const [savingDownPayment, setSavingDownPayment] = useState(false);
 
+  // Web App Colors state
+  const [colorSettingsId, setColorSettingsId] = useState<number | null>(null);
+  const [mainColor, setMainColor] = useState("#1F61D9");
+  const [primaryColor, setPrimaryColor] = useState("240 5.9% 10%");
+  const [primaryForeground, setPrimaryForeground] = useState("0 0% 98%");
+  const [savingColors, setSavingColors] = useState(false);
+
   const isLoading = isLoadingSettings || isLoadingDeposit;
 
   useEffect(() => {
@@ -74,6 +82,23 @@ export default function SystemSettingsPage() {
       setPercentage(depositSettings.percentage ?? 25);
     }
   }, [depositSettings]);
+
+  useEffect(() => {
+    if (settings && settings.length > 0) {
+      const colorSetting = settings.find((s) => s.key === WEB_APP_COLORS_KEY);
+      if (colorSetting) {
+        setColorSettingsId(colorSetting.id);
+        try {
+          const colors = JSON.parse(colorSetting.value);
+          setMainColor(colors.main || "#1F61D9");
+          setPrimaryColor(colors.primary || "240 5.9% 10%");
+          setPrimaryForeground(colors.primaryForeground || "0 0% 98%");
+        } catch (e) {
+          console.error("Failed to parse color settings:", e);
+        }
+      }
+    }
+  }, [settings]);
 
   const handleSystemSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +170,58 @@ export default function SystemSettingsPage() {
     }
   };
 
+  const handleColorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingColors(true);
+
+    try {
+      const colorData = {
+        main: mainColor,
+        primary: primaryColor,
+        primaryForeground: primaryForeground,
+      };
+
+      const payload = {
+        key: WEB_APP_COLORS_KEY,
+        value: JSON.stringify(colorData),
+        description: "Warna tema untuk web app",
+        type: "json" as const,
+      };
+
+      if (colorSettingsId) {
+        await updateSetting({
+          id: colorSettingsId,
+          data: {
+            value: payload.value,
+            description: payload.description,
+            type: payload.type,
+          },
+        });
+        toast({
+          variant: "success",
+          title: "Warna web app berhasil diperbarui",
+          description: "Perubahan akan terlihat di web app setelah refresh",
+        });
+      } else {
+        const created = await createSetting(payload);
+        setColorSettingsId(created.id);
+        toast({
+          variant: "success",
+          title: "Warna web app berhasil disimpan",
+          description: "Perubahan akan terlihat di web app setelah refresh",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Terjadi kesalahan",
+        description: error?.response?.data?.message || error?.message,
+      });
+    } finally {
+      setSavingColors(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -167,9 +244,10 @@ export default function SystemSettingsPage() {
       <Separator />
 
       <Tabs defaultValue="system" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="system">Pengaturan Sistem</TabsTrigger>
           <TabsTrigger value="down-payment">Down Payment</TabsTrigger>
+          <TabsTrigger value="web-colors">Warna Web App</TabsTrigger>
         </TabsList>
 
         <TabsContent value="system">
@@ -274,6 +352,106 @@ export default function SystemSettingsPage() {
                 <div className="flex justify-end gap-2">
                   <Button type="submit" disabled={savingDownPayment}>
                     {savingDownPayment ? "Menyimpan..." : "Simpan Pengaturan"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="web-colors">
+          <Card>
+            <CardContent className="pt-6">
+              <form onSubmit={handleColorSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="main-color">
+                      Warna Utama (Main Color) <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="main-color"
+                        type="color"
+                        value={mainColor}
+                        onChange={(e) => setMainColor(e.target.value)}
+                        disabled={savingColors}
+                        className="w-20 h-10"
+                      />
+                      <Input
+                        type="text"
+                        value={mainColor}
+                        onChange={(e) => setMainColor(e.target.value)}
+                        placeholder="#1F61D9"
+                        disabled={savingColors}
+                        className="flex-1"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Warna utama yang digunakan di web app (contoh: tombol, link, accent)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="primary-color">
+                      Primary Color (HSL) <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="primary-color"
+                      type="text"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      placeholder="240 5.9% 10%"
+                      disabled={savingColors}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Primary color dalam format HSL (Hue Saturation% Lightness%)
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="primary-foreground">
+                      Primary Foreground (HSL) <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="primary-foreground"
+                      type="text"
+                      value={primaryForeground}
+                      onChange={(e) => setPrimaryForeground(e.target.value)}
+                      placeholder="0 0% 98%"
+                      disabled={savingColors}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Warna teks untuk primary color dalam format HSL
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm font-medium mb-2">Preview:</p>
+                    <div className="flex gap-4 items-center">
+                      <div
+                        className="w-20 h-20 rounded-lg border-2"
+                        style={{ backgroundColor: mainColor }}
+                      />
+                      <div className="space-y-1">
+                        <div
+                          className="px-4 py-2 rounded text-sm font-medium"
+                          style={{
+                            backgroundColor: `hsl(${primaryColor})`,
+                            color: `hsl(${primaryForeground})`,
+                          }}
+                        >
+                          Primary Button
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button type="submit" disabled={savingColors}>
+                    {savingColors ? "Menyimpan..." : "Simpan Warna"}
                   </Button>
                 </div>
               </form>
