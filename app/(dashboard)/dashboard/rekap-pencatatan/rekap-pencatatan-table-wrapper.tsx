@@ -4,7 +4,6 @@ import SearchInput from "@/components/search-input";
 import Spinner from "@/components/spinner";
 import {
   columnsOrderanSewa,
-  columnsProduk,
   columnsReimburse,
   columnsInventaris,
   columnsLainnya,
@@ -13,7 +12,6 @@ import { RekapPencatatanTable } from "@/components/tables/rekap-pencatatan-table
 import { TabsContent } from "@/components/ui/tabs";
 import {
   useGetOrderanSewa,
-  useGetOrderanProduk,
   useGetReimburse,
   useGetInventaris,
   useGetLainnya,
@@ -91,18 +89,6 @@ const RekapPencatatanTableWrapper = () => {
       },
       {
         enabled: activeTab === "reimburse",
-      },
-    );
-
-  const { data: orderanProdukData, isFetching: isFetchingOrderanProduk } =
-    useGetOrderanProduk(
-      {
-        limit: pageLimit,
-        page: page,
-        q: searchDebounce,
-      },
-      {
-        enabled: activeTab === "orderan-produk",
       },
     );
 
@@ -185,7 +171,7 @@ const RekapPencatatanTableWrapper = () => {
         };
 
         // Request backend to include price calculation for orders tabs
-        if (tab === "orderan-sewa" || tab === "orderan-produk") {
+        if (tab === "orderan-sewa") {
           params.include_price_calculation = true;
         }
 
@@ -193,9 +179,6 @@ const RekapPencatatanTableWrapper = () => {
         switch (tab) {
           case "orderan-sewa":
             endpoint = "/rekap-transaksi/orderan-sewa";
-            break;
-          case "orderan-produk":
-            endpoint = "/rekap-transaksi/produk";
             break;
           case "reimburse":
             endpoint = "/rekap-transaksi/reimburse";
@@ -229,9 +212,6 @@ const RekapPencatatanTableWrapper = () => {
       switch (activeTab) {
         case "orderan-sewa":
           tabName = "Orderan Fleets";
-          break;
-        case "orderan-produk":
-          tabName = "Orderan Produk";
           break;
         case "reimburse":
           tabName = "Reimburse";
@@ -281,34 +261,6 @@ const RekapPencatatanTableWrapper = () => {
             "Total Harga Keseluruhan": formatRupiah(data.price_calculation?.grand_total ?? 0),
             "No Invoice": data.invoice_number || "-",
             Status: data.status === "accepted" ? "Lunas" : (data.status ?? "-"),
-          };
-        });
-      } else if (activeTab === "orderan-produk") {
-        rows = currentData.map((data: any, index: number) => {
-          const discountPercentage = (data.price_calculation?.discount_percentage ?? data.discount ?? 0) as number;
-          const additionalServicesTotal = Array.isArray(data.additional_services)
-            ? data.additional_services.reduce((sum: number, item: any) => sum + (Number(item?.price) || 0), 0)
-            : 0;
-          const displayStatus = data.status === "accepted" ? "Lunas" : (data.status || "-");
-          const startDate = data.start_date ? format(new Date(data.start_date), "EEEE, dd MMMM yyyy HH:mm", { locale: id }) : "-";
-          return {
-            No: index + 1,
-            Pelanggan: data.customer?.name || "-",
-            Produk: data.product?.name || data.fleet?.name || "-",
-            Kategori: data.product?.category_label || data.product?.category || "-",
-            "Tanggal Sewa": startDate,
-            "Harga Produk": formatRupiah(data.product?.price ?? 0),
-            "Durasi Penyewaan": data.duration ?? 0,
-            "Total Harga Unit": formatRupiah(data.price_calculation?.total_rent_price ?? data.sub_total_price ?? 0),
-            "Diskon (%)": discountPercentage,
-            "Total Potongan Diskon": formatRupiah(data.price_calculation?.discount ?? data.discount_amount ?? 0),
-            "Total Harga Setelah Diskon": formatRupiah(((data.price_calculation?.total_rent_price ?? data.sub_total_price ?? 0) - (data.price_calculation?.discount ?? data.discount_amount ?? 0))),
-            "Layanan Antar Jemput": formatRupiah(data.price_calculation?.total_weekend_price ?? data.weekend_price ?? 0),
-            "Layanan Lainnya": formatRupiah(additionalServicesTotal),
-            "Layanan Add-Ons": formatRupiah(data.price_calculation?.addons_price ?? data.addons_price ?? 0),
-            "Total Harga Keseluruhan": formatRupiah(data.price_calculation?.grand_total ?? 0),
-            "No Invoice": data.invoice_number || "-",
-            Status: displayStatus,
           };
         });
       } else if (activeTab === "reimburse") {
@@ -388,10 +340,6 @@ const RekapPencatatanTableWrapper = () => {
     {
       name: "Orderan Fleets",
       value: "orderan-sewa",
-    },
-    {
-      name: "Orderan Produk",
-      value: "orderan-produk",
     },
     {
       name: "Reimburse",
@@ -585,21 +533,6 @@ const RekapPencatatanTableWrapper = () => {
             searchKey="customer.name"
             totalUsers={orderanSewaData.meta?.total_items}
             pageCount={Math.ceil(orderanSewaData.meta?.total_items / pageLimit)}
-            pageNo={page}
-          />
-        )}
-      </TabsContent>
-
-      <TabsContent value="orderan-produk" className="space-y-4">
-        {isFetchingOrderanProduk && <Spinner />}
-        {!isFetchingOrderanProduk && orderanProdukData && (
-          <RekapPencatatanTable
-            columns={columnsProduk}
-            data={orderanProdukData.items}
-            type="orderan-produk"
-            searchKey="customer.name"
-            totalUsers={orderanProdukData.meta?.total_items}
-            pageCount={Math.ceil(orderanProdukData.meta?.total_items / pageLimit)}
             pageNo={page}
           />
         )}

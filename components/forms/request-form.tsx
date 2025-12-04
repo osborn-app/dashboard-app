@@ -32,7 +32,6 @@ import { useToast } from "../ui/use-toast";
 import { useGetInfinityCustomers } from "@/hooks/api/useCustomer";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetInfinityFleets } from "@/hooks/api/useFleet";
-import { useGetInfinityProducts } from "@/hooks/api/useProduct";
 import { Textarea } from "@/components/ui/textarea";
 import { useGetInfinityDrivers } from "@/hooks/api/useDriver";
 import { useEditRequest, usePostRequest } from "@/hooks/api/useRequest";
@@ -48,8 +47,7 @@ dayjs.locale("id");
 
 // perlu dipisah
 const formSchema = z.object({
-  fleet: z.string().optional(),
-  product: z.string().optional(),
+  fleet: z.string().min(1, { message: "Tolong pilih fleet" }),
   customer: z.string().min(1, { message: "Tolong pilih pelanggan" }),
   pic: z.string().min(1, { message: "Tolong pilih pic" }),
   time: z.coerce.date({ required_error: "Tolong masukkan Waktu" }),
@@ -58,9 +56,6 @@ const formSchema = z.object({
   description: z.string().optional().nullable(),
   is_self_pickup: z.boolean(),
   distance: z.coerce.number().gte(0, "Jarak minimal 0 KM"),
-}).refine((data) => data.fleet || data.product, {
-  message: "Tolong pilih fleet atau product",
-  path: ["fleet", "product"],
 });
 
 type RequestFormValues = z.infer<typeof formSchema>;
@@ -78,11 +73,9 @@ export const RequestForm: React.FC<RequestFormProps> = ({
 
   const [searchCustomerTerm, setSearchCustomerTerm] = useState("");
   const [searchFleetTerm, setSearchFleetTerm] = useState("");
-  const [searchProductTerm, setSearchProductTerm] = useState("");
   const [searchDriverTerm, setSearchDriverTerm] = useState("");
   const [searchCustomerDebounce] = useDebounce(searchCustomerTerm, 500);
   const [searchFleetDebounce] = useDebounce(searchFleetTerm, 500);
-  const [searchProductDebounce] = useDebounce(searchProductTerm, 500);
   const [searchDriverDebounce] = useDebounce(searchDriverTerm, 500);
 
   const {
@@ -99,13 +92,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({
     isFetchingNextPage: isFetchingNextFleets,
   } = useGetInfinityFleets(searchFleetDebounce);
 
-  const {
-    data: products,
-    fetchNextPage: fetchNextProducts,
-    hasNextPage: hasNextProducts,
-    isFetchingNextPage: isFetchingNextProducts,
-  } = useGetInfinityProducts(searchProductDebounce);
-
   // const { data: fleets } = useGetFleets({ limit: 10, page: 1 });
   const {
     data: drivers,
@@ -119,15 +105,15 @@ export const RequestForm: React.FC<RequestFormProps> = ({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const title = !isEdit
-    ? "Detail Request"
+    ? "Detail Request Osborn"
     : initialData
-    ? "Edit Request"
-    : "Create Request";
+    ? "Edit Request Osborn"
+    : "Buat Request Osborn";
   const description = !isEdit
     ? ""
     : initialData
-    ? "Edit a request for driver"
-    : "Add a new request for driver";
+    ? "Edit request untuk driver Osborn"
+    : "Tambah request baru untuk driver Osborn";
   const toastMessage = initialData
     ? "Request Task berhasil diubah!"
     : "Request Task berhasil dibuat!";
@@ -151,7 +137,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({
         customer: initialData?.customer?.id?.toString(),
         pic: initialData?.driver?.id?.toString(),
         fleet: initialData?.fleet?.id?.toString(),
-        product: initialData?.product?.id?.toString(),
         time: initialData?.start_date,
         type: initialData?.type,
         address: initialData?.address,
@@ -163,7 +148,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({
         customer: "",
         pic: "",
         fleet: "",
-        product: "",
         type: "",
         address: predefinedAddress,
         description: predefinedDesc,
@@ -196,8 +180,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
     setLoading(true);
     const payload = {
       customer_id: Number(data?.customer),
-      fleet_id: data?.fleet ? Number(data?.fleet) : undefined,
-      product_id: data?.product ? Number(data?.product) : undefined,
+      fleet_id: Number(data?.fleet),
       driver_id: Number(data?.pic),
       start_date: dayjs(data?.time).toISOString(),
       type: data?.type,
@@ -285,13 +268,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({
     const target = event.target as HTMLDivElement;
     if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
       fetchNextFleets();
-    }
-  };
-
-  const handleScrollProducts = (event: React.UIEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement;
-    if (target.scrollTop + target.offsetHeight === target.scrollHeight) {
-      fetchNextProducts();
     }
   };
 
@@ -454,70 +430,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({
 
             {!isEdit ? (
               <FormItem>
-                <FormLabel>Product</FormLabel>
-                <FormControl className="disabled:opacity-100">
-                  <Input
-                    disabled={!isEdit || loading}
-                    value={initialData?.product?.name}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            ) : (
-              <FormField
-                name="product"
-                control={form.control}
-                render={({ field }) => (
-                  <Space size={12} direction="vertical">
-                    <FormLabel className="relative">
-                      Product
-                    </FormLabel>
-                    <FormControl>
-                      <AntdSelect
-                        showSearch
-                        value={field.value}
-                        placeholder="Pilih Product"
-                        style={{ width: "100%" }}
-                        onSearch={setSearchProductTerm}
-                        onChange={field.onChange}
-                        onPopupScroll={handleScrollProducts}
-                        filterOption={false}
-                        notFoundContent={
-                          isFetchingNextProducts ? (
-                            <p className="px-3 text-sm">loading</p>
-                          ) : null
-                        }
-                      >
-                        {isEdit && (
-                          <Option value={initialData?.product?.id?.toString()}>
-                            {initialData?.product?.name}
-                          </Option>
-                        )}
-                        {products?.pages.map((page: any, pageIndex: any) =>
-                          page.data.items.map((item: any, itemIndex: any) => {
-                            return (
-                              <Option key={item.id} value={item.id.toString()}>
-                                {item.name} ({item.category_label || 'Produk'})
-                              </Option>
-                            );
-                          }),
-                        )}
-
-                        {isFetchingNextProducts && (
-                          <Option disabled>
-                            <p className="px-3 text-sm">loading</p>
-                          </Option>
-                        )}
-                      </AntdSelect>
-                    </FormControl>
-                    <FormMessage />
-                  </Space>
-                )}
-              />
-            )}
-
-            {!isEdit ? (
-              <FormItem>
                 <FormLabel>PIC</FormLabel>
                 <FormControl className="disabled:opacity-100">
                   <Input
@@ -577,6 +489,53 @@ export const RequestForm: React.FC<RequestFormProps> = ({
                     <FormMessage />
                   </Space>
                 )}
+              />
+            )}
+            {!isEdit ? (
+              <FormItem>
+                <FormLabel>Waktu</FormLabel>
+                <FormControl className="disabled:opacity-100">
+                  <Input
+                    disabled={!isEdit || loading}
+                    value={dayjs(defaultValues?.time)
+                      .locale("id")
+                      .format("HH:mm:ss - dddd, DD MMMM (YYYY)")}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            ) : (
+              <FormField
+                control={form.control}
+                name="time"
+                render={({ field: { onChange, onBlur, value, ref } }) => {
+                  return (
+                    <ConfigProvider locale={locale}>
+                      <Space size={12} direction="vertical">
+                        <FormLabel className="relative label-required">
+                          Waktu
+                        </FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            disabled={loading}
+                            style={{ width: "100%" }}
+                            height={40}
+                            className="p"
+                            showNow={false}
+                            onChange={onChange} // send value to hook form
+                            onBlur={onBlur} // notify when input is touched/blur
+                            value={
+                              value ? dayjs(value).locale("id") : undefined
+                            }
+                            format={"HH:mm:ss - dddd, DD MMMM (YYYY)"}
+                            showTime
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </Space>
+                    </ConfigProvider>
+                  );
+                }}
               />
             )}
             <FormField
@@ -641,53 +600,6 @@ export const RequestForm: React.FC<RequestFormProps> = ({
                 </FormItem>
               )}
             />
-            {!isEdit ? (
-              <FormItem>
-                <FormLabel>Waktu</FormLabel>
-                <FormControl className="disabled:opacity-100">
-                  <Input
-                    disabled={!isEdit || loading}
-                    value={dayjs(defaultValues?.time)
-                      .locale("id")
-                      .format("HH:mm:ss - dddd, DD MMMM (YYYY)")}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            ) : (
-              <FormField
-                control={form.control}
-                name="time"
-                render={({ field: { onChange, onBlur, value, ref } }) => {
-                  return (
-                    <ConfigProvider locale={locale}>
-                      <Space size={12} direction="vertical">
-                        <FormLabel className="relative label-required">
-                          Waktu
-                        </FormLabel>
-                        <FormControl>
-                          <DatePicker
-                            disabled={loading}
-                            style={{ width: "100%" }}
-                            height={40}
-                            className="p"
-                            showNow={false}
-                            onChange={onChange} // send value to hook form
-                            onBlur={onBlur} // notify when input is touched/blur
-                            value={
-                              value ? dayjs(value).locale("id") : undefined
-                            }
-                            format={"HH:mm:ss - dddd, DD MMMM (YYYY)"}
-                            showTime
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </Space>
-                    </ConfigProvider>
-                  );
-                }}
-              />
-            )}
           </div>
           {!isEdit && initialData?.customer.id_cards && (
             <div className="">

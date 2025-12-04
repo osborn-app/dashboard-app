@@ -79,7 +79,7 @@ const formSchema = z.object({
     .string({ required_error: "Email diperlukan" })
     .email({ message: "Email harus valid" }),
   gender: z.string().optional().nullable(),
-  role: z.enum(["customer", "product_customer"]).optional(),
+  role: z.enum(["customer", "product_customer"]).default("customer"),
   password: z
     .string()
     .optional()
@@ -106,20 +106,7 @@ const formSchema = z.object({
     .string({ required_error: "Nomor telepon diperlukan" })
     .min(10, { message: "Nomor Telepon minimal harus 10 digit" }),
     // additional_data: z.any().optional(),
-}).refine(
-  (data) => {
-    // If role is product_customer, supporting_documents_url is required
-    if (data.role === "product_customer") {
-      return data.supporting_documents_url !== undefined && data.supporting_documents_url !== null;
-    }
-    // For customer role or no role, supporting_documents_url is optional
-    return true;
-  },
-  {
-    message: "Dokumen pendukung wajib diisi untuk akun Product Customer",
-    path: ["supporting_documents_url"],
-  }
-);
+});
 
 const formEditSchema = z.object({
   name: z
@@ -358,6 +345,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
       const payload = {
         ...data,
+        role: 'customer', // Default role selalu customer fleet
         date_of_birth: data?.date_of_birth
           ? dayjs(data?.date_of_birth).format("YYYY-MM-DD")
           : "",
@@ -575,36 +563,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                 </FormItem>
               )}
             />
-            {!initialData && (
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="relative label-required">
-                      Role Customer
-                    </FormLabel>
-                    <Select
-                      disabled={!isEdit || loading}
-                      onValueChange={field.onChange}
-                      value={field.value ?? 'customer'}
-                      defaultValue={field.value ?? 'customer'}
-                    >
-                      <FormControl className="disabled:opacity-100">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih role customer" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="customer">Customer Fleet</SelectItem>
-                        <SelectItem value="product_customer">Customer Product</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
             {!initialData && (
               <FormField
                 control={form.control}

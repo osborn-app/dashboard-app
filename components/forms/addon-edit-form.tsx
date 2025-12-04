@@ -46,10 +46,6 @@ const formSchema = z.object({
 });
 
 const categoryOptions = [
-  { label: "iPhone", value: "iphone" },
-  { label: "Kamera", value: "camera" },
-  { label: "Outdoor", value: "outdoor" },
-  { label: "Starlink", value: "starlink" },
   { label: "Mobil", value: "car" },
   { label: "Motor", value: "motorcycle" },
 ];

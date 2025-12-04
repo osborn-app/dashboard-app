@@ -15,11 +15,6 @@ import { format } from "date-fns";
 
 // Addon categories enum
 const AddonCategories = {
-  // Product Categories
-  IPHONE: 'iphone',
-  CAMERA: 'camera', 
-  OUTDOOR: 'outdoor',
-  STARLINK: 'starlink',
   // Fleet Types
   CAR: 'car',
   MOTORCYCLE: 'motorcycle',
@@ -109,11 +104,6 @@ const AddonTableWrapper = () => {
 
   const categoryOptions = [
     { label: "Semua Kategori", value: "" },
-    // Product Categories
-    { label: "iPhone", value: AddonCategories.IPHONE },
-    { label: "Kamera", value: AddonCategories.CAMERA },
-    { label: "Outdoor", value: AddonCategories.OUTDOOR },
-    { label: "Starlink", value: AddonCategories.STARLINK },
     // Fleet Types
     { label: "Mobil", value: AddonCategories.CAR },
     { label: "Motor", value: AddonCategories.MOTORCYCLE },

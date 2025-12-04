@@ -14,12 +14,11 @@ const EndpointSelector = () => {
 
   const endpoints = [
     { id: "fleets", name: "Kendaraan" },
-    { id: "products", name: "Produk" },
     { id: "inspections", name: "Inspeksi" },
     { id: "maintenance", name: "Maintenance" },
   ];
 
-  const handleEndpointChange = (value: "fleets" | "products" | "inspections" | "maintenance") => {
+  const handleEndpointChange = (value: "fleets" | "inspections" | "maintenance") => {
     setEndpoint(value);
   };
 

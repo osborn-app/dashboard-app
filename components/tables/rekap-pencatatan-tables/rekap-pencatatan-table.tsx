@@ -37,7 +37,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 interface RekapPencatatanTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  type: "orderan-sewa" | "orderan-produk" | "reimburse" | "inventaris" | "lainnya";
+  type: "orderan-sewa" | "reimburse" | "inventaris" | "lainnya";
   searchKey: string;
   pageNo: number;
   totalUsers: number;
@@ -125,10 +125,8 @@ export function RekapPencatatanTable<TData, TValue>({
   });
 
   const handleRowClick = (rowData: any) => {
-    // Handle row click untuk orderan-sewa, orderan-produk, reimburse, dan inventaris
+    // Handle row click untuk orderan-sewa, reimburse, dan inventaris
     if (type === "orderan-sewa") {
-      router.push(`/dashboard/rekap-pencatatan/${type}/${rowData.id}/detail`);
-    } else if (type === "orderan-produk") {
       router.push(`/dashboard/rekap-pencatatan/${type}/${rowData.id}/detail`);
     } else if (type === "reimburse") {
       router.push(`/dashboard/reimburse/${rowData.id}/detail`);
@@ -164,7 +162,7 @@ export function RekapPencatatanTable<TData, TValue>({
               table.getRowModel().rows.map((row: any) => (
                 <TableRow
                   className={`${
-                    type === "orderan-sewa" || type === "orderan-produk" ||
+                    type === "orderan-sewa" ||
                     type === "reimburse" ||
                     type === "inventaris"
                       ? "cursor-pointer hover:bg-gray-100 transition-colors duration-200 ease-in-out"

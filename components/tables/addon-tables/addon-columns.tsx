@@ -7,14 +7,6 @@ import { Package, Tag } from "lucide-react";
 // Helper function to get category label
 const getAddonCategoryLabel = (category: string) => {
   switch (category) {
-    case 'iphone':
-      return 'iPhone';
-    case 'camera':
-      return 'Kamera';
-    case 'outdoor':
-      return 'Outdoor';
-    case 'starlink':
-      return 'Starlink';
     case 'car':
       return 'Mobil';
     case 'motorcycle':
@@ -27,11 +19,6 @@ const getAddonCategoryLabel = (category: string) => {
 // Helper function to get category color
 const getCategoryColor = (category: string) => {
   switch (category) {
-    case 'iphone':
-    case 'camera':
-    case 'outdoor':
-    case 'starlink':
-      return 'bg-blue-100 text-blue-800';
     case 'car':
     case 'motorcycle':
       return 'bg-green-100 text-green-800';

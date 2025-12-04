@@ -20,7 +20,6 @@ const RequestTypeFilter = ({ value, onValueChange }: RequestTypeFilterProps) => 
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">Semua Request</SelectItem>
-        <SelectItem value="product">Product Orders</SelectItem>
         <SelectItem value="fleet">Fleet Orders</SelectItem>
       </SelectContent>
     </Select>
