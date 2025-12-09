@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { signIn } from "next-auth/react";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Crown, Car, DollarSign, Monitor, Wrench, User, Eye, EyeOff } from "lucide-react";
-import LoadingMascot from "@/components/ui/loading-mascot";
 
 const roleIcons = {
   super_admin: Crown, //re
@@ -34,7 +33,6 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [showMascotLoading, setShowMascotLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -124,25 +122,20 @@ export default function LoginPage() {
           description: "Selamat datang di dashboard",
         });
         
-        // Show mascot loading animation
-        setShowMascotLoading(true);
+        // Redirect based on role
+        const getDefaultRoute = (role: string) => {
+          switch(role) {
+            case "owner": return "/dashboard/calendar";
+            case "finance": return "/dashboard/rekap-pencatatan";
+            case "operation": return "/dashboard/inspections";
+            case "driver": return "/dashboard/reimburse";
+            case "admin": return "/dashboard";
+            case "super_admin": return "/dashboard";
+            default: return "/dashboard";
+          }
+        };
         
-        // Redirect based on role after loading animation
-        setTimeout(() => {
-          const getDefaultRoute = (role: string) => {
-            switch(role) {
-              case "owner": return "/dashboard/calendar";
-              case "finance": return "/dashboard/rekap-pencatatan";
-              case "operation": return "/dashboard/inspections";
-              case "driver": return "/dashboard/reimburse";
-              case "admin": return "/dashboard";
-              case "super_admin": return "/dashboard";
-              default: return "/dashboard";
-            }
-          };
-          
-          router.push(getDefaultRoute(selectedRole || "admin"));
-        }, 2500); // 2.5 seconds for loading animation
+        router.push(getDefaultRoute(selectedRole || "admin"));
       }
     } catch (error) {
       toast({
@@ -164,15 +157,6 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* Loading Mascot Overlay */}
-      {showMascotLoading && (
-        <LoadingMascot 
-          message="Memproses login dan mengarahkan ke dashboard..."
-          showProgress={true}
-          duration={2500}
-        />
-      )}
-      
       <div className="min-h-screen flex flex-col md:flex-row relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
