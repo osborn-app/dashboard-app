@@ -26,7 +26,7 @@ type paramsProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Product Orders | Transgo",
+  title: "Product Orders | Osborn",
   description: "Product Orders page",
 };
 

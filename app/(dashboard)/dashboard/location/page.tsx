@@ -20,7 +20,7 @@ type paramsProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Location | Transgo",
+  title: "Location | Osborn",
   description: "Location page",
 };
 

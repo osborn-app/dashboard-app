@@ -20,7 +20,7 @@ type paramsProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Owners | Transgo",
+  title: "Owners | Osborn",
   description: "Owners page",
 };
 

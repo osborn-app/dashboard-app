@@ -11,7 +11,7 @@ import {
 import { getOutOfTownRates } from "@/client/outOfTownRatesClient";
 
 export const metadata: Metadata = {
-  title: "Tarif Luar Kota | Transgo",
+  title: "Tarif Luar Kota | Osborn",
   description: "Kelola tarif luar kota",
 };
 

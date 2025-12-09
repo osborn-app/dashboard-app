@@ -20,7 +20,7 @@ import InventoryTableWrapper from "./components/inventory-table-wrapper";
 const breadcrumbItems = [{ title: "Inventaris", link: "/dashboard/inventaris" }];
 
 export const metadata: Metadata = {
-  title: "Inventaris | Transgo",
+  title: "Inventaris | Osborn",
   description: "Manage company inventory and assets",
 };
 // re

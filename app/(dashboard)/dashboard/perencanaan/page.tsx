@@ -8,7 +8,7 @@ import PerencanaanTableWrapper from "./perencanaan-table-wrapper";
 const breadcrumbItems = [{ title: "Perencanaan", link: "/dashboard/perencanaan" }];
 
 export const metadata: Metadata = {
-  title: "Perencanaan | Transgo",
+  title: "Perencanaan | Osborn",
   description: "Kelola perencanaan keuangan perusahaan",
 }; //redeploy
 

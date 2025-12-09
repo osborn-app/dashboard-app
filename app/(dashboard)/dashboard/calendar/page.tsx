@@ -9,7 +9,7 @@ import YearAndMonthSelector from "@/components/calendar/year-and-month-selector"
 const BREAD_CRUMB_ITEMS = [{ title: "Calendar", link: "/dashboard/calendar" }];
 
 export const metadata: Metadata = {
-  title: "Calendar | Transgo",
+  title: "Calendar | Osborn",
   description: "Calendar page",
 };
 // triger

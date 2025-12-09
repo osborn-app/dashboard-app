@@ -11,7 +11,7 @@ const breadcrumbItems = [
 ];
 
 export const metadata: Metadata = {
-  title: "Create Add-on | Transgo",
+  title: "Create Add-on | Osborn",
   description: "Create a new add-on for products or fleets",
 };
 

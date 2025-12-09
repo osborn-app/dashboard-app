@@ -6,7 +6,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import VerificationTableWrapper from "./table/detail/verification-table-wrapper";
 
 export const metadata: Metadata = {
-  title: "Verifikasi Tambahan | Transgo",
+  title: "Verifikasi Tambahan | Osborn",
   description: "Halaman verifikasi tambahan",
 };
 

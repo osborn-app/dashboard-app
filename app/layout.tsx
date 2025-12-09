@@ -15,7 +15,7 @@ import './sweetalert-override.css';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Transgo",
+  title: "Osborn",
   description: "Manage rent car",
   icons: {
     icon: "/logov2.png",
@@ -39,14 +39,14 @@ export default async function RootLayout({
         />
         <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
         <link rel="shortcut icon" href="/logo.png" />
-        <meta property="og:title" content="Dashboard Transgo" />
-        <meta property="og:description" content="Dashboard Transgo" />
+        <meta property="og:title" content="Dashboard Osborn" />
+        <meta property="og:description" content="Dashboard Osborn" />
         <meta property="og:url" content="https://dev.dashboard.transgo.id/" />
         <meta
           property="og:image"
           content="https://dev.dashboard.transgo.id/logo.png"
         />
-        <meta property="og:site_name" content="Dashboard Transgo" />
+        <meta property="og:site_name" content="Dashboard Osborn" />
         <meta
           name="twitter:card"
           content="summary_large_image"

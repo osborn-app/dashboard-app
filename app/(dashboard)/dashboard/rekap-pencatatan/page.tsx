@@ -16,7 +16,7 @@ import {
 import { getOrderanSewa } from "@/client/rekapClient";
 
 export const metadata: Metadata = {
-  title: "Rekap Pencatatan | Transgo",
+  title: "Rekap Pencatatan | Osborn",
   description: "Rekap Pencatatan page",
 };
 

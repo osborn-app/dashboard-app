@@ -16,7 +16,7 @@ import {
 import { getCustomers } from "@/client/customerClient";
 
 export const metadata: Metadata = {
-  title: "Customers | Transgo",
+  title: "Customers | Osborn",
   description: "Customers page",
 };
 

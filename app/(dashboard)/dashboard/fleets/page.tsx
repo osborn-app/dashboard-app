@@ -19,7 +19,7 @@ type paramsProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Fleets | Transgo",
+  title: "Fleets | Osborn",
   description: "Fleets page",
 };
 // change to ssr

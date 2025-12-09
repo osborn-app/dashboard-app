@@ -20,7 +20,7 @@ type paramsProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Drivers | Transgo",
+  title: "Drivers | Osborn",
   description: "Drivers page",
 };
 

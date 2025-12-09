@@ -27,7 +27,7 @@ type paramsProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Reimburse | Transgo",
+  title: "Reimburse | Osborn",
   description: "Requests page",
 };
 

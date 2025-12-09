@@ -26,7 +26,7 @@ const breadcrumbItems = [
 
 export async function generateMetadata({ params }: InventoryDetailPageProps): Promise<Metadata> {
   return {
-    title: `Detail Inventaris | Transgo`,
+    title: `Detail Inventaris | Osborn`,
     description: "Detail item inventaris perusahaan",
   };
 }

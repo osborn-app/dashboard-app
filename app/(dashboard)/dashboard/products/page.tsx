@@ -20,7 +20,7 @@ import ProductTableWrapper from "./product-table-wrapper";
 const breadcrumbItems = [{ title: "Products", link: "/dashboard/products" }];
 
 export const metadata: Metadata = {
-  title: "Products | Transgo",
+  title: "Products | Osborn",
   description: "Manage products like iPhone, Camera, Outdoor, Starlink",
 };
 
