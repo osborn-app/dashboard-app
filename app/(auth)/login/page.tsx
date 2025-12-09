@@ -160,19 +160,19 @@ export default function LoginPage() {
       <div className="min-h-screen flex flex-col md:flex-row relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-10 left-10 w-20 h-20 bg-blue-100 rounded-full opacity-30 animate-pulse"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 bg-blue-200 rounded-full opacity-40 animate-bounce"></div>
-        <div className="absolute bottom-20 left-20 w-24 h-24 bg-blue-100 rounded-full opacity-30 animate-pulse delay-1000"></div>
-        <div className="absolute bottom-32 right-10 w-12 h-12 bg-blue-200 rounded-full opacity-40 animate-bounce delay-500"></div>
+        <div className="absolute top-10 left-10 w-20 h-20 bg-gray-200 rounded-full opacity-30 animate-pulse"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 bg-gray-300 rounded-full opacity-40 animate-bounce"></div>
+        <div className="absolute bottom-20 left-20 w-24 h-24 bg-gray-200 rounded-full opacity-30 animate-pulse delay-1000"></div>
+        <div className="absolute bottom-32 right-10 w-12 h-12 bg-gray-300 rounded-full opacity-40 animate-bounce delay-500"></div>
       </div>
 
-             {/* Top Panel - Blue Background (Mobile) / Left Panel (Desktop) */}
-             <div className="w-full md:w-2/5 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 flex flex-col justify-center items-center relative py-12 md:py-0 overflow-hidden">
+             {/* Top Panel - Gray/Black Background (Mobile) / Left Panel (Desktop) */}
+             <div className="w-full md:w-2/5 bg-gradient-to-br from-gray-800 via-gray-900 to-black flex flex-col justify-center items-center relative py-12 md:py-0 overflow-hidden">
                <Button
                  variant="ghost"
                  size="sm"
                  onClick={handleBack}
-                 className="absolute top-6 left-6 text-white hover:bg-blue-700/50 transition-all duration-300 z-10"
+                 className="absolute top-6 left-6 text-white hover:bg-gray-700/50 transition-all duration-300 z-10"
                >
                  <ArrowLeft className="w-5 h-5" />
                </Button>
@@ -200,7 +200,7 @@ export default function LoginPage() {
 
                  {/* Welcome text with enhanced styling */}
                  <div className="space-y-2 md:space-y-3">
-                   <h2 className="text-xl md:text-2xl font-bold mb-2 animate-slide-up bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent drop-shadow-lg">
+                   <h2 className="text-xl md:text-2xl font-bold mb-2 animate-slide-up bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent drop-shadow-lg">
                      SELAMAT DATANG,
                    </h2>
                    <div className="relative">
@@ -213,7 +213,7 @@ export default function LoginPage() {
                  </div>
 
                  {/* Role description */}
-                 <p className="text-sm md:text-base text-blue-100 mt-4 md:mt-6 animate-fade-in-delay-2 max-w-xs mx-auto leading-relaxed">
+                 <p className="text-sm md:text-base text-gray-200 mt-4 md:mt-6 animate-fade-in-delay-2 max-w-xs mx-auto leading-relaxed">
                    {selectedRole === 'super_admin' && 'Akses penuh ke semua fitur sistem'}
                    {selectedRole === 'owner' && 'Kelola calendar, fleet, dan laporan'}
                    {selectedRole === 'finance' && 'Kelola keuangan dan reimburse'}
@@ -225,10 +225,10 @@ export default function LoginPage() {
              </div>
 
       {/* Bottom Panel - White Background (Mobile) / Right Panel (Desktop) */}
-      <div className="w-full md:w-3/5 bg-gradient-to-br from-white via-blue-50/30 to-white flex flex-col justify-center items-center p-6 md:p-12 relative">
+      <div className="w-full md:w-3/5 bg-gradient-to-br from-white via-gray-50/30 to-white flex flex-col justify-center items-center p-6 md:p-12 relative">
         <div className="w-full max-w-md relative z-10">
           <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-800 to-black bg-clip-text text-transparent mb-2">
               LOGIN KE DASHBOARD
             </h1>
             <p className="text-gray-600">Masukkan kredensial Anda untuk melanjutkan</p>
@@ -244,7 +244,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border-blue-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300 hover:border-blue-300"
+                className="w-full border-gray-300 focus:border-gray-700 focus:ring-gray-700 transition-all duration-300 hover:border-gray-400"
                 placeholder="Masukkan email..."
                 disabled={loading}
                 required
@@ -261,7 +261,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border-blue-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300 hover:border-blue-300 pr-10"
+                  className="w-full border-gray-300 focus:border-gray-700 focus:ring-gray-700 transition-all duration-300 hover:border-gray-400 pr-10"
                   placeholder="Masukkan password..."
                   disabled={loading}
                   required
@@ -284,7 +284,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 text-lg font-semibold uppercase transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full bg-gradient-to-r from-gray-800 to-black hover:from-gray-900 hover:to-black text-white py-3 text-lg font-semibold uppercase transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
