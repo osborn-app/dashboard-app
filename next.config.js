@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
-const { withSentryConfig } = require("@sentry/nextjs");
+// Sentry disabled - not using Sentry anymore
+// const { withSentryConfig } = require("@sentry/nextjs");
 
 const nextConfig = {
   output: "standalone",
@@ -36,9 +37,12 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(nextConfig, {
-  org: "transgo",
-  project: "dashboard-app",
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  silent: false,
-});
+// Sentry disabled - export config directly without Sentry wrapper
+module.exports = nextConfig;
+
+// module.exports = withSentryConfig(nextConfig, {
+//   org: "transgo",
+//   project: "dashboard-app",
+//   authToken: process.env.SENTRY_AUTH_TOKEN,
+//   silent: false,
+// });

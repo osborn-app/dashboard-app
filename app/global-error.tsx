@@ -1,7 +1,8 @@
 "use client"; // Error components must be Client Components
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+// Sentry disabled - not using Sentry anymore
+// import * as Sentry from "@sentry/nextjs";
 import NextError from "next/error";
 
 export default function GlobalError({
@@ -12,10 +13,9 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    Sentry.captureException(error);
-
-    throw new Error("error");
+    // Sentry disabled - just log to console
+    // Sentry.captureException(error);
+    console.error("Global error:", error);
   }, [error]);
 
   return (

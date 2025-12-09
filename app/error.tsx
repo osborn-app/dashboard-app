@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+// Sentry disabled - not using Sentry anymore
+// import * as Sentry from "@sentry/nextjs";
 
 export default function ErrorPage({
   error,
@@ -9,8 +10,9 @@ export default function ErrorPage({
   error: Error & { digest?: string };
 }) {
   useEffect(() => { //redeploy rollback
-    
-    Sentry.captureException(error);
+    // Sentry disabled
+    // Sentry.captureException(error);
+    console.error("Error:", error);
   }, [error]);
 
   return (
