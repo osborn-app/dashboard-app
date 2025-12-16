@@ -23,9 +23,9 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Set build-time environment variables (adjust these values as needed)
-ENV NEXTAUTH_URL=https://dashboard.zanfuu.my.id
+ENV NEXTAUTH_URL=https://dashboard.osborncarrental.com
 ENV NEXTAUTH_SECRET=76/7b1EBPbkxZqD+hYv/4fKJMC4cdKFLHa6W+j0crLA=
-ENV NEXT_PUBLIC_API_HOST=https://api.zanfuu.my.id/api/v1
+ENV NEXT_PUBLIC_API_HOST=https://api.osborncarrental.com/api/v1
 ENV NEXT_PUBLIC_BASIC_AUTH_USER=LINhzGdEo9
 ENV NEXT_PUBLIC_BASIC_AUTH_PASSWORD=l5vEiYS7HO
 ENV NEXT_PUBLIC_SENTRY_DSN=
@@ -40,9 +40,9 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NEXTAUTH_URL=https://dashboard.zanfuu.my.id
+ENV NEXTAUTH_URL=https://dashboard.osborncarrental.com
 ENV NEXTAUTH_SECRET=76/7b1EBPbkxZqD+hYv/4fKJMC4cdKFLHa6W+j0crLA=
-ENV NEXT_PUBLIC_API_HOST=https://api.zanfuu.my.id/api/v1
+ENV NEXT_PUBLIC_API_HOST=https://api.osborncarrental.com/api/v1
 ENV NEXT_PUBLIC_BASIC_AUTH_USER=LINhzGdEo9
 ENV NEXT_PUBLIC_BASIC_AUTH_PASSWORD=l5vEiYS7HO
 ENV NEXT_PUBLIC_SENTRY_DSN=
