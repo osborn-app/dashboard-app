@@ -150,9 +150,12 @@ export default function CtaForm({ initialData, onDataChange }: CtaFormProps) {
           id="cta-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="e.g., Daftar sekarang dan dapatkan promo spesial!"
+          placeholder="e.g., Daftar sekarang dan dapatkan promo spesial! (HTML supported, e.g., &lt;a href='https://example.com'&gt;klik sini&lt;/a&gt;)"
           rows={3}
         />
+        <p className="text-xs text-gray-500">
+          HTML tags are supported. Example: &lt;a href="https://osborncarrental.com"&gt;klik sini&lt;/a&gt;
+        </p>
       </div>
 
       {/* Button Config */}

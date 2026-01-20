@@ -203,14 +203,19 @@ export default function PromoGridForm({
                   }
                   className="h-8 text-xs"
                 />
-                <Input
-                  placeholder="Description"
-                  value={promo.description}
-                  onChange={(e) =>
-                    handlePromoChange(index, 'description', e.target.value)
-                  }
-                  className="h-8 text-xs"
-                />
+                <div className="grid gap-1">
+                  <Input
+                    placeholder="Description (HTML supported)"
+                    value={promo.description}
+                    onChange={(e) =>
+                      handlePromoChange(index, 'description', e.target.value)
+                    }
+                    className="h-8 text-xs"
+                  />
+                  <p className="text-xs text-gray-500">
+                    HTML tags supported (e.g., &lt;a href="..."&gt;link&lt;/a&gt;)
+                  </p>
+                </div>
                 <Input
                   placeholder="Link URL"
                   value={promo.link}

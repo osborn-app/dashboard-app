@@ -273,9 +273,12 @@ export default function WhyChooseUsForm({
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description paragraph..."
+          placeholder="Description paragraph... (HTML supported, e.g., &lt;a href='https://example.com'&gt;klik sini&lt;/a&gt;)"
           rows={3}
         />
+        <p className="text-xs text-gray-500">
+          HTML tags are supported. Example: &lt;a href="https://osborncarrental.com"&gt;klik sini&lt;/a&gt;
+        </p>
       </div>
 
       {/* Image Upload */}
@@ -388,13 +391,16 @@ export default function WhyChooseUsForm({
                 <div className="grid gap-2">
                   <Label className="text-xs">Description</Label>
                   <Textarea
-                    placeholder="Item description..."
+                    placeholder="Item description... (HTML supported)"
                     value={item.description}
                     onChange={(e) =>
                       handleItemChange(index, 'description', e.target.value)
                     }
                     rows={3}
                   />
+                  <p className="text-xs text-gray-500">
+                    HTML tags are supported.
+                  </p>
                 </div>
               </div>
             </div>
@@ -451,9 +457,12 @@ export default function WhyChooseUsForm({
             <Textarea
               value={clientSectionDescription}
               onChange={(e) => setClientSectionDescription(e.target.value)}
-              placeholder="Deskripsi singkat mengenai klien-klien kamu..."
+              placeholder="Deskripsi singkat mengenai klien-klien kamu... (HTML supported)"
               rows={2}
             />
+            <p className="text-xs text-gray-500">
+              HTML tags are supported.
+            </p>
           </div>
         </div>
 

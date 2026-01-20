@@ -263,7 +263,7 @@ export default function TestimonialsForm({
                   <div className="grid gap-2">
                     <Label className="text-xs">Comment</Label>
                     <Textarea
-                      placeholder="Customer comment..."
+                      placeholder="Customer comment... (HTML supported, e.g., &lt;a href='https://example.com'&gt;klik sini&lt;/a&gt;)"
                       value={testimonial.comment}
                       onChange={(e) =>
                         handleTestimonialChange(index, 'comment', e.target.value)
@@ -271,6 +271,9 @@ export default function TestimonialsForm({
                       rows={3}
                       className="text-sm"
                     />
+                    <p className="text-xs text-gray-500">
+                      HTML tags are supported. Example: &lt;a href="https://osborncarrental.com"&gt;klik sini&lt;/a&gt;
+                    </p>
                   </div>
                 </div>
               </div>

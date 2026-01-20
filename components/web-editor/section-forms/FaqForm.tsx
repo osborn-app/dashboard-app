@@ -131,13 +131,16 @@ export default function FaqForm({ initialData, onDataChange }: FaqFormProps) {
                 <div className="grid gap-2">
                   <Label className="text-xs">Answer</Label>
                   <Textarea
-                    placeholder="Answer to the question..."
+                    placeholder="Answer to the question... (HTML supported, e.g., &lt;a href='https://example.com'&gt;klik sini&lt;/a&gt;)"
                     value={faq.answer}
                     onChange={(e) =>
                       handleFaqChange(index, 'answer', e.target.value)
                     }
                     rows={4}
                   />
+                  <p className="text-xs text-gray-500">
+                    HTML tags are supported. Example: &lt;a href="https://osborncarrental.com"&gt;klik sini&lt;/a&gt;
+                  </p>
                 </div>
               </div>
             </div>

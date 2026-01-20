@@ -269,7 +269,7 @@ export default function FeaturesForm({
                 <div className="grid gap-2">
                   <Label className="text-xs">Description</Label>
                   <Textarea
-                    placeholder="Feature description..."
+                    placeholder="Feature description... (HTML supported, e.g., &lt;a href='https://example.com'&gt;klik sini&lt;/a&gt;)"
                     value={feature.description}
                     onChange={(e) =>
                       handleFeatureChange(index, 'description', e.target.value)
@@ -277,6 +277,9 @@ export default function FeaturesForm({
                     rows={3}
                     className="text-sm"
                   />
+                  <p className="text-xs text-gray-500">
+                    HTML tags are supported. Example: &lt;a href="https://osborncarrental.com"&gt;klik sini&lt;/a&gt;
+                  </p>
                 </div>
 
                 {/* Optional Link */}
