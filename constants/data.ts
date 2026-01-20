@@ -8,88 +8,6 @@ export type User = {
   verified: boolean;
   status: string;
 };
-export const users: User[] = [
-  {
-    id: 1,
-    name: "Candice Schiner",
-    company: "Dell",
-    role: "Frontend Developer",
-    verified: false,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "John Doe",
-    company: "TechCorp",
-    role: "Backend Developer",
-    verified: true,
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Alice Johnson",
-    company: "WebTech",
-    role: "UI Designer",
-    verified: true,
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "David Smith",
-    company: "Innovate Inc.",
-    role: "Fullstack Developer",
-    verified: false,
-    status: "Inactive",
-  },
-  {
-    id: 5,
-    name: "Emma Wilson",
-    company: "TechGuru",
-    role: "Product Manager",
-    verified: true,
-    status: "Active",
-  },
-  {
-    id: 6,
-    name: "James Brown",
-    company: "CodeGenius",
-    role: "QA Engineer",
-    verified: false,
-    status: "Active",
-  },
-  {
-    id: 7,
-    name: "Laura White",
-    company: "SoftWorks",
-    role: "UX Designer",
-    verified: true,
-    status: "Active",
-  },
-  {
-    id: 8,
-    name: "Michael Lee",
-    company: "DevCraft",
-    role: "DevOps Engineer",
-    verified: false,
-    status: "Active",
-  },
-  {
-    id: 9,
-    name: "Olivia Green",
-    company: "WebSolutions",
-    role: "Frontend Developer",
-    verified: true,
-    status: "Active",
-  },
-  {
-    id: 10,
-    name: "Robert Taylor",
-    company: "DataTech",
-    role: "Data Analyst",
-    verified: false,
-    status: "Active",
-  },
-];
 
 export type Employee = {
   id: number;
@@ -166,14 +84,14 @@ export const navItems: NavItem[] = [
   {
     title: "PESANAN",
     label: "orders",
-    roles: ["admin", "finance"],
+    roles: ["admin", "finance", "operation"],
     items: [
       {
         title: "Pesanan Kendaraan",
         href: "/dashboard/orders",
         icon: "car",
         label: "fleet-orders",
-        roles: ["admin", "finance"],
+        roles: ["admin", "finance", "operation"],
       },
       // {
       //   title: "Pesanan Produk",
@@ -322,13 +240,13 @@ export const navItems: NavItem[] = [
         label: "recap",
         roles: ["owner"],
       },
-      {
-        title: "Rekap Produk",
-        href: "/dashboard/product-ledgers",
-        icon: "ledger",
-        label: "product-ledgers",
-        roles: ["owner"],
-      },
+      // {
+      //   title: "Rekap Produk",
+      //   href: "/dashboard/product-ledgers",
+      //   icon: "ledger",
+      //   label: "product-ledgers",
+      //   roles: ["owner"],
+      // },
     ],
   },
   {
@@ -341,14 +259,14 @@ export const navItems: NavItem[] = [
         href: "/dashboard/inspections",
         icon: "listchecks",
         label: "Inspections",
-        roles: ["admin", "owner", "operation"],
+        roles: ["admin", "owner", "operation", "driver"],
       },
       {
         title: "Keperluan & Perbaikan",
         href: "/dashboard/needs",
         icon: "wrench",
         label: "Keperluan Perbaikan",
-        roles: ["admin", "owner", "operation"],
+        roles: ["admin", "owner", "operation", "driver"],
       },
     ],
   },
@@ -380,34 +298,34 @@ export const navItems: NavItem[] = [
       },
     ],
   },
-  // {
-  //   title: "FITUR TAMBAHAN",
-  //   label: "extra",
-  //   roles: ["admin", "driver", "finance", "operation"],
-  //   items: [
-  //     {
-  //       title: "Reimburse",
-  //       href: "/dashboard/reimburse",
-  //       icon: "hand",
-  //       label: "reimburse",
-  //       roles: ["admin", "finance", "driver"],
-  //     },
-  //     {
-  //       title: "Buru Sergap",
-  //       href: "/dashboard/buser",
-  //       icon: "footprints",
-  //       label: "Buru Sergap",
-  //       roles: ["admin", "operation"],
-  //     },
+  {
+    title: "FITUR TAMBAHAN",
+    label: "extra",
+    roles: ["admin", "driver", "finance", "operation"],
+    items: [
+      {
+        title: "Reimburse",
+        href: "/dashboard/reimburse",
+        icon: "hand",
+        label: "reimburse",
+        roles: ["admin", "finance", "driver"],
+      },
+      {
+        title: "Buru Sergap",
+        href: "/dashboard/buser",
+        icon: "footprints",
+        label: "Buru Sergap",
+        roles: ["admin", "operation", "driver"],
+      },
   //     {
   //       title: "Template Pesan Fleet",
   //       href: "/dashboard/wa-blas-partner",
   //       icon: "phonecall",
   //       label: "Template Pesan Fleet",
   //       roles: ["admin"],
-  //     },
-  //   ],
-  // },
+      // },
+    ],
+  },
   {
     title: "KEUANGAN",
     label: "keuangan",
@@ -443,26 +361,26 @@ export const navItems: NavItem[] = [
       },
     ],
   },
-  // {
-  //   title: "Content Management System",
-  //   label: "extra",
-  //   roles: [""],
-  //   items: [
-  //     {
-  //       title: "Content Management",
-  //       href: "/dashboard/cms",
-  //       icon: "contentImage",
-  //       label: "Content Management",
-  //       roles: [""]
-  //     },
-  //     {
-  //       title: "Kategori CMS",
-  //       href: "/dashboard/category-cms",
-  //       icon: "contentImage",
-  //       label: "Kategori CMS",
-  //       roles: [""]
-  //     },
-  //   ],
-  // },
+  {
+    title: "Content Management System",
+    label: "extra",
+    roles: [""],
+    items: [
+      {
+        title: "Content Management",
+        href: "/dashboard/cms",
+        icon: "contentImage",
+        label: "Content Management",
+        roles: [""]
+      },
+      {
+        title: "Kategori CMS",
+        href: "/dashboard/category-cms",
+        icon: "contentImage",
+        label: "Kategori CMS",
+        roles: [""]
+      },
+    ],
+  },
 ];
 

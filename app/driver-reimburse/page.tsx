@@ -6,7 +6,7 @@ import {
   Form,
   FormControl,
   FormField,
-  FormItem, //redeploy
+  FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
@@ -38,7 +38,7 @@ const formSchema = z.object({
   noRekening: z.string().optional(),
   driver: z.coerce.number().min(1, { message: "Driver harus dipilih" }),
   fleet: z.coerce.number().optional().nullable(),
-  product: z.coerce.number().optional().nullable(),
+  // product: z.coerce.number().optional().nullable(),
   location: z.coerce.number().min(1, { message: "Lokasi harus dipilih" }),
   date: z.coerce.date({ required_error: "Tanggal harus diisi" }),
   description: z.string().min(10, { message: "Keterangan minimal 10 karakter" }),
@@ -56,26 +56,28 @@ export default function DriverReimbursePage() {
   // Search terms
   const [searchDriverTerm, setSearchDriverTerm] = useState("");
   const [searchFleetTerm, setSearchFleetTerm] = useState("");
-  const [searchProductTerm, setSearchProductTerm] = useState("");
+  // const [searchProductTerm, setSearchProductTerm] = useState("");
   const [searchLocationTerm, setSearchLocationTerm] = useState("");
+  const [searchCategoryTerm, setSearchCategoryTerm] = useState("");
   
   // Debounced search
   const [searchDriverDebounce] = useDebounce(searchDriverTerm, 500);
   const [searchFleetDebounce] = useDebounce(searchFleetTerm, 500);
-  const [searchProductDebounce] = useDebounce(searchProductTerm, 500);
+  // const [searchProductDebounce] = useDebounce(searchProductTerm, 500);
   const [searchLocationDebounce] = useDebounce(searchLocationTerm, 500);
+  const [searchCategoryDebounce] = useDebounce(searchCategoryTerm, 500);
   
   // Data states
   const [drivers, setDrivers] = useState<any[]>([]);
   const [fleets, setFleets] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  // const [products, setProducts] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   
   // Loading states
   const [loadingDrivers, setLoadingDrivers] = useState(false);
   const [loadingFleets, setLoadingFleets] = useState(false);
-  const [loadingProducts, setLoadingProducts] = useState(false);
+  // const [loadingProducts, setLoadingProducts] = useState(false);
   const [loadingLocations, setLoadingLocations] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
@@ -94,7 +96,7 @@ export default function DriverReimbursePage() {
   const defaultValues: Partial<FormValues> = {
     driver: 0,
     fleet: null,
-    product: null,
+    // product: null,
     nominal: 0,
     bank: "",
     location: 0,
@@ -112,7 +114,7 @@ export default function DriverReimbursePage() {
   });
 
   const fleetField = form.watch("fleet");
-  const productField = form.watch("product");
+  // const productField = form.watch("product");
   const categoryField = form.watch("category");
 
   // Auto-set quantity to 1 when category is driver-related
@@ -157,7 +159,7 @@ export default function DriverReimbursePage() {
     }
   };
 
-  const fetchProducts = async (search: string = "") => {
+  /*const fetchProducts = async (search: string = "") => {
     try {
       setLoadingProducts(true);
       const response = await apiClient.get("/products", {
@@ -169,7 +171,7 @@ export default function DriverReimbursePage() {
     } finally {
       setLoadingProducts(false);
     }
-  };
+  };*/
 
   const fetchLocations = async (search: string = "") => {
     try {
@@ -185,11 +187,18 @@ export default function DriverReimbursePage() {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (search: string = "") => {
     try {
       setLoadingCategories(true);
-      const response = await apiClient.get("/realization/transaction-categories/active");
-      setCategories(response.data?.data || response.data || []);
+      const response = await apiClient.get("/realization/transaction-categories", {
+        params: { 
+          limit: 100, 
+          page: 1, 
+          is_active: true,
+          q: search || undefined 
+        },
+      });
+      setCategories(response.data?.data?.items || response.data?.items || response.data?.data || response.data || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
@@ -201,7 +210,7 @@ export default function DriverReimbursePage() {
   useEffect(() => {
     fetchDrivers();
     fetchFleets();
-    fetchProducts();
+    // fetchProducts();
     fetchLocations();
     fetchCategories();
   }, []);
@@ -219,17 +228,23 @@ export default function DriverReimbursePage() {
     }
   }, [searchFleetDebounce]);
 
-  useEffect(() => {
-    if (searchProductDebounce !== undefined) {
-      fetchProducts(searchProductDebounce);
-    }
-  }, [searchProductDebounce]);
+  // useEffect(() => {
+  //   if (searchProductDebounce !== undefined) {
+  //     fetchProducts(searchProductDebounce);
+  //   }
+  // }, [searchProductDebounce]);
 
   useEffect(() => {
     if (searchLocationDebounce !== undefined) {
       fetchLocations(searchLocationDebounce);
     }
   }, [searchLocationDebounce]);
+
+  useEffect(() => {
+    if (searchCategoryDebounce !== undefined) {
+      fetchCategories(searchCategoryDebounce);
+    }
+  }, [searchCategoryDebounce]);
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
@@ -250,7 +265,7 @@ export default function DriverReimbursePage() {
       const payload = {
         driver_id: data.driver,
         fleet_id: data.fleet || null,
-        product_id: data.product || null,
+        // product_id: data.product || null,
         nominal: data.nominal,
         bank: data.bank,
         location_id: data.location,
@@ -485,14 +500,14 @@ export default function DriverReimbursePage() {
                       placeholder="Pilih fleet..."
                       style={{ height: "48px" }}
                       size="large"
-                      disabled={!!productField}
+                      // disabled={!!productField}
                       onSearch={setSearchFleetTerm}
-                      onChange={(value) => {
-                        field.onChange(value);
-                        if (value) {
-                          form.setValue("product", null);
-                        }
-                      }}
+                      // onChange={(value) => {
+                      //   field.onChange(value);
+                      //   if (value) {
+                      //     form.setValue("product", null);
+                      //   }
+                      // }}
                       filterOption={false}
                       loading={loadingFleets}
                       allowClear
@@ -512,7 +527,7 @@ export default function DriverReimbursePage() {
             </div>
 
             {/* Product */}
-            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
+            {/* <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
               <FormField
               name="product"
               control={form.control}
@@ -550,7 +565,7 @@ export default function DriverReimbursePage() {
                 </FormItem>
               )}
             />
-            </div>
+            </div> */}
 
             {/* Date */}
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4 sm:p-6">
@@ -655,6 +670,8 @@ export default function DriverReimbursePage() {
                       size="large"
                       value={field.value || undefined}
                       onChange={field.onChange}
+                      onSearch={setSearchCategoryTerm}
+                      filterOption={false}
                       loading={loadingCategories}
                     >
                       {categories.map((category: any) => (

@@ -111,7 +111,11 @@ export function DashboardNav({
 
           // Check if any child item is active
           const isChildActive = item.items?.some(child => 
-            child.href && path.startsWith(child.href)
+            child.href && (
+              child.href === "/dashboard"
+                ? path === "/dashboard"
+                : path.startsWith(child.href)
+            )
           );
 
           return (
@@ -149,7 +153,12 @@ export function DashboardNav({
                 <div className="ml-6 space-y-1">
                   {item.items.map((subItem, subIndex) => {
                     const SubIcon = Icons[subItem.icon || "arrowRight"];
-                    const isSubActive = subItem.href && path.startsWith(subItem.href);
+                    // Special handling for /dashboard to only match exact path
+                    const isSubActive = subItem.href && (
+                      subItem.href === "/dashboard" 
+                        ? path === "/dashboard"
+                        : path.startsWith(subItem.href)
+                    );
 
                     return (
                       <Link

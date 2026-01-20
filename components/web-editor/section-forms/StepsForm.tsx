@@ -266,14 +266,19 @@ export default function StepsForm({
                       handleStepChange(index, 'title', e.target.value)
                     }
                   />
-                  <Textarea
-                    placeholder="Step description..."
-                    value={step.description}
-                    onChange={(e) =>
-                      handleStepChange(index, 'description', e.target.value)
-                    }
-                    rows={3}
-                  />
+                  <div className="grid gap-2">
+                    <Textarea
+                      placeholder="Step description... (HTML supported, e.g., &lt;a href='https://example.com'&gt;klik sini&lt;/a&gt;)"
+                      value={step.description}
+                      onChange={(e) =>
+                        handleStepChange(index, 'description', e.target.value)
+                      }
+                      rows={3}
+                    />
+                    <p className="text-xs text-gray-500">
+                      HTML tags are supported. Example: &lt;a href="https://osborncarrental.com"&gt;klik sini&lt;/a&gt;
+                    </p>
+                  </div>
                 </div>
 
                 {/* Delete Button */}

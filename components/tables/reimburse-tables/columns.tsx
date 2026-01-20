@@ -3,7 +3,7 @@ import { ColumnDef } from "@tanstack/react-table";
 // import { CellAction } from "./cell-action";
 import dayjs from "dayjs";
 import "dayjs/locale/id";
-import { cn, formatRupiah } from "@/lib/utils";
+import { cn, formatRupiah, formatDate, convertTime } from "@/lib/utils";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -83,7 +83,7 @@ export const pendingColumns: ColumnDef<any>[] = [
     cell: ({ row }) => (
       <HoverCard>
         <HoverCardTrigger className="bg-[#f5f5f5] rounded-full py-1 px-3 text-nowrap">
-          {row.original?.date}
+          {formatDate(row.original?.date)}
         </HoverCardTrigger>
         <HoverCardContent
           onClick={(e) => {
@@ -98,10 +98,10 @@ export const pendingColumns: ColumnDef<any>[] = [
           </div>
           <div className="pt-1">
             <p className="text-[14px] font-semibold leading-5">
-              {dayjs(row.original?.date).format("dddd, DD MMMM YYYY")}
+              {formatDate(row.original?.date)}
             </p>
             <p className="text-[14px] font-normal leading-5">
-              Jam {dayjs(row.original?.date).format("H:mm")} WIB
+              Jam {convertTime(row.original?.date)} WIB
             </p>
           </div>
           <Separator className="my-4" />
@@ -206,7 +206,7 @@ export const rejectedColumns: ColumnDef<any>[] = [
     cell: ({ row }) => (
       <HoverCard>
         <HoverCardTrigger className="bg-[#f5f5f5] rounded-full py-1 px-3 text-nowrap">
-          {dayjs(row.original?.date).format("DD MMMM YYYY")}
+          {formatDate(row.original?.date)}
         </HoverCardTrigger>
         <HoverCardContent
           onClick={(e) => {
@@ -215,10 +215,10 @@ export const rejectedColumns: ColumnDef<any>[] = [
         >
           <div className="pt-1">
             <p className="text-[14px] font-semibold leading-5">
-              {dayjs(row.original?.start_date).format("dddd, DD MMMM YYYY")}
+              {formatDate(row.original?.start_date)}
             </p>
             <p className="text-[14px] font-normal leading-5">
-              Jam {dayjs(row.original?.start_date).format("H:mm")} WIB
+              Jam {convertTime(row.original?.start_date)} WIB
             </p>
           </div>
           <Separator className="my-4" />
@@ -347,7 +347,7 @@ export const confirmedColumns: ColumnDef<any>[] = [
     cell: ({ row }) => (
       <HoverCard>
         <HoverCardTrigger className="bg-[#f5f5f5] rounded-full py-1 px-3 text-nowrap">
-          {dayjs(row.original?.date).format("DD MMMM YYYY")}
+          {formatDate(row.original?.date)}
         </HoverCardTrigger>
         <HoverCardContent
           onClick={(e) => {
@@ -356,10 +356,10 @@ export const confirmedColumns: ColumnDef<any>[] = [
         >
           <div className="pt-1">
             <p className="text-[14px] font-semibold leading-5">
-              {dayjs(row.original?.start_date).format("dddd, DD MMMM YYYY")}
+              {formatDate(row.original?.start_date)}
             </p>
             <p className="text-[14px] font-normal leading-5">
-              Jam {dayjs(row.original?.start_date).format("H:mm")} WIB
+              Jam {convertTime(row.original?.start_date)} WIB
             </p>
           </div>
           <Separator className="my-4" />
@@ -463,7 +463,7 @@ export const completedColumns: ColumnDef<any>[] = [
     cell: ({ row }) => (
       <HoverCard>
         <HoverCardTrigger className="bg-[#f5f5f5] rounded-full py-1 px-3 text-nowrap">
-          {dayjs(row.original?.date).format("DD MMMM YYYY")}
+          {formatDate(row.original?.date)}
         </HoverCardTrigger>
         <HoverCardContent
           onClick={(e) => {
@@ -472,10 +472,10 @@ export const completedColumns: ColumnDef<any>[] = [
         >
           <div className="pt-1">
             <p className="text-[14px] font-semibold leading-5">
-              {dayjs(row.original?.start_date).format("dddd, DD MMMM YYYY")}
+              {formatDate(row.original?.start_date)}
             </p>
             <p className="text-[14px] font-normal leading-5">
-              Jam {dayjs(row.original?.start_date).format("H:mm")} WIB
+              Jam {convertTime(row.original?.start_date)} WIB
             </p>
           </div>
           <Separator className="my-4" />
