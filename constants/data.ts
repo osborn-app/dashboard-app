@@ -135,6 +135,13 @@ export const navItems: NavItem[] = [
         label: "customer",
         roles: ["admin"],
       },
+      {
+        title: "Dashboard User",
+        href: "/dashboard/users",
+        icon: "users",
+        label: "users",
+        roles: ["admin"],
+      },
     ],
   },
   {
