@@ -27,13 +27,16 @@ const breadcrumbItems = [{ title: "Users", link: "/dashboard/users" }];
 
 export default async function page({ searchParams }: paramsProps) {
   const queryClient = new QueryClient();
-
-  await queryClient.prefetchQuery({
-    queryKey: ["users"],
-    queryFn: () => getUsers({ role: "operation" }),
-  });
-
   const defaultTab = searchParams.role ?? "operation";
+  const page = Number(searchParams.page) || 1;
+  const limit = Number(searchParams.limit) || 10;
+  const q = searchParams.q || "";
+
+  // Prefetch untuk tab yang aktif
+  await queryClient.prefetchQuery({
+    queryKey: ["users", { role: defaultTab, page, limit, q: q || undefined }],
+    queryFn: () => getUsers({ role: defaultTab, page, limit, q: q || undefined }),
+  });
 
   return (
     <>

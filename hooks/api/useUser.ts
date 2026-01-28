@@ -21,6 +21,7 @@ export const useGetUsers = (
   return useQuery({
     queryKey: ["users", params],
     queryFn: getUsers,
+    enabled: true, // Always enable, let wrapper control via options
     ...options,
   });
 };

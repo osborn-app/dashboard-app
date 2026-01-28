@@ -1,10 +1,9 @@
 "use client";
-import TabLists from "@/components/TabLists";
 import SearchInput from "@/components/search-input";
 import Spinner from "@/components/spinner";
 import { UserColumns } from "@/components/tables/user-tables/columns";
 import { UserTable } from "@/components/tables/user-tables/user-table";
-import { TabsContent } from "@/components/ui/tabs";
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetUsers } from "@/hooks/api/useUser";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
@@ -21,37 +20,43 @@ const UserTableWrapper = () => {
   const [searchQuery, setSearchQuery] = React.useState<string>(q ?? "");
   const [searchDebounce] = useDebounce(searchQuery, 500);
 
+  const operationParams = {
+    role: "operation",
+    limit: pageLimit,
+    page: page,
+    q: searchDebounce || undefined,
+  };
+
+  const adminParams = {
+    role: "admin",
+    limit: pageLimit,
+    page: page,
+    q: searchDebounce || undefined,
+  };
+
+  const financeParams = {
+    role: "finance",
+    limit: pageLimit,
+    page: page,
+    q: searchDebounce || undefined,
+  };
+
   const { data: operationData, isFetching: isFetchingOperation } = useGetUsers(
-    {
-      role: "operation",
-      limit: pageLimit,
-      page: page,
-      q: searchDebounce,
-    },
+    operationParams,
     {
       enabled: defaultTab === "operation",
     }
   );
 
   const { data: adminData, isFetching: isFetchingAdmin } = useGetUsers(
-    {
-      role: "admin",
-      limit: pageLimit,
-      page: page,
-      q: searchDebounce,
-    },
+    adminParams,
     {
       enabled: defaultTab === "admin",
     }
   );
 
   const { data: financeData, isFetching: isFetchingFinance } = useGetUsers(
-    {
-      role: "finance",
-      limit: pageLimit,
-      page: page,
-      q: searchDebounce,
-    },
+    financeParams,
     {
       enabled: defaultTab === "finance",
     }
@@ -92,10 +97,27 @@ const UserTableWrapper = () => {
     },
   ];
 
+  // Set initial role in URL if not present
   useEffect(() => {
+    if (!searchParams.get("role")) {
+      router.replace(
+        `${pathname}?${createQueryString({
+          role: defaultTab,
+          q: searchDebounce || null,
+          page: 1,
+          limit: pageLimit,
+        })}`,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update URL when search changes (but keep current role)
+  useEffect(() => {
+    const currentRole = searchParams.get("role") || defaultTab;
     router.push(
       `${pathname}?${createQueryString({
-        role: defaultTab,
+        role: currentRole,
         q: searchDebounce || null,
         page: null,
         limit: pageLimit,
@@ -104,10 +126,31 @@ const UserTableWrapper = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchDebounce]);
 
+  const handleTabChange = (value: string) => {
+    router.push(
+      `${pathname}?${createQueryString({
+        role: value,
+        q: searchDebounce || null,
+        page: 1,
+        limit: pageLimit,
+      })}`,
+    );
+  };
+
   return (
     <>
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <TabLists lists={lists} />
+        <TabsList>
+          {lists.map((list, index) => (
+            <TabsTrigger
+              key={index}
+              value={list.value}
+              onClick={() => handleTabChange(list.value)}
+            >
+              {list.name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         <div className="flex items-center justify-between gap-4 flex-wrap w-full lg:!w-auto">
           <SearchInput
             searchQuery={searchQuery}
