@@ -234,11 +234,11 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
     try {
       if (isEditMode) {
         await axiosAuth.put(`/cms/${articleId}`, payload)
-        setArticleUrl(`https://transgo.id/content/${slug}`)
+        setArticleUrl(`https://osborncarrental.com/content/${slug}`)
         setShowSuccessDialog(true)
       } else {
         await axiosAuth.post('/cms', payload)
-        setArticleUrl(`https://transgo.id/content/${slug}`)
+        setArticleUrl(`https://osborncarrental.com/content/${slug}`)
         setShowSuccessDialog(true)
       }
     } catch (error) {

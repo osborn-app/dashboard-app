@@ -37,13 +37,12 @@ jobs:
           tags: zanfuu/osborn:dashboard-prod 
 
       # --- 2. Step Deployment ke VPS via SSH ---
-      
       - name: Redeploy Dashboard Admin on VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: 103.41.205.81
+          username: root
+          password: $uPPortCK*2025
           script_stop: true
           # Perintah yang akan dieksekusi di VPS Anda
           script: |

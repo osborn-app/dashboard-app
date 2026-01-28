@@ -153,7 +153,7 @@ export function CMSTable({
                         content={
                           <div className="max-w-[250px] p-3 flex flex-col gap-2">
                             <a
-                              href={`https://transgo.id/content/${item.slug}`}
+                              href={`https://osborncarrental.com/content/${item.slug}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="block text-left text-sm text-gray-700 hover:bg-gray-100 px-2 py-1 rounded"
