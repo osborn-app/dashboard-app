@@ -50,10 +50,10 @@ jobs:
             echo "Memulai Redeploy Dashboard Admin di VPS..."
             
             # Pindah ke direktori script webhook
-            cd ~/project/webhook
+            cd ~/app/dashboard-app/
             
             # Jalankan script redeploy khusus dashboard
             # PASTIKAN FILE INI ADA DI VPS ANDA
-            /bin/bash ./redeploy-admin-prod.sh
+            /bin/bash ./deploy-dashboard.sh
             
             echo "[✓] Deployment Dashboard Admin Selesai!"
