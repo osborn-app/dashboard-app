@@ -9,7 +9,7 @@ export default function DriverReimburseUrlCard() {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    const url = `${window.location.origin}/driver-reimburse`;
+    const url = `${window.location.origin}/operational-reimburse`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     toast({
@@ -25,10 +25,10 @@ export default function DriverReimburseUrlCard() {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-blue-900 mb-1">
-            📋 Form Reimburse Driver
+            📋 Form Reimburse Operasional
           </h3>
           <p className="text-xs text-blue-700 mb-3">
-            Bagikan link ini ke driver untuk mengisi form reimburse
+            Bagikan link ini ke operasional untuk mengisi form reimburse
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 bg-white border border-blue-200 rounded px-3 py-2 text-sm text-blue-900 font-mono overflow-x-auto">
