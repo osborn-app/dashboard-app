@@ -10,6 +10,13 @@ export interface CMSItem {
   is_active: boolean;
   categories?: Category[];
   already_indexed: boolean;
+  meta_keyword?: string;
+  status: 'published' | 'draft' | 'scheduled';
+  scheduled_at?: string;
+  author?: {
+    name: string;
+    email: string;
+  };
   created_at: string;
   updated_at: string;
 }

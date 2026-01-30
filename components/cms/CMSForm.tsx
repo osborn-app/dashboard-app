@@ -51,6 +51,12 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
+  // New Fields
+  const [metaKeyword, setMetaKeyword] = useState<string>('')
+  const [status, setStatus] = useState<'published' | 'draft' | 'scheduled'>('published')
+  const [scheduledAt, setScheduledAt] = useState<string>('')
+  const [authorName, setAuthorName] = useState<string | null>(null)
+
   // Category Dialog States
   const [showCategoryDialog, setShowCategoryDialog] = useState<boolean>(false)
   const [categories, setCategories] = useState<Category[]>([])
@@ -80,6 +86,10 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
       setEditorContent(article.content)
       setUploadedImageUrl(article.thumbnail)
       setImagePreview(article.thumbnail)
+      setMetaKeyword(article.meta_keyword || '')
+      setStatus(article.status || 'published')
+      setScheduledAt(article.scheduled_at ? new Date(article.scheduled_at).toISOString().slice(0, 16) : '')
+      setAuthorName(article.author?.name || null)
 
       if (article.categories && article.categories.length > 0) {
         setSelectedCategories(article.categories.map(cat => cat.id))
@@ -224,8 +234,11 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
       thumbnail: uploadedImageUrl,
       description,
       content: editorContent,
-      is_active: true,
+      is_active: status === 'published', // Legacy field, keeping for compatibility
       category_ids: selectedCategories,
+      meta_keyword: metaKeyword,
+      status: status,
+      scheduled_at: status === 'scheduled' ? scheduledAt : null,
     }
 
     setIsSubmitting(true)
@@ -317,6 +330,9 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
               value={title}
               onChange={handleTitleChange}
             />
+            {authorName && (
+              <p className="text-[12px] text-gray-500 mt-1">Oleh: <span className="font-semibold">{authorName}</span></p>
+            )}
           </div>
 
           <div className="flex w-full mt-5 mb-[100px] justify-between gap-4">
@@ -428,6 +444,38 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                 />
+
+                <p className="font-semibold mb-1 mt-5">Meta Keywords</p>
+                <Input
+                  placeholder="kunci1, kunci2, kunci3"
+                  className="w-full"
+                  value={metaKeyword}
+                  onChange={(e) => setMetaKeyword(e.target.value)}
+                />
+
+                <p className="font-semibold mb-1 mt-5">Status Artikel</p>
+                <select
+                  className="w-full border rounded-md p-2 text-sm"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as any)}
+                >
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                  <option value="scheduled">Scheduled</option>
+                </select>
+
+                {status === 'scheduled' && (
+                  <div className="mt-4">
+                    <p className="font-semibold mb-1">Jadwalkan Pada</p>
+                    <Input
+                      type="datetime-local"
+                      className="w-full"
+                      value={scheduledAt}
+                      onChange={(e) => setScheduledAt(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
 
                 <Button
                   onClick={handleSubmitButtonClick}
@@ -581,8 +629,8 @@ export default function CMSForm({ articleId, mode }: CMSFormProps) {
                 <div>
                   <h3 className="font-semibold text-amber-800 mb-1">Informasi SEO &amp; Pengindeksan</h3>
                   <p className="text-sm text-amber-700">
-                    Untuk keperluan SEO, proses pengindeksan biasanya memakan waktu <strong>1-7 hari</strong>. 
-                    Anda dapat mempercepat proses ini dengan menggunakan Google Search Console. 
+                    Untuk keperluan SEO, proses pengindeksan biasanya memakan waktu <strong>1-7 hari</strong>.
+                    Anda dapat mempercepat proses ini dengan menggunakan Google Search Console.
                     Jika tidak menggunakan GSC, artikel tetap akan diindeks secara otomatis, namun mungkin membutuhkan waktu lebih lama.
                   </p>
                 </div>
