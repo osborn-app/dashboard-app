@@ -107,13 +107,13 @@ export const RequestForm: React.FC<RequestFormProps> = ({
   const title = !isEdit
     ? "Detail Request Osborn"
     : initialData
-    ? "Edit Request Osborn"
-    : "Buat Request Osborn";
+      ? "Edit Request Osborn"
+      : "Buat Request Osborn";
   const description = !isEdit
     ? ""
     : initialData
-    ? "Edit request untuk driver Osborn"
-    : "Tambah request baru untuk driver Osborn";
+      ? "Edit request untuk operasional Osborn"
+      : "Tambah request baru untuk operasional Osborn";
   const toastMessage = initialData
     ? "Request Task berhasil diubah!"
     : "Request Task berhasil dibuat!";
@@ -134,26 +134,26 @@ export const RequestForm: React.FC<RequestFormProps> = ({
   const predefinedAddress = `Tuliskan alamat disini: \n\n\nLink Google Maps:`;
   const defaultValues = initialData
     ? {
-        customer: initialData?.customer?.id?.toString(),
-        pic: initialData?.driver?.id?.toString(),
-        fleet: initialData?.fleet?.id?.toString(),
-        time: initialData?.start_date,
-        type: initialData?.type,
-        address: initialData?.address,
-        description: initialData?.description,
-        is_self_pickup: initialData?.is_self_pickup,
-        distance: initialData?.distance,
-      }
+      customer: initialData?.customer?.id?.toString(),
+      pic: initialData?.driver?.id?.toString(),
+      fleet: initialData?.fleet?.id?.toString(),
+      time: initialData?.start_date,
+      type: initialData?.type,
+      address: initialData?.address,
+      description: initialData?.description,
+      is_self_pickup: initialData?.is_self_pickup,
+      distance: initialData?.distance,
+    }
     : {
-        customer: "",
-        pic: "",
-        fleet: "",
-        type: "",
-        address: predefinedAddress,
-        description: predefinedDesc,
-        is_self_pickup: false,
-        distance: 0,
-      };
+      customer: "",
+      pic: "",
+      fleet: "",
+      type: "",
+      address: predefinedAddress,
+      description: predefinedDesc,
+      is_self_pickup: false,
+      distance: 0,
+    };
   const form = useForm<RequestFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -197,7 +197,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
         return true;
       })
     );
-    
+
     console.log('Request payload:', newPayload);
 
     if (initialData) {
@@ -230,7 +230,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
           toast({
             variant: "success",
             title: toastMessage,
-            description: "Driver akan menerima notifikasi request ini.",
+            description: "Operasional akan menerima notifikasi request ini.",
           });
           router.refresh();
           router.push(`/dashboard/requests`);
@@ -672,8 +672,8 @@ export const RequestForm: React.FC<RequestFormProps> = ({
                   dangerouslySetInnerHTML={{
                     __html: !isEmpty(defaultValues?.address)
                       ? makeUrlsClickable(
-                          defaultValues?.address?.replace(/\n/g, "<br />"),
-                        )
+                        defaultValues?.address?.replace(/\n/g, "<br />"),
+                      )
                       : "-",
                   }}
                 />
@@ -712,8 +712,8 @@ export const RequestForm: React.FC<RequestFormProps> = ({
                   dangerouslySetInnerHTML={{
                     __html: !isEmpty(defaultValues?.description)
                       ? makeUrlsClickable(
-                          defaultValues?.description?.replace(/\n/g, "<br />"),
-                        )
+                        defaultValues?.description?.replace(/\n/g, "<br />"),
+                      )
                       : "-",
                   }}
                 />
@@ -765,8 +765,8 @@ export const RequestForm: React.FC<RequestFormProps> = ({
               <FormLabel>Foto Bukti Serah terima</FormLabel>
               {(initialData?.status === "pending" ||
                 initialData?.status === "on_progress") && (
-                <p className="text-sm">{`Request ${wording} belum selesai dilakukan `}</p>
-              )}
+                  <p className="text-sm">{`Request ${wording} belum selesai dilakukan `}</p>
+                )}
               {initialData?.status === "done" &&
                 endlogs?.map((log: any) => (
                   <>
@@ -797,7 +797,7 @@ export const RequestForm: React.FC<RequestFormProps> = ({
                       key={log.id}
                     >
                       <FormItem>
-                        <FormLabel>Catatan Driver</FormLabel>
+                        <FormLabel>Catatan Operasional</FormLabel>
                         <div
                           className="border border-gray-200 rounded-md px-2 py-1 break-words"
                           dangerouslySetInnerHTML={{
@@ -806,6 +806,18 @@ export const RequestForm: React.FC<RequestFormProps> = ({
                               : "-",
                           }}
                         />
+                      </FormItem>
+                      <FormItem>
+                        <FormLabel>Kondisi BBM</FormLabel>
+                        <FormControl className="disabled:opacity-100">
+                          <Input disabled value={log?.fuel_condition ?? "-"} />
+                        </FormControl>
+                      </FormItem>
+                      <FormItem>
+                        <FormLabel>Kilometer</FormLabel>
+                        <FormControl className="disabled:opacity-100">
+                          <Input disabled value={log?.kilometer ?? "-"} />
+                        </FormControl>
                       </FormItem>
                     </div>
                   </>
